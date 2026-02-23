@@ -151,7 +151,7 @@
     <script>
         // ==========================================
         // 🚨 BỆ HẠ DÁN SHEET ID VÀO GIỮA 2 DẤU NHÁY ĐƠN BÊN DƯỚI 🚨
-        const SHEET_ID = 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing';
+        const SHEET_ID = '1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg';
         // ==========================================
 
         let cloudData = []; // Biến chứa dữ liệu từ mây
@@ -187,7 +187,7 @@
             if (currentRole === 'student' && newRole === 'teacher') {
                 const savedPin = localStorage.getItem('teacherPin');
                 if (savedPin) {
-                    const enteredPin = prompt("Vui lòng nhập mã PIN của Thầy Thịnh:");
+                    const enteredPin = prompt("Vui lòng nhập mã PIN:");
                     if (enteredPin !== savedPin) {
                         alert("❌ Sai mã PIN! Không thể vào ngự thư phòng!");
                         return;
