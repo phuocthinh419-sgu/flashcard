@@ -148,10 +148,10 @@
         </div>
     </div>
 
-   <script>
+    <script>
         // ==========================================
-        // 🚨 ĐÃ SỬA LẠI MÃ SHEET ID CHUẨN XÁC 🚨
-        const SHEET_ID = '1dZA9LTjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg';
+        // 🚨 THẦN ĐÃ LẮP SẴN ĐƯỜNG LINK THẬT CỦA BỆ HẠ VÀO ĐÂY, BỆ HẠ KHÔNG CẦN SỬA GÌ NỮA 🚨
+        const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarlpxCg/edit';
         // ==========================================
 
         let cloudData = []; 
@@ -221,7 +221,7 @@
             document.getElementById('previewFrame').srcdoc = document.getElementById('sourceCode').value;
         }
 
-        // BỘ GIẢI MÃ NÂNG CẤP: CHỐNG LỖI VÀ BÁO LỖI TIẾNG VIỆT CHI TIẾT
+        // BỘ GIẢI MÃ NÂNG CẤP VÀ TỰ ĐỘNG TÁCH ID TỪ LINK DÀI
         async function fetchFromCloud() {
             const container = document.getElementById('libraryContainer');
             const spinner = document.getElementById('loadingSpinner');
@@ -229,25 +229,38 @@
             container.innerHTML = '';
             spinner.style.display = 'block';
 
-            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+            if (SHEET_LINK === 'DÁN_ĐƯỜNG_LINK_VÀO_ĐÂY') {
+                spinner.style.display = 'none';
+                container.innerHTML = "<p style='color: #d50000; padding: 20px;'>⚠️ Bệ hạ chưa dán Link Google Sheets vào mã nguồn!</p>";
+                return;
+            }
+
+            let sheetId = SHEET_LINK;
+            if (sheetId.includes('/d/')) {
+                sheetId = sheetId.split('/d/')[1].split('/')[0];
+            }
+
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
 
             try {
                 const response = await fetch(url);
-                if (!response.ok) throw new Error("Chưa mở khóa 'Bất kỳ ai có liên kết' cho file Sheets.");
+                if (response.status === 404) {
+                    throw new Error("Không tìm thấy file Google Sheets. Có vẻ đường link bị thiếu chữ rồi!");
+                }
+                if (!response.ok) {
+                    throw new Error("Bị chặn truy cập. Có thể file chưa được mở khóa 'Bất kỳ ai có đường liên kết'.");
+                }
 
                 const text = await response.text();
                 
-                // Cắt chữ an toàn tuyệt đối
                 const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-                if (!jsonString) throw new Error("Không tìm thấy dữ liệu (bệ hạ đã dán code sai ô chăng?).");
+                if (!jsonString) throw new Error("File trống hoặc mã HTML chưa được dán vào ô B2.");
 
                 const data = JSON.parse(jsonString);
                 const rows = data.table.rows;
                 cloudData = [];
                 
-                // Quét từ dòng 2 (bỏ qua dòng 1 là tiêu đề)
                 for (let i = 1; i < rows.length; i++) {
-                    // Kiểm tra kỹ xem ô đó có rỗng không trước khi lấy dữ liệu
                     if (rows[i] && rows[i].c && rows[i].c[0] && rows[i].c[1] && rows[i].c[1].v) {
                         cloudData.push({
                             id: i,
@@ -262,7 +275,11 @@
 
             } catch (error) {
                 spinner.style.display = 'none';
-                container.innerHTML = `<p style='color: #d50000; padding: 20px; line-height: 1.6;'>❌ <b>Hệ thống báo lỗi:</b> ${error.message}<br><br>💡 <b>Lệnh kiểm tra cho bệ hạ:</b><br>1. File Google Sheets đã đổi quyền Chia sẻ thành 'Bất kỳ ai có đường liên kết' chưa?<br>2. Ở Sheets, bệ hạ đã bấm F2 vào đúng ô B2 để dán mã chưa? TUYỆT ĐỐI không để mã tràn xuống các dòng bên dưới.</p>`;
+                let errMsg = error.message;
+                if (error.name === 'TypeError') {
+                    errMsg = "Trình duyệt chặn kết nối. Xin bệ hạ kiểm tra lại quyền Chia sẻ của file Sheets.";
+                }
+                container.innerHTML = `<p style='color: #d50000; padding: 20px; line-height: 1.6;'>❌ <b>Hệ thống báo lỗi:</b> ${errMsg}</p>`;
             }
         }
 
@@ -302,7 +319,6 @@
             document.getElementById('modalFrame').srcdoc = '';
         }
 
-        // Khởi động
         applyRole();
         fetchFromCloud();
     </script>
