@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VocabForge | Teacher Thinh</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+    <title>VocabForge | Workspace</title>
     <style>
         :root {
             --primary: #1a237e; --secondary: #2962ff; --success: #00c853; --danger: #d50000;
@@ -13,9 +12,12 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { display: flex; height: 100vh; background-color: var(--bg-color); color: var(--text-main); overflow: hidden; }
         
-        #admin-view { display: flex; width: 100%; height: 100%; }
         .sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid #e0e0e0; padding: 20px; display: flex; flex-direction: column; }
-        .brand { font-size: 24px; font-weight: bold; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 10px; }
+        .brand { font-size: 24px; font-weight: bold; color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; text-align: center;}
+        
+        .user-badge { background: #e8eaf6; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 20px; font-weight: bold; color: var(--primary); border: 2px dashed var(--secondary); }
+        .badge-student { background: #e0f2f1; color: #00695c; border-color: #00897b; }
+
         .nav-item { padding: 12px 15px; margin-bottom: 10px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: 0.2s; color: #555; }
         .nav-item:hover, .nav-item.active { background: #e8eaf6; color: var(--primary); }
         
@@ -27,98 +29,132 @@
         .view-section { display: none; flex-direction: column; height: 100%; }
         .view-section.active { display: flex; }
 
+        /* Workspace Editor */
         .workspace { display: flex; gap: 20px; flex: 1; min-height: 0; }
         .panel { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; }
         .panel-header { background: #fafafa; padding: 15px 20px; border-bottom: 1px solid #eee; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .panel-actions { display: flex; gap: 10px; }
-        
         textarea { flex: 1; width: 100%; border: none; padding: 20px; font-family: 'Consolas', monospace; font-size: 14px; color: #333; resize: none; outline: none; background: #fafafa; }
+        
+        /* Buttons */
         button { border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; color: white; }
         .btn-run { background: var(--secondary); } .btn-run:hover { background: #1c44b2; }
         .btn-save { background: var(--success); } .btn-save:hover { background: #009624; }
         .btn-danger { background: var(--danger); } .btn-danger:hover { background: #9b0000; }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background: var(--primary); color: white; }
+        
         iframe { width: 100%; height: 100%; border: none; background: #fff; }
 
-        .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
+        /* Library */
+        .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; }
         .lib-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; height: 160px;}
         .lib-card h3 { color: var(--primary); margin-bottom: 10px; font-size: 18px; }
         .lib-card .date { font-size: 12px; color: #888; margin-bottom: 15px; }
         .lib-actions { display: flex; gap: 8px; }
-        .lib-actions button { flex: 1; padding: 8px 5px; font-size: 13px; }
+        .lib-actions button { flex: 1; padding: 10px 5px; font-size: 14px; }
 
-        .settings-card { background: #fff; padding: 25px; border-radius: 12px; max-width: 500px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .form-group { margin-bottom: 20px; }
+        /* Settings Dashboard */
+        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 900px; }
+        .settings-card { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .settings-card h3 { margin-bottom: 15px; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px;}
+        .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-weight: bold; margin-bottom: 8px; color: #555; }
         .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+        .role-switch { display: flex; gap: 10px; margin-bottom: 20px; }
+        .role-switch button { flex: 1; padding: 12px; font-size: 16px; }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
+        /* Modal Preview */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
         .modal.active { display: flex; }
-        .modal-content { background: white; width: 90%; max-width: 800px; height: 80vh; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+        .modal-content { background: white; width: 95%; max-width: 900px; height: 85vh; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
         .modal-header { padding: 15px 20px; background: #fafafa; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
-        .btn-close { background: #ccc; color: #333; }
-        
-        #student-view { display: none; width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; background: #f0f2f5; z-index: 9999; }
-        #student-view.active { display: block; }
-        #studentFrame { width: 100%; height: 100%; border: none; }
+        .btn-close { background: #ccc; color: #333; font-size: 16px; padding: 8px 20px;}
     </style>
 </head>
 <body>
 
-    <div id="admin-view">
-        <aside class="sidebar">
-            <div class="brand">🎓 VocabForge</div>
-            <div class="nav-item active" onclick="switchTab('creator')">⚡ Trình Tạo Flashcard</div>
-            <div class="nav-item" onclick="switchTab('library')">📚 Kho Từ Vựng</div>
-            <div class="nav-item" onclick="switchTab('settings')">⚙️ Cài Đặt Lớp Học</div>
-        </aside>
+    <aside class="sidebar">
+        <div class="brand">🎓 VocabForge</div>
+        
+        <div id="userBadge" class="user-badge">👨‍🏫 Chế độ: Giáo Viên</div>
 
-        <main class="main-content">
-            <div id="view-creator" class="view-section active">
-                <div class="header">
-                    <h1 id="welcomeText">Workspace - Tích Hợp Thẻ</h1>
-                    <p>Dán mã nguồn HTML/CSS/JS/Tailwind do hệ thống AI tạo ra để chạy thử nghiệm.</p>
-                </div>
-                <div class="workspace">
-                    <div class="panel">
-                        <div class="panel-header">
-                            <span>💻 Code Editor (Dán Code HTML vào đây)</span>
-                            <div class="panel-actions">
-                                <button class="btn-run" onclick="renderCode()">Khởi Chạy ▶</button>
-                                <button class="btn-save" onclick="saveFlashcard()">💾 Lưu vào Kho</button>
-                            </div>
+        <div class="nav-item" id="nav-creator" onclick="switchTab('creator')">⚡ Trình Tạo Flashcard</div>
+        <div class="nav-item active" id="nav-library" onclick="switchTab('library')">📚 Kho Từ Vựng</div>
+        <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">⚙️ Cài Đặt Không Gian</div>
+    </aside>
+
+    <main class="main-content">
+        <div id="view-creator" class="view-section">
+            <div class="header">
+                <h1>Workspace - Trình Soạn Thảo</h1>
+                <p>Nơi bệ hạ dán mã HTML/Tailwind để rèn đúc Flashcard mới.</p>
+            </div>
+            <div class="workspace">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>💻 HTML Editor</span>
+                        <div class="panel-actions">
+                            <button class="btn-run" onclick="renderCode()">Chạy Thử ▶</button>
+                            <button class="btn-save" onclick="saveFlashcard()">💾 Cất vào Kho</button>
                         </div>
-                        <textarea id="sourceCode" placeholder=""></textarea>
                     </div>
-                    <div class="panel">
-                        <div class="panel-header"><span>📱 Live Preview</span></div>
-                        <iframe id="previewFrame" sandbox="allow-scripts"></iframe>
-                    </div>
+                    <textarea id="sourceCode" placeholder=""></textarea>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><span>📱 Live Preview</span></div>
+                    <iframe id="previewFrame" sandbox="allow-scripts"></iframe>
                 </div>
             </div>
+        </div>
 
-            <div id="view-library" class="view-section">
-                <div class="header">
-                    <h1>📚 Kho Từ Vựng</h1>
-                </div>
-                <div class="library-grid" id="libraryContainer"></div>
+        <div id="view-library" class="view-section active">
+            <div class="header">
+                <h1 id="libraryTitle">📚 Kho Bài Học</h1>
+                <p>Chọn một bộ thẻ bên dưới để bắt đầu ôn luyện.</p>
             </div>
+            <div class="library-grid" id="libraryContainer"></div>
+        </div>
 
-            <div id="view-settings" class="view-section">
-                <div class="header">
-                    <h1>⚙️ Cài Đặt Hệ Thống</h1>
-                </div>
+        <div id="view-settings" class="view-section">
+            <div class="header">
+                <h1>⚙️ Quản Trị Hệ Thống</h1>
+                <p>Tùy chỉnh vai trò, bảo mật và sao lưu dữ liệu lớp học.</p>
+            </div>
+            
+            <div class="settings-grid">
                 <div class="settings-card">
-                    <div class="form-group">
-                        <label>Tên Giáo Viên (Định danh):</label>
-                        <input type="text" id="teacherName" placeholder="Ví dụ: Mr. Thinh Nguyen">
+                    <h3>🎭 Chuyển Đổi Vai Trò</h3>
+                    <p style="margin-bottom: 15px; color: #666; font-size: 14px;">Chuyển sang "Học Sinh" để ẩn công cụ chỉnh sửa, tạo môi trường học tập an toàn.</p>
+                    <div class="role-switch">
+                        <button class="btn-run" onclick="changeRole('teacher')">👨‍🏫 Giáo Viên</button>
+                        <button class="btn-save" onclick="changeRole('student')">👨‍🎓 Học Sinh</button>
                     </div>
-                    <button class="btn-run" onclick="saveSettings()" style="width: 100%; margin-bottom: 20px;">Cập Nhật Thông Tin</button>
-                    <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 20px;">
-                    <button class="btn-danger" onclick="clearAllData()" style="width: 100%;">Cảnh báo: Xóa toàn bộ dữ liệu Flashcard</button>
+                    
+                    <div class="form-group" id="pinSetupGroup">
+                        <label>Thiết lập mã PIN Giáo Viên:</label>
+                        <input type="password" id="teacherPin" placeholder="Để trống nếu không cần bảo mật...">
+                        <button class="btn-outline" onclick="savePin()" style="width: 100%; margin-top: 10px;">Lưu mã PIN</button>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>📦 Đồng Bộ Dữ Liệu (Không cần mạng)</h3>
+                    <p style="margin-bottom: 15px; color: #666; font-size: 14px;">Giáo viên tải File Dữ Liệu xuống, gửi cho Học sinh. Học sinh tải File đó lên để đồng bộ kho bài học.</p>
+                    
+                    <button class="btn-run" onclick="exportData()" style="width: 100%; margin-bottom: 15px;">📥 Xuất File Dữ Liệu (Gửi cho trò)</button>
+                    
+                    <div style="position: relative; overflow: hidden; display: inline-block; width: 100%;">
+                        <button class="btn-outline" style="width: 100%;">📤 Nhập File Dữ Liệu (Học sinh ấn vào đây)</button>
+                        <input type="file" id="importFile" accept=".vocab, .json" onchange="importData(event)" style="position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; height: 100%; width: 100%;">
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px dashed #ccc; margin: 20px 0;">
+                    <button class="btn-danger" id="btnWipeData" onclick="clearAllData()" style="width: 100%;">🔥 Xóa Toàn Bộ Kho Dữ Liệu</button>
                 </div>
             </div>
-        </main>
-    </div>
+        </div>
+    </main>
 
     <div class="modal" id="previewModal">
         <div class="modal-content">
@@ -130,84 +166,124 @@
         </div>
     </div>
 
-    <div id="student-view">
-        <iframe id="studentFrame" sandbox="allow-scripts"></iframe>
-    </div>
-
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const sharedCode = urlParams.get('play');
+        // --- 1. HỆ THỐNG PHÂN QUYỀN (ROLE MANAGEMENT) ---
+        function applyRole() {
+            const role = localStorage.getItem('userRole') || 'teacher';
+            const badge = document.getElementById('userBadge');
+            const navCreator = document.getElementById('nav-creator');
+            const btnWipe = document.getElementById('btnWipeData');
+            const pinGroup = document.getElementById('pinSetupGroup');
 
-        if (sharedCode) {
-            document.getElementById('admin-view').style.display = 'none';
-            document.getElementById('student-view').classList.add('active');
-            try {
-                // Giải mã link cho học sinh
-                const decodedCode = LZString.decompressFromEncodedURIComponent(sharedCode);
-                if (!decodedCode) throw new Error("Mã hỏng");
-                document.getElementById('studentFrame').srcdoc = decodedCode;
-            } catch (e) {
-                document.getElementById('student-view').innerHTML = '<h2 style="text-align:center; padding-top:50px; font-family:sans-serif;">Link bài học bị hỏng hoặc đoạn mã quá lớn. Xin báo lại cho bệ hạ!</h2>';
+            if (role === 'student') {
+                badge.className = 'user-badge badge-student';
+                badge.innerText = '👨‍🎓 Chế độ: Học Sinh';
+                navCreator.style.display = 'none'; // Giấu Trình Tạo Flashcard
+                btnWipe.style.display = 'none'; // Học sinh không được xóa kho
+                pinGroup.style.display = 'none'; // Học sinh không được đổi PIN
+                
+                // Ép về trang Kho Từ Vựng nếu đang ở Trình Tạo
+                if (document.getElementById('view-creator').classList.contains('active')) {
+                    switchTab('library');
+                }
+            } else {
+                badge.className = 'user-badge';
+                badge.innerText = '👨‍🏫 Chế độ: Giáo Viên';
+                navCreator.style.display = 'block';
+                btnWipe.style.display = 'block';
+                pinGroup.style.display = 'block';
             }
-        } else {
-            applySettings();
+            
+            // Render lại Kho Từ Vựng để ẩn/hiện nút Xóa
+            loadLibrary();
         }
 
+        function changeRole(newRole) {
+            const currentRole = localStorage.getItem('userRole') || 'teacher';
+            
+            // Nếu từ Học Sinh muốn lên Giáo Viên -> Bắt nhập mã PIN
+            if (currentRole === 'student' && newRole === 'teacher') {
+                const savedPin = localStorage.getItem('teacherPin');
+                if (savedPin) {
+                    const enteredPin = prompt("Vui lòng nhập mã PIN của Thầy Thịnh:");
+                    if (enteredPin !== savedPin) {
+                        alert("❌ Sai mã PIN! Kẻ gian không được vào ngự thư phòng!");
+                        return;
+                    }
+                }
+            }
+
+            localStorage.setItem('userRole', newRole);
+            applyRole();
+            alert(newRole === 'teacher' ? "Đã cấp quyền Giáo Viên!" : "Đã chuyển sang góc độ Học Sinh!");
+            switchTab('library');
+        }
+
+        function savePin() {
+            const pin = document.getElementById('teacherPin').value;
+            localStorage.setItem('teacherPin', pin);
+            alert("Đã lưu mã PIN an toàn!");
+            document.getElementById('teacherPin').value = '';
+        }
+
+        // --- 2. ĐIỀU HƯỚNG & GIAO DIỆN ---
         function switchTab(tabId) {
             document.querySelectorAll('.view-section').forEach(function(el) { el.classList.remove('active'); });
             document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+            
             document.getElementById('view-' + tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+            document.getElementById('nav-' + tabId).classList.add('active');
+            
             if (tabId === 'library') loadLibrary();
         }
 
+        // --- 3. LOGIC FLASHCARD (Dành cho Giáo viên) ---
         function renderCode() {
-            const code = document.getElementById('sourceCode').value;
-            document.getElementById('previewFrame').srcdoc = code;
+            document.getElementById('previewFrame').srcdoc = document.getElementById('sourceCode').value;
         }
 
         function saveFlashcard() {
             const code = document.getElementById('sourceCode').value;
             if (!code.trim()) { alert("Bẩm, chưa có mã nguồn!"); return; }
-            const title = prompt("Tên bộ Flashcard:", "Từ Vựng Unit Mới");
+            const title = prompt("Ban tên cho bộ Flashcard này:", "Từ Vựng Unit Mới");
             if (!title) return;
 
             let library = JSON.parse(localStorage.getItem('vocabLibrary')) || [];
-            // Thêm thẻ mới
-            library.push({ 
-                id: Date.now(), 
-                title: title, 
-                code: code, 
-                date: new Date().toLocaleDateString('vi-VN') 
-            });
+            library.push({ id: Date.now(), title: title, code: code, date: new Date().toLocaleDateString('vi-VN') });
             localStorage.setItem('vocabLibrary', JSON.stringify(library));
-            alert("Đã cất vào Kho Từ Vựng!");
+            
+            alert("Đã cất vào Kho an toàn!");
             document.getElementById('sourceCode').value = ''; 
             document.getElementById('previewFrame').srcdoc = '';
         }
 
+        // --- 4. HIỂN THỊ KHO TỪ VỰNG TÙY THEO VAI TRÒ ---
         function loadLibrary() {
             const container = document.getElementById('libraryContainer');
             const library = JSON.parse(localStorage.getItem('vocabLibrary')) || [];
+            const role = localStorage.getItem('userRole') || 'teacher';
+
             if (library.length === 0) {
-                container.innerHTML = "<p style='color: #888;'>Kho hiện tại trống rỗng.</p>"; return;
+                container.innerHTML = "<p style='color: #888; padding: 20px;'>Kho bài học đang trống.</p>"; return;
             }
             
-            // Đã đổi sang nối chuỗi cổ điển để không bao giờ bị dính lỗi biến số
             let htmlContent = '';
             for (let i = 0; i < library.length; i++) {
                 const item = library[i];
                 htmlContent += '<div class="lib-card">' +
                     '<div>' +
                         '<h3>' + item.title + '</h3>' +
-                        '<div class="date">Ngày tạo: ' + item.date + '</div>' +
+                        '<div class="date">Cập nhật: ' + item.date + '</div>' +
                     '</div>' +
                     '<div class="lib-actions">' +
-                        '<button class="btn-run" onclick="viewCard(' + item.id + ')">Mở</button>' +
-                        '<button class="btn-save" onclick="copyShareLink(' + item.id + ')">🔗 Copy Link</button>' +
-                        '<button class="btn-danger" onclick="deleteCard(' + item.id + ')">Xóa</button>' +
-                    '</div>' +
-                '</div>';
+                        '<button class="btn-run" onclick="viewCard(' + item.id + ')" style="font-size: 16px;">▶ Mở Học Ngay</button>';
+                
+                // CHỈ GIÁO VIÊN MỚI THẤY NÚT XÓA
+                if (role === 'teacher') {
+                    htmlContent += '<button class="btn-danger" onclick="deleteCard(' + item.id + ')" style="flex: 0.3;">Xóa</button>';
+                }
+                
+                htmlContent += '</div></div>';
             }
             container.innerHTML = htmlContent;
         }
@@ -215,9 +291,7 @@
         function viewCard(id) {
             const library = JSON.parse(localStorage.getItem('vocabLibrary')) || [];
             let card = null;
-            for(let i=0; i<library.length; i++) {
-                if(library[i].id === id) { card = library[i]; break; }
-            }
+            for(let i=0; i<library.length; i++) { if(library[i].id === id) { card = library[i]; break; } }
             if (card) {
                 document.getElementById('modalTitle').innerText = card.title;
                 document.getElementById('modalFrame').srcdoc = card.code;
@@ -231,62 +305,76 @@
         }
 
         function deleteCard(id) {
-            if (confirm("Xóa bộ này vĩnh viễn?")) {
+            if (confirm("Xóa bộ thẻ này vĩnh viễn khỏi Kho?")) {
                 let library = JSON.parse(localStorage.getItem('vocabLibrary')) || [];
                 let newLibrary = [];
-                for(let i=0; i<library.length; i++) {
-                    if(library[i].id !== id) { newLibrary.push(library[i]); }
-                }
+                for(let i=0; i<library.length; i++) { if(library[i].id !== id) { newLibrary.push(library[i]); } }
                 localStorage.setItem('vocabLibrary', JSON.stringify(newLibrary));
                 loadLibrary(); 
             }
         }
 
-        function copyShareLink(id) {
-            const library = JSON.parse(localStorage.getItem('vocabLibrary')) || [];
-            let card = null;
-            for(let i=0; i<library.length; i++) {
-                if(library[i].id === id) { card = library[i]; break; }
+        // --- 5. ĐỒNG BỘ DỮ LIỆU (EXPORT / IMPORT) ---
+        function exportData() {
+            const library = localStorage.getItem('vocabLibrary');
+            if (!library || library === '[]') {
+                alert("Kho đang trống, không có gì để xuất bẩm bệ hạ!"); return;
             }
             
-            if (card) {
-                const compressedCode = LZString.compressToEncodedURIComponent(card.code);
-                const baseUrl = window.location.href.split('?')[0]; 
-                const shareUrl = baseUrl + '?play=' + compressedCode;
-                
-                if (shareUrl.length > 8000) {
-                    alert("⚠️ CẢNH BÁO: Đoạn mã HTML này quá nặng (có thể do chứa ảnh Base64). Link có thể sẽ không hoạt động!");
-                }
-
-                navigator.clipboard.writeText(shareUrl).then(function() {
-                    alert("Đã chép link thành công!");
-                }).catch(function() {
-                    alert("Trình duyệt chặn sao chép, bệ hạ vui lòng copy tay:\n\n" + shareUrl);
-                });
-            }
+            // Tạo file .vocab (thực chất là chuỗi JSON)
+            const blob = new Blob([library], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `DuLieuLopHoc_${new Date().getTime()}.vocab`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
-        function saveSettings() {
-            localStorage.setItem('teacherName', document.getElementById('teacherName').value);
-            applySettings();
-            alert("Đã cập nhật tên!");
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData)) {
+                        // Hỏi xem muốn Ghi Đè hay Gộp chung
+                        const merge = confirm("Bấm OK để 'Gộp chung' dữ liệu mới vào kho cũ.\nBấm Cancel để 'Xóa kho cũ, chỉ lấy dữ liệu mới'.");
+                        if (merge) {
+                            const currentLibrary = JSON.parse(localStorage.getItem('vocabLibrary')) || [];
+                            const combined = currentLibrary.concat(importedData);
+                            localStorage.setItem('vocabLibrary', JSON.stringify(combined));
+                        } else {
+                            localStorage.setItem('vocabLibrary', JSON.stringify(importedData));
+                        }
+                        alert("🎉 Nhập dữ liệu thành công! Mời học trò vào Kho để học.");
+                        switchTab('library');
+                    } else {
+                        throw new Error("Sai định dạng");
+                    }
+                } catch (err) {
+                    alert("❌ File dữ liệu bị hỏng hoặc không đúng chuẩn VocabForge!");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset input
         }
 
         function clearAllData() {
-            if (confirm("Thiêu rụi toàn bộ Kho Từ Vựng?")) {
+            if (confirm("CẢNH BÁO: Thao tác này sẽ thiêu rụi toàn bộ dữ liệu. Bệ hạ có chắc chắn?")) {
                 localStorage.removeItem('vocabLibrary');
-                alert("Đã dọn sạch!");
+                alert("Đã dọn sạch kho!");
                 loadLibrary();
             }
         }
 
-        function applySettings() {
-            const name = localStorage.getItem('teacherName');
-            if (name) {
-                document.getElementById('teacherName').value = name;
-                document.getElementById('welcomeText').innerText = "Workspace của " + name;
-            }
-        }
+        // Khởi động
+        applyRole();
+        loadLibrary();
     </script>
 </body>
 </html>
