@@ -148,16 +148,16 @@
         </div>
     </div>
 
-    <script>
+   <script>
         // ==========================================
-        // 🚨 BỆ HẠ DÁN SHEET ID VÀO GIỮA 2 DẤU NHÁY ĐƠN BÊN DƯỚI 🚨
-        const SHEET_ID = '1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg';
+        // 🚨 ĐÃ SỬA LẠI MÃ SHEET ID CHUẨN XÁC 🚨
+        const SHEET_ID = '1dZA9LTjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg';
         // ==========================================
 
-        let cloudData = []; // Biến chứa dữ liệu từ mây
+        let cloudData = []; 
 
         function applyRole() {
-            const role = localStorage.getItem('userRole') || 'student'; // Mặc định ai vào web cũng là học sinh
+            const role = localStorage.getItem('userRole') || 'student'; 
             const badge = document.getElementById('userBadge');
             const navCreator = document.getElementById('nav-creator');
             const pinGroup = document.getElementById('pinSetupGroup');
@@ -221,7 +221,7 @@
             document.getElementById('previewFrame').srcdoc = document.getElementById('sourceCode').value;
         }
 
-        // KẾT NỐI VỚI GOOGLE SHEETS LẤY DỮ LIỆU
+        // BỘ GIẢI MÃ NÂNG CẤP: CHỐNG LỖI VÀ BÁO LỖI TIẾNG VIỆT CHI TIẾT
         async function fetchFromCloud() {
             const container = document.getElementById('libraryContainer');
             const spinner = document.getElementById('loadingSpinner');
@@ -229,32 +229,29 @@
             container.innerHTML = '';
             spinner.style.display = 'block';
 
-            if (SHEET_ID === '1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg') {
-                spinner.style.display = 'none';
-                container.innerHTML = "<p style='color: #d50000; padding: 20px; font-weight: bold;'>⚠️ Bệ hạ chưa dán Sheet ID vào mã nguồn HTML! Vui lòng mở code ra và dán vào dòng 120.</p>";
-                return;
-            }
-
-            // Google Visualization API để lấy dữ liệu json
             const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
             try {
                 const response = await fetch(url);
+                if (!response.ok) throw new Error("Chưa mở khóa 'Bất kỳ ai có liên kết' cho file Sheets.");
+
                 const text = await response.text();
                 
-                // Cắt bỏ phần dư thừa của Google để lấy đúng chuỗi JSON
-                const jsonString = text.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\)/)[1];
+                // Cắt chữ an toàn tuyệt đối
+                const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+                if (!jsonString) throw new Error("Không tìm thấy dữ liệu (bệ hạ đã dán code sai ô chăng?).");
+
                 const data = JSON.parse(jsonString);
-                
                 const rows = data.table.rows;
                 cloudData = [];
                 
-                // Bỏ qua dòng tiêu đề (i=1), bắt đầu từ i=1 nếu dòng 0 là Tiêu đề
+                // Quét từ dòng 2 (bỏ qua dòng 1 là tiêu đề)
                 for (let i = 1; i < rows.length; i++) {
-                    if (rows[i].c[0] && rows[i].c[1]) {
+                    // Kiểm tra kỹ xem ô đó có rỗng không trước khi lấy dữ liệu
+                    if (rows[i] && rows[i].c && rows[i].c[0] && rows[i].c[1] && rows[i].c[1].v) {
                         cloudData.push({
                             id: i,
-                            title: rows[i].c[0].v,
+                            title: rows[i].c[0].v || "Bài học không tên",
                             code: rows[i].c[1].v
                         });
                     }
@@ -265,14 +262,14 @@
 
             } catch (error) {
                 spinner.style.display = 'none';
-                container.innerHTML = "<p style='color: #d50000; padding: 20px;'>❌ Lỗi kết nối Đám Mây! Bệ hạ vui lòng kiểm tra xem file Google Sheets đã được cấp quyền 'Bất kỳ ai có liên kết' chưa?</p>";
+                container.innerHTML = `<p style='color: #d50000; padding: 20px; line-height: 1.6;'>❌ <b>Hệ thống báo lỗi:</b> ${error.message}<br><br>💡 <b>Lệnh kiểm tra cho bệ hạ:</b><br>1. File Google Sheets đã đổi quyền Chia sẻ thành 'Bất kỳ ai có đường liên kết' chưa?<br>2. Ở Sheets, bệ hạ đã bấm F2 vào đúng ô B2 để dán mã chưa? TUYỆT ĐỐI không để mã tràn xuống các dòng bên dưới.</p>`;
             }
         }
 
         function renderLibrary() {
             const container = document.getElementById('libraryContainer');
             if (cloudData.length === 0) {
-                container.innerHTML = "<p style='color: #888; padding: 20px;'>Kho bài học trên Đám Mây đang trống. Bệ hạ hãy vào Google Sheets để dán bài học vào Cột A và Cột B.</p>"; 
+                container.innerHTML = "<p style='color: #888; padding: 20px;'>Kho bài học đang trống. Bệ hạ hãy vào Google Sheets gõ Tên bài học (Cột A) và dán Mã Code (Cột B).</p>"; 
                 return;
             }
             
