@@ -17,6 +17,9 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { display: flex; height: 100vh; background-color: var(--bg-color); color: var(--text-main); overflow: hidden; }
         
+        /* Chế độ Quản trị (Giáo viên) */
+        #admin-view { display: flex; width: 100%; height: 100%; }
+        
         /* Sidebar */
         .sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid #e0e0e0; padding: 20px; display: flex; flex-direction: column; }
         .brand { font-size: 24px; font-weight: bold; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 10px; }
@@ -71,206 +74,218 @@
         .modal-header { padding: 15px 20px; background: #fafafa; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
         .btn-close { background: #ccc; color: #333; }
         .btn-close:hover { background: #aaa; }
+
+        /* Chế độ Học sinh */
+        #student-view { display: none; width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; background: #f0f2f5; z-index: 9999; }
+        #student-view.active { display: block; }
+        #studentFrame { width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body>
 
+    <div id="admin-view">
+        <aside class="sidebar">
+            <div class="brand">🎓 VocabForge</div>
+            <div class="nav-item active" onclick="switchTab('creator')">⚡ Trình Tạo Flashcard</div>
+            <div class="nav-item" onclick="switchTab('library')">📚 Kho Từ Vựng</div>
+            <div class="nav-item" onclick="switchTab('settings')">⚙️ Cài Đặt Lớp Học</div>
+        </aside>
+
+        <main class="main-content">
+            <div id="view-creator" class="view-section active">
+                <div class="header">
+                    <h1 id="welcomeText">Workspace - Tích Hợp Thẻ</h1>
+                    <p>Dán mã nguồn, xem trước và lưu trữ bộ Flashcard mới.</p>
+                </div>
+                <div class="workspace">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span>💻 Code Editor</span>
+                            <div class="panel-actions">
+                                <button class="btn-run" onclick="renderCode()">Khởi Chạy ▶</button>
+                                <button class="btn-save" onclick="saveFlashcard()">💾 Lưu vào Kho</button>
+                            </div>
+                        </div>
+                        <textarea id="sourceCode" placeholder=""></textarea>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header"><span>📱 Live Preview</span></div>
+                        <iframe id="previewFrame" sandbox="allow-scripts"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-library" class="view-section">
+                <div class="header">
+                    <h1>📚 Kho Từ Vựng Của Bệ Hạ</h1>
+                    <p>Quản lý các bộ Flashcard đã được lưu trữ.</p>
+                </div>
+                <div class="library-grid" id="libraryContainer"></div>
+            </div>
+
+            <div id="view-settings" class="view-section">
+                <div class="header">
+                    <h1>⚙️ Cài Đặt Hệ Thống</h1>
+                    <p>Định danh giáo viên và quản lý dữ liệu.</p>
+                </div>
+                <div class="settings-card">
+                    <div class="form-group">
+                        <label>Tên Giáo Viên (Định danh):</label>
+                        <input type="text" id="teacherName" placeholder="Ví dụ: Mr. Thinh Nguyen">
+                    </div>
+                    <button class="btn-run" onclick="saveSettings()" style="width: 100%; margin-bottom: 20px;">Cập Nhật Thông Tin</button>
+                    <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 20px;">
+                    <button class="btn-danger" onclick="clearAllData()" style="width: 100%;">Cảnh báo: Xóa toàn bộ dữ liệu Flashcard</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="previewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Xem Flashcard</h3>
+                <button class="btn-close" onclick="closeModal()">Đóng ✖</button>
+            </div>
+            <iframe id="modalFrame" sandbox="allow-scripts" style="flex:1;"></iframe>
+        </div>
+    </div>
+
+    <div id="student-view">
+        <iframe id="studentFrame" sandbox="allow-scripts"></iframe>
+    </div>
+
     <script>
-        // 0. KHỞI ĐỘNG: KIỂM TRA CHẾ ĐỘ HỌC SINH HAY GIÁO VIÊN
+        // 0. BỘ KIỂM SOÁT LUỒNG: KIỂM TRA CHẾ ĐỘ HỌC SINH HAY GIÁO VIÊN
         const urlParams = new URLSearchParams(window.location.search);
         const sharedCode = urlParams.get('play');
 
         if (sharedCode) {
-            // NẾU LÀ HỌC SINH MỞ LINK -> Ẩn sạch giao diện quản trị, chỉ bung iframe toàn màn hình
+            // Đóng cửa ngự thư phòng, chỉ cho học sinh xem flashcard
+            document.getElementById('admin-view').style.display = 'none';
+            document.getElementById('student-view').classList.add('active');
             try {
-                const decodedCode = decodeURIComponent(atob(sharedCode));
-                document.write(`<iframe style="position:fixed; top:0; left:0; width:100vw; height:100vh; border:none; background:#f0f2f5;" srcdoc="${decodedCode.replace(/"/g, '&quot;')}"></iframe>`);
+                // Giải mã dữ liệu an toàn (Hỗ trợ tiếng Việt và kí tự đặc biệt)
+                const decodedCode = decodeURIComponent(escape(atob(sharedCode)));
+                document.getElementById('studentFrame').srcdoc = decodedCode;
             } catch (e) {
-                document.write(`<h2 style="text-align:center; margin-top:50px; font-family:sans-serif;">Link bài học bị lỗi. Xin báo lại cho thầy Thịnh!</h2>`);
+                document.getElementById('student-view').innerHTML = '<h2 style="text-align:center; padding-top:50px; font-family:sans-serif;">Link bài học bị hỏng hoặc đã hết hạn. Xin báo lại cho thầy Thịnh!</h2>';
             }
         } else {
-            // NẾU LÀ BỆ HẠ (GIÁO VIÊN) -> Tải giao diện quản trị bình thường
-            document.write(`
-                <aside class="sidebar">
-                    <div class="brand">🎓 VocabForge</div>
-                    <div class="nav-item active" onclick="switchTab('creator')">⚡ Trình Tạo Flashcard</div>
-                    <div class="nav-item" onclick="switchTab('library')">📚 Kho Từ Vựng</div>
-                    <div class="nav-item" onclick="switchTab('settings')">⚙️ Cài Đặt Lớp Học</div>
-                </aside>
+            // Chế độ dành cho Bệ hạ (Giáo viên)
+            applySettings();
+        }
 
-                <main class="main-content">
-                    <div id="view-creator" class="view-section active">
-                        <div class="header">
-                            <h1 id="welcomeText">Workspace - Tích Hợp Thẻ</h1>
-                            <p>Dán mã nguồn, xem trước và lưu trữ bộ Flashcard mới.</p>
-                        </div>
-                        <div class="workspace">
-                            <div class="panel">
-                                <div class="panel-header">
-                                    <span>💻 Code Editor</span>
-                                    <div class="panel-actions">
-                                        <button class="btn-run" onclick="renderCode()">Khởi Chạy ▶</button>
-                                        <button class="btn-save" onclick="saveFlashcard()">💾 Lưu vào Kho</button>
-                                    </div>
-                                </div>
-                                <textarea id="sourceCode" placeholder=""></textarea>
-                            </div>
-                            <div class="panel">
-                                <div class="panel-header"><span>📱 Live Preview</span></div>
-                                <iframe id="previewFrame" sandbox="allow-scripts"></iframe>
-                            </div>
-                        </div>
+        // --- CÁC HÀM XỬ LÝ DÀNH CHO GIÁO VIÊN ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+            if (tabId === 'library') loadLibrary();
+        }
+
+        function renderCode() {
+            const code = document.getElementById('sourceCode').value;
+            document.getElementById('previewFrame').srcdoc = code;
+        }
+
+        function saveFlashcard() {
+            const code = document.getElementById('sourceCode').value;
+            if (!code.trim()) { alert("Bẩm, chưa có mã nguồn nào để lưu cả!"); return; }
+            const title = prompt("Xin bệ hạ ban tên cho bộ Flashcard này:", "Từ Vựng Unit Mới");
+            if (!title) return;
+
+            let library = JSON.parse(localStorage.getItem('vocabLibrary')) || [];
+            library.push({ id: Date.now(), title: title, code: code, date: new Date().toLocaleDateString('vi-VN') });
+            localStorage.setItem('vocabLibrary', JSON.stringify(library));
+            alert("Đã cất vào Kho Từ Vựng an toàn!");
+            document.getElementById('sourceCode').value = ''; 
+            document.getElementById('previewFrame').srcdoc = '';
+        }
+
+        function loadLibrary() {
+            const container = document.getElementById('libraryContainer');
+            const library = JSON.parse(localStorage.getItem('vocabLibrary')) || [];
+            if (library.length === 0) {
+                container.innerHTML = "<p style='color: #888;'>Kho hiện tại trống rỗng. Xin bệ hạ tạo thêm!</p>"; return;
+            }
+            container.innerHTML = library.map(item => `
+                <div class="lib-card">
+                    <div>
+                        <h3>${item.title}</h3>
+                        <div class="date">Ngày tạo: ${item.date}</div>
                     </div>
-
-                    <div id="view-library" class="view-section">
-                        <div class="header">
-                            <h1>📚 Kho Từ Vựng Của Bệ Hạ</h1>
-                            <p>Quản lý các bộ Flashcard đã được lưu trữ.</p>
-                        </div>
-                        <div class="library-grid" id="libraryContainer"></div>
-                    </div>
-
-                    <div id="view-settings" class="view-section">
-                        <div class="header">
-                            <h1>⚙️ Cài Đặt Hệ Thống</h1>
-                            <p>Định danh giáo viên và quản lý dữ liệu.</p>
-                        </div>
-                        <div class="settings-card">
-                            <div class="form-group">
-                                <label>Tên Giáo Viên (Định danh):</label>
-                                <input type="text" id="teacherName" placeholder="Ví dụ: Mr. Thinh Nguyen">
-                            </div>
-                            <button class="btn-run" onclick="saveSettings()" style="width: 100%; margin-bottom: 20px;">Cập Nhật Thông Tin</button>
-                            <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 20px;">
-                            <button class="btn-danger" onclick="clearAllData()" style="width: 100%;">Cảnh báo: Xóa toàn bộ dữ liệu Flashcard</button>
-                        </div>
-                    </div>
-                </main>
-
-                <div class="modal" id="previewModal">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3 id="modalTitle">Xem Flashcard</h3>
-                            <button class="btn-close" onclick="closeModal()">Đóng ✖</button>
-                        </div>
-                        <iframe id="modalFrame" sandbox="allow-scripts" style="flex:1;"></iframe>
+                    <div class="lib-actions">
+                        <button class="btn-run" onclick="viewCard(${item.id})">Mở</button>
+                        <button class="btn-save" onclick="copyShareLink(${item.id})">🔗 Copy Link</button>
+                        <button class="btn-danger" onclick="deleteCard(${item.id})">Xóa</button>
                     </div>
                 </div>
-            `);
+            `).join('');
+        }
 
-            // --- CÁC HÀM XỬ LÝ DÀNH CHO GIÁO VIÊN ---
-            window.switchTab = function(tabId) {
-                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-                document.getElementById('view-' + tabId).classList.add('active');
-                event.currentTarget.classList.add('active');
-                if (tabId === 'library') loadLibrary();
-            };
+        function viewCard(id) {
+            const library = JSON.parse(localStorage.getItem('vocabLibrary')) || [];
+            const card = library.find(c => c.id === id);
+            if (card) {
+                document.getElementById('modalTitle').innerText = card.title;
+                document.getElementById('modalFrame').srcdoc = card.code;
+                document.getElementById('previewModal').classList.add('active');
+            }
+        }
 
-            window.renderCode = function() {
-                const code = document.getElementById('sourceCode').value;
-                document.getElementById('previewFrame').srcdoc = code;
-            };
+        function closeModal() {
+            document.getElementById('previewModal').classList.remove('active');
+            document.getElementById('modalFrame').srcdoc = '';
+        }
 
-            window.saveFlashcard = function() {
-                const code = document.getElementById('sourceCode').value;
-                if (!code.trim()) { alert("Chưa có mã nguồn!"); return; }
-                const title = prompt("Tên bộ Flashcard:", "Từ Vựng Unit Mới");
-                if (!title) return;
-
+        function deleteCard(id) {
+            if (confirm("Bệ hạ có chắc chắn muốn xóa bộ này vĩnh viễn không?")) {
                 let library = JSON.parse(localStorage.getItem('vocabLibrary')) || [];
-                library.push({ id: Date.now(), title: title, code: code, date: new Date().toLocaleDateString('vi-VN') });
+                library = library.filter(c => c.id !== id);
                 localStorage.setItem('vocabLibrary', JSON.stringify(library));
-                alert("Đã cất vào Kho Từ Vựng!");
-                document.getElementById('sourceCode').value = ''; 
-                document.getElementById('previewFrame').srcdoc = '';
-            };
+                loadLibrary(); 
+            }
+        }
 
-            window.loadLibrary = function() {
-                const container = document.getElementById('libraryContainer');
-                const library = JSON.parse(localStorage.getItem('vocabLibrary')) || [];
-                if (library.length === 0) {
-                    container.innerHTML = "<p style='color: #888;'>Kho hiện tại trống rỗng.</p>"; return;
-                }
-                container.innerHTML = library.map(item => `
-                    <div class="lib-card">
-                        <div>
-                            <h3>${item.title}</h3>
-                            <div class="date">Ngày tạo: ${item.date}</div>
-                        </div>
-                        <div class="lib-actions">
-                            <button class="btn-run" onclick="viewCard(${item.id})">Mở</button>
-                            <button class="btn-save" onclick="copyShareLink(${item.id})">🔗 Copy Link</button>
-                            <button class="btn-danger" onclick="deleteCard(${item.id})">Xóa</button>
-                        </div>
-                    </div>
-                `).join('');
-            };
+        function copyShareLink(id) {
+            const library = JSON.parse(localStorage.getItem('vocabLibrary')) || [];
+            const card = library.find(c => c.id === id);
+            if (card) {
+                // Thuật toán nén mã an toàn để không bị vỡ link
+                const encodedCode = btoa(unescape(encodeURIComponent(card.code)));
+                const baseUrl = window.location.href.split('?')[0]; 
+                const shareUrl = `${baseUrl}?play=${encodedCode}`;
+                
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert("Đã chép link! Bệ hạ cứ việc dán thẳng vào Zalo nhóm lớp, học trò bấm vào là dùng được ngay.");
+                }).catch(() => {
+                    alert("Trình duyệt chặn quyền tự động sao chép. Xin bệ hạ kiểm tra lại!");
+                });
+            }
+        }
 
-            window.viewCard = function(id) {
-                const library = JSON.parse(localStorage.getItem('vocabLibrary')) || [];
-                const card = library.find(c => c.id === id);
-                if (card) {
-                    document.getElementById('modalTitle').innerText = card.title;
-                    document.getElementById('modalFrame').srcdoc = card.code;
-                    document.getElementById('previewModal').classList.add('active');
-                }
-            };
-
-            window.closeModal = function() {
-                document.getElementById('previewModal').classList.remove('active');
-                document.getElementById('modalFrame').srcdoc = '';
-            };
-
-            window.deleteCard = function(id) {
-                if (confirm("Xóa bộ này vĩnh viễn?")) {
-                    let library = JSON.parse(localStorage.getItem('vocabLibrary')) || [];
-                    library = library.filter(c => c.id !== id);
-                    localStorage.setItem('vocabLibrary', JSON.stringify(library));
-                    loadLibrary(); 
-                }
-            };
-
-            // HÀM SAO CHÉP LINK CHO HỌC SINH
-            window.copyShareLink = function(id) {
-                const library = JSON.parse(localStorage.getItem('vocabLibrary')) || [];
-                const card = library.find(c => c.id === id);
-                if (card) {
-                    const encodedCode = btoa(encodeURIComponent(card.code));
-                    const baseUrl = window.location.href.split('?')[0]; // Lấy link gốc (bỏ tham số cũ nếu có)
-                    const shareUrl = \`\${baseUrl}?play=\${encodedCode}\`;
-                    
-                    navigator.clipboard.writeText(shareUrl).then(() => {
-                        alert("Đã chép link! Bệ hạ dán vào nhóm lớp để học trò bấm vào là học ngay.");
-                    }).catch(() => {
-                        alert("Bị chặn quyền sao chép. Hãy thử lại!");
-                    });
-                }
-            };
-
-            window.saveSettings = function() {
-                localStorage.setItem('teacherName', document.getElementById('teacherName').value);
-                applySettings();
-                alert("Đã cập nhật tên!");
-            };
-
-            window.clearAllData = function() {
-                if (confirm("Lưu ý: Thiêu rụi toàn bộ Kho Từ Vựng?")) {
-                    localStorage.removeItem('vocabLibrary');
-                    alert("Đã dọn sạch!");
-                    loadLibrary();
-                }
-            };
-
-            window.applySettings = function() {
-                const name = localStorage.getItem('teacherName');
-                if (name) {
-                    document.getElementById('teacherName').value = name;
-                    document.getElementById('welcomeText').innerText = \`Workspace của \${name}\`;
-                }
-            };
-
+        function saveSettings() {
+            localStorage.setItem('teacherName', document.getElementById('teacherName').value);
             applySettings();
+            alert("Thông tin của bệ hạ đã được cập nhật!");
+        }
+
+        function clearAllData() {
+            if (confirm("Lưu ý: Hành động này sẽ thiêu rụi toàn bộ Kho Từ Vựng. Bệ hạ có chắc chắn?")) {
+                localStorage.removeItem('vocabLibrary');
+                alert("Đã dọn sạch kho dữ liệu!");
+                loadLibrary();
+            }
+        }
+
+        function applySettings() {
+            const name = localStorage.getItem('teacherName');
+            if (name) {
+                document.getElementById('teacherName').value = name;
+                document.getElementById('welcomeText').innerText = `Workspace của ${name}`;
+            }
         }
     </script>
 </body>
