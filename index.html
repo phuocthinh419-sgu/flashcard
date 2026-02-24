@@ -352,7 +352,7 @@
             spinner.style.display = 'block';
 
             // KIỂM TRA LINK RỖNG MỚI BÁO LỖI
-            if (!SHEET_LINK || SHEET_LINK === '' || SHEET_LINK === 'DÁN_ĐƯỜNG_LINK_VÀO_ĐÂY') {
+            if (!SHEET_LINK || SHEET_LINK === '' || SHEET_LINK === 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing') {
                 spinner.style.display = 'none';
                 container.innerHTML = "<p style='color: #d50000; padding: 20px;'>⚠️ Bệ hạ chưa dán Link Google Sheets vào mã nguồn!</p>";
                 return;
