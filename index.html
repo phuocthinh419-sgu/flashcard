@@ -294,7 +294,7 @@
             const spinner = document.getElementById('loadingSpinner');
             container.innerHTML = ''; spinner.style.display = 'block';
 
-            if (!SHEET_LINK || SHEET_LINK.includes('DÁN_ĐƯỜNG_LINK')) {
+            if (!SHEET_LINK || SHEET_LINK.includes('https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing')) {
                 spinner.style.display = 'none';
                 container.innerHTML = "<p style='color: #d50000; padding: 20px;'>⚠️ Bệ hạ chưa dán Link Google Sheets!</p>";
                 return;
