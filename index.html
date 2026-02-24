@@ -2,108 +2,136 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VocabForge | Workspace</title>
-    <meta name="theme-color" content="#1a237e">
     <style>
-        :root { --primary: #1a237e; --secondary: #2962ff; --success: #00c853; --danger: #d50000; --bg-color: #f0f2f5; --text-main: #333; --sidebar-w: 250px; }
+        :root {
+            --primary: #1a237e; --secondary: #2962ff; --success: #00c853; --danger: #d50000;
+            --bg-color: #f0f2f5; --text-main: #333; --sidebar-w: 250px;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { display: flex; height: 100vh; background-color: var(--bg-color); color: var(--text-main); overflow: hidden; }
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; opacity: 0; transition: opacity 0.3s; }
-        .menu-btn { display: none; font-size: 24px; cursor: pointer; background: white; border: 1px solid #ccc; border-radius: 6px; padding: 5px 15px; color: var(--primary); margin-bottom: 15px; width: fit-content; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
-        .btn-close-sidebar { display: none; background: none; border: none; font-size: 20px; cursor: pointer; color: #555; }
-        .sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid #e0e0e0; padding: 20px; display: flex; flex-direction: column; z-index: 1001; transition: transform 0.3s ease; }
-        .brand { font-size: 24px; font-weight: bold; color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: center;}
+        
+        .sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid #e0e0e0; padding: 20px; display: flex; flex-direction: column; }
+        .brand { font-size: 24px; font-weight: bold; color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; text-align: center;}
+        
         .user-badge { background: #e8eaf6; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 20px; font-weight: bold; color: var(--primary); border: 2px dashed var(--secondary); }
         .badge-student { background: #e0f2f1; color: #00695c; border-color: #00897b; }
-        .nav-item { padding: 12px 15px; margin-bottom: 10px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: 0.2s; color: #555; display: flex; align-items: center;}
+
+        .nav-item { padding: 12px 15px; margin-bottom: 10px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: 0.2s; color: #555; }
         .nav-item:hover, .nav-item.active { background: #e8eaf6; color: var(--primary); }
-        .main-content { flex: 1; display: flex; flex-direction: column; padding: 20px 30px; overflow-y: auto; width: 100%; }
-        .header { margin-bottom: 25px; } .header h1 { font-size: 28px; color: var(--primary); } .header p { color: #666; margin-top: 5px; }
-        .view-section { display: none; flex-direction: column; height: 100%; } .view-section.active { display: flex; }
+        
+        .main-content { flex: 1; display: flex; flex-direction: column; padding: 20px 30px; overflow-y: auto; }
+        .header { margin-bottom: 25px; }
+        .header h1 { font-size: 28px; color: var(--primary); }
+        .header p { color: #666; margin-top: 5px; }
+        
+        .view-section { display: none; flex-direction: column; height: 100%; }
+        .view-section.active { display: flex; }
+
+        /* Workspace Editor */
         .workspace { display: flex; gap: 20px; flex: 1; min-height: 0; }
         .panel { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; }
         .panel-header { background: #fafafa; padding: 15px 20px; border-bottom: 1px solid #eee; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .panel-actions { display: flex; gap: 10px; }
         textarea { flex: 1; width: 100%; border: none; padding: 20px; font-family: 'Consolas', monospace; font-size: 14px; color: #333; resize: none; outline: none; background: #fafafa; }
+        
+        /* Buttons */
         button { border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; color: white; }
         .btn-run { background: var(--secondary); } .btn-run:hover { background: #1c44b2; }
         .btn-save { background: var(--success); } .btn-save:hover { background: #009624; }
-        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); } .btn-outline:hover { background: var(--primary); color: white; }
+        .btn-danger { background: var(--danger); } .btn-danger:hover { background: #9b0000; }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background: var(--primary); color: white; }
+        
         iframe { width: 100%; height: 100%; border: none; background: #fff; }
-        .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; padding-bottom: 30px;}
-        .lib-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; height: 150px; border-left: 5px solid var(--secondary);}
-        .lib-card h3 { color: var(--primary); margin-bottom: 10px; font-size: 18px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .lib-actions { display: flex; gap: 8px; } .lib-actions button { flex: 1; padding: 10px 5px; font-size: 14px; }
-        .settings-card { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-width: 500px; margin: 0 auto 20px auto; width: 100%;}
+
+        /* Library */
+        .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; }
+        .lib-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; height: 150px;}
+        .lib-card h3 { color: var(--primary); margin-bottom: 10px; font-size: 18px; }
+        .lib-actions { display: flex; gap: 8px; }
+        .lib-actions button { flex: 1; padding: 10px 5px; font-size: 14px; }
+        .cloud-status { padding: 15px; background: #e3f2fd; color: #1565c0; border-radius: 8px; margin-bottom: 20px; font-weight: bold; border: 1px solid #90caf9; }
+
+        /* Settings Dashboard */
+        .settings-card { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-width: 500px; }
         .settings-card h3 { margin-bottom: 15px; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px;}
-        .form-group { margin-bottom: 15px; } .form-group label { display: block; font-weight: bold; margin-bottom: 8px; color: #555; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 8px; color: #555; }
         .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
-        .role-switch { display: flex; gap: 10px; margin-bottom: 20px; } .role-switch button { flex: 1; padding: 12px; font-size: 16px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; padding: 15px; }
+        .role-switch { display: flex; gap: 10px; margin-bottom: 20px; }
+        .role-switch button { flex: 1; padding: 12px; font-size: 16px; }
+
+        /* Modal Preview */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
         .modal.active { display: flex; }
-        .modal-content { background: white; width: 100%; max-width: 900px; height: 85vh; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+        .modal-content { background: white; width: 95%; max-width: 900px; height: 85vh; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
         .modal-header { padding: 15px 20px; background: #fafafa; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
         .btn-close { background: #ccc; color: #333; font-size: 16px; padding: 8px 20px;}
+        
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @media (max-width: 768px) {
-            .sidebar { position: fixed; transform: translateX(-100%); height: 100%; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
-            .sidebar.show { transform: translateX(0); }
-            .btn-close-sidebar { display: block; } .menu-btn { display: block; } .main-content { padding: 15px; }
-            .workspace { flex-direction: column; display: block;} .panel { min-height: 400px; margin-bottom: 20px;} .library-grid { grid-template-columns: 1fr; }
-        }
     </style>
 </head>
 <body>
-    <div id="sidebarOverlay" class="overlay" onclick="toggleSidebar()"></div>
-    <aside class="sidebar" id="sidebar">
-        <div class="brand"><span>🎓 VocabForge</span><button class="btn-close-sidebar" onclick="toggleSidebar()">✖</button></div>
-        <div id="userBadge" class="user-badge">👨‍🏫 Giáo Viên</div>
+
+    <aside class="sidebar">
+        <div class="brand">🎓 VocabForge</div>
+        <div id="userBadge" class="user-badge">👨‍🏫 Chế độ: Giáo Viên</div>
         <div class="nav-item" id="nav-creator" onclick="switchTab('creator')">⚡ Khung Soạn Thảo</div>
         <div class="nav-item active" id="nav-library" onclick="switchTab('library')">☁️ Kho Đám Mây</div>
         <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">⚙️ Cài Đặt Hệ Thống</div>
     </aside>
 
     <main class="main-content">
-        <button class="menu-btn" onclick="toggleSidebar()">☰ Menu</button>
         <div id="view-creator" class="view-section">
-            <div class="header"><h1>Workspace - Khung Soạn Thảo</h1></div>
+            <div class="header">
+                <h1>Workspace - Khung Soạn Thảo</h1>
+                <p>Nơi bệ hạ dán mã để chạy thử. Thử xong ưng ý thì copy dán vào cột B bên Google Sheets nhé!</p>
+            </div>
             <div class="workspace">
                 <div class="panel">
-                    <div class="panel-header"><span>💻 HTML/Tailwind Editor</span><button class="btn-run" onclick="renderCode()">Chạy Thử ▶</button></div>
-                    <textarea id="sourceCode" placeholder="Dán mã vào đây..."></textarea>
+                    <div class="panel-header">
+                        <span>💻 HTML/Tailwind Editor</span>
+                        <button class="btn-run" onclick="renderCode()">Chạy Thử ▶</button>
+                    </div>
+                    <textarea id="sourceCode" placeholder=""></textarea>
                 </div>
-                <div class="panel"><div class="panel-header"><span>📱 Live Preview</span></div><iframe id="previewFrame" sandbox="allow-scripts"></iframe></div>
+                <div class="panel">
+                    <div class="panel-header"><span>📱 Live Preview</span></div>
+                    <iframe id="previewFrame" sandbox="allow-scripts"></iframe>
+                </div>
             </div>
         </div>
 
         <div id="view-library" class="view-section active">
-            <div class="header"><h1>☁️ Kho Bài Học</h1></div>
-            <div id="loadingSpinner" class="loader" style="display: none;"></div>
+            <div class="header">
+                <h1 id="libraryTitle">☁️ Kho Bài Học (Đồng bộ Google Sheets)</h1>
+                <p>Dữ liệu được cập nhật tự động từ "Ngự Thư Phòng".</p>
+            </div>
+            <div id="cloudMessage" class="cloud-status" style="display: none;">
+                💡 Chế độ Giáo Viên: Bệ hạ vui lòng mở file Google Sheets để thêm/sửa/xóa bài học. Trang web này sẽ tự động hiển thị kết quả.
+            </div>
+            <div id="loadingSpinner" class="loader"></div>
             <div class="library-grid" id="libraryContainer"></div>
         </div>
 
         <div id="view-settings" class="view-section">
-            <div class="header"><h1>⚙️ Cài Đặt Hệ Thống</h1></div>
-            
-            <div class="settings-card" id="dbSetupGroup">
-                <h3>🔗 Kết Nối Google Sheets</h3>
-                <p style="margin-bottom: 15px; color: #666; font-size: 14px;">Bệ hạ hãy dán link Google Sheets của mình vào đây.</p>
-                <div class="form-group">
-                    <input type="text" id="sheetLinkInput" placeholder="Dán link Google Sheets vào đây...">
-                    <button class="btn-save" onclick="saveSheetLink()" style="width: 100%; margin-top: 10px;">💾 Lưu Link & Tải Dữ Liệu</button>
-                </div>
+            <div class="header">
+                <h1>⚙️ Phân Quyền Không Gian</h1>
+                <p>Chuyển đổi góc nhìn giữa Thầy và Trò.</p>
             </div>
-
             <div class="settings-card">
                 <h3>🎭 Chuyển Đổi Vai Trò</h3>
+                <p style="margin-bottom: 15px; color: #666; font-size: 14px;">Chuyển sang "Học Sinh" để ẩn công cụ chỉnh sửa.</p>
                 <div class="role-switch">
                     <button class="btn-run" onclick="changeRole('teacher')">👨‍🏫 Giáo Viên</button>
                     <button class="btn-save" onclick="changeRole('student')">👨‍🎓 Học Sinh</button>
                 </div>
                 <div class="form-group" id="pinSetupGroup">
                     <label>Thiết lập mã PIN Giáo Viên:</label>
-                    <input type="password" id="teacherPin" placeholder="Bỏ trống nếu không cần...">
+                    <input type="password" id="teacherPin" placeholder="Để trống nếu không cần bảo mật...">
                     <button class="btn-outline" onclick="savePin()" style="width: 100%; margin-top: 10px;">Lưu mã PIN</button>
                 </div>
             </div>
@@ -112,144 +140,187 @@
 
     <div class="modal" id="previewModal">
         <div class="modal-content">
-            <div class="modal-header"><h3 id="modalTitle">Xem Flashcard</h3><button class="btn-close" onclick="closeModal()">Đóng ✖</button></div>
+            <div class="modal-header">
+                <h3 id="modalTitle">Xem Flashcard</h3>
+                <button class="btn-close" onclick="closeModal()">Đóng ✖</button>
+            </div>
             <iframe id="modalFrame" sandbox="allow-scripts" style="flex:1;"></iframe>
         </div>
     </div>
 
     <script>
+        // ==========================================
+        // 🚨 THẦN ĐÃ LẮP SẴN ĐƯỜNG LINK THẬT CỦA BỆ HẠ VÀO ĐÂY, BỆ HẠ KHÔNG CẦN SỬA GÌ NỮA 🚨
+        const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarlpxCg/edit';
+        // ==========================================
+
         let cloudData = []; 
 
-        // Khởi tạo giao diện
-        function initApp() {
-            document.getElementById('sheetLinkInput').value = localStorage.getItem('vocabSheetLink') || '';
-            applyRole();
-        }
-
-        function toggleSidebar() { 
-            document.getElementById('sidebar').classList.toggle('show'); 
-            document.getElementById('sidebarOverlay').style.display = document.getElementById('sidebar').classList.contains('show') ? 'block' : 'none'; 
-            document.getElementById('sidebarOverlay').style.opacity = document.getElementById('sidebar').classList.contains('show') ? '1' : '0'; 
-        }
-        
         function applyRole() {
-            const role = localStorage.getItem('userRole') || 'teacher'; 
-            document.getElementById('userBadge').className = role === 'student' ? 'user-badge badge-student' : 'user-badge';
-            document.getElementById('userBadge').innerText = role === 'student' ? '👨‍🎓 Học Sinh' : '👨‍🏫 Giáo Viên';
-            
-            document.getElementById('nav-creator').style.display = role === 'student' ? 'none' : 'flex';
-            document.getElementById('nav-settings').style.display = role === 'student' ? 'none' : 'flex';
-            document.getElementById('dbSetupGroup').style.display = role === 'student' ? 'none' : 'block';
-            document.getElementById('pinSetupGroup').style.display = role === 'student' ? 'none' : 'block';
+            const role = localStorage.getItem('userRole') || 'student'; 
+            const badge = document.getElementById('userBadge');
+            const navCreator = document.getElementById('nav-creator');
+            const pinGroup = document.getElementById('pinSetupGroup');
+            const cloudMsg = document.getElementById('cloudMessage');
 
-            if (role === 'student' && !document.getElementById('view-library').classList.contains('active')) {
-                switchTab('library');
-            } else if (document.getElementById('view-library').classList.contains('active')) {
-                fetchFromCloud();
+            if (role === 'student') {
+                badge.className = 'user-badge badge-student';
+                badge.innerText = '👨‍🎓 Chế độ: Học Sinh';
+                navCreator.style.display = 'none'; 
+                pinGroup.style.display = 'none'; 
+                cloudMsg.style.display = 'none';
+                
+                if (document.getElementById('view-creator').classList.contains('active')) {
+                    switchTab('library');
+                }
+            } else {
+                badge.className = 'user-badge';
+                badge.innerText = '👨‍🏫 Chế độ: Giáo Viên';
+                navCreator.style.display = 'block';
+                pinGroup.style.display = 'block';
+                cloudMsg.style.display = 'block';
             }
         }
 
-        function changeRole(newRole) { 
-            if (newRole === 'teacher') {
+        function changeRole(newRole) {
+            const currentRole = localStorage.getItem('userRole') || 'student';
+            if (currentRole === 'student' && newRole === 'teacher') {
                 const savedPin = localStorage.getItem('teacherPin');
-                if (savedPin && prompt("Nhập mã PIN Giáo Viên:") !== savedPin) {
-                    alert("❌ Sai mã PIN!"); return;
+                if (savedPin) {
+                    const enteredPin = prompt("Vui lòng nhập mã PIN:");
+                    if (enteredPin !== savedPin) {
+                        alert("❌ Sai mã PIN! Không thể vào ngự thư phòng!");
+                        return;
+                    }
                 }
             }
-            localStorage.setItem('userRole', newRole); 
-            applyRole(); 
-            alert(newRole === 'teacher' ? "Đã vào chế độ Giáo Viên!" : "Đã vào chế độ Học Sinh!");
-        }
-
-        function savePin() {
-            localStorage.setItem('teacherPin', document.getElementById('teacherPin').value);
-            alert("Đã lưu mã PIN!"); document.getElementById('teacherPin').value = '';
-        }
-
-        function saveSheetLink() {
-            const link = document.getElementById('sheetLinkInput').value.trim();
-            if (!link) return alert("Bệ hạ chưa nhập link!");
-            localStorage.setItem('vocabSheetLink', link);
-            alert("Đã lưu kết nối! Bắt đầu tải dữ liệu...");
+            localStorage.setItem('userRole', newRole);
+            applyRole();
+            alert(newRole === 'teacher' ? "Đã mở khóa quyền Giáo Viên!" : "Đã chuyển sang góc độ Học Sinh!");
             switchTab('library');
         }
 
+        function savePin() {
+            const pin = document.getElementById('teacherPin').value;
+            localStorage.setItem('teacherPin', pin);
+            alert("Đã lưu mã PIN an toàn!");
+            document.getElementById('teacherPin').value = '';
+        }
+
         function switchTab(tabId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.view-section').forEach(function(el) { el.classList.remove('active'); });
+            document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+            
             document.getElementById('view-' + tabId).classList.add('active');
+            document.getElementById('nav-' + tabId).classList.add('active');
             
-            const navItem = document.getElementById('nav-' + tabId);
-            if(navItem) navItem.classList.add('active');
-            
-            if (window.innerWidth <= 768) toggleSidebar();
             if (tabId === 'library') fetchFromCloud();
         }
 
-        function renderCode() { document.getElementById('previewFrame').srcdoc = document.getElementById('sourceCode').value; }
+        function renderCode() {
+            document.getElementById('previewFrame').srcdoc = document.getElementById('sourceCode').value;
+        }
 
+        // BỘ GIẢI MÃ NÂNG CẤP VÀ TỰ ĐỘNG TÁCH ID TỪ LINK DÀI
         async function fetchFromCloud() {
             const container = document.getElementById('libraryContainer');
             const spinner = document.getElementById('loadingSpinner');
-            const savedLink = localStorage.getItem('vocabSheetLink');
-
-            container.innerHTML = ''; 
+            
+            container.innerHTML = '';
             spinner.style.display = 'block';
 
-            if (!savedLink) {
+            if (SHEET_LINK === 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing') {
                 spinner.style.display = 'none';
-                container.innerHTML = `<div style="padding: 20px; text-align: center; background: #ffebee; border-radius: 8px; color: #d50000; font-weight: bold; border: 1px solid #ffcdd2;">
-                    ⚠️ Bệ hạ chưa kết nối Google Sheets!<br><br>
-                    <button class="btn-run" onclick="switchTab('settings')">Nhấp vào đây để qua Cài Đặt và dán Link</button>
-                </div>`;
+                container.innerHTML = "<p style='color: #d50000; padding: 20px;'>⚠️ Bệ hạ chưa dán Link Google Sheets vào mã nguồn!</p>";
                 return;
             }
 
-            let sheetId = savedLink.includes('/d/') ? savedLink.split('/d/')[1].split('/')[0] : savedLink;
+            let sheetId = SHEET_LINK;
+            if (sheetId.includes('/d/')) {
+                sheetId = sheetId.split('/d/')[1].split('/')[0];
+            }
+
             const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
 
             try {
-                const response = await fetch(url, { cache: "no-store" });
-                if (response.status === 404) throw new Error("Link không đúng hoặc bị thiếu chữ. Bệ hạ vui lòng qua mục Cài Đặt dán lại.");
-                if (!response.ok) throw new Error("File bị khóa. Hãy đảm bảo đã chia sẻ 'Bất kỳ ai có liên kết'.");
-                
+                const response = await fetch(url);
+                if (response.status === 404) {
+                    throw new Error("Không tìm thấy file Google Sheets. Có vẻ đường link bị thiếu chữ rồi!");
+                }
+                if (!response.ok) {
+                    throw new Error("Bị chặn truy cập. Có thể file chưa được mở khóa 'Bất kỳ ai có đường liên kết'.");
+                }
+
                 const text = await response.text();
+                
                 const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-                if (!jsonString) throw new Error("File trống.");
+                if (!jsonString) throw new Error("File trống hoặc mã HTML chưa được dán vào ô B2.");
 
                 const data = JSON.parse(jsonString);
+                const rows = data.table.rows;
                 cloudData = [];
-                for (let i = 1; i < data.table.rows.length; i++) {
-                    const r = data.table.rows[i];
-                    if (r && r.c && r.c[0] && r.c[1] && r.c[1].v) {
-                        cloudData.push({ id: i, title: r.c[0].v || "Bài học", code: r.c[1].v });
+                
+                for (let i = 1; i < rows.length; i++) {
+                    if (rows[i] && rows[i].c && rows[i].c[0] && rows[i].c[1] && rows[i].c[1].v) {
+                        cloudData.push({
+                            id: i,
+                            title: rows[i].c[0].v || "Bài học không tên",
+                            code: rows[i].c[1].v
+                        });
                     }
                 }
+
                 spinner.style.display = 'none';
                 renderLibrary();
+
             } catch (error) {
                 spinner.style.display = 'none';
-                container.innerHTML = `<p style='color: #d50000; padding: 20px;'>❌ <b>Lỗi:</b> ${error.message}</p>`;
+                let errMsg = error.message;
+                if (error.name === 'TypeError') {
+                    errMsg = "Trình duyệt chặn kết nối. Xin bệ hạ kiểm tra lại quyền Chia sẻ của file Sheets.";
+                }
+                container.innerHTML = `<p style='color: #d50000; padding: 20px; line-height: 1.6;'>❌ <b>Hệ thống báo lỗi:</b> ${errMsg}</p>`;
             }
         }
 
         function renderLibrary() {
             const container = document.getElementById('libraryContainer');
-            if (cloudData.length === 0) return container.innerHTML = "<p style='color: #888; padding: 20px;'>Kho bài học đang trống.</p>"; 
-            container.innerHTML = cloudData.map(item => `<div class="lib-card"><div><h3>${item.title}</h3></div><div class="lib-actions"><button class="btn-run" onclick="viewCard(${item.id})">▶ Mở Học Ngay</button></div></div>`).join('');
+            if (cloudData.length === 0) {
+                container.innerHTML = "<p style='color: #888; padding: 20px;'>Kho bài học đang trống. Bệ hạ hãy vào Google Sheets gõ Tên bài học (Cột A) và dán Mã Code (Cột B).</p>"; 
+                return;
+            }
+            
+            let htmlContent = '';
+            for (let i = 0; i < cloudData.length; i++) {
+                const item = cloudData[i];
+                htmlContent += '<div class="lib-card">' +
+                    '<div>' +
+                        '<h3>' + item.title + '</h3>' +
+                    '</div>' +
+                    '<div class="lib-actions">' +
+                        '<button class="btn-run" onclick="viewCard(' + item.id + ')" style="font-size: 16px;">▶ Mở Học Ngay</button>' +
+                    '</div></div>';
+            }
+            container.innerHTML = htmlContent;
         }
 
         function viewCard(id) {
-            const card = cloudData.find(c => c.id === id);
+            let card = null;
+            for(let i=0; i<cloudData.length; i++) { if(cloudData[i].id === id) { card = cloudData[i]; break; } }
             if (card) {
                 document.getElementById('modalTitle').innerText = card.title;
                 document.getElementById('modalFrame').srcdoc = card.code;
                 document.getElementById('previewModal').classList.add('active');
             }
         }
-        function closeModal() { document.getElementById('previewModal').classList.remove('active'); document.getElementById('modalFrame').srcdoc = ''; }
-        
-        window.onload = initApp;
+
+        function closeModal() {
+            document.getElementById('previewModal').classList.remove('active');
+            document.getElementById('modalFrame').srcdoc = '';
+        }
+
+        applyRole();
+        fetchFromCloud();
     </script>
 </body>
 </html>
