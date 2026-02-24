@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VocabForge | Workspace</title>
+    
     <meta name="theme-color" content="#1a237e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3048/3048122.png">
+    <link rel="manifest" href="./manifest.json">
+    
     <style>
         :root { --primary: #1a237e; --secondary: #2962ff; --success: #00c853; --danger: #d50000; --bg-color: #f0f2f5; --text-main: #333; --sidebar-w: 250px; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -18,6 +24,8 @@
         .badge-student { background: #e0f2f1; color: #00695c; border-color: #00897b; }
         .nav-item { padding: 12px 15px; margin-bottom: 10px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: 0.2s; color: #555; display: flex; align-items: center;}
         .nav-item:hover, .nav-item.active { background: #e8eaf6; color: var(--primary); }
+        .nav-item.install-btn { background: var(--secondary); color: white; margin-top: auto; justify-content: center; font-weight: bold; box-shadow: 0 4px 6px rgba(41,98,255,0.3);}
+        .nav-item.install-btn:hover { background: #1c44b2; }
         .main-content { flex: 1; display: flex; flex-direction: column; padding: 20px 30px; overflow-y: auto; width: 100%; }
         .header { margin-bottom: 25px; } .header h1 { font-size: 28px; color: var(--primary); } .header p { color: #666; margin-top: 5px; }
         .view-section { display: none; flex-direction: column; height: 100%; } .view-section.active { display: flex; }
@@ -46,6 +54,12 @@
         .btn-close { background: #ccc; color: #333; font-size: 16px; padding: 8px 20px;}
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Cửa sổ hướng dẫn cài App thủ công */
+        .install-modal-content { max-width: 400px; height: auto; text-align: center; padding: 30px 20px; }
+        .install-icon { font-size: 40px; margin-bottom: 15px; }
+        .install-step { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: left; border-left: 4px solid var(--secondary); font-size: 15px; line-height: 1.5; color: #444;}
+        
         @media (max-width: 768px) {
             .sidebar { position: fixed; transform: translateX(-100%); height: 100%; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
             .sidebar.show { transform: translateX(0); }
@@ -58,21 +72,22 @@
     <div id="sidebarOverlay" class="overlay" onclick="toggleSidebar()"></div>
     <aside class="sidebar" id="sidebar">
         <div class="brand"><span>🎓 VocabForge</span><button class="btn-close-sidebar" onclick="toggleSidebar()">✖</button></div>
-        <div id="userBadge" class="user-badge">👨‍🏫 Giáo Viên</div>
+        <div id="userBadge" class="user-badge">👨‍🏫 Chế độ: Giáo Viên</div>
         <div class="nav-item" id="nav-creator" onclick="switchTab('creator')">⚡ Khung Soạn Thảo</div>
         <div class="nav-item active" id="nav-library" onclick="switchTab('library')">☁️ Kho Đám Mây</div>
-        <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">⚙️ Cài Đặt</div>
+        <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">⚙️ Phân Quyền</div>
+        
+        <div class="nav-item install-btn" onclick="openInstallModal()">📱 Cài Đặt App</div>
     </aside>
 
     <main class="main-content">
         <button class="menu-btn" onclick="toggleSidebar()">☰ Menu</button>
-        
         <div id="view-creator" class="view-section">
             <div class="header"><h1>Workspace - Khung Soạn Thảo</h1></div>
             <div class="workspace">
                 <div class="panel">
                     <div class="panel-header"><span>💻 HTML Editor</span><button class="btn-run" onclick="renderCode()">Chạy Thử ▶</button></div>
-                    <textarea id="sourceCode" placeholder="Dán mã vào đây..."></textarea>
+                    <textarea id="sourceCode" placeholder="Dán mã bài học vào đây..."></textarea>
                 </div>
                 <div class="panel"><div class="panel-header"><span>📱 Live Preview</span></div><iframe id="previewFrame" sandbox="allow-scripts"></iframe></div>
             </div>
@@ -85,7 +100,7 @@
         </div>
 
         <div id="view-settings" class="view-section">
-            <div class="header"><h1>⚙️ Phân Quyền</h1></div>
+            <div class="header"><h1>⚙️ Cài Đặt Hệ Thống</h1></div>
             <div class="settings-card">
                 <h3>🎭 Chuyển Đổi Vai Trò</h3>
                 <div class="role-switch">
@@ -93,7 +108,7 @@
                     <button class="btn-save" onclick="changeRole('student')">👨‍🎓 Học Sinh</button>
                 </div>
                 <div class="form-group" id="pinSetupGroup">
-                    <label>Mã PIN:</label>
+                    <label>Mã PIN (Giáo viên):</label>
                     <input type="password" id="teacherPin" placeholder="Bỏ trống nếu không cần...">
                     <button class="btn-outline" onclick="savePin()" style="width: 100%; margin-top: 10px;">Lưu mã PIN</button>
                 </div>
@@ -108,15 +123,61 @@
         </div>
     </div>
 
+    <div class="modal" id="installModal">
+        <div class="modal-content install-modal-content">
+            <div class="install-icon">📱</div>
+            <h3 style="color: var(--primary); margin-bottom: 10px;">Cài đặt VocabForge</h3>
+            <p style="color: #666; font-size: 14px;">Thêm ứng dụng vào màn hình chính để học tập tiện lợi hơn.</p>
+            <div id="installAndroid" class="install-step" style="display: none;">
+                <b>Dành cho Android (Chrome/Cốc Cốc):</b><br>
+                Bấm vào biểu tượng <b>3 chấm ⋮</b> ở góc phải trình duyệt -> Chọn <b>"Thêm vào màn hình chính"</b>.
+            </div>
+            <div id="installIOS" class="install-step" style="display: none;">
+                <b>Dành cho iPhone/iPad (Safari):</b><br>
+                Bấm vào biểu tượng <b>Chia sẻ ⍐</b> ở dưới cùng -> Vuốt lên chọn <b>"Thêm vào MH chính"</b> (Add to Home Screen).
+            </div>
+            <button class="btn-run" style="width: 100%; margin-top: 15px;" onclick="closeInstallModal()">Đã hiểu</button>
+        </div>
+    </div>
+
     <script>
-        // XÓA SẠCH MỌI BỘ NHỚ ĐỆM GÂY LỖI
-        if ('caches' in window) {
-            caches.keys().then(names => {
-                for (let name of names) caches.delete(name);
+        // ==========================================
+        // 1. KÍCH HOẠT PWA SERVICE WORKER
+        // ==========================================
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Đã nạp Service Worker!'))
+                    .catch(err => console.log('Lỗi nạp SW:', err));
             });
         }
 
-        // LINK CỦA BỆ HẠ ĐÃ ĐƯỢC CHẤP NHẬN BÌNH THƯỜNG
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); 
+            deferredPrompt = e; // Giữ lại sự kiện cài đặt của trình duyệt
+        });
+
+        function openInstallModal() {
+            if (deferredPrompt) {
+                // Nếu trình duyệt (Android) hỗ trợ, hiện bảng cài đặt gốc của máy
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+            } else {
+                // Nếu dùng iOS hoặc đã cài rồi, hiện bảng hướng dẫn thủ công
+                document.getElementById('installModal').classList.add('active');
+                const isIOS = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+                document.getElementById('installIOS').style.display = isIOS ? 'block' : 'none';
+                document.getElementById('installAndroid').style.display = isIOS ? 'none' : 'block';
+            }
+            if (window.innerWidth <= 768) toggleSidebar(); 
+        }
+        function closeInstallModal() { document.getElementById('installModal').classList.remove('active'); }
+
+
+        // ==========================================
+        // 2. KẾT NỐI DỮ LIỆU GOOGLE SHEETS
+        // ==========================================
         const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing';
         let cloudData = []; 
 
@@ -138,7 +199,7 @@
         function changeRole(newRole) { 
             if (newRole === 'teacher') {
                 const savedPin = localStorage.getItem('teacherPin');
-                if (savedPin && prompt("Nhập mã PIN:") !== savedPin) return alert("❌ Sai mã PIN!");
+                if (savedPin && prompt("Nhập mã PIN Giáo Viên:") !== savedPin) return alert("❌ Sai mã PIN!");
             }
             localStorage.setItem('userRole', newRole); applyRole(); switchTab('library');
         }
@@ -165,16 +226,15 @@
             container.innerHTML = ''; spinner.style.display = 'block';
 
             let sheetId = SHEET_LINK.includes('/d/') ? SHEET_LINK.split('/d/')[1].split('/')[0] : SHEET_LINK;
-            // ÉP TẢI LẠI TỪ MÁY CHỦ BẰNG THỜI GIAN THỰC
             const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&t=${new Date().getTime()}`;
 
             try {
                 const response = await fetch(url, { cache: "no-store" });
-                if (!response.ok) throw new Error("Bị chặn truy cập. File chưa bật Chia sẻ.");
+                if (!response.ok) throw new Error("Bị chặn truy cập. File chưa bật Chia sẻ công khai.");
                 
                 const text = await response.text();
                 const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-                if (!jsonString) throw new Error("File rỗng.");
+                if (!jsonString) throw new Error("File rỗng hoặc mã HTML chưa đúng chuẩn.");
 
                 const data = JSON.parse(jsonString);
                 cloudData = [];
