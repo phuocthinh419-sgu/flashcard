@@ -207,32 +207,22 @@
         </div>
     </div>
 
-    <script>
+  <script>
         // ==========================================
-        // ĐĂNG KÝ SERVICE WORKER & BẮT SỰ KIỆN CÀI ĐẶT APP
+        // THẦN ĐÃ DÁN SẴN LINK CHUẨN XÁC CỦA BỆ HẠ VÀO ĐÂY:
+        const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing';
         // ==========================================
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Bẩm, Service Worker đã khởi chạy!'))
-                    .catch(err => console.log('Lỗi Service Worker:', err));
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
             });
         }
-
         let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); 
-            deferredPrompt = e; 
-        });
+        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
 
-        // ==========================================
-        // ĐƯỜNG LINK CỦA BỆ HẠ ĐƯỢC GIỮ NGUYÊN
-        const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing';
-        // ==========================================
-        
         let cloudData = []; 
 
-        /* --- XỬ LÝ GIAO DIỆN ĐIỆN THOẠI --- */
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
@@ -246,190 +236,106 @@
             }
         }
 
-        /* --- XỬ LÝ MODAL CÀI ĐẶT APP (ĐÃ NÂNG CẤP) --- */
         function openInstallModal() {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('Học trò đã đồng ý cài App!');
-                    }
-                    deferredPrompt = null;
-                });
+                deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
             } else {
                 document.getElementById('installModal').classList.add('active');
-                const userAgent = window.navigator.userAgent.toLowerCase();
-                const isIOS = /iphone|ipad|ipod/.test(userAgent);
-                
-                if (isIOS) {
-                    document.getElementById('installIOS').style.display = 'block';
-                    document.getElementById('installAndroid').style.display = 'none';
-                } else {
-                    document.getElementById('installAndroid').style.display = 'block';
-                    document.getElementById('installIOS').style.display = 'none';
-                }
+                const isIOS = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+                document.getElementById('installIOS').style.display = isIOS ? 'block' : 'none';
+                document.getElementById('installAndroid').style.display = isIOS ? 'none' : 'block';
             }
             if (window.innerWidth <= 768) toggleSidebar(); 
         }
         
-        function closeInstallModal() {
-            document.getElementById('installModal').classList.remove('active');
-        }
+        function closeInstallModal() { document.getElementById('installModal').classList.remove('active'); }
 
-        /* --- PHÂN QUYỀN HỆ THỐNG --- */
         function applyRole() {
             const role = localStorage.getItem('userRole') || 'student'; 
-            const badge = document.getElementById('userBadge');
-            const navCreator = document.getElementById('nav-creator');
-            const pinGroup = document.getElementById('pinSetupGroup');
-            const cloudMsg = document.getElementById('cloudMessage');
-
-            if (role === 'student') {
-                badge.className = 'user-badge badge-student';
-                badge.innerText = '👨‍🎓 Chế độ: Học Sinh';
-                navCreator.style.display = 'none'; 
-                pinGroup.style.display = 'none'; 
-                cloudMsg.style.display = 'none';
-                
-                if (document.getElementById('view-creator').classList.contains('active')) {
-                    switchTab('library');
-                }
-            } else {
-                badge.className = 'user-badge';
-                badge.innerText = '👨‍🏫 Chế độ: Giáo Viên';
-                navCreator.style.display = 'block';
-                pinGroup.style.display = 'block';
-                cloudMsg.style.display = 'block';
-            }
+            document.getElementById('userBadge').className = role === 'student' ? 'user-badge badge-student' : 'user-badge';
+            document.getElementById('userBadge').innerText = role === 'student' ? '👨‍🎓 Chế độ: Học Sinh' : '👨‍🏫 Chế độ: Giáo Viên';
+            document.getElementById('nav-creator').style.display = role === 'student' ? 'none' : 'block';
+            document.getElementById('pinSetupGroup').style.display = role === 'student' ? 'none' : 'block';
+            document.getElementById('cloudMessage').style.display = role === 'student' ? 'none' : 'block';
+            if (role === 'student' && document.getElementById('view-creator').classList.contains('active')) switchTab('library');
         }
 
         function changeRole(newRole) {
-            const currentRole = localStorage.getItem('userRole') || 'student';
-            if (currentRole === 'student' && newRole === 'teacher') {
+            if (localStorage.getItem('userRole') === 'student' && newRole === 'teacher') {
                 const savedPin = localStorage.getItem('teacherPin');
-                if (savedPin) {
-                    const enteredPin = prompt("Vui lòng nhập mã PIN:");
-                    if (enteredPin !== savedPin) {
-                        alert("❌ Sai mã PIN! Không thể vào ngự thư phòng!");
-                        return;
-                    }
-                }
+                if (savedPin && prompt("Vui lòng nhập mã PIN:") !== savedPin) return alert("❌ Sai mã PIN!");
             }
             localStorage.setItem('userRole', newRole);
             applyRole();
-            alert(newRole === 'teacher' ? "Đã mở khóa quyền Giáo Viên!" : "Đã chuyển sang góc độ Học Sinh!");
+            alert(newRole === 'teacher' ? "Đã mở khóa ngự thư phòng!" : "Đã chuyển sang góc độ Học Sinh!");
             switchTab('library');
         }
 
         function savePin() {
-            const pin = document.getElementById('teacherPin').value;
-            localStorage.setItem('teacherPin', pin);
+            localStorage.setItem('teacherPin', document.getElementById('teacherPin').value);
             alert("Đã lưu mã PIN an toàn!");
             document.getElementById('teacherPin').value = '';
         }
 
         function switchTab(tabId) {
-            document.querySelectorAll('.view-section').forEach(function(el) { el.classList.remove('active'); });
-            document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
-            
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('view-' + tabId).classList.add('active');
             document.getElementById('nav-' + tabId).classList.add('active');
-            
             if (window.innerWidth <= 768) toggleSidebar();
             if (tabId === 'library') fetchFromCloud();
         }
 
-        function renderCode() {
-            document.getElementById('previewFrame').srcdoc = document.getElementById('sourceCode').value;
-        }
+        function renderCode() { document.getElementById('previewFrame').srcdoc = document.getElementById('sourceCode').value; }
 
-        // --- ĐÁM MÂY GOOGLE SHEETS ---
         async function fetchFromCloud() {
             const container = document.getElementById('libraryContainer');
             const spinner = document.getElementById('loadingSpinner');
-            
-            container.innerHTML = '';
-            spinner.style.display = 'block';
+            container.innerHTML = ''; spinner.style.display = 'block';
 
-            // KIỂM TRA LINK RỖNG MỚI BÁO LỖI
-            if (!SHEET_LINK || SHEET_LINK === '' || SHEET_LINK === 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing') {
+            if (!SHEET_LINK || SHEET_LINK.includes('DÁN_ĐƯỜNG_LINK')) {
                 spinner.style.display = 'none';
-                container.innerHTML = "<p style='color: #d50000; padding: 20px;'>⚠️ Bệ hạ chưa dán Link Google Sheets vào mã nguồn!</p>";
+                container.innerHTML = "<p style='color: #d50000; padding: 20px;'>⚠️ Bệ hạ chưa dán Link Google Sheets!</p>";
                 return;
             }
 
-            let sheetId = SHEET_LINK;
-            if (sheetId.includes('/d/')) {
-                sheetId = sheetId.split('/d/')[1].split('/')[0];
-            }
-
+            let sheetId = SHEET_LINK.includes('/d/') ? SHEET_LINK.split('/d/')[1].split('/')[0] : SHEET_LINK;
             const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
 
             try {
                 const response = await fetch(url);
-                if (response.status === 404) {
-                    throw new Error("Không tìm thấy file Google Sheets. Xin bệ hạ kiểm tra lại đường link xem có bị copy thiếu chữ nào không.");
-                }
-                if (!response.ok) {
-                    throw new Error("Bị chặn truy cập. Có thể file chưa được mở khóa 'Bất kỳ ai có đường liên kết'.");
-                }
-
-                const text = await response.text();
+                if (response.status === 404) throw new Error("Không tìm thấy file Google Sheets. Đường link bị sai.");
+                if (!response.ok) throw new Error("Bị chặn truy cập. File chưa bật Chia sẻ 'Bất kỳ ai có liên kết'.");
                 
+                const text = await response.text();
                 const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
                 if (!jsonString) throw new Error("File trống hoặc mã HTML chưa được dán vào ô B2.");
 
                 const data = JSON.parse(jsonString);
-                const rows = data.table.rows;
                 cloudData = [];
-                
-                for (let i = 1; i < rows.length; i++) {
-                    if (rows[i] && rows[i].c && rows[i].c[0] && rows[i].c[1] && rows[i].c[1].v) {
-                        cloudData.push({
-                            id: i,
-                            title: rows[i].c[0].v || "Bài học không tên",
-                            code: rows[i].c[1].v
-                        });
+                for (let i = 1; i < data.table.rows.length; i++) {
+                    const r = data.table.rows[i];
+                    if (r && r.c && r.c[0] && r.c[1] && r.c[1].v) {
+                        cloudData.push({ id: i, title: r.c[0].v || "Bài học", code: r.c[1].v });
                     }
                 }
-
                 spinner.style.display = 'none';
                 renderLibrary();
-
             } catch (error) {
                 spinner.style.display = 'none';
-                let errMsg = error.message;
-                if (error.name === 'TypeError') {
-                    errMsg = "Trình duyệt chặn kết nối. Xin bệ hạ kiểm tra lại quyền Chia sẻ của file Sheets (phải là Public).";
-                }
-                container.innerHTML = `<p style='color: #d50000; padding: 20px; line-height: 1.6;'>❌ <b>Hệ thống báo lỗi:</b> ${errMsg}</p>`;
+                container.innerHTML = `<p style='color: #d50000; padding: 20px;'>❌ <b>Hệ thống báo lỗi:</b> ${error.message}</p>`;
             }
         }
 
         function renderLibrary() {
             const container = document.getElementById('libraryContainer');
-            if (cloudData.length === 0) {
-                container.innerHTML = "<p style='color: #888; padding: 20px;'>Kho bài học đang trống. Bệ hạ hãy vào Google Sheets gõ Tên bài học (Cột A) và dán Mã Code (Cột B).</p>"; 
-                return;
-            }
-            
-            let htmlContent = '';
-            for (let i = 0; i < cloudData.length; i++) {
-                const item = cloudData[i];
-                htmlContent += '<div class="lib-card">' +
-                    '<div>' +
-                        '<h3>' + item.title + '</h3>' +
-                    '</div>' +
-                    '<div class="lib-actions">' +
-                        '<button class="btn-run" onclick="viewCard(' + item.id + ')" style="font-size: 16px;">▶ Mở Học Ngay</button>' +
-                    '</div></div>';
-            }
-            container.innerHTML = htmlContent;
+            if (cloudData.length === 0) return container.innerHTML = "<p style='color: #888; padding: 20px;'>Kho bài học đang trống.</p>"; 
+            container.innerHTML = cloudData.map(item => `<div class="lib-card"><div><h3>${item.title}</h3></div><div class="lib-actions"><button class="btn-run" onclick="viewCard(${item.id})">▶ Mở Học Ngay</button></div></div>`).join('');
         }
 
         function viewCard(id) {
-            let card = null;
-            for(let i=0; i<cloudData.length; i++) { if(cloudData[i].id === id) { card = cloudData[i]; break; } }
+            const card = cloudData.find(c => c.id === id);
             if (card) {
                 document.getElementById('modalTitle').innerText = card.title;
                 document.getElementById('modalFrame').srcdoc = card.code;
@@ -442,8 +348,7 @@
             document.getElementById('modalFrame').srcdoc = '';
         }
 
-        applyRole();
-        fetchFromCloud();
+        applyRole(); fetchFromCloud();
     </script>
 </body>
 </html>
