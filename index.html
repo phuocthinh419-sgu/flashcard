@@ -228,13 +228,6 @@
             
             container.innerHTML = '';
             spinner.style.display = 'block';
-
-            if (SHEET_LINK === 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing') {
-                spinner.style.display = 'none';
-                container.innerHTML = "<p style='color: #d50000; padding: 20px;'>⚠️ Bệ hạ chưa dán Link Google Sheets vào mã nguồn!</p>";
-                return;
-            }
-
             let sheetId = SHEET_LINK;
             if (sheetId.includes('/d/')) {
                 sheetId = sheetId.split('/d/')[1].split('/')[0];
