@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VocabForge | Workspace</title>
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a237e">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3048/3048122.png">
-    
-    <style>
+    <link rel="manifest" href="./manifest.json"> <style>
         :root {
             --primary: #1a237e; --secondary: #2962ff; --success: #00c853; --danger: #d50000;
             --bg-color: #f0f2f5; --text-main: #333; --sidebar-w: 250px;
@@ -21,9 +21,9 @@
         .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; opacity: 0; transition: opacity 0.3s; }
         .menu-btn { display: none; font-size: 24px; cursor: pointer; background: white; border: 1px solid #ccc; border-radius: 6px; padding: 5px 15px; color: var(--primary); margin-bottom: 15px; width: fit-content; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
         .btn-close-sidebar { display: none; background: none; border: none; font-size: 20px; cursor: pointer; color: #555; }
-
+        
         .sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid #e0e0e0; padding: 20px; display: flex; flex-direction: column; z-index: 1001; transition: transform 0.3s ease; }
-        .brand { font-size: 24px; font-weight: bold; color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .brand { font-size: 24px; font-weight: bold; color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: center;}
         
         .user-badge { background: #e8eaf6; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 20px; font-weight: bold; color: var(--primary); border: 2px dashed var(--secondary); }
         .badge-student { background: #e0f2f1; color: #00695c; border-color: #00897b; }
@@ -81,7 +81,7 @@
         .modal-content { background: white; width: 100%; max-width: 900px; height: 85vh; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
         .modal-header { padding: 15px 20px; background: #fafafa; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
         .btn-close { background: #ccc; color: #333; font-size: 16px; padding: 8px 20px;}
-
+        
         /* App Install Modal */
         .install-modal-content { max-width: 400px; height: auto; text-align: center; padding: 30px 20px; }
         .install-icon { font-size: 40px; margin-bottom: 15px; }
@@ -89,7 +89,7 @@
         
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
+        
         /* Responsive cho Mobile */
         @media (max-width: 768px) {
             .sidebar { position: fixed; transform: translateX(-100%); height: 100%; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
@@ -104,9 +104,7 @@
     </style>
 </head>
 <body>
-
     <div id="sidebarOverlay" class="overlay" onclick="toggleSidebar()"></div>
-
     <aside class="sidebar" id="sidebar">
         <div class="brand">
             <span>🎓 VocabForge</span>
@@ -123,7 +121,7 @@
 
     <main class="main-content">
         <button class="menu-btn" onclick="toggleSidebar()">☰ Menu</button>
-
+        
         <div id="view-creator" class="view-section">
             <div class="header">
                 <h1>Workspace - Khung Soạn Thảo</h1>
@@ -209,6 +207,23 @@
 
     <script>
         // ==========================================
+        // ĐĂNG KÝ SERVICE WORKER & BẮT SỰ KIỆN CÀI ĐẶT APP
+        // ==========================================
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Bẩm, Service Worker đã khởi chạy!'))
+                    .catch(err => console.log('Lỗi Service Worker:', err));
+            });
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); // Ngăn trình duyệt tự hiện bảng hỏi
+            deferredPrompt = e; // Lưu lại để dùng khi bấm nút
+        });
+
+        // ==========================================
         // ĐƯỜNG LINK CỦA BỆ HẠ ĐƯỢC GIỮ NGUYÊN
         const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing';
         // ==========================================
@@ -229,21 +244,34 @@
             }
         }
 
-        /* --- XỬ LÝ MODAL CÀI ĐẶT APP --- */
+        /* --- XỬ LÝ MODAL CÀI ĐẶT APP (ĐÃ NÂNG CẤP) --- */
         function openInstallModal() {
-            document.getElementById('installModal').classList.add('active');
-            const userAgent = window.navigator.userAgent.toLowerCase();
-            const isIOS = /iphone|ipad|ipod/.test(userAgent);
-            
-            if (isIOS) {
-                document.getElementById('installIOS').style.display = 'block';
-                document.getElementById('installAndroid').style.display = 'none';
+            if (deferredPrompt) {
+                // Nếu trình duyệt hỗ trợ (Android Chrome), gọi thẳng bảng cài đặt chính thống
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('Học trò đã đồng ý cài App!');
+                    }
+                    deferredPrompt = null;
+                });
             } else {
-                document.getElementById('installAndroid').style.display = 'block';
-                document.getElementById('installIOS').style.display = 'none';
+                // Nếu là iOS hoặc đã cài rồi thì hiện bảng hướng dẫn thủ công
+                document.getElementById('installModal').classList.add('active');
+                const userAgent = window.navigator.userAgent.toLowerCase();
+                const isIOS = /iphone|ipad|ipod/.test(userAgent);
+                
+                if (isIOS) {
+                    document.getElementById('installIOS').style.display = 'block';
+                    document.getElementById('installAndroid').style.display = 'none';
+                } else {
+                    document.getElementById('installAndroid').style.display = 'block';
+                    document.getElementById('installIOS').style.display = 'none';
+                }
             }
             if (window.innerWidth <= 768) toggleSidebar(); 
         }
+        
         function closeInstallModal() {
             document.getElementById('installModal').classList.remove('active');
         }
@@ -323,7 +351,7 @@
             container.innerHTML = '';
             spinner.style.display = 'block';
 
-            if (SHEET_LINK === 'DÁN_ĐƯỜNG_LINK_VÀO_ĐÂY') {
+            if (SHEET_LINK === 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing') {
                 spinner.style.display = 'none';
                 container.innerHTML = "<p style='color: #d50000; padding: 20px;'>⚠️ Bệ hạ chưa dán Link Google Sheets vào mã nguồn!</p>";
                 return;
