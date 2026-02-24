@@ -9,7 +9,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a237e">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3048/3048122.png">
-    <link rel="manifest" href="./manifest.json"> <style>
+    <link rel="manifest" href="./manifest.json">
+    
+    <style>
         :root {
             --primary: #1a237e; --secondary: #2962ff; --success: #00c853; --danger: #d50000;
             --bg-color: #f0f2f5; --text-main: #333; --sidebar-w: 250px;
@@ -219,8 +221,8 @@
 
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); // Ngăn trình duyệt tự hiện bảng hỏi
-            deferredPrompt = e; // Lưu lại để dùng khi bấm nút
+            e.preventDefault(); 
+            deferredPrompt = e; 
         });
 
         // ==========================================
@@ -247,7 +249,6 @@
         /* --- XỬ LÝ MODAL CÀI ĐẶT APP (ĐÃ NÂNG CẤP) --- */
         function openInstallModal() {
             if (deferredPrompt) {
-                // Nếu trình duyệt hỗ trợ (Android Chrome), gọi thẳng bảng cài đặt chính thống
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then((choiceResult) => {
                     if (choiceResult.outcome === 'accepted') {
@@ -256,7 +257,6 @@
                     deferredPrompt = null;
                 });
             } else {
-                // Nếu là iOS hoặc đã cài rồi thì hiện bảng hướng dẫn thủ công
                 document.getElementById('installModal').classList.add('active');
                 const userAgent = window.navigator.userAgent.toLowerCase();
                 const isIOS = /iphone|ipad|ipod/.test(userAgent);
@@ -351,7 +351,8 @@
             container.innerHTML = '';
             spinner.style.display = 'block';
 
-            if (SHEET_LINK === 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing') {
+            // KIỂM TRA LINK RỖNG MỚI BÁO LỖI
+            if (!SHEET_LINK || SHEET_LINK === '' || SHEET_LINK === 'DÁN_ĐƯỜNG_LINK_VÀO_ĐÂY') {
                 spinner.style.display = 'none';
                 container.innerHTML = "<p style='color: #d50000; padding: 20px;'>⚠️ Bệ hạ chưa dán Link Google Sheets vào mã nguồn!</p>";
                 return;
