@@ -1,0 +1,17 @@
+{
+  "name": "VocabForge Workspace",
+  "short_name": "VocabForge",
+  "description": "Hệ thống Flashcard luyện tập từ vựng",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f0f2f5",
+  "theme_color": "#1a237e",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3048/3048122.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
