@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VocabForge | Gamification</title>
     <meta name="theme-color" content="#1a237e">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -20,7 +19,6 @@
         .sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid #e0e0e0; padding: 20px; display: flex; flex-direction: column; z-index: 1001; transition: transform 0.3s ease; }
         .brand { font-size: 24px; font-weight: bold; color: var(--primary); margin-bottom: 20px; text-align: center;}
         
-        /* Thông tin User ở Sidebar */
         .user-profile { text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #ccc; }
         .user-avatar { width: 50px; height: 50px; border-radius: 50%; background: #e0e0e0; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center; font-size: 24px; overflow: hidden;}
         .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -41,7 +39,6 @@
         .header { margin-bottom: 25px; } .header h1 { font-size: 28px; color: var(--primary); } .header p { color: #666; margin-top: 5px; }
         .view-section { display: none; flex-direction: column; height: 100%; } .view-section.active { display: flex; }
         
-        /* Bảng Xếp Hạng */
         .lb-container { display: flex; flex-direction: column; gap: 12px; max-width: 600px; margin: 0 auto; width: 100%; }
         .lb-row { background: #fff; padding: 15px 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.04); font-weight: bold; font-size: 16px; transition: 0.2s;}
         .lb-rank-1 { border-left: 6px solid #ffd700; background: linear-gradient(90deg, #fffdf0 0%, #ffffff 100%); font-size: 18px;}
@@ -52,6 +49,14 @@
         .lib-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; height: 150px; border-left: 5px solid var(--secondary);}
         .lib-actions { display: flex; gap: 8px; margin-top: 10px; } .lib-actions button { flex: 1; }
         
+        /* Chỉnh lại giao diện Shop cho xịn */
+        .shop-item { background: #fff; padding: 25px 20px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center; border: 2px solid transparent; transition: all 0.3s ease; position: relative; overflow: hidden;}
+        .shop-item:hover { border-color: #fbc02d; transform: translateY(-5px); box-shadow: 0 12px 25px rgba(251, 192, 45, 0.2);}
+        .item-icon { font-size: 55px; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);}
+        .item-title { font-size: 18px; color: var(--primary); margin-bottom: 5px; font-weight: bold;}
+        .item-desc { font-size: 13px; color: #666; height: 40px;}
+        .item-price { font-size: 22px; font-weight: 900; color: #fbc02d; margin: 15px 0; background: #fff9c4; padding: 5px; border-radius: 10px; display: inline-block; width: fit-content; margin-left: auto; margin-right: auto;}
+        
         .workspace { display: flex; gap: 20px; flex: 1; min-height: 0; }
         .panel { flex: 1; background: #fff; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .panel-header { background: #fafafa; padding: 15px; border-bottom: 1px solid #eee; font-weight: bold; display: flex; justify-content: space-between; }
@@ -59,8 +64,11 @@
         iframe { width: 100%; height: 100%; border: none; }
         
         button { border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; color: white; }
-        .btn-run { background: var(--secondary); } .btn-save { background: var(--success); } .btn-google { background: #db4437; width: 100%; padding: 12px; font-size: 16px;}
-        
+        .btn-run { background: var(--secondary); } .btn-run:hover { background: #1c44b2; }
+        .btn-save { background: var(--success); } .btn-google { background: #db4437; width: 100%; padding: 12px; font-size: 16px;}
+        .btn-buy { background: linear-gradient(45deg, #fbc02d, #f57f17); width: 100%; font-size: 16px; padding: 12px; border-radius: 8px; box-shadow: 0 4px 10px rgba(251,192,45,0.3);}
+        .btn-buy:hover { background: linear-gradient(45deg, #f57f17, #fbc02d); transform: scale(1.02);}
+
         .settings-card { background: #fff; padding: 25px; border-radius: 12px; max-width: 500px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
         .form-group { margin-bottom: 15px; } .form-group label { display: block; font-weight: bold; margin-bottom: 8px;}
         .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
@@ -71,7 +79,6 @@
         .modal-header { padding: 15px 20px; background: #fafafa; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
         .btn-close { background: #ccc; color: #333; padding: 8px 20px;}
         
-        /* Modal riêng cho việc nhập tên */
         .name-modal-content { max-width: 400px; height: auto; text-align: center; padding: 30px; }
         
         .reward-anim { position: fixed; bottom: 20px; right: 20px; background: #00c853; color: white; padding: 15px 25px; border-radius: 30px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 15px rgba(0,200,83,0.4); transform: translateY(100px); opacity: 0; transition: 0.5s; z-index: 9999;}
@@ -121,11 +128,41 @@
             </div>
 
             <div id="view-shop" class="view-section">
-                <div class="header"><h1>🛒 Cửa Hàng Vật Phẩm</h1></div>
+                <div class="header">
+                    <h1>🛒 Trung Tâm Thương Mại</h1>
+                    <p>Dùng Vàng 🪙 do bạn cày được để sắm sửa bảo vật.</p>
+                </div>
                 <div class="shop-grid">
-                    <div style="background:#fff; padding:20px; border-radius:12px; text-align:center;">
-                        <div style="font-size:40px;">🧪</div><h3>Bình XP x2</h3><p>🪙 150</p>
-                        <button class="btn-run" style="width:100%; margin-top:10px;" onclick="buyItem('xp', 150)">Mua</button>
+                    <div class="shop-item">
+                        <div class="item-icon">🛡️</div>
+                        <div class="item-title">Bùa Bảo Hộ</div>
+                        <div class="item-desc">Cứu nguy giữ nguyên chuỗi Streak nếu lỡ quên học 1 ngày.</div>
+                        <div class="item-price">🪙 200</div>
+                        <button class="btn-buy" onclick="buyItem('shield', 200)">Mua Ngay</button>
+                    </div>
+                    
+                    <div class="shop-item">
+                        <div class="item-icon">🧪</div>
+                        <div class="item-title">Bình Tiên XP x2</div>
+                        <div class="item-desc">Uống vào tinh thần sảng khoái, buff tinh thần học tập gấp bội.</div>
+                        <div class="item-price">🪙 150</div>
+                        <button class="btn-buy" onclick="buyItem('potion', 150)">Mua Ngay</button>
+                    </div>
+
+                    <div class="shop-item">
+                        <div class="item-icon">👑</div>
+                        <div class="item-title">Huy Hiệu Hoàng Kim</div>
+                        <div class="item-desc">Gắn Vương miện lấp lánh cạnh tên trên Bảng Xếp Hạng. Bao ngầu!</div>
+                        <div class="item-price">🪙 500</div>
+                        <button class="btn-buy" onclick="buyItem('crown', 500)">Mua Ngay</button>
+                    </div>
+
+                    <div class="shop-item">
+                        <div class="item-icon">🎭</div>
+                        <div class="item-title">Thẻ Đổi Tên</div>
+                        <div class="item-desc">Không ưng tên cũ? Mua thẻ này để đổi lại danh xưng mới.</div>
+                        <div class="item-price">🪙 300</div>
+                        <button class="btn-buy" onclick="buyItem('rename', 300)">Mua Ngay</button>
                     </div>
                 </div>
             </div>
@@ -153,7 +190,7 @@
                 
                 <div class="settings-card">
                     <h3>🔐 Cổng Đăng Nhập Đám Mây</h3>
-                    <p style="color: #666; margin-bottom: 15px; font-size: 14px;">Bệ hạ/Môn sinh cần đăng nhập để lưu điểm, xếp hạng.</p>
+                    <p style="color: #666; margin-bottom: 15px; font-size: 14px;">Bạn cần đăng nhập để lưu điểm, xếp hạng.</p>
                     <div id="authSection">
                         <button class="btn-google" onclick="loginWithGoogle()">🌐 Đăng nhập bằng Google</button>
                     </div>
@@ -189,15 +226,14 @@
             <p style="color: #555; margin-bottom: 20px;">Để Giáo viên chấm điểm dễ dàng, xin hãy nhập tên hiển thị thật của mình:</p>
             <input type="text" id="displayNameInput" placeholder="Ví dụ: Nguyễn Phước Thịnh..." style="width: 100%; padding: 12px; border: 2px solid var(--secondary); border-radius: 8px; margin-bottom: 15px; font-size: 16px;">
             <button class="btn-save" style="width: 100%; padding: 12px;" onclick="saveDisplayName()">Lưu Danh Xưng</button>
+            <button class="btn-close" style="width: 100%; padding: 12px; margin-top: 10px; display: none;" id="closeNameModalBtn" onclick="document.getElementById('nameModal').classList.remove('active')">Hủy bỏ</button>
         </div>
     </div>
 
     <div id="rewardAnim" class="reward-anim">🎉 +10 🪙 | +15 ⭐</div>
 
     <script>
-        // =========================================================================
-        // 🚨 🚨 🚨 KHU VỰC BẮT BUỘC BỆ HẠ PHẢI ĐIỀN ĐỂ ĐĂNG NHẬP CHẠY ĐƯỢC 🚨 🚨 🚨
-        // =========================================================================
+        // BỆ HẠ NHỚ DÁN LẠI ĐÚNG MÃ FIREBASE VÀO ĐÂY NHÉ!
         const firebaseConfig = {
             apiKey: "AIzaSyAmDqBfe4JRBKDGVwqVS0yI9_P2O2WIzxI",
             authDomain: "academic-planner-v100.firebaseapp.com",
@@ -207,19 +243,15 @@
             appId: "1:80448326816:web:15e6dda33c3be03be90dc5"
         };
 
-        // Khởi tạo Firebase
         let db, auth;
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
             auth = firebase.auth();
         } catch (e) {
-            console.error("Firebase chưa được cấu hình. Hệ thống sẽ chạy offline.");
+            console.error("Firebase chưa được cấu hình.");
         }
 
-        // ==============================================================
-        // HỆ THỐNG USER & CHỈ SỐ
-        // ==============================================================
         let currentUser = null;
         let userData = { role: 'student', gold: 0, xp: 0, streak: 1, displayName: '' };
 
@@ -227,7 +259,6 @@
             auth.onAuthStateChanged(user => {
                 if (user) {
                     currentUser = user;
-                    // Chú ý: Đổi chữ users thành vocab_users theo sách lược Nước sông không phạm nước giếng
                     db.collection('vocab_users').doc(user.uid).get().then(doc => {
                         if (doc.exists) {
                             userData = doc.data();
@@ -245,7 +276,7 @@
         }
 
         function loginWithGoogle() {
-            if(!auth) return alert("Bệ hạ chưa điền mã Cấu hình Firebase trong Source Code!");
+            if(!auth) return alert("Bệ hạ chưa điền mã Cấu hình Firebase!");
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider).catch(err => alert("Lỗi đăng nhập: " + err.message));
         }
@@ -259,8 +290,10 @@
             
             db.collection('vocab_users').doc(currentUser.uid).set(userData, {merge: true}).then(() => {
                 document.getElementById('nameModal').classList.remove('active');
+                document.getElementById('closeNameModalBtn').style.display = 'none';
                 updateUI();
                 alert("Đã lưu danh xưng thành công!");
+                fetchLeaderboard(); // Tải lại Bảng Xếp Hạng để cập nhật tên
             });
         }
 
@@ -269,7 +302,8 @@
                 db.collection('vocab_users').doc(currentUser.uid).update({
                     gold: userData.gold,
                     xp: userData.xp,
-                    streak: userData.streak
+                    streak: userData.streak,
+                    displayName: userData.displayName
                 });
             }
             updateUI();
@@ -300,6 +334,41 @@
             }
         }
 
+        // CHỨC NĂNG MUA HÀNG LOGIC TỪ SHOP MỚI
+        function buyItem(itemType, price) {
+            if (!currentUser) return alert("Bệ hạ cần đăng nhập thì hệ thống mới biết thu Vàng của ai!");
+            
+            if (userData.gold >= price) {
+                if(confirm(`Xác nhận chi ${price} 🪙 để rước báu vật này về?`)) {
+                    userData.gold -= price;
+                    
+                    // Xử lý tác dụng của từng loại vật phẩm
+                    if (itemType === 'crown') {
+                        if(!userData.displayName.includes('👑')) {
+                            userData.displayName = '👑 ' + userData.displayName;
+                            alert("Vương miện đã được đội lên đầu!");
+                        } else {
+                            alert("Bạn đã sở hữu Vương Miện rồi!");
+                            userData.gold += price; // Trả lại tiền
+                            return;
+                        }
+                    } else if (itemType === 'rename') {
+                        document.getElementById('nameModal').classList.add('active');
+                        document.getElementById('closeNameModalBtn').style.display = 'block'; // Nút hủy lỡ bấm nhầm
+                        document.getElementById('displayNameInput').value = userData.displayName.replace('👑 ', '');
+                        alert("Mời bạn nhập danh xưng mới!");
+                    } else {
+                        alert("Giao dịch thành công! Vật phẩm đã cất vào tay nải.");
+                    }
+                    
+                    syncStatsToCloud();
+                    if(itemType === 'crown') fetchLeaderboard();
+                }
+            } else {
+                alert("Trong túi không đủ Vàng! Vui lòng vào luyện tập thêm để kiếm tiền.");
+            }
+        }
+
         window.addEventListener('message', function(event) {
             if (event.data === 'CORRECT') {
                 userData.gold += 10;
@@ -312,9 +381,6 @@
             }
         });
 
-        // ==============================================================
-        // BẢNG XẾP HẠNG
-        // ==============================================================
         async function fetchLeaderboard() {
             if(!db) return;
             const lbContainer = document.getElementById('leaderboardData');
@@ -340,7 +406,7 @@
                 });
                 lbContainer.innerHTML = html || '<p style="text-align:center">Chưa có môn sinh nào ghi danh.</p>';
             } catch (err) {
-                lbContainer.innerHTML = '<p style="color:red; text-align:center">Lỗi tải Bảng Vàng. Bệ hạ đã cấu hình Firebase chưa?</p>';
+                lbContainer.innerHTML = '<p style="color:red; text-align:center">Lỗi tải Bảng Vàng.</p>';
             }
         }
 
@@ -353,7 +419,7 @@
                 userData.role = 'teacher';
                 db.collection('vocab_users').doc(currentUser.uid).update({ role: 'teacher' });
                 updateUI();
-                alert("Đã thăng cấp thành Giáo Viên! Bệ hạ sẽ bị ẩn khỏi bảng xếp hạng của học sinh.");
+                alert("Đã thăng cấp thành Giáo Viên! Bạn sẽ bị ẩn khỏi bảng xếp hạng của học sinh.");
                 document.getElementById('teacherPinCheck').value = '';
             } else {
                 alert("❌ Sai mã PIN!");
@@ -382,9 +448,6 @@
             if (tabId === 'leaderboard') fetchLeaderboard(); 
         }
 
-        // ==============================================================
-        // LINK CHUẨN XÁC ĐÃ SỬA
-        // ==============================================================
         const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing';
         
         async function fetchFromSheets() {
@@ -412,7 +475,6 @@
             document.getElementById('previewModal').classList.add('active');
         }
         function closeModal() { document.getElementById('previewModal').classList.remove('active'); document.getElementById('modalFrame').srcdoc = ''; }
-        function renderCode() { document.getElementById('previewFrame').srcdoc = document.getElementById('sourceCode').value; }
 
         updateUI(); fetchFromSheets();
     </script>
