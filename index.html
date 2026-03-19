@@ -1,708 +1,692 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VocabForge | Gamification</title>
-    <meta name="theme-color" content="#1a237e">
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VocabForge | Gamification</title>
+    <meta name="theme-color" content="#1a237e">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    <style>
-        :root { --primary: #1a237e; --secondary: #2962ff; --success: #00c853; --danger: #d50000; --bg-color: #f0f2f5; --text-main: #333; --sidebar-w: 250px; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { display: flex; height: 100vh; background-color: var(--bg-color); color: var(--text-main); overflow: hidden; }
-        
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; opacity: 0; transition: opacity 0.3s; }
-        .sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid #e0e0e0; padding: 20px; display: flex; flex-direction: column; z-index: 1001; transition: transform 0.3s ease; }
-        .brand { font-size: 24px; font-weight: bold; color: var(--primary); margin-bottom: 20px; text-align: center;}
-        
-        .user-profile { text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #ccc; }
-        .user-avatar { width: 50px; height: 50px; border-radius: 50%; background: #e0e0e0; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center; font-size: 24px; overflow: hidden;}
-        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .user-name { font-weight: bold; color: var(--primary); font-size: 16px;}
-        .user-badge { display: inline-block; background: #e8eaf6; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; color: var(--secondary); margin-top: 5px; }
-        .badge-student { background: #e0f2f1; color: #00695c; }
-        .badge-teacher { background: #ffe0b2; color: #e65100; }
+    <style>
+        :root { --primary: #1a237e; --secondary: #2962ff; --success: #00c853; --danger: #d50000; --bg-color: #f0f2f5; --text-main: #333; --sidebar-w: 250px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { display: flex; height: 100vh; background-color: var(--bg-color); color: var(--text-main); overflow: hidden; }
+        
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; opacity: 0; transition: opacity 0.3s; }
+        .sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid #e0e0e0; padding: 20px; display: flex; flex-direction: column; z-index: 1001; transition: transform 0.3s ease; }
+        .brand { font-size: 24px; font-weight: bold; color: var(--primary); margin-bottom: 20px; text-align: center;}
+        
+        .user-profile { text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #ccc; }
+        .user-avatar { width: 50px; height: 50px; border-radius: 50%; background: #e0e0e0; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center; font-size: 24px; overflow: hidden;}
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .user-name { font-weight: bold; color: var(--primary); font-size: 16px;}
+        .user-badge { display: inline-block; background: #e8eaf6; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; color: var(--secondary); margin-top: 5px; }
+        .badge-student { background: #e0f2f1; color: #00695c; }
+        .badge-teacher { background: #ffe0b2; color: #e65100; }
 
-        .nav-item { padding: 12px 15px; margin-bottom: 10px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: 0.2s; color: #555; display: flex; align-items: center; gap: 8px;}
-        .nav-item:hover, .nav-item.active { background: #e8eaf6; color: var(--primary); }
-        .nav-arena { background: #ffebee; color: #c62828; font-weight: bold;}
-        .nav-arena:hover, .nav-arena.active { background: #ffcdd2; color: #b71c1c; }
-        
-        .main-wrapper { flex: 1; display: flex; flex-direction: column; width: 100%; overflow: hidden;}
-        .top-stats-bar { background: #fff; padding: 15px 30px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: flex-end; align-items: center; gap: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .stat-box { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 16px; padding: 6px 12px; border-radius: 20px; background: #f8f9fa; }
-        .stat-streak { color: #ff5722; } .stat-xp { color: var(--secondary); } .stat-gold { color: #fbc02d; }
-        .menu-btn { display: none; font-size: 24px; cursor: pointer; background: transparent; border: none; color: var(--primary); }
+        .nav-item { padding: 12px 15px; margin-bottom: 10px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: 0.2s; color: #555; display: flex; align-items: center; gap: 8px;}
+        .nav-item:hover, .nav-item.active { background: #e8eaf6; color: var(--primary); }
+        .nav-arena { background: #ffebee; color: #c62828; font-weight: bold;}
+        .nav-arena:hover, .nav-arena.active { background: #ffcdd2; color: #b71c1c; }
+        
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; width: 100%; overflow: hidden;}
+        .top-stats-bar { background: #fff; padding: 15px 30px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: flex-end; align-items: center; gap: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .stat-box { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 16px; padding: 6px 12px; border-radius: 20px; background: #f8f9fa; }
+        .stat-streak { color: #ff5722; } .stat-xp { color: var(--secondary); } .stat-gold { color: #fbc02d; }
+        .menu-btn { display: none; font-size: 24px; cursor: pointer; background: transparent; border: none; color: var(--primary); }
 
-        .main-content { flex: 1; padding: 20px 30px 100px 30px; overflow-y: auto; overflow-x: hidden; }
-        .header { margin-bottom: 25px; } .header h1 { font-size: 28px; color: var(--primary); } .header p { color: #666; margin-top: 5px; }
-        .view-section { display: none; flex-direction: column; min-height: 100%; height: auto; } .view-section.active { display: flex; }
-        
-        .lb-container { display: flex; flex-direction: column; gap: 12px; max-width: 600px; margin: 0 auto; width: 100%; }
-        .lb-row { background: #fff; padding: 15px 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.04); font-weight: bold; font-size: 16px; transition: 0.2s;}
-        .lb-rank-1 { border-left: 6px solid #ffd700; background: linear-gradient(90deg, #fffdf0 0%, #ffffff 100%); font-size: 18px;}
-        .lb-rank-2 { border-left: 6px solid #c0c0c0; background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%); font-size: 17px;}
-        .lb-rank-3 { border-left: 6px solid #cd7f32; background: linear-gradient(90deg, #fffaf0 0%, #ffffff 100%); }
-        
-        .library-grid, .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .lib-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; height: 150px; border-left: 5px solid var(--secondary);}
-        .lib-actions { display: flex; gap: 8px; margin-top: 10px; } .lib-actions button { flex: 1; }
-        
-        .shop-item { background: #fff; padding: 25px 20px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center; border: 2px solid transparent; transition: all 0.3s ease;}
-        .shop-item:hover { border-color: #fbc02d; transform: translateY(-5px); }
-        .item-icon { font-size: 55px; margin-bottom: 10px; }
-        .item-title { font-size: 18px; color: var(--primary); margin-bottom: 5px; font-weight: bold;}
-        .item-desc { font-size: 13px; color: #666; height: 50px;}
-        .item-price { font-size: 22px; font-weight: 900; color: #fbc02d; margin: 15px 0; background: #fff9c4; padding: 5px; border-radius: 10px; display: inline-block; width: fit-content; margin-left: auto; margin-right: auto;}
-        
-        .workspace { display: flex; gap: 20px; flex: 1; min-height: 0; }
-        .panel { flex: 1; background: #fff; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .panel-header { background: #fafafa; padding: 15px; border-bottom: 1px solid #eee; font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
-        textarea { flex: 1; padding: 20px; border: none; outline: none; background: #fafafa; font-family: monospace; font-size: 14px; resize: none;}
-        iframe { width: 100%; height: 100%; border: none; }
+        .main-content { flex: 1; padding: 20px 30px 100px 30px; overflow-y: auto; overflow-x: hidden; }
+        .header { margin-bottom: 25px; } .header h1 { font-size: 28px; color: var(--primary); } .header p { color: #666; margin-top: 5px; }
+        .view-section { display: none; flex-direction: column; min-height: 100%; height: auto; } .view-section.active { display: flex; }
+        
+        .lb-container { display: flex; flex-direction: column; gap: 12px; max-width: 600px; margin: 0 auto; width: 100%; }
+        .lb-row { background: #fff; padding: 15px 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.04); font-weight: bold; font-size: 16px; transition: 0.2s;}
+        .lb-rank-1 { border-left: 6px solid #ffd700; background: linear-gradient(90deg, #fffdf0 0%, #ffffff 100%); font-size: 18px;}
+        .lb-rank-2 { border-left: 6px solid #c0c0c0; background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%); font-size: 17px;}
+        .lb-rank-3 { border-left: 6px solid #cd7f32; background: linear-gradient(90deg, #fffaf0 0%, #ffffff 100%); }
+        
+        .library-grid, .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .lib-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; height: 150px; border-left: 5px solid var(--secondary);}
+        .lib-actions { display: flex; gap: 8px; margin-top: 10px; } .lib-actions button { flex: 1; }
+        
+        .shop-item { background: #fff; padding: 25px 20px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center; border: 2px solid transparent; transition: all 0.3s ease;}
+        .shop-item:hover { border-color: #fbc02d; transform: translateY(-5px); }
+        .item-icon { font-size: 55px; margin-bottom: 10px; }
+        .item-title { font-size: 18px; color: var(--primary); margin-bottom: 5px; font-weight: bold;}
+        .item-desc { font-size: 13px; color: #666; height: 50px;}
+        .item-price { font-size: 22px; font-weight: 900; color: #fbc02d; margin: 15px 0; background: #fff9c4; padding: 5px; border-radius: 10px; display: inline-block; width: fit-content; margin-left: auto; margin-right: auto;}
+        
+        .workspace { display: flex; gap: 20px; flex: 1; min-height: 0; }
+        .panel { flex: 1; background: #fff; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .panel-header { background: #fafafa; padding: 15px; border-bottom: 1px solid #eee; font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
+        textarea { flex: 1; padding: 20px; border: none; outline: none; background: #fafafa; font-family: monospace; font-size: 14px; resize: none;}
+        iframe { width: 100%; height: 100%; border: none; }
 
-        button { border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; color: white; }
-        .btn-run { background: var(--secondary); } .btn-run:hover { background: #1c44b2; }
-        .btn-save { background: var(--success); } .btn-danger { background: var(--danger); }
-        .btn-buy { background: linear-gradient(45deg, #fbc02d, #f57f17); width: 100%; font-size: 16px; padding: 12px; border-radius: 8px;}
-        .btn-google { background: #db4437; width: 100%; padding: 12px; font-size: 16px;}
+        button { border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; color: white; }
+        .btn-run { background: var(--secondary); } .btn-run:hover { background: #1c44b2; }
+        .btn-save { background: var(--success); } .btn-danger { background: var(--danger); }
+        .btn-buy { background: linear-gradient(45deg, #fbc02d, #f57f17); width: 100%; font-size: 16px; padding: 12px; border-radius: 8px;}
+        .btn-google { background: #db4437; width: 100%; padding: 12px; font-size: 16px;}
 
-        .settings-card { background: #fff; padding: 25px; border-radius: 12px; max-width: 500px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
-        .form-group { margin-bottom: 15px; } .form-group label { display: block; font-weight: bold; margin-bottom: 8px;}
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
-        
-        .arena-container { display: flex; gap: 20px; flex-wrap: wrap; }
-        .arena-panel { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex: 1; min-width: 300px;}
-        .arena-title { font-size: 18px; color: var(--danger); font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #ffcdd2; padding-bottom: 10px;}
-        .syllabus-list { max-height: 250px; overflow-y: auto; background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 10px; margin-bottom: 15px;}
-        .syllabus-item { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #eee; font-weight: 500;}
-        .syllabus-item:last-child { border-bottom: none; }
-        
-        .bracket-board { 
-            background: linear-gradient(135deg, #1a237e 0%, #311b92 100%); 
-            border-radius: 15px; padding: 40px 20px; color: white; margin-bottom: 40px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; display: none; width: 100%;
-            overflow-x: auto; overflow-y: visible;
-        }
-        .bracket-board h2 { font-size: 26px; text-transform: uppercase; letter-spacing: 2px; }
-        .bracket-stage { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
-            gap: 25px; margin-top: 30px; padding: 20px; 
-            background: rgba(255,255,255,0.05); border-radius: 12px;
-        }
-        .match-box { 
-            background: rgba(255, 255, 255, 0.1); border: 2px solid #5c6bc0; 
-            border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-            backdrop-filter: blur(5px); transition: transform 0.2s, border-color 0.2s; position: relative;
-        }
-        .match-box:hover { transform: translateY(-5px); border-color: #ffd700; }
-        .player-name { padding: 10px; font-weight: bold; font-size: 16px; border-bottom: 1px dashed rgba(255,255,255,0.2); }
-        .player-name:last-child { border-bottom: none; }
-        .vs-text { 
-            font-size: 14px; color: #ffeb3b; font-style: italic; margin: 10px 0; font-weight: 900; 
-            background: rgba(0,0,0,0.3); display: inline-block; padding: 4px 12px; border-radius: 12px;
-        }
-        .btn-fight { display:none; background: #ff5252; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; margin-top: 10px; cursor: pointer; width: 100%; font-weight: bold; border: none;}
-        .btn-fight:hover { background: #d50000; }
+        .settings-card { background: #fff; padding: 25px; border-radius: 12px; max-width: 500px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
+        .form-group { margin-bottom: 15px; } .form-group label { display: block; font-weight: bold; margin-bottom: 8px;}
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+        
+        .arena-container { display: flex; gap: 20px; flex-wrap: wrap; }
+        .arena-panel { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex: 1; min-width: 300px;}
+        .arena-title { font-size: 18px; color: var(--danger); font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #ffcdd2; padding-bottom: 10px;}
+        .syllabus-list { max-height: 250px; overflow-y: auto; background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 10px; margin-bottom: 15px;}
+        .syllabus-item { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #eee; font-weight: 500;}
+        .syllabus-item:last-child { border-bottom: none; }
+        
+        .bracket-board { 
+            background: linear-gradient(135deg, #1a237e 0%, #311b92 100%); 
+            border-radius: 15px; padding: 40px 20px; color: white; margin-bottom: 40px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; display: none; width: 100%;
+            overflow-x: auto; overflow-y: visible;
+        }
+        .bracket-board h2 { font-size: 26px; text-transform: uppercase; letter-spacing: 2px; }
+        .bracket-stage { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+            gap: 25px; margin-top: 30px; padding: 20px; 
+            background: rgba(255,255,255,0.05); border-radius: 12px;
+        }
+        .match-box { 
+            background: rgba(255, 255, 255, 0.1); border: 2px solid #5c6bc0; 
+            border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            backdrop-filter: blur(5px); transition: transform 0.2s, border-color 0.2s; position: relative;
+        }
+        .match-box:hover { transform: translateY(-5px); border-color: #ffd700; }
+        .player-name { padding: 10px; font-weight: bold; font-size: 16px; border-bottom: 1px dashed rgba(255,255,255,0.2); }
+        .player-name:last-child { border-bottom: none; }
+        .vs-text { 
+            font-size: 14px; color: #ffeb3b; font-style: italic; margin: 10px 0; font-weight: 900; 
+            background: rgba(0,0,0,0.3); display: inline-block; padding: 4px 12px; border-radius: 12px;
+        }
+        .btn-fight { display:none; background: #ff5252; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; margin-top: 10px; cursor: pointer; width: 100%; font-weight: bold; border: none;}
+        .btn-fight:hover { background: #d50000; }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; padding: 15px; }
-        .modal.active { display: flex; }
-        .modal-content { background: white; width: 100%; max-width: 900px; height: 85vh; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
-        .modal-header { padding: 15px 20px; background: #fafafa; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
-        .btn-close { background: #ccc; color: #333; padding: 8px 20px;}
-        .name-modal-content { max-width: 400px; height: auto; text-align: center; padding: 30px; }
-        
-        /* GIAO DIỆN PHÒNG TỶ VÕ (ARENA) */
-        .battle-arena { background: linear-gradient(135deg, #111, #311b92); color: white; width: 100%; max-width: 800px; height: 90vh; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 50px rgba(0,0,0,0.8); border: 2px solid #5c6bc0;}
-        .battle-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; background: rgba(0,0,0,0.5); border-bottom: 2px solid rgba(255,255,255,0.1); }
-        .fighter { font-size: 24px; font-weight: 900; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; }
-        .fighter span { font-size: 36px; color: #ffd700; margin-top: 5px; }
-        .vs-badge { background: #d50000; padding: 10px 20px; border-radius: 30px; font-weight: 900; font-size: 20px; box-shadow: 0 0 20px rgba(213,0,0,0.5); }
-        
-        .battle-body { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; position: relative; }
-        .battle-question { font-size: 45px; font-weight: 900; color: #fff; text-align: center; margin-bottom: 40px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .battle-options { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; max-width: 600px; }
-        .btn-ans { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); padding: 20px; border-radius: 15px; font-size: 20px; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; backdrop-filter: blur(5px); }
-        .btn-ans:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
-        .btn-ans.correct { background: #00c853; border-color: #00e676; }
-        .btn-ans.wrong { background: #d50000; border-color: #ff1744; }
-        .btn-ans.locked { opacity: 0.5; pointer-events: none; }
-        
-        .lock-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 10; flex-direction: column; }
-        .lock-overlay.active { display: flex; }
-        .lock-text { font-size: 30px; color: #ffeb3b; font-weight: bold; text-align: center; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; padding: 15px; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; width: 100%; max-width: 900px; height: 85vh; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+        .modal-header { padding: 15px 20px; background: #fafafa; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
+        .btn-close { background: #ccc; color: #333; padding: 8px 20px;}
+        .name-modal-content { max-width: 400px; height: auto; text-align: center; padding: 30px; }
+        
+        /* GIAO DIỆN PHÒNG TỶ VÕ (ARENA) */
+        .battle-arena { background: linear-gradient(135deg, #111, #311b92); color: white; width: 100%; max-width: 800px; height: 90vh; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 50px rgba(0,0,0,0.8); border: 2px solid #5c6bc0;}
+        .battle-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; background: rgba(0,0,0,0.5); border-bottom: 2px solid rgba(255,255,255,0.1); }
+        .fighter { font-size: 24px; font-weight: 900; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; }
+        .fighter span { font-size: 36px; color: #ffd700; margin-top: 5px; }
+        .vs-badge { background: #d50000; padding: 10px 20px; border-radius: 30px; font-weight: 900; font-size: 20px; box-shadow: 0 0 20px rgba(213,0,0,0.5); }
+        
+        .battle-body { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; position: relative; }
+        .battle-question { font-size: 45px; font-weight: 900; color: #fff; text-align: center; margin-bottom: 40px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .battle-options { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; max-width: 600px; }
+        .btn-ans { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); padding: 20px; border-radius: 15px; font-size: 20px; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; backdrop-filter: blur(5px); }
+        .btn-ans:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
+        .btn-ans.correct { background: #00c853; border-color: #00e676; }
+        .btn-ans.wrong { background: #d50000; border-color: #ff1744; }
+        .btn-ans.locked { opacity: 0.5; pointer-events: none; }
+        
+        .lock-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 10; flex-direction: column; }
+        .lock-overlay.active { display: flex; }
+        .lock-text { font-size: 30px; color: #ffeb3b; font-weight: bold; text-align: center; }
 
-        .reward-anim { position: fixed; bottom: 20px; right: 20px; background: #00c853; color: white; padding: 15px 25px; border-radius: 30px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 15px rgba(0,200,83,0.4); transform: translateY(100px); opacity: 0; transition: 0.5s; z-index: 9999;}
-        .reward-anim.show { transform: translateY(0); opacity: 1; }
+        .reward-anim { position: fixed; bottom: 20px; right: 20px; background: #00c853; color: white; padding: 15px 25px; border-radius: 30px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 15px rgba(0,200,83,0.4); transform: translateY(100px); opacity: 0; transition: 0.5s; z-index: 9999;}
+        .reward-anim.show { transform: translateY(0); opacity: 1; }
 
-        @media (max-width: 768px) {
-            .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
-            .sidebar.show { transform: translateX(0); }
-            .menu-btn { display: block; }
-            .top-stats-bar { justify-content: space-between; padding: 10px 15px; }
-            .workspace { flex-direction: column; display: block;} .panel { min-height: 400px; margin-bottom: 20px;}
-            .fighter { font-size: 16px; } .fighter span { font-size: 24px; }
-            .battle-question { font-size: 30px; } .btn-ans { font-size: 16px; padding: 15px; }
-            .battle-options { grid-template-columns: 1fr; }
-        }
-    </style>
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
+            .sidebar.show { transform: translateX(0); }
+            .menu-btn { display: block; }
+            .top-stats-bar { justify-content: space-between; padding: 10px 15px; }
+            .workspace { flex-direction: column; display: block;} .panel { min-height: 400px; margin-bottom: 20px;}
+            .fighter { font-size: 16px; } .fighter span { font-size: 24px; }
+            .battle-question { font-size: 30px; } .btn-ans { font-size: 16px; padding: 15px; }
+            .battle-options { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
-    <div id="sidebarOverlay" class="overlay" onclick="toggleSidebar()"></div>
-    <aside class="sidebar" id="sidebar">
-        <div class="brand">🎓 VocabForge</div>
-        
-        <div class="user-profile">
-            <div class="user-avatar" id="sidebarAvatar">👤</div>
-            <div class="user-name" id="sidebarName">Khách vãng lai</div>
-            <div class="user-badge badge-student" id="sidebarRole">👨‍🎓 Học Sinh</div>
-            <div style="font-size: 12px; color: #666; margin-top: 5px;">🔍 Kính Lúp: <span id="ui-glass-count" style="font-weight:bold; color:var(--primary);">0</span></div>
-        </div>
+    <div id="sidebarOverlay" class="overlay" onclick="toggleSidebar()"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="brand">🎓 VocabForge</div>
+        
+        <div class="user-profile">
+            <div class="user-avatar" id="sidebarAvatar">👤</div>
+            <div class="user-name" id="sidebarName">Khách vãng lai</div>
+            <div class="user-badge badge-student" id="sidebarRole">👨‍🎓 Học Sinh</div>
+            <div style="font-size: 12px; color: #666; margin-top: 5px;">🔍 Kính Lúp: <span id="ui-glass-count" style="font-weight:bold; color:var(--primary);">0</span></div>
+        </div>
 
-        <div class="nav-item" id="nav-creator" onclick="switchTab('creator')" style="display:none">⚡ Lò Đúc Bài Học</div>
-        <div class="nav-item nav-arena" id="nav-arena" onclick="switchTab('arena')" style="display:none">⚔️ Đài Tỷ Võ (Knock-out)</div>
-        <div class="nav-item active" id="nav-library" onclick="switchTab('library')">☁️ Kho Bài Học</div>
-        <div class="nav-item" id="nav-shop" onclick="switchTab('shop')">🛒 Cửa Hàng</div>
-        <div class="nav-item" id="nav-leaderboard" onclick="switchTab('leaderboard')">🏆 Xếp Hạng</div>
-        <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">⚙️ Cài Đặt Hệ Thống</div>
-    </aside>
+        <div class="nav-item" id="nav-creator" onclick="switchTab('creator')" style="display:none">⚡ Lò Đúc Bài Học</div>
+        <div class="nav-item nav-arena" id="nav-arena" onclick="switchTab('arena')" style="display:none">⚔️ Đài Tỷ Võ (Knock-out)</div>
+        <div class="nav-item active" id="nav-library" onclick="switchTab('library')">☁️ Kho Bài Học</div>
+        <div class="nav-item" id="nav-shop" onclick="switchTab('shop')">🛒 Cửa Hàng</div>
+        <div class="nav-item" id="nav-leaderboard" onclick="switchTab('leaderboard')">🏆 Xếp Hạng</div>
+        <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">⚙️ Cài Đặt Hệ Thống</div>
+    </aside>
 
-    <div class="main-wrapper">
-        <div class="top-stats-bar">
-            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-            <div style="display: flex; gap: 15px;">
-                <div class="stat-box stat-streak">🔥 <span id="ui-streak">0</span></div>
-                <div class="stat-box stat-xp">⭐ <span id="ui-xp">0</span></div>
-                <div class="stat-box stat-gold">🪙 <span id="ui-gold">0</span></div>
-            </div>
-        </div>
+    <div class="main-wrapper">
+        <div class="top-stats-bar">
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <div style="display: flex; gap: 15px;">
+                <div class="stat-box stat-streak">🔥 <span id="ui-streak">0</span></div>
+                <div class="stat-box stat-xp">⭐ <span id="ui-xp">0</span></div>
+                <div class="stat-box stat-gold">🪙 <span id="ui-gold">0</span></div>
+            </div>
+        </div>
 
-        <main class="main-content">
-            <div id="view-library" class="view-section active">
-                <div class="header"><h1>☁️ Kho Bài Học</h1></div>
-                <div class="library-grid" id="libraryContainer"></div>
-            </div>
+        <main class="main-content">
+            <div id="view-library" class="view-section active">
+                <div class="header"><h1>☁️ Kho Bài Học</h1></div>
+                <div class="library-grid" id="libraryContainer"></div>
+            </div>
 
-            <div id="view-arena" class="view-section">
-                <div class="header">
-                    <h1 style="color: var(--danger);">⚔️ Đài Tỷ Võ - Vòng Sinh Tử</h1>
-                    <p>Trung tâm điều binh khiển tướng dành riêng cho Bệ hạ.</p>
-                </div>
-                
-                <div class="arena-container">
-                    <div class="arena-panel">
-                        <div class="arena-title">1. Ngự Thiện Phòng (Tuyển chọn đề thi)</div>
-                        <p style="font-size: 14px; color: #666; margin-bottom: 10px;">Tick chọn các giáo trình sẽ xuất hiện trong vòng Knock-out tháng này:</p>
-                        <div class="syllabus-list" id="syllabusChecklist">
-                            <p style="text-align:center; color:#888;">Đang tải danh sách bài học...</p>
-                        </div>
-                        <button class="btn-save" style="width: 100%; padding: 12px; font-size: 16px;" onclick="saveSyllabusSelection()">💾 Khóa Đề Thi</button>
-                    </div>
+            <div id="view-arena" class="view-section">
+                <div class="header">
+                    <h1 style="color: var(--danger);">⚔️ Đài Tỷ Võ - Vòng Sinh Tử</h1>
+                    <p>Trung tâm điều binh khiển tướng dành riêng cho Bệ hạ.</p>
+                </div>
+                
+                <div class="arena-container">
+                    <div class="arena-panel">
+                        <div class="arena-title">1. Ngự Thiện Phòng (Tuyển chọn đề thi)</div>
+                        <p style="font-size: 14px; color: #666; margin-bottom: 10px;">Tick chọn các giáo trình sẽ xuất hiện trong vòng Knock-out tháng này:</p>
+                        <div class="syllabus-list" id="syllabusChecklist">
+                            <p style="text-align:center; color:#888;">Đang tải danh sách bài học...</p>
+                        </div>
+                        <button class="btn-save" style="width: 100%; padding: 12px; font-size: 16px;" onclick="saveSyllabusSelection()">💾 Khóa Đề Thi</button>
+                    </div>
 
-                    <div class="arena-panel">
-                        <div class="arena-title">2. Lò Bát Quái (Thiên Mệnh Phân Nhánh)</div>
-                        <p style="font-size: 14px; color: #666; margin-bottom: 15px;">Hệ thống sẽ tự động quét Bảng Vàng, cắt Top người giỏi nhất và bốc thăm mù chia cặp.</p>
-                        <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 10px; margin-bottom: 20px; font-size: 14px;">
-                            <b>Luật lệ Vòng Loại:</b><br>
-                            - Sĩ số dưới 16 người: Lấy <b>Top 4</b> (Bán kết)<br>
-                            - Sĩ số từ 16 - 23 người: Lấy <b>Top 8</b> (Tứ kết)<br>
-                            - Sĩ số từ 24 trở lên: Lấy <b>Top 16</b> (Vòng 1/8)
-                        </div>
-                        <button class="btn-danger" style="width: 100%; padding: 15px; font-size: 18px; font-weight: 900;" onclick="executeBlindDraw()">🎲 CHỐT SỔ & BỐC THĂM MÙ</button>
-                    </div>
-                </div>
-            </div>
+                    <div class="arena-panel">
+                        <div class="arena-title">2. Lò Bát Quái (Thiên Mệnh Phân Nhánh)</div>
+                        <p style="font-size: 14px; color: #666; margin-bottom: 15px;">Hệ thống sẽ tự động quét Bảng Vàng, cắt Top người giỏi nhất và bốc thăm mù chia cặp.</p>
+                        <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 10px; margin-bottom: 20px; font-size: 14px;">
+                            <b>Luật lệ Vòng Loại:</b><br>
+                            - Sĩ số dưới 16 người: Lấy <b>Top 4</b> (Bán kết)<br>
+                            - Sĩ số từ 16 - 23 người: Lấy <b>Top 8</b> (Tứ kết)<br>
+                            - Sĩ số từ 24 trở lên: Lấy <b>Top 16</b> (Vòng 1/8)
+                        </div>
+                        <button class="btn-danger" style="width: 100%; padding: 15px; font-size: 18px; font-weight: 900;" onclick="executeBlindDraw()">🎲 CHỐT SỔ & BỐC THĂM MÙ</button>
+                    </div>
+                </div>
+            </div>
 
-            <div id="view-shop" class="view-section">
-                <div class="header">
-                    <h1>🛒 Trung Tâm Thương Mại</h1>
-                    <p>Sử dụng Vàng 🪙 tích lũy được để đổi các vật phẩm hữu ích.</p>
-                </div>
-                <div class="shop-grid">
-                    <div class="shop-item">
-                        <div class="item-icon">🧪</div>
-                        <div class="item-title">Bình Tiên XP x2</div>
-                        <div class="item-desc">Tăng gấp đôi phần thưởng Vàng & XP. Tác dụng giới hạn trong 24 giờ.</div>
-                        <div class="item-price">🪙 150</div>
-                        <button class="btn-buy" onclick="buyItem('potion', 150)">Đổi Ngay</button>
-                    </div>
-                    <div class="shop-item">
-                        <div class="item-icon">🎭</div>
-                        <div class="item-title">Mặt Nạ Hắc Ám</div>
-                        <div class="item-desc">Ẩn tên và điểm số trên Bảng xếp hạng thành "???". Tác dụng 24 giờ.</div>
-                        <div class="item-price">🪙 250</div>
-                        <button class="btn-buy" onclick="buyItem('mask', 250)">Đổi Ngay</button>
-                    </div>
-                    <div class="shop-item">
-                        <div class="item-icon">🔍</div>
-                        <div class="item-title">Kính Lúp Thám Tử</div>
-                        <div class="item-desc">Loại bỏ 2 đáp án sai trong lúc làm Trắc nghiệm (Dùng 1 lần/kính).</div>
-                        <div class="item-price">🪙 200</div>
-                        <button class="btn-buy" onclick="buyItem('glass', 200)">Đổi Ngay</button>
-                    </div>
-                    <div class="shop-item">
-                        <div class="item-icon">🛡️</div>
-                        <div class="item-title">Bùa Bảo Hộ</div>
-                        <div class="item-desc">Cứu chuỗi ngày học liên tiếp nếu lỡ quên học 1 ngày.</div>
-                        <div class="item-price">🪙 200</div>
-                        <button class="btn-buy" onclick="buyItem('shield', 200)">Đổi Ngay</button>
-                    </div>
-                </div>
-            </div>
+            <div id="view-shop" class="view-section">
+                <div class="header">
+                    <h1>🛒 Trung Tâm Thương Mại</h1>
+                    <p>Sử dụng Vàng 🪙 tích lũy được để đổi các vật phẩm hữu ích.</p>
+                </div>
+                <div class="shop-grid">
+                    <div class="shop-item">
+                        <div class="item-icon">🧪</div>
+                        <div class="item-title">Bình Tiên XP x2</div>
+                        <div class="item-desc">Tăng gấp đôi phần thưởng Vàng & XP. Tác dụng giới hạn trong 24 giờ.</div>
+                        <div class="item-price">🪙 150</div>
+                        <button class="btn-buy" onclick="buyItem('potion', 150)">Đổi Ngay</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="item-icon">🎭</div>
+                        <div class="item-title">Mặt Nạ Hắc Ám</div>
+                        <div class="item-desc">Ẩn tên và điểm số trên Bảng xếp hạng thành "???". Tác dụng 24 giờ.</div>
+                        <div class="item-price">🪙 250</div>
+                        <button class="btn-buy" onclick="buyItem('mask', 250)">Đổi Ngay</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="item-icon">🔍</div>
+                        <div class="item-title">Kính Lúp Thám Tử</div>
+                        <div class="item-desc">Loại bỏ 2 đáp án sai trong lúc làm Trắc nghiệm (Dùng 1 lần/kính).</div>
+                        <div class="item-price">🪙 200</div>
+                        <button class="btn-buy" onclick="buyItem('glass', 200)">Đổi Ngay</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="item-icon">🛡️</div>
+                        <div class="item-title">Bùa Bảo Hộ</div>
+                        <div class="item-desc">Cứu chuỗi ngày học liên tiếp nếu lỡ quên học 1 ngày.</div>
+                        <div class="item-price">🪙 200</div>
+                        <button class="btn-buy" onclick="buyItem('shield', 200)">Đổi Ngay</button>
+                    </div>
+                </div>
+            </div>
 
-            <div id="view-leaderboard" class="view-section">
-                <div class="header" style="text-align: center;">
-                    <h1>🏆 Bảng Xếp Hạng Điểm Số</h1>
-                    <p>Tôn vinh nỗ lực học tập. Kẻ mạnh nhất sẽ lọt vào vòng Knock-out!</p>
-                </div>
-                
-                <div class="bracket-board" id="bracketBoard">
-                    <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 SƠ ĐỒ NHÁNH ĐẤU KNOCK-OUT 🏆</h2>
-                    <p id="bracketStatus" style="margin-bottom: 20px; color: #ccc;">Sẵn sàng khai chiến!</p>
-                    <div class="bracket-stage" id="bracketMatches"></div>
-                </div>
+            <div id="view-leaderboard" class="view-section">
+                <div class="header" style="text-align: center;">
+                    <h1>🏆 Bảng Xếp Hạng Điểm Số</h1>
+                    <p>Tôn vinh nỗ lực học tập. Kẻ mạnh nhất sẽ lọt vào vòng Knock-out!</p>
+                </div>
+                
+                <div class="bracket-board" id="bracketBoard">
+                    <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 SƠ ĐỒ NHÁNH ĐẤU KNOCK-OUT 🏆</h2>
+                    <p id="bracketStatus" style="margin-bottom: 20px; color: #ccc;">Sẵn sàng khai chiến!</p>
+                    <div class="bracket-stage" id="bracketMatches"></div>
+                </div>
 
-                <div class="lb-container" id="leaderboardData">
-                    <p style="text-align:center; color:#888;">Đang tải dữ liệu từ máy chủ...</p>
-                </div>
-            </div>
+                <div class="lb-container" id="leaderboardData">
+                    <p style="text-align:center; color:#888;">Đang tải dữ liệu từ máy chủ...</p>
+                </div>
+            </div>
 
-            <div id="view-creator" class="view-section">
-                <div class="header"><h1>⚡ Lò Đúc Trắc Nghiệm Tự Động</h1></div>
-                <div class="workspace">
-                    <div class="panel">
-                        <div class="panel-header"><span>📝 Nhập danh sách từ vựng:</span><button class="btn-run" onclick="generateCode()">Tạo Mã ▶</button></div>
-                        <textarea id="rawInput" placeholder="Ví dụ:&#10;fall | Ngã | /fɔːl/ | Verb"></textarea>
-                    </div>
-                    <div class="panel">
-                        <div class="panel-header"><span>⚙️ Mã HTML</span><button class="btn-save" onclick="copyCode()">📋 Copy Mã</button></div>
-                        <textarea id="generatedCode" readonly style="background:#e8eaf6; font-size: 12px;"></textarea>
-                    </div>
-                </div>
-            </div>
+            <div id="view-creator" class="view-section">
+                <div class="header"><h1>⚡ Lò Đúc Trắc Nghiệm Tự Động</h1></div>
+                <div class="workspace">
+                    <div class="panel">
+                        <div class="panel-header"><span>📝 Nhập danh sách từ vựng:</span><button class="btn-run" onclick="generateCode()">Tạo Mã ▶</button></div>
+                        <textarea id="rawInput" placeholder="Ví dụ:&#10;fall | Ngã | /fɔːl/ | Verb"></textarea>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header"><span>⚙️ Mã HTML</span><button class="btn-save" onclick="copyCode()">📋 Copy Mã</button></div>
+                        <textarea id="generatedCode" readonly style="background:#e8eaf6; font-size: 12px;"></textarea>
+                    </div>
+                </div>
+            </div>
 
-            <div id="view-settings" class="view-section">
-                <div class="header"><h1>⚙️ Cài Đặt Hệ Thống</h1></div>
-                <div class="settings-card">
-                    <h3>🔐 Cổng Đăng Nhập</h3>
-                    <div id="authSection"><button class="btn-google" onclick="loginWithGoogle()">🌐 Đăng nhập bằng Google</button></div>
-                </div>
-                <div class="settings-card">
-                    <h3>🎭 Quyền Kiểm Soát (Dành cho Giáo Viên)</h3>
-                    <div class="form-group">
-                        <label>Mã PIN xác thực:</label>
-                        <input type="password" id="teacherPinCheck" placeholder="Nhập PIN để cấp quyền giáo viên...">
-                        <button class="btn-run" onclick="attemptTeacherLogin()" style="width: 100%; margin-top: 10px;">Xác nhận</button>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
+            <div id="view-settings" class="view-section">
+                <div class="header"><h1>⚙️ Cài Đặt Hệ Thống</h1></div>
+                <div class="settings-card">
+                    <h3>🔐 Cổng Đăng Nhập</h3>
+                    <div id="authSection"><button class="btn-google" onclick="loginWithGoogle()">🌐 Đăng nhập bằng Google</button></div>
+                </div>
+                <div class="settings-card">
+                    <h3>🎭 Quyền Kiểm Soát (Dành cho Giáo Viên)</h3>
+                    <div class="form-group">
+                        <label>Mã PIN xác thực:</label>
+                        <input type="password" id="teacherPinCheck" placeholder="Nhập PIN để cấp quyền giáo viên...">
+                        <button class="btn-run" onclick="attemptTeacherLogin()" style="width: 100%; margin-top: 10px;">Xác nhận</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
 
-    <div class="modal" id="nameModal">
-        <div class="modal-content name-modal-content">
-            <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 22px;">Thông Tin Cá Nhân</h3>
-            <p style="color: #555; margin-bottom: 20px;">Vui lòng nhập tên hiển thị thật:</p>
-            <input type="text" id="displayNameInput" placeholder="Ví dụ: Nguyễn Văn A..." style="width: 100%; padding: 12px; border: 2px solid var(--secondary); border-radius: 8px; margin-bottom: 15px; font-size: 16px;">
-            <button class="btn-save" style="width: 100%; padding: 12px;" onclick="saveDisplayName()">Lưu Tên Hiển Thị</button>
-            <button class="btn-close" style="width: 100%; padding: 12px; margin-top: 10px; display: none;" id="closeNameModalBtn" onclick="document.getElementById('nameModal').classList.remove('active')">Hủy bỏ</button>
-        </div>
-    </div>
+    <div class="modal" id="nameModal">
+        <div class="modal-content name-modal-content">
+            <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 22px;">Thông Tin Cá Nhân</h3>
+            <p style="color: #555; margin-bottom: 20px;">Vui lòng nhập tên hiển thị thật:</p>
+            <input type="text" id="displayNameInput" placeholder="Ví dụ: Nguyễn Văn A..." style="width: 100%; padding: 12px; border: 2px solid var(--secondary); border-radius: 8px; margin-bottom: 15px; font-size: 16px;">
+            <button class="btn-save" style="width: 100%; padding: 12px;" onclick="saveDisplayName()">Lưu Tên Hiển Thị</button>
+            <button class="btn-close" style="width: 100%; padding: 12px; margin-top: 10px; display: none;" id="closeNameModalBtn" onclick="document.getElementById('nameModal').classList.remove('active')">Hủy bỏ</button>
+        </div>
+    </div>
 
-   <div class="modal" id="pvpModal">
-        <div class="battle-arena">
-            <div class="battle-header">
-                <div class="fighter">
-                    <div id="pvpP1Name" style="font-weight:bold;">Tuyển thủ 1</div>
-                    <span id="pvpP1Correct" style="font-size: 50px; font-weight: 900; color: #fff;">0</span> 
-                    <div style="font-size: 14px; color: #ffd700;">Set Score: <b id="pvpP1Set">0</b></div> 
-                </div>
-                <div class="vs-badge">VS</div>
-                <div class="fighter">
-                    <div id="pvpP2Name" style="font-weight:bold;">Tuyển thủ 2</div>
-                    <span id="pvpP2Correct" style="font-size: 50px; font-weight: 900; color: #fff;">0</span>
-                    <div style="font-size: 14px; color: #ffd700;">Set Score: <b id="pvpP2Set">0</b></div>
-                </div>
-            </div>
+    <div class="modal" id="pvpModal">
+        <div class="battle-arena">
+            <div class="battle-header">
+                <div class="fighter" id="pvpP1Name">Tuyển thủ 1 <span id="pvpP1Score">0</span></div>
+                <div class="vs-badge">VS</div>
+                <div class="fighter" id="pvpP2Name">Tuyển thủ 2 <span id="pvpP2Score">0</span></div>
+            </div>
+            <div class="battle-body">
+                <div class="lock-overlay" id="lockOverlay">
+                    <div class="lock-text" id="lockMsg">ĐỐI THỦ ĐÃ CHỘP TRƯỚC!</div>
+                </div>
+                <div id="pvpWaitMsg" style="font-size:20px; color:#aaa; margin-bottom: 20px;">Đang đợi hệ thống phát đề...</div>
+                <div class="battle-question" id="pvpQuestion" style="display:none;">APPLE</div>
+                <div class="battle-options" id="pvpOptions" style="display:none;">
+                    <button class="btn-ans" onclick="submitPvPAnswer(0)" id="pvpOpt0">Quả táo</button>
+                    <button class="btn-ans" onclick="submitPvPAnswer(1)" id="pvpOpt1">Quả cam</button>
+                    <button class="btn-ans" onclick="submitPvPAnswer(2)" id="pvpOpt2">Quả chuối</button>
+                    <button class="btn-ans" onclick="submitPvPAnswer(3)" id="pvpOpt3">Quả lựu</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <div style="text-align:center; color:#ccc; margin-top:10px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 5px;">
-                CÂU HỎI SỐ: <span id="pvpQIndex" style="color:#ffd700;">1</span> / 21
-            </div>
+    <div id="rewardAnim" class="reward-anim">🎉 +10 🪙 | +15 ⭐</div>
 
-            <div class="battle-body">
-                <div class="lock-overlay" id="lockOverlay">
-                    <div class="lock-text" id="lockMsg">ĐỐI THỦ ĐÃ CHỘP TRƯỚC!</div>
-                </div>
-                
-                <div id="pvpWaitMsg" style="font-size:18px; color:#aaa; text-align:center;">Đang đợi hiệu lệnh từ bệ hạ...</div>
-                
-                <div class="battle-question" id="pvpQuestion" style="display:none; margin-top: 20px;">READY?</div>
-                
-                <div class="battle-options" id="pvpOptions" style="display:none;">
-                    <button class="btn-ans" onclick="submitPvPAnswer(0)" id="pvpOpt0">-</button>
-                    <button class="btn-ans" onclick="submitPvPAnswer(1)" id="pvpOpt1">-</button>
-                    <button class="btn-ans" onclick="submitPvPAnswer(2)" id="pvpOpt2">-</button>
-                    <button class="btn-ans" onclick="submitPvPAnswer(3)" id="pvpOpt3">-</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAmDqBfe4JRBKDGVwqVS0yI9_P2O2WIzxI",
+            authDomain: "academic-planner-v100.firebaseapp.com",
+            databaseURL: "https://academic-planner-v100-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "academic-planner-v100",
+            storageBucket: "academic-planner-v100.firebasestorage.app",
+            messagingSenderId: "80448326816",
+            appId: "1:80448326816:web:15e6dda33c3be03be90dc5"
+        };
 
-    <div id="rewardAnim" class="reward-anim">🎉 +10 🪙 | +15 ⭐</div>
+        let db, auth, rtdb;
+        try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); auth = firebase.auth(); rtdb = firebase.database(); } 
+        catch (e) { console.error("Lỗi Firebase!"); }
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAmDqBfe4JRBKDGVwqVS0yI9_P2O2WIzxI",
-            authDomain: "academic-planner-v100.firebaseapp.com",
-            databaseURL: "https://academic-planner-v100-default-rtdb.asia-southeast1.firebasedatabase.app/",
-            projectId: "academic-planner-v100",
-            storageBucket: "academic-planner-v100.firebasestorage.app",
-            messagingSenderId: "80448326816",
-            appId: "1:80448326816:web:15e6dda33c3be03be90dc5"
-        };
+        let currentUser = null;
+        let userData = { role: 'student', gold: 0, xp: 0, streak: 1, displayName: '', lastLogin: '', hasShield: false, potionExpiry: null, maskExpiry: null, magnifyingGlass: 0 };
+        let currentPvPMatchId = null;
 
-        let db, auth, rtdb;
-        try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); auth = firebase.auth(); rtdb = firebase.database(); } 
-        catch (e) { console.error("Lỗi Firebase!"); }
+        if(auth) {
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    currentUser = user;
+                    const todayStr = new Date().toLocaleDateString('en-GB'); 
+                    db.collection('vocab_users').doc(user.uid).get().then(doc => {
+                        if (doc.exists) {
+                            userData = doc.data();
+                            if(!userData.streak || userData.streak === 0) userData.streak = 1;
+                            if(!userData.lastLogin) userData.lastLogin = todayStr;
+                            if (userData.lastLogin !== todayStr) {
+                                const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+                                if (userData.lastLogin === yesterday.toLocaleDateString('en-GB')) userData.streak += 1;
+                                else { userData.streak = userData.hasShield ? (userData.hasShield = false, alert("Bùa cứu chuỗi!"), userData.streak) : 1; }
+                                userData.lastLogin = todayStr;
+                                db.collection('vocab_users').doc(user.uid).update({ streak: userData.streak, lastLogin: todayStr, hasShield: userData.hasShield });
+                            }
+                            updateUI();
+                        } else {
+                            userData.lastLogin = todayStr; 
+                            document.getElementById('nameModal').classList.add('active');
+                        }
+                    });
+                } else {
+                    currentUser = null; userData = { role: 'student', gold: 0, xp: 0, streak: 0, displayName: 'Khách' }; updateUI();
+                }
+            });
+        }
 
-        let currentUser = null;
-        let userData = { role: 'student', gold: 0, xp: 0, streak: 1, displayName: '', lastLogin: '', hasShield: false, potionExpiry: null, maskExpiry: null, magnifyingGlass: 0 };
-        let currentPvPMatchId = null;
+        function loginWithGoogle() { if(auth) auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
 
-        if(auth) {
-            auth.onAuthStateChanged(user => {
-                if (user) {
-                    currentUser = user;
-                    const todayStr = new Date().toLocaleDateString('en-GB'); 
-                    db.collection('vocab_users').doc(user.uid).get().then(doc => {
-                        if (doc.exists) {
-                            userData = doc.data();
-                            if(!userData.streak || userData.streak === 0) userData.streak = 1;
-                            if(!userData.lastLogin) userData.lastLogin = todayStr;
-                            if (userData.lastLogin !== todayStr) {
-                                const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-                                if (userData.lastLogin === yesterday.toLocaleDateString('en-GB')) userData.streak += 1;
-                                else { userData.streak = userData.hasShield ? (userData.hasShield = false, alert("Bùa cứu chuỗi!"), userData.streak) : 1; }
-                                userData.lastLogin = todayStr;
-                                db.collection('vocab_users').doc(user.uid).update({ streak: userData.streak, lastLogin: todayStr, hasShield: userData.hasShield });
-                            }
-                            updateUI();
-                        } else {
-                            userData.lastLogin = todayStr; 
-                            document.getElementById('nameModal').classList.add('active');
-                        }
-                    });
-                } else {
-                    currentUser = null; userData = { role: 'student', gold: 0, xp: 0, streak: 0, displayName: 'Khách' }; updateUI();
-                }
-            });
-        }
+        function saveDisplayName() {
+            const name = document.getElementById('displayNameInput').value.trim();
+            if (!name) return alert("Không được để trống tên hiển thị!");
+            userData.displayName = name; userData.email = currentUser.email;
+            db.collection('vocab_users').doc(currentUser.uid).set(userData, {merge: true}).then(() => {
+                document.getElementById('nameModal').classList.remove('active'); updateUI(); fetchLeaderboard();
+            });
+        }
 
-        function loginWithGoogle() { if(auth) auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+        function syncStatsToCloud() {
+            if (currentUser && db) db.collection('vocab_users').doc(currentUser.uid).update({ 
+                gold: userData.gold, xp: userData.xp, streak: userData.streak, displayName: userData.displayName
+            }); updateUI();
+        }
 
-        function saveDisplayName() {
-            const name = document.getElementById('displayNameInput').value.trim();
-            if (!name) return alert("Không được để trống tên hiển thị!");
-            userData.displayName = name; userData.email = currentUser.email;
-            db.collection('vocab_users').doc(currentUser.uid).set(userData, {merge: true}).then(() => {
-                document.getElementById('nameModal').classList.remove('active'); updateUI(); fetchLeaderboard();
-            });
-        }
+        function updateUI() {
+            document.getElementById('ui-gold').innerText = userData.gold; document.getElementById('ui-xp').innerText = userData.xp;
+            document.getElementById('ui-streak').innerText = userData.streak; 
+            document.getElementById('sidebarName').innerText = userData.displayName || "Khách vãng lai";
+            
+            const badge = document.getElementById('sidebarRole');
+            if(userData.role === 'teacher') {
+                badge.className = 'user-badge badge-teacher'; badge.innerText = '👨‍🏫 Giáo Viên';
+                document.getElementById('nav-creator').style.display = 'flex'; document.getElementById('nav-arena').style.display = 'flex';
+            } else {
+                badge.className = 'user-badge badge-student'; badge.innerText = '👨‍🎓 Học Sinh';
+                document.getElementById('nav-creator').style.display = 'none'; document.getElementById('nav-arena').style.display = 'none';
+            }
+        }
 
-        function syncStatsToCloud() {
-            if (currentUser && db) db.collection('vocab_users').doc(currentUser.uid).update({ 
-                gold: userData.gold, xp: userData.xp, streak: userData.streak, displayName: userData.displayName
-            }); updateUI();
-        }
+        function buyItem(itemType, price) { /* Giữ gọn để test */ }
 
-        function updateUI() {
-            document.getElementById('ui-gold').innerText = userData.gold; document.getElementById('ui-xp').innerText = userData.xp;
-            document.getElementById('ui-streak').innerText = userData.streak; 
-            document.getElementById('sidebarName').innerText = userData.displayName || "Khách vãng lai";
-            
-            const badge = document.getElementById('sidebarRole');
-            if(userData.role === 'teacher') {
-                badge.className = 'user-badge badge-teacher'; badge.innerText = '👨‍🏫 Giáo Viên';
-                document.getElementById('nav-creator').style.display = 'flex'; document.getElementById('nav-arena').style.display = 'flex';
-            } else {
-                badge.className = 'user-badge badge-student'; badge.innerText = '👨‍🎓 Học Sinh';
-                document.getElementById('nav-creator').style.display = 'none'; document.getElementById('nav-arena').style.display = 'none';
-            }
-        }
+        async function fetchLeaderboard() {
+            if(!db) return;
+            const lbContainer = document.getElementById('leaderboardData'); lbContainer.innerHTML = '<div class="loader"></div>';
+            try {
+                const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').limit(30).get();
+                let html = ''; let rank = 1; const now = new Date().getTime();
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.role !== 'teacher') {
+                        let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '.';
+                        let rankClass = rank <= 3 ? `lb-rank-${rank}` : '';
+                        let displayXp = data.xp; let displayName = data.displayName || 'Ẩn danh';
+                        html += `<div class="lb-row ${rankClass}"><span>${medal} ${displayName}</span><span style="color:var(--secondary)">⭐ ${displayXp} XP</span></div>`;
+                        rank++;
+                    }
+                });
+                lbContainer.innerHTML = html || '<p style="text-align:center">Chưa có người dùng nào ghi danh.</p>';
+            } catch (err) { lbContainer.innerHTML = '<p style="color:red; text-align:center">Lỗi tải dữ liệu bảng xếp hạng.</p>'; }
+        }
 
-        function buyItem(itemType, price) { /* Giữ gọn để test */ }
+        // TẢI KHO BÀI HỌC (ĐÃ PHỤC HỒI)
+        const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing';
+        async function fetchFromSheets() {
+            const container = document.getElementById('libraryContainer');
+            if (!container) return;
+            container.innerHTML = '<p style="text-align:center; color:#888;">Đang tải dữ liệu từ kho...</p>';
+            let sheetId = SHEET_LINK.includes('/d/') ? SHEET_LINK.split('/d/')[1].split('/')[0] : SHEET_LINK;
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&t=${new Date().getTime()}`;
+            try {
+                const response = await fetch(url); const text = await response.text();
+                const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+                const data = JSON.parse(jsonString);
+                
+                let htmlLib = ''; let htmlArena = ''; allLessons = [];
+                for (let i = 1; i < data.table.rows.length; i++) {
+                    const r = data.table.rows[i];
+                    if (r && r.c && r.c[0] && r.c[1]) {
+                        const lessonName = r.c[0].v;
+                        allLessons.push(lessonName);
+                        htmlLib += `<div class="lib-card"><h3>${lessonName}</h3><button class="btn-run" style="margin-top:10px;" onclick="alert('Đang nâng cấp kho!')">▶ VÀO HỌC</button></div>`;
+                        htmlArena += `<label class="syllabus-item"><input type="checkbox" name="syllabusCheck" value="${lessonName}"> <span>${lessonName}</span></label>`;
+                    }
+                }
+                container.innerHTML = htmlLib || '<p>Kho trống.</p>';
+                document.getElementById('syllabusChecklist').innerHTML = htmlArena || '<p>Chưa có dữ liệu giáo trình.</p>';
+            } catch (e) { 
+                console.error(e); 
+                container.innerHTML = '<p style="color:red; text-align:center">Lỗi tải dữ liệu. Vui lòng kiểm tra Google Sheets.</p>'; 
+            }
+        }
 
-        async function fetchLeaderboard() {
-            if(!db) return;
-            const lbContainer = document.getElementById('leaderboardData'); lbContainer.innerHTML = '<div class="loader"></div>';
-            try {
-                const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').limit(30).get();
-                let html = ''; let rank = 1; const now = new Date().getTime();
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (data.role !== 'teacher') {
-                        let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '.';
-                        let rankClass = rank <= 3 ? `lb-rank-${rank}` : '';
-                        let displayXp = data.xp; let displayName = data.displayName || 'Ẩn danh';
-                        html += `<div class="lb-row ${rankClass}"><span>${medal} ${displayName}</span><span style="color:var(--secondary)">⭐ ${displayXp} XP</span></div>`;
-                        rank++;
-                    }
-                });
-                lbContainer.innerHTML = html || '<p style="text-align:center">Chưa có người dùng nào ghi danh.</p>';
-            } catch (err) { lbContainer.innerHTML = '<p style="color:red; text-align:center">Lỗi tải dữ liệu bảng xếp hạng.</p>'; }
-        }
+        // ĐÀI TỶ VÕ VÀ BỐC THĂM
+        function saveSyllabusSelection() { alert("Đã khóa danh sách Đề Thi cho Vòng Knock-out!"); }
 
-        // TẢI KHO BÀI HỌC (ĐÃ PHỤC HỒI)
-        const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing';
-        async function fetchFromSheets() {
-            const container = document.getElementById('libraryContainer');
-            if (!container) return;
-            container.innerHTML = '<p style="text-align:center; color:#888;">Đang tải dữ liệu từ kho...</p>';
-            let sheetId = SHEET_LINK.includes('/d/') ? SHEET_LINK.split('/d/')[1].split('/')[0] : SHEET_LINK;
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&t=${new Date().getTime()}`;
-            try {
-                const response = await fetch(url); const text = await response.text();
-                const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-                const data = JSON.parse(jsonString);
-                
-                let htmlLib = ''; let htmlArena = ''; allLessons = [];
-                for (let i = 1; i < data.table.rows.length; i++) {
-                    const r = data.table.rows[i];
-                    if (r && r.c && r.c[0] && r.c[1]) {
-                        const lessonName = r.c[0].v;
-                        allLessons.push(lessonName);
-                        htmlLib += `<div class="lib-card"><h3>${lessonName}</h3><button class="btn-run" style="margin-top:10px;" onclick="alert('Đang nâng cấp kho!')">▶ VÀO HỌC</button></div>`;
-                        htmlArena += `<label class="syllabus-item"><input type="checkbox" name="syllabusCheck" value="${lessonName}"> <span>${lessonName}</span></label>`;
-                    }
-                }
-                container.innerHTML = htmlLib || '<p>Kho trống.</p>';
-                document.getElementById('syllabusChecklist').innerHTML = htmlArena || '<p>Chưa có dữ liệu giáo trình.</p>';
-            } catch (e) { 
-                console.error(e); 
-                container.innerHTML = '<p style="color:red; text-align:center">Lỗi tải dữ liệu. Vui lòng kiểm tra Google Sheets.</p>'; 
-            }
-        }
+        async function executeBlindDraw() {
+            if(!confirm("Bệ hạ có chắc muốn bốc thăm ngay bây giờ?")) return;
+            try {
+                const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get();
+                let candidates = [];
+                snapshot.forEach(doc => { if(doc.data().role !== 'teacher') candidates.push(doc.data().displayName || "Ẩn danh"); });
+                
+                const N = candidates.length; if(N < 4) return alert("Chưa đủ 4 người để bốc thăm!");
+                let topCount = 4; let stageName = "BÁN KẾT";
+                if(N >= 24) { topCount = 16; stageName = "VÒNG 1/8"; } else if(N >= 16) { topCount = 8; stageName = "TỨ KẾT"; }
 
-        // ĐÀI TỶ VÕ VÀ BỐC THĂM
-        function saveSyllabusSelection() { alert("Đã khóa danh sách Đề Thi cho Vòng Knock-out!"); }
+                let qualifiedPlayers = candidates.slice(0, topCount);
+                for (let i = qualifiedPlayers.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [qualifiedPlayers[i], qualifiedPlayers[j]] = [qualifiedPlayers[j], qualifiedPlayers[i]];
+                }
 
-        async function executeBlindDraw() {
-            if(!confirm("Bệ hạ có chắc muốn bốc thăm ngay bây giờ?")) return;
-            try {
-                const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get();
-                let candidates = [];
-                snapshot.forEach(doc => { if(doc.data().role !== 'teacher') candidates.push(doc.data().displayName || "Ẩn danh"); });
-                
-                const N = candidates.length; if(N < 4) return alert("Chưa đủ 4 người để bốc thăm!");
-                let topCount = 4; let stageName = "BÁN KẾT";
-                if(N >= 24) { topCount = 16; stageName = "VÒNG 1/8"; } else if(N >= 16) { topCount = 8; stageName = "TỨ KẾT"; }
+                let matches = [];
+                for(let i = 0; i < qualifiedPlayers.length; i+=2) { matches.push({ player1: qualifiedPlayers[i], player2: qualifiedPlayers[i+1] }); }
 
-                let qualifiedPlayers = candidates.slice(0, topCount);
-                for (let i = qualifiedPlayers.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [qualifiedPlayers[i], qualifiedPlayers[j]] = [qualifiedPlayers[j], qualifiedPlayers[i]];
-                }
+                rtdb.ref('tournament_status/bracket').set({ stage: stageName, matches: matches, timestamp: new Date().getTime() });
+                alert(`Đã bốc thăm xong! Nhánh đấu nằm ở tab Xếp Hạng.`);
+            } catch(e) { alert("Lỗi khi bốc thăm: " + e.message); }
+        }
 
-                let matches = [];
-                for(let i = 0; i < qualifiedPlayers.length; i+=2) { matches.push({ player1: qualifiedPlayers[i], player2: qualifiedPlayers[i+1] }); }
+        // LẮNG NGHE SƠ ĐỒ VÀ PVP
+        if(rtdb) {
+            rtdb.ref('tournament_status/bracket').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if(data) {
+                    document.getElementById('bracketBoard').style.display = 'block';
+                    document.getElementById('bracketStatus').innerText = `GIAI ĐOẠN: ${data.stage} | Trạng thái: Chờ thi đấu`;
+                    let matchHtml = '';
+                    data.matches.forEach((m, index) => {
+                        let fightBtn = userData.role === 'teacher' ? `<button class="btn-fight" style="display:block;" onclick="adminStartPvP('${m.player1}', '${m.player2}', ${index})">⚔️ ÉP KHAI CHIẾN</button>` : '';
+                        matchHtml += `
+                        <div class="match-box">
+                            <div style="font-size:10px; color:#aaa; margin-bottom:5px;">Trận ${index + 1}</div>
+                            <div class="player-name">${m.player1}</div>
+                            <div class="vs-text">VS</div>
+                            <div class="player-name">${m.player2}</div>
+                            ${fightBtn}
+                        </div>`;
+                    });
+                    document.getElementById('bracketMatches').innerHTML = matchHtml;
+                }
+            });
+            
+            rtdb.ref('active_pvp_match').on('value', (snapshot) => {
+                const match = snapshot.val();
+                if(match && (userData.displayName === match.p1 || userData.displayName === match.p2)) {
+                    currentPvPMatchId = match.id;
+                    document.getElementById('pvpModal').classList.add('active');
+                    document.getElementById('pvpP1Name').innerHTML = `${match.p1} <span id="pvpP1Score">${match.p1_score}</span>`;
+                    document.getElementById('pvpP2Name').innerHTML = `${match.p2} <span id="pvpP2Score">${match.p2_score}</span>`;
+                    
+                    if(match.status === 'playing') {
+                        document.getElementById('pvpWaitMsg').style.display = 'none';
+                        document.getElementById('pvpQuestion').style.display = 'block';
+                        document.getElementById('pvpOptions').style.display = 'grid';
+                        document.getElementById('pvpQuestion').innerText = match.current_q.en;
+                        for(let i=0; i<4; i++) {
+                            let btn = document.getElementById('pvpOpt' + i);
+                            btn.innerText = match.current_q.opts[i]; btn.className = 'btn-ans'; 
+                        }
+                        if(match.locked_by !== "") {
+                            document.getElementById('lockOverlay').classList.add('active');
+                            if(match.locked_by === userData.displayName) document.getElementById('lockMsg').innerText = "BẠN ĐÃ CHỌN ĐÁP ÁN!";
+                            else document.getElementById('lockMsg').innerText = `${match.locked_by} ĐÃ CƯỚP ĐIỂM!`;
+                        } else {
+                            document.getElementById('lockOverlay').classList.remove('active');
+                        }
+                    } else if (match.status === 'finished') {
+                        document.getElementById('pvpWaitMsg').style.display = 'block';
+                        document.getElementById('pvpWaitMsg').innerText = "Trận đấu kết thúc! Người thắng: " + (match.p1_score > match.p2_score ? match.p1 : match.p2);
+                        document.getElementById('pvpQuestion').style.display = 'none';
+                        document.getElementById('pvpOptions').style.display = 'none';
+                        document.getElementById('lockOverlay').classList.remove('active');
+                        setTimeout(() => document.getElementById('pvpModal').classList.remove('active'), 5000);
+                    }
+                }
+            });
+        }
 
-                rtdb.ref('tournament_status/bracket').set({ stage: stageName, matches: matches, timestamp: new Date().getTime() });
-                alert(`Đã bốc thăm xong! Nhánh đấu nằm ở tab Xếp Hạng.`);
-            } catch(e) { alert("Lỗi khi bốc thăm: " + e.message); }
-        }
-
-        // LẮNG NGHE SƠ ĐỒ VÀ PVP
-        if(rtdb) {
-            rtdb.ref('tournament_status/bracket').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if(data) {
-                    document.getElementById('bracketBoard').style.display = 'block';
-                    document.getElementById('bracketStatus').innerText = `GIAI ĐOẠN: ${data.stage} | Trạng thái: Chờ thi đấu`;
-                    let matchHtml = '';
-                    data.matches.forEach((m, index) => {
-                        let fightBtn = userData.role === 'teacher' ? `<button class="btn-fight" style="display:block;" onclick="adminStartPvP('${m.player1}', '${m.player2}', ${index})">⚔️ ÉP KHAI CHIẾN</button>` : '';
-                        matchHtml += `
-                        <div class="match-box">
-                            <div style="font-size:10px; color:#aaa; margin-bottom:5px;">Trận ${index + 1}</div>
-                            <div class="player-name">${m.player1}</div>
-                            <div class="vs-text">VS</div>
-                            <div class="player-name">${m.player2}</div>
-                            ${fightBtn}
-                        </div>`;
-                    });
-                    document.getElementById('bracketMatches').innerHTML = matchHtml;
-                }
-            });
-            
-            rtdb.ref('active_pvp_match').on('value', (snapshot) => {
-                const match = snapshot.val();
-                if(match && (userData.displayName === match.p1 || userData.displayName === match.p2)) {
-                    currentPvPMatchId = match.id;
-                    document.getElementById('pvpModal').classList.add('active');
-                    document.getElementById('pvpP1Name').innerHTML = `${match.p1} <span id="pvpP1Score">${match.p1_score}</span>`;
-                    document.getElementById('pvpP2Name').innerHTML = `${match.p2} <span id="pvpP2Score">${match.p2_score}</span>`;
-                    
-                    if(match.status === 'playing') {
-                        document.getElementById('pvpWaitMsg').style.display = 'none';
-                        document.getElementById('pvpQuestion').style.display = 'block';
-                        document.getElementById('pvpOptions').style.display = 'grid';
-                        document.getElementById('pvpQuestion').innerText = match.current_q.en;
-                        for(let i=0; i<4; i++) {
-                            let btn = document.getElementById('pvpOpt' + i);
-                            btn.innerText = match.current_q.opts[i]; btn.className = 'btn-ans'; 
-                        }
-                        if(match.locked_by !== "") {
-                            document.getElementById('lockOverlay').classList.add('active');
-                            if(match.locked_by === userData.displayName) document.getElementById('lockMsg').innerText = "BẠN ĐÃ CHỌN ĐÁP ÁN!";
-                            else document.getElementById('lockMsg').innerText = `${match.locked_by} ĐÃ CƯỚP ĐIỂM!`;
-                        } else {
-                            document.getElementById('lockOverlay').classList.remove('active');
-                        }
-                    } else if (match.status === 'finished') {
-                        document.getElementById('pvpWaitMsg').style.display = 'block';
-                        document.getElementById('pvpWaitMsg').innerText = "Trận đấu kết thúc! Người thắng: " + (match.p1_score > match.p2_score ? match.p1 : match.p2);
-                        document.getElementById('pvpQuestion').style.display = 'none';
-                        document.getElementById('pvpOptions').style.display = 'none';
-                        document.getElementById('lockOverlay').classList.remove('active');
-                        setTimeout(() => document.getElementById('pvpModal').classList.remove('active'), 5000);
-                    }
-                }
-            });
-        }
-
-        // ==========================================
+        // ==========================================
 // ĐẠO LUẬT ĐẤU TRƯỜNG 21 CÂU - PHIÊN BẢN HOÀNG GIA
 // ==========================================
 
 let pvpQuestionBank = []; // Lưu 21 câu trích xuất từ giáo trình bệ hạ đã chọn
 
 async function adminStartPvP(p1, p2, matchIndex) {
-    if(!confirm(`Bệ hạ muốn bắt đầu trận đấu 21 câu giữa ${p1} và ${p2}?`)) return;
+    if(!confirm(`Bệ hạ muốn bắt đầu trận đấu 21 câu giữa ${p1} và ${p2}?`)) return;
 
-    // 1. Lấy danh sách đề bệ hạ đã tick
-    const syllabusSnap = await rtdb.ref('tournament_status/syllabus').once('value');
-    const selectedLessons = syllabusSnap.val();
-    if(!selectedLessons || selectedLessons.length === 0) return alert("Bệ hạ chưa chọn giáo trình!");
+    // 1. Lấy danh sách đề bệ hạ đã tick
+    const syllabusSnap = await rtdb.ref('tournament_status/syllabus').once('value');
+    const selectedLessons = syllabusSnap.val();
+    if(!selectedLessons || selectedLessons.length === 0) return alert("Bệ hạ chưa chọn giáo trình!");
 
-    // 2. TỔNG HỢP TỪ VỰNG THẬT TỪ CÁC BÀI ĐÃ CHỌN
-    let allVocab = [];
-    // allLessonsData là biến lưu trữ toàn bộ dữ liệu từ Sheets mà thần đã tối ưu
-    // Chạy vòng lặp quét qua các bài học bệ hạ đã tick
-    selectedLessons.forEach(lessonName => {
-        let lesson = allLessonsData.find(l => l.name === lessonName);
-        if(lesson) allVocab = allVocab.concat(lesson.vocab);
-    });
+    // 2. TỔNG HỢP TỪ VỰNG THẬT TỪ CÁC BÀI ĐÃ CHỌN
+    let allVocab = [];
+    // allLessonsData là biến lưu trữ toàn bộ dữ liệu từ Sheets mà thần đã tối ưu
+    // Chạy vòng lặp quét qua các bài học bệ hạ đã tick
+    selectedLessons.forEach(lessonName => {
+        let lesson = allLessonsData.find(l => l.name === lessonName);
+        if(lesson) allVocab = allVocab.concat(lesson.vocab);
+    });
 
-    if(allVocab.length < 21) return alert(`Giáo trình bệ hạ chọn chỉ có ${allVocab.length} từ, không đủ 21 câu thi đấu!`);
+    if(allVocab.length < 21) return alert(`Giáo trình bệ hạ chọn chỉ có ${allVocab.length} từ, không đủ 21 câu thi đấu!`);
 
-    // 3. XÓC ĐỀ & CHỌN 21 CÂU MÙ
-    allVocab.sort(() => Math.random() - 0.5);
-    pvpQuestionBank = allVocab.slice(0, 21).map(v => {
-        // Tạo 4 đáp án (1 đúng 3 sai ngẫu nhiên)
-        let wrong = allVocab.filter(x => x.vi !== v.vi).sort(() => Math.random() - 0.5).slice(0, 3);
-        let opts = [v.vi, ...wrong.map(w => w.vi)].sort(() => Math.random() - 0.5);
-        return { en: v.en, vi: v.vi, opts: opts };
-    });
+    // 3. XÓC ĐỀ & CHỌN 21 CÂU MÙ
+    allVocab.sort(() => Math.random() - 0.5);
+    pvpQuestionBank = allVocab.slice(0, 21).map(v => {
+        // Tạo 4 đáp án (1 đúng 3 sai ngẫu nhiên)
+        let wrong = allVocab.filter(x => x.vi !== v.vi).sort(() => Math.random() - 0.5).slice(0, 3);
+        let opts = [v.vi, ...wrong.map(w => w.vi)].sort(() => Math.random() - 0.5);
+        return { en: v.en, vi: v.vi, opts: opts };
+    });
 
-    // 4. KHAI THÔNG FIREBASE
-    rtdb.ref('active_pvp_match').set({
-        id: 'match_' + matchIndex,
-        p1: p1, p2: p2,
-        p1_set: 0, p2_set: 0,       // Tỉ số Set (nhỏ bên dưới)
-        p1_correct: 0, p2_correct: 0, // Tỉ số câu đúng (lớn ở giữa)
-        status: 'playing',
-        q_idx: 1, // Đang ở câu thứ mấy
-        current_q: pvpQuestionBank[0],
-        locked_by: "",
-        question_bank: pvpQuestionBank // Gửi đề lên máy chủ
-    });
+    // 4. KHAI THÔNG FIREBASE
+    rtdb.ref('active_pvp_match').set({
+        id: 'match_' + matchIndex,
+        p1: p1, p2: p2,
+        p1_set: 0, p2_set: 0,       // Tỉ số Set (nhỏ bên dưới)
+        p1_correct: 0, p2_correct: 0, // Tỉ số câu đúng (lớn ở giữa)
+        status: 'playing',
+        q_idx: 1, // Đang ở câu thứ mấy
+        current_q: pvpQuestionBank[0],
+        locked_by: "",
+        question_bank: pvpQuestionBank // Gửi đề lên máy chủ
+    });
 }
 
 function submitPvPAnswer(optIndex) {
-    rtdb.ref('active_pvp_match').once('value').then(snapshot => {
-        let match = snapshot.val();
-        if(!match || match.status !== 'playing' || match.locked_by !== "") return;
+    rtdb.ref('active_pvp_match').once('value').then(snapshot => {
+        let match = snapshot.val();
+        if(!match || match.status !== 'playing' || match.locked_by !== "") return;
 
-        const selectedText = match.current_q.opts[optIndex];
-        let isCorrect = selectedText === match.current_q.vi;
-        let updates = { locked_by: userData.displayName };
+        const selectedText = match.current_q.opts[optIndex];
+        let isCorrect = selectedText === match.current_q.vi;
+        let updates = { locked_by: userData.displayName };
 
-        if(isCorrect) {
-            if(userData.displayName === match.p1) updates.p1_correct = match.p1_correct + 1;
-            if(userData.displayName === match.p2) updates.p2_correct = match.p2_correct + 1;
-        }
+        if(isCorrect) {
+            if(userData.displayName === match.p1) updates.p1_correct = match.p1_correct + 1;
+            if(userData.displayName === match.p2) updates.p2_correct = match.p2_correct + 1;
+        }
 
-        rtdb.ref('active_pvp_match').update(updates).then(() => {
-            setTimeout(() => nextQuestionOrSet(match), 1500);
-        });
-    });
+        rtdb.ref('active_pvp_match').update(updates).then(() => {
+            setTimeout(() => nextQuestionOrSet(match), 1500);
+        });
+    });
 }
 
 async function nextQuestionOrSet(match) {
-    rtdb.ref('active_pvp_match').once('value').then(snap => {
-        let m = snap.val();
-        let nextIdx = m.q_idx + 1;
+    rtdb.ref('active_pvp_match').once('value').then(snap => {
+        let m = snap.val();
+        let nextIdx = m.q_idx + 1;
 
-        // KIỂM TRA KẾT THÚC SET
-        if(m.q_idx === 10 || m.q_idx === 20) {
-            let p1_s = m.p1_set; let p2_s = m.p2_set;
-            // So sánh câu đúng để định đoạt Set
-            if(m.p1_correct > m.p2_correct) p1_s++;
-            else if(m.p2_correct > m.p1_correct) p2_s++;
+        // KIỂM TRA KẾT THÚC SET
+        if(m.q_idx === 10 || m.q_idx === 20) {
+            let p1_s = m.p1_set; let p2_s = m.p2_set;
+            // So sánh câu đúng để định đoạt Set
+            if(m.p1_correct > m.p2_correct) p1_s++;
+            else if(m.p2_correct > m.p1_correct) p2_s++;
 
-            rtdb.ref('active_pvp_match').update({
-                p1_set: p1_s, p2_set: p2_s,
-                p1_correct: 0, p2_correct: 0, // Reset điểm câu đúng cho Set mới
-                q_idx: nextIdx,
-                current_q: m.question_bank[nextIdx - 1],
-                locked_by: ""
-            });
-            alert(`KẾT THÚC SET ${m.q_idx === 10 ? 1 : 2}! Tỉ số Set hiện tại: ${p1_s} - ${p2_s}`);
-        } 
-        // TRẬN ĐẤU KẾT THÚC (SAU CÂU 21 HOẶC THẮNG TUYỆT ĐỐI 2-0)
-        else if (nextIdx > 21 || (m.p1_set === 2 || m.p2_set === 2)) {
-             let winner = m.p1_set > m.p2_set ? m.p1 : m.p2;
-             if(m.p1_set === m.p2_set) winner = m.p1_correct > m.p2_correct ? m.p1 : m.p2; // Golden Goal
-             rtdb.ref('active_pvp_match').update({ status: 'finished', winner: winner });
-        }
-        // TIẾP TỤC CÂU TIẾP THEO TRONG SET
-        else {
-            rtdb.ref('active_pvp_match').update({
-                q_idx: nextIdx,
-                current_q: m.question_bank[nextIdx - 1],
-                locked_by: ""
-            });
-        }
-    });
+            rtdb.ref('active_pvp_match').update({
+                p1_set: p1_s, p2_set: p2_s,
+                p1_correct: 0, p2_correct: 0, // Reset điểm câu đúng cho Set mới
+                q_idx: nextIdx,
+                current_q: m.question_bank[nextIdx - 1],
+                locked_by: ""
+            });
+            alert(`KẾT THÚC SET ${m.q_idx === 10 ? 1 : 2}! Tỉ số Set hiện tại: ${p1_s} - ${p2_s}`);
+        } 
+        // TRẬN ĐẤU KẾT THÚC (SAU CÂU 21 HOẶC THẮNG TUYỆT ĐỐI 2-0)
+        else if (nextIdx > 21 || (m.p1_set === 2 || m.p2_set === 2)) {
+             let winner = m.p1_set > m.p2_set ? m.p1 : m.p2;
+             if(m.p1_set === m.p2_set) winner = m.p1_correct > m.p2_correct ? m.p1 : m.p2; // Golden Goal
+             rtdb.ref('active_pvp_match').update({ status: 'finished', winner: winner });
+        }
+        // TIẾP TỤC CÂU TIẾP THEO TRONG SET
+        else {
+            rtdb.ref('active_pvp_match').update({
+                q_idx: nextIdx,
+                current_q: m.question_bank[nextIdx - 1],
+                locked_by: ""
+            });
+        }
+    });
 }
-        function attemptTeacherLogin() {
-            if (document.getElementById('teacherPinCheck').value === localStorage.getItem('teacherPin')) {
-                userData.role = 'teacher'; db.collection('vocab_users').doc(currentUser.uid).update({ role: 'teacher' }); updateUI(); alert("Đã vào quyền Admin!");
-            } else alert("Mã PIN sai!");
-        }
-        function savePin() { localStorage.setItem('teacherPin', document.getElementById('teacherPin').value); alert("Lưu PIN!"); }
 
-        function switchTab(tabId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById('view-' + tabId).classList.add('active');
-            const navBtn = document.getElementById('nav-' + tabId); if(navBtn) navBtn.classList.add('active');
-            if (window.innerWidth <= 768) toggleSidebar();
-            
-            // ĐÃ KHÔI PHỤC: Tải lại kho bài học và bảng vàng khi bấm chuyển tab
-            if (tabId === 'library') fetchFromSheets();
-            if (tabId === 'leaderboard') fetchLeaderboard();
-        }
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); document.getElementById('sidebarOverlay').style.display = document.getElementById('sidebar').classList.contains('show') ? 'block' : 'none'; }
+        function attemptTeacherLogin() {
+            if (document.getElementById('teacherPinCheck').value === localStorage.getItem('teacherPin')) {
+                userData.role = 'teacher'; db.collection('vocab_users').doc(currentUser.uid).update({ role: 'teacher' }); updateUI(); alert("Đã vào quyền Admin!");
+            } else alert("Mã PIN sai!");
+        }
+        function savePin() { localStorage.setItem('teacherPin', document.getElementById('teacherPin').value); alert("Lưu PIN!"); }
 
-        // ĐÃ KHÔI PHỤC: Lệnh đánh thức kho bài học khi vừa mở trang
-        updateUI(); fetchLeaderboard(); fetchFromSheets(); 
-    </script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + tabId).classList.add('active');
+            const navBtn = document.getElementById('nav-' + tabId); if(navBtn) navBtn.classList.add('active');
+            if (window.innerWidth <= 768) toggleSidebar();
+            
+            // ĐÃ KHÔI PHỤC: Tải lại kho bài học và bảng vàng khi bấm chuyển tab
+            if (tabId === 'library') fetchFromSheets();
+            if (tabId === 'leaderboard') fetchLeaderboard();
+        }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); document.getElementById('sidebarOverlay').style.display = document.getElementById('sidebar').classList.contains('show') ? 'block' : 'none'; }
+
+        // ĐÃ KHÔI PHỤC: Lệnh đánh thức kho bài học khi vừa mở trang
+        updateUI(); fetchLeaderboard(); fetchFromSheets(); 
+    </script>
 </body>
 </html>
-Nhớ là chỉnh danh xưng trung lập, KHÔNG DÙNG BỆ HẠ
