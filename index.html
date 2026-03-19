@@ -191,10 +191,34 @@
             <div id="view-shop" class="view-section">
                 <div class="header"><h1>🛒 Cửa Hàng</h1><p>Đổi vật phẩm bằng Vàng.</p></div>
                 <div class="shop-grid">
-                    <div class="shop-item"><div class="item-icon">🧪</div><div class="item-title">Bình Tiên XP x2</div><div class="item-desc">Tăng gấp đôi phần thưởng Vàng & XP. Tác dụng 24h.</div><div class="item-price">🪙 150</div><button class="btn-buy" onclick="buyItem('potion', 150)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🎭</div><div class="item-title">Mặt Nạ Hắc Ám</div><div class="item-desc">Ẩn tên và điểm số trên Bảng xếp hạng. Tác dụng 24h.</div><div class="item-price">🪙 250</div><button class="btn-buy" onclick="buyItem('mask', 250)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🔍</div><div class="item-title">Kính Lúp Thám Tử</div><div class="item-desc">Loại bỏ 2 đáp án sai trong lúc làm bài (Dùng 1 lần/kính).</div><div class="item-price">🪙 200</div><button class="btn-buy" onclick="buyItem('glass', 200)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🛡️</div><div class="item-title">Bùa Bảo Hộ</div><div class="item-desc">Cứu chuỗi ngày học liên tiếp nếu lỡ quên học 1 ngày.</div><div class="item-price">🪙 200</div><button class="btn-buy" onclick="buyItem('shield', 200)">Đổi Ngay</button></div>
+                    <div class="shop-item">
+                        <div class="item-icon">🧪</div>
+                        <div class="item-title">Bình Tiên XP x2</div>
+                        <div class="item-desc">Tăng gấp đôi phần thưởng Vàng & XP. Tác dụng 24h.</div>
+                        <div class="item-price">🪙 150</div>
+                        <button class="btn-buy" onclick="buyItem('potion', 150)">Đổi Ngay</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="item-icon">🎭</div>
+                        <div class="item-title">Mặt Nạ Hắc Ám</div>
+                        <div class="item-desc">Ẩn tên và điểm số trên Bảng xếp hạng. Tác dụng 24h.</div>
+                        <div class="item-price">🪙 250</div>
+                        <button class="btn-buy" onclick="buyItem('mask', 250)">Đổi Ngay</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="item-icon">🔍</div>
+                        <div class="item-title">Kính Lúp Thám Tử</div>
+                        <div class="item-desc">Loại bỏ 2 đáp án sai trong lúc làm bài (Dùng 1 lần/kính).</div>
+                        <div class="item-price">🪙 200</div>
+                        <button class="btn-buy" onclick="buyItem('glass', 200)">Đổi Ngay</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="item-icon">🛡️</div>
+                        <div class="item-title">Bùa Bảo Hộ</div>
+                        <div class="item-desc">Cứu chuỗi ngày học liên tiếp nếu lỡ quên học 1 ngày.</div>
+                        <div class="item-price">🪙 200</div>
+                        <button class="btn-buy" onclick="buyItem('shield', 200)">Đổi Ngay</button>
+                    </div>
                 </div>
             </div>
 
@@ -209,21 +233,32 @@
             </div>
 
             <div id="view-creator" class="view-section">
-                <div class="header"><h1>⚡ Lò Đúc Trắc Nghiệm</h1></div>
+                <div class="header"><h1>⚡ Lò Đúc Trắc Nghiệm Tự Động</h1></div>
                 <div class="workspace">
-                    <textarea id="rawInput" placeholder="Tiếng Anh | Tiếng Việt..."></textarea>
-                    <button class="btn-run" onclick="generateCode()">Tạo Mã</button>
-                    <textarea id="generatedCode" readonly style="background:#e8eaf6; font-size: 12px; margin-top:10px;"></textarea>
+                    <div class="panel">
+                        <div class="panel-header"><span>📝 Nhập danh sách từ vựng:</span><button class="btn-run" onclick="generateCode()">Tạo Mã ▶</button></div>
+                        <textarea id="rawInput" placeholder="Ví dụ:&#10;fall | Ngã | /fɔːl/ | Verb"></textarea>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header"><span>⚙️ Mã HTML</span><button class="btn-save" onclick="copyCode()">📋 Copy Mã</button></div>
+                        <textarea id="generatedCode" readonly style="background:#e8eaf6; font-size: 12px;"></textarea>
+                    </div>
                 </div>
             </div>
 
             <div id="view-settings" class="view-section">
-                <div class="header"><h1>⚙️ Cài Đặt</h1></div>
-                <div id="authSection"><button class="btn-google" onclick="loginWithGoogle()">🌐 Đăng nhập</button></div>
+                <div class="header"><h1>⚙️ Cài Đặt Hệ Thống</h1></div>
                 <div class="settings-card">
-                    <h3>🎭 Quyền Admin</h3>
-                    <input type="password" id="teacherPinCheck" placeholder="Nhập PIN..."><br>
-                    <button class="btn-run" onclick="attemptTeacherLogin()" style="margin-top:10px;">Xác nhận</button>
+                    <h3>🔐 Cổng Đăng Nhập</h3>
+                    <div id="authSection"><button class="btn-google" onclick="loginWithGoogle()">🌐 Đăng nhập bằng Google</button></div>
+                </div>
+                <div class="settings-card">
+                    <h3>🎭 Quyền Kiểm Soát (Dành cho Giáo Viên)</h3>
+                    <div class="form-group">
+                        <label>Mã PIN xác thực:</label>
+                        <input type="password" id="teacherPinCheck" placeholder="Nhập PIN để cấp quyền giáo viên...">
+                        <button class="btn-run" onclick="attemptTeacherLogin()" style="width: 100%; margin-top: 10px;">Xác nhận</button>
+                    </div>
                 </div>
             </div>
         </main>
@@ -264,7 +299,7 @@
 
             <div style="text-align:center; color:#ccc; margin-top:10px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 5px;">
                 CÂU HỎI SỐ: <span id="pvpQIndex" style="color:#ffd700;">1</span> / 30 
-                <span id="pvpTypeBanner" style="margin-left: 15px; color: #00e676;">[TRẮC NGHIỆM]</span>
+                <span style="margin-left: 15px; color: #00e676;">[TRẮC NGHIỆM]</span>
                 <div id="pvpTimerBanner" style="font-size: 24px; color: #ff1744; margin-top: 5px;">⏳ 15s</div>
             </div>
 
@@ -481,7 +516,7 @@
         }
 
         // ==========================================
-        // ĐẠO LUẬT PVP - 30 CÂU TRẮC NGHIỆM ĐỒNG NHẤT 15 GIÂY
+        // ĐẠO LUẬT PVP - LOCAL TIMER BẤT TỬ
         // ==========================================
 
         async function adminStartPvP(p1, p2, matchIndex) {
@@ -513,9 +548,7 @@
                 p1_score: 0, p2_score: 0, 
                 status: 'playing',
                 q_idx: 1, 
-                q_end_time: Date.now() + 15000, 
                 current_q: pvpQuestionBank[0],
-                
                 p1_ans: "", p1_time: 0,
                 p2_ans: "", p2_time: 0,
                 evaluating: false, 
@@ -622,9 +655,8 @@
                     updates.status = 'finished';
                     updates.winner = winner;
                 } else {
-                    updates.status = 'playing'; 
+                    updates.status = 'playing'; // KHÔI PHỤC TRẠNG THÁI CHƠI ĐỂ KHÔNG BỊ ĐƠ
                     updates.q_idx = nextIdx;
-                    updates.q_end_time = Date.now() + 15000; 
                     updates.current_q = m.question_bank[nextIdx - 1];
                 }
 
@@ -682,15 +714,12 @@
                     
                     document.getElementById('pvpQIndex').innerText = m.q_idx;
 
+                    // HIỂN THỊ KHI ĐANG TRẢ LỜI
                     if(m.status === 'playing') {
                         document.getElementById('pvpWaitMsg').style.display = 'none';
                         document.getElementById('pvpQuestion').style.display = 'block';
                         document.getElementById('pvpOptions').style.display = 'grid';
                         document.getElementById('pvpQuestion').innerText = m.current_q.en;
-
-                        let typeBanner = document.getElementById('pvpTypeBanner');
-                        typeBanner.innerText = "[TRẮC NGHIỆM]"; 
-                        typeBanner.style.color = "#00e676";
 
                         let myAns = isP1 ? m.p1_ans : (isP2 ? m.p2_ans : "");
                         if(myAns === "") {
@@ -705,6 +734,7 @@
                             }
                         }
 
+                        // CƠ CHẾ BOT: Thông minh, ngẫu nhiên từ 3-10 giây
                         let myRole = isP1 ? 'p1' : (isP2 ? 'p2' : null);
                         let oppRole = isP1 ? 'p2' : 'p1';
                         let oppName = isP1 ? m.p2 : m.p1;
@@ -731,17 +761,27 @@
                         if(oppAns !== "") { botStatus.innerText = "Đối thủ đã chốt!"; botStatus.style.color = "#ff1744"; }
                         else { botStatus.innerText = "Đối thủ đang suy nghĩ..."; botStatus.style.color = "#00e676"; }
 
+                        // BỘ ĐẾM GIỜ CỤC BỘ BẤT TỬ (LOCAL TIMER)
+                        if (window.currentPlayingQIdx !== m.q_idx) {
+                            window.currentPlayingQIdx = m.q_idx;
+                            window.localPvPTime = 15; // Setup cứng 15s cho mọi câu
+                        }
+
                         clearInterval(window.pvpTimer);
                         window.pvpTimer = setInterval(() => {
-                            let t = Math.max(0, Math.ceil((m.q_end_time - Date.now())/1000));
+                            window.localPvPTime--;
+                            let t = window.localPvPTime;
+                            if (t < 0) t = 0;
                             document.getElementById('pvpTimerBanner').innerText = `⏳ ${t}s`;
+                            
                             if (t <= 0 && !m.evaluating) { clearInterval(window.pvpTimer); triggerEval(); }
-                        }, 500);
+                        }, 1000);
 
                         if (m.p1_ans !== "" && m.p2_ans !== "" && !m.evaluating) {
                             clearInterval(window.pvpTimer); triggerEval();
                         }
                     } 
+                    // HIỂN THỊ KẾT QUẢ ĐÚNG/SAI
                     else if (m.status === 'showing_result') {
                         clearInterval(window.pvpTimer);
                         if (window.pvpBotTimer) clearTimeout(window.pvpBotTimer);
@@ -777,6 +817,7 @@
                             } else { btn.style.opacity = '0.3'; }
                         }
                     } 
+                    // KẾT THÚC TRẬN
                     else if (m.status === 'finished') {
                         clearInterval(window.pvpTimer);
                         if (window.pvpBotTimer) clearTimeout(window.pvpBotTimer);
@@ -792,6 +833,7 @@
             });
         }
 
+        // CÀI ĐẶT CHUNG
         function switchTab(tabId) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -809,6 +851,9 @@
             } else alert("Mã PIN sai!");
         }
 
+        function buyItem(itemType, price) { alert('Đã mua ' + itemType + ' với giá ' + price + ' Vàng!'); }
+
+        // LÒ ĐÚC MÃ (FULL GIAO DIỆN BẢO TỒN)
         function generateCode() {
             const raw = document.getElementById('rawInput').value.trim();
             if(!raw) return alert("Vui lòng nhập từ vựng!");
@@ -1049,7 +1094,6 @@
         }
 
         function copyCode() { document.getElementById('generatedCode').select(); document.execCommand("copy"); alert("Đã copy mã! Hãy dán đè vào Cột B của Google Sheets."); }
-        function buyItem(itemType, price) { alert('Đã mua ' + itemType + ' với giá ' + price + ' Vàng!'); }
 
         updateUI(); fetchLeaderboard(); fetchFromSheets(); 
     </script>
