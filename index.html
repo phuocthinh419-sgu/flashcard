@@ -517,12 +517,20 @@
         async function executeBlindDraw() {
             if(!confirm("Bệ hạ có chắc muốn chốt sổ Bảng Vàng và bốc thăm ngay bây giờ?")) return;
             try {
-                const snapshot = await db.collection('vocab_users').where('role', '!=', 'teacher').orderBy('xp', 'desc').get();
+                // SỬA LỖI FIREBASE TẠI ĐÂY: Chỉ gọi sắp xếp XP, không bắt máy chủ lọc Teacher nữa
+                const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get();
                 let candidates = [];
-                snapshot.forEach(doc => candidates.push(doc.data().displayName || "Ẩn danh"));
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    // Máy trạm tự động lọc Giáo viên ra khỏi danh sách thi đấu
+                    if(data.role !== 'teacher') {
+                        candidates.push(data.displayName || "Ẩn danh");
+                    }
+                });
                 
                 const N = candidates.length;
-                if(N < 4) return alert("Thưa bệ hạ, bách tính chưa đủ 4 người để lập Bán kết!");
+                if(N < 4) return alert("Thưa bệ hạ, bách tính hiện mới có " + N + " người, chưa đủ 4 người để lập Bán kết!");
 
                 let topCount = 4; let stageName = "BÁN KẾT";
                 if(N >= 24) { topCount = 16; stageName = "VÒNG 1/8"; }
@@ -545,7 +553,7 @@
                     timestamp: new Date().getTime()
                 });
                 alert(`Đã hoàn tất bốc thăm ${stageName}!`);
-            } catch(e) { console.error(e); alert("Lỗi khi bốc thăm!"); }
+            } catch(e) { console.error(e); alert("Lỗi khi bốc thăm: " + e.message); }
         }
 
         // NGHE KẾT QUẢ BỐC THĂM TỪ REALTIME DB
