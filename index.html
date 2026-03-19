@@ -314,6 +314,15 @@
         </div>
     </div>
 
+    <div class="modal" id="previewModal">
+        <div class="modal-content" style="background:white; width:100%; max-width:900px; height:85vh; border-radius:12px; overflow:hidden; display:flex; flex-direction:column;">
+            <div style="padding:15px; background:#fafafa; display:flex; justify-content:space-between; border-bottom:1px solid #eee;">
+                <h3>Luyện Tập</h3><button onclick="closeModal()" style="color:#333; background:#ccc; padding:5px 15px; font-weight:bold; border-radius:4px;">Thoát X</button>
+            </div>
+            <iframe id="modalFrame" style="flex:1; border:none;"></iframe>
+        </div>
+    </div>
+
     <div class="modal" id="pvpModal">
         <div class="battle-arena">
             <div class="battle-header">
@@ -339,7 +348,7 @@
                     <div class="lock-text" id="lockMsg">ĐỐI THỦ ĐÃ CHỘP TRƯỚC!</div>
                 </div>
                 
-                <div id="pvpWaitMsg" style="font-size:18px; color:#aaa; text-align:center;">Đang đợi hiệu lệnh từ bệ hạ...</div>
+                <div id="pvpWaitMsg" style="font-size:18px; color:#aaa; text-align:center;">Đang đợi hiệu lệnh...</div>
                 
                 <div class="battle-question" id="pvpQuestion" style="display:none; margin-top: 20px;">READY?</div>
                 
@@ -457,7 +466,7 @@
             } catch (err) { lbContainer.innerHTML = '<p style="color:red; text-align:center">Lỗi tải dữ liệu bảng xếp hạng.</p>'; }
         }
 
-        // TẢI KHO BÀI HỌC (ĐÃ PHỤC HỒI)
+        // TẢI KHO BÀI HỌC VÀ GỌI VIEW CARD
         const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing';
         async function fetchFromSheets() {
             const container = document.getElementById('libraryContainer');
@@ -481,7 +490,6 @@
                         if (vocabMatch) { try { currentVocab = eval("[" + vocabMatch[1] + "]"); } catch(e){} }
                         allLessonsData.push({ name: lessonName, vocab: currentVocab, raw: rawHTML });
                         
-                        // Đã sửa: Nút "Vào học" bây giờ sẽ gọi hàm viewCard() để mở bài học
                         htmlLib += `<div class="lib-card"><h3>${lessonName}</h3><p style="font-size:11px;">${currentVocab.length} từ</p><button class="btn-run" style="margin-top:10px;" onclick="viewCard('${btoa(unescape(encodeURIComponent(rawHTML)))}')">▶ VÀO HỌC</button></div>`;
                         
                         htmlArena += `<label class="syllabus-item"><input type="checkbox" name="syllabusCheck" value="${lessonName}"> <span>${lessonName} (${currentVocab.length} từ)</span></label>`;
@@ -492,11 +500,21 @@
             } catch(e) { console.error("Lỗi tải Sheets:", e); }
         }
 
+        // KHÔI PHỤC CHỨC NĂNG MỞ FLASHCARD
+        function viewCard(base64) {
+            document.getElementById('modalFrame').srcdoc = decodeURIComponent(escape(atob(base64)));
+            document.getElementById('previewModal').classList.add('active');
+        }
+        function closeModal() {
+            document.getElementById('previewModal').classList.remove('active');
+            document.getElementById('modalFrame').srcdoc = '';
+        }
+
         // ĐÀI TỶ VÕ VÀ BỐC THĂM
         function saveSyllabusSelection() { alert("Đã khóa danh sách Đề Thi cho Vòng Knock-out!"); }
 
         async function executeBlindDraw() {
-            if(!confirm("Bệ hạ có chắc muốn bốc thăm ngay bây giờ?")) return;
+            if(!confirm("Xác nhận bốc thăm ngay bây giờ?")) return;
             try {
                 const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get();
                 let candidates = [];
@@ -548,8 +566,15 @@
                 if(match && (userData.displayName === match.p1 || userData.displayName === match.p2)) {
                     currentPvPMatchId = match.id;
                     document.getElementById('pvpModal').classList.add('active');
-                    document.getElementById('pvpP1Name').innerHTML = `${match.p1} <span id="pvpP1Score">${match.p1_score}</span>`;
-                    document.getElementById('pvpP2Name').innerHTML = `${match.p2} <span id="pvpP2Score">${match.p2_score}</span>`;
+                    document.getElementById('pvpP1Name').innerHTML = `${match.p1}`;
+                    document.getElementById('pvpP1Correct').innerText = match.p1_correct;
+                    document.getElementById('pvpP1Set').innerText = match.p1_set;
+                    
+                    document.getElementById('pvpP2Name').innerHTML = `${match.p2}`;
+                    document.getElementById('pvpP2Correct').innerText = match.p2_correct;
+                    document.getElementById('pvpP2Set').innerText = match.p2_set;
+                    
+                    document.getElementById('pvpQIndex').innerText = match.q_idx;
                     
                     if(match.status === 'playing') {
                         document.getElementById('pvpWaitMsg').style.display = 'none';
@@ -569,7 +594,7 @@
                         }
                     } else if (match.status === 'finished') {
                         document.getElementById('pvpWaitMsg').style.display = 'block';
-                        document.getElementById('pvpWaitMsg').innerText = "Trận đấu kết thúc! Người thắng: " + (match.p1_score > match.p2_score ? match.p1 : match.p2);
+                        document.getElementById('pvpWaitMsg').innerText = "Trận đấu kết thúc! Người thắng: " + match.winner;
                         document.getElementById('pvpQuestion').style.display = 'none';
                         document.getElementById('pvpOptions').style.display = 'none';
                         document.getElementById('lockOverlay').classList.remove('active');
@@ -579,111 +604,95 @@
             });
         }
 
-        // ==========================================
-// ĐẠO LUẬT ĐẤU TRƯỜNG 21 CÂU - PHIÊN BẢN HOÀNG GIA
-// ==========================================
+        let pvpQuestionBank = []; 
 
-let pvpQuestionBank = []; // Lưu 21 câu trích xuất từ giáo trình bệ hạ đã chọn
+        async function adminStartPvP(p1, p2, matchIndex) {
+            if(!confirm(`Xác nhận bắt đầu trận đấu 21 câu giữa ${p1} và ${p2}?`)) return;
 
-async function adminStartPvP(p1, p2, matchIndex) {
-    if(!confirm(`Bệ hạ muốn bắt đầu trận đấu 21 câu giữa ${p1} và ${p2}?`)) return;
+            const syllabusSnap = await rtdb.ref('tournament_status/syllabus').once('value');
+            const selectedLessons = syllabusSnap.val();
+            if(!selectedLessons || selectedLessons.length === 0) return alert("Vui lòng chọn giáo trình!");
 
-    // 1. Lấy danh sách đề bệ hạ đã tick
-    const syllabusSnap = await rtdb.ref('tournament_status/syllabus').once('value');
-    const selectedLessons = syllabusSnap.val();
-    if(!selectedLessons || selectedLessons.length === 0) return alert("Bệ hạ chưa chọn giáo trình!");
-
-    // 2. TỔNG HỢP TỪ VỰNG THẬT TỪ CÁC BÀI ĐÃ CHỌN
-    let allVocab = [];
-    // allLessonsData là biến lưu trữ toàn bộ dữ liệu từ Sheets mà thần đã tối ưu
-    // Chạy vòng lặp quét qua các bài học bệ hạ đã tick
-    selectedLessons.forEach(lessonName => {
-        let lesson = allLessonsData.find(l => l.name === lessonName);
-        if(lesson) allVocab = allVocab.concat(lesson.vocab);
-    });
-
-    if(allVocab.length < 21) return alert(`Giáo trình bệ hạ chọn chỉ có ${allVocab.length} từ, không đủ 21 câu thi đấu!`);
-
-    // 3. XÓC ĐỀ & CHỌN 21 CÂU MÙ
-    allVocab.sort(() => Math.random() - 0.5);
-    pvpQuestionBank = allVocab.slice(0, 21).map(v => {
-        // Tạo 4 đáp án (1 đúng 3 sai ngẫu nhiên)
-        let wrong = allVocab.filter(x => x.vi !== v.vi).sort(() => Math.random() - 0.5).slice(0, 3);
-        let opts = [v.vi, ...wrong.map(w => w.vi)].sort(() => Math.random() - 0.5);
-        return { en: v.en, vi: v.vi, opts: opts };
-    });
-
-    // 4. KHAI THÔNG FIREBASE
-    rtdb.ref('active_pvp_match').set({
-        id: 'match_' + matchIndex,
-        p1: p1, p2: p2,
-        p1_set: 0, p2_set: 0,       // Tỉ số Set (nhỏ bên dưới)
-        p1_correct: 0, p2_correct: 0, // Tỉ số câu đúng (lớn ở giữa)
-        status: 'playing',
-        q_idx: 1, // Đang ở câu thứ mấy
-        current_q: pvpQuestionBank[0],
-        locked_by: "",
-        question_bank: pvpQuestionBank // Gửi đề lên máy chủ
-    });
-}
-
-function submitPvPAnswer(optIndex) {
-    rtdb.ref('active_pvp_match').once('value').then(snapshot => {
-        let match = snapshot.val();
-        if(!match || match.status !== 'playing' || match.locked_by !== "") return;
-
-        const selectedText = match.current_q.opts[optIndex];
-        let isCorrect = selectedText === match.current_q.vi;
-        let updates = { locked_by: userData.displayName };
-
-        if(isCorrect) {
-            if(userData.displayName === match.p1) updates.p1_correct = match.p1_correct + 1;
-            if(userData.displayName === match.p2) updates.p2_correct = match.p2_correct + 1;
-        }
-
-        rtdb.ref('active_pvp_match').update(updates).then(() => {
-            setTimeout(() => nextQuestionOrSet(match), 1500);
-        });
-    });
-}
-
-async function nextQuestionOrSet(match) {
-    rtdb.ref('active_pvp_match').once('value').then(snap => {
-        let m = snap.val();
-        let nextIdx = m.q_idx + 1;
-
-        // KIỂM TRA KẾT THÚC SET
-        if(m.q_idx === 10 || m.q_idx === 20) {
-            let p1_s = m.p1_set; let p2_s = m.p2_set;
-            // So sánh câu đúng để định đoạt Set
-            if(m.p1_correct > m.p2_correct) p1_s++;
-            else if(m.p2_correct > m.p1_correct) p2_s++;
-
-            rtdb.ref('active_pvp_match').update({
-                p1_set: p1_s, p2_set: p2_s,
-                p1_correct: 0, p2_correct: 0, // Reset điểm câu đúng cho Set mới
-                q_idx: nextIdx,
-                current_q: m.question_bank[nextIdx - 1],
-                locked_by: ""
+            let allVocab = [];
+            selectedLessons.forEach(lessonName => {
+                let lesson = allLessonsData.find(l => l.name === lessonName);
+                if(lesson) allVocab = allVocab.concat(lesson.vocab);
             });
-            alert(`KẾT THÚC SET ${m.q_idx === 10 ? 1 : 2}! Tỉ số Set hiện tại: ${p1_s} - ${p2_s}`);
-        } 
-        // TRẬN ĐẤU KẾT THÚC (SAU CÂU 21 HOẶC THẮNG TUYỆT ĐỐI 2-0)
-        else if (nextIdx > 21 || (m.p1_set === 2 || m.p2_set === 2)) {
-             let winner = m.p1_set > m.p2_set ? m.p1 : m.p2;
-             if(m.p1_set === m.p2_set) winner = m.p1_correct > m.p2_correct ? m.p1 : m.p2; // Golden Goal
-             rtdb.ref('active_pvp_match').update({ status: 'finished', winner: winner });
-        }
-        // TIẾP TỤC CÂU TIẾP THEO TRONG SET
-        else {
-            rtdb.ref('active_pvp_match').update({
-                q_idx: nextIdx,
-                current_q: m.question_bank[nextIdx - 1],
-                locked_by: ""
+
+            if(allVocab.length < 21) return alert(`Giáo trình chọn chỉ có ${allVocab.length} từ, không đủ 21 câu thi đấu!`);
+
+            allVocab.sort(() => Math.random() - 0.5);
+            pvpQuestionBank = allVocab.slice(0, 21).map(v => {
+                let wrong = allVocab.filter(x => x.vi !== v.vi).sort(() => Math.random() - 0.5).slice(0, 3);
+                let opts = [v.vi, ...wrong.map(w => w.vi)].sort(() => Math.random() - 0.5);
+                return { en: v.en, vi: v.vi, opts: opts };
+            });
+
+            rtdb.ref('active_pvp_match').set({
+                id: 'match_' + matchIndex,
+                p1: p1, p2: p2,
+                p1_set: 0, p2_set: 0,       
+                p1_correct: 0, p2_correct: 0, 
+                status: 'playing',
+                q_idx: 1, 
+                current_q: pvpQuestionBank[0],
+                locked_by: "",
+                question_bank: pvpQuestionBank 
             });
         }
-    });
-}
+
+        function submitPvPAnswer(optIndex) {
+            rtdb.ref('active_pvp_match').once('value').then(snapshot => {
+                let match = snapshot.val();
+                if(!match || match.status !== 'playing' || match.locked_by !== "") return;
+
+                const selectedText = match.current_q.opts[optIndex];
+                let isCorrect = selectedText === match.current_q.vi;
+                let updates = { locked_by: userData.displayName };
+
+                if(isCorrect) {
+                    if(userData.displayName === match.p1) updates.p1_correct = match.p1_correct + 1;
+                    if(userData.displayName === match.p2) updates.p2_correct = match.p2_correct + 1;
+                }
+
+                rtdb.ref('active_pvp_match').update(updates).then(() => {
+                    setTimeout(() => nextQuestionOrSet(match), 1500);
+                });
+            });
+        }
+
+        async function nextQuestionOrSet(match) {
+            rtdb.ref('active_pvp_match').once('value').then(snap => {
+                let m = snap.val();
+                let nextIdx = m.q_idx + 1;
+
+                if(m.q_idx === 10 || m.q_idx === 20) {
+                    let p1_s = m.p1_set; let p2_s = m.p2_set;
+                    if(m.p1_correct > m.p2_correct) p1_s++;
+                    else if(m.p2_correct > m.p1_correct) p2_s++;
+
+                    rtdb.ref('active_pvp_match').update({
+                        p1_set: p1_s, p2_set: p2_s,
+                        p1_correct: 0, p2_correct: 0, 
+                        q_idx: nextIdx,
+                        current_q: m.question_bank[nextIdx - 1],
+                        locked_by: ""
+                    });
+                } 
+                else if (nextIdx > 21 || (m.p1_set === 2 || m.p2_set === 2)) {
+                     let winner = m.p1_set > m.p2_set ? m.p1 : m.p2;
+                     if(m.p1_set === m.p2_set) winner = m.p1_correct > m.p2_correct ? m.p1 : m.p2; 
+                     rtdb.ref('active_pvp_match').update({ status: 'finished', winner: winner });
+                }
+                else {
+                    rtdb.ref('active_pvp_match').update({
+                        q_idx: nextIdx,
+                        current_q: m.question_bank[nextIdx - 1],
+                        locked_by: ""
+                    });
+                }
+            });
+        }
 
         function attemptTeacherLogin() {
             if (document.getElementById('teacherPinCheck').value === localStorage.getItem('teacherPin')) {
@@ -699,13 +708,22 @@ async function nextQuestionOrSet(match) {
             const navBtn = document.getElementById('nav-' + tabId); if(navBtn) navBtn.classList.add('active');
             if (window.innerWidth <= 768) toggleSidebar();
             
-            // ĐÃ KHÔI PHỤC: Tải lại kho bài học và bảng vàng khi bấm chuyển tab
             if (tabId === 'library') fetchFromSheets();
             if (tabId === 'leaderboard') fetchLeaderboard();
         }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); document.getElementById('sidebarOverlay').style.display = document.getElementById('sidebar').classList.contains('show') ? 'block' : 'none'; }
 
-        // ĐÃ KHÔI PHỤC: Lệnh đánh thức kho bài học khi vừa mở trang
+        // KHÔI PHỤC TÍNH NĂNG TẠO MÃ Ở LÒ ĐÚC
+        function generateCode() {
+            const raw = document.getElementById('rawInput').value.trim();
+            if(!raw) return alert("Vui lòng nhập từ vựng!");
+            const lines = raw.split('\n'); let vocabArray = [];
+            for(let line of lines) { let parts = line.split('|').map(s => s.trim()); if(parts.length >= 2) vocabArray.push(`{ en: "${parts[0]}", vi: "${parts[1]}", pro: "${parts[2] || ''}", type: "${parts[3] || ''}" }`); }
+            const template = `<!DOCTYPE html><html><head><meta charset="UTF-8"><script src="https://cdn.tailwindcss.com"><\/script></head><body class="p-4 bg-indigo-50"><script>const vocabList = [${vocabArray.join(',')}];<\/script><h1 class="text-2xl font-bold text-center text-indigo-900 mt-10">Bài học đã nạp thành công! Hãy Copy và dán vào Sheets.</h1></body></html>`;
+            document.getElementById('generatedCode').value = template;
+        }
+        function copyCode() { document.getElementById('generatedCode').select(); document.execCommand("copy"); alert("Đã copy mã!"); }
+
         updateUI(); fetchLeaderboard(); fetchFromSheets(); 
     </script>
 </body>
