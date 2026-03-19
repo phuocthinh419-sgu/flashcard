@@ -314,24 +314,40 @@
         </div>
     </div>
 
-    <div class="modal" id="pvpModal">
+   <div class="modal" id="pvpModal">
         <div class="battle-arena">
             <div class="battle-header">
-                <div class="fighter" id="pvpP1Name">Tuyển thủ 1 <span id="pvpP1Score">0</span></div>
+                <div class="fighter">
+                    <div id="pvpP1Name" style="font-weight:bold;">Tuyển thủ 1</div>
+                    <span id="pvpP1Correct" style="font-size: 50px; font-weight: 900; color: #fff;">0</span> 
+                    <div style="font-size: 14px; color: #ffd700;">Set Score: <b id="pvpP1Set">0</b></div> 
+                </div>
                 <div class="vs-badge">VS</div>
-                <div class="fighter" id="pvpP2Name">Tuyển thủ 2 <span id="pvpP2Score">0</span></div>
+                <div class="fighter">
+                    <div id="pvpP2Name" style="font-weight:bold;">Tuyển thủ 2</div>
+                    <span id="pvpP2Correct" style="font-size: 50px; font-weight: 900; color: #fff;">0</span>
+                    <div style="font-size: 14px; color: #ffd700;">Set Score: <b id="pvpP2Set">0</b></div>
+                </div>
             </div>
+
+            <div style="text-align:center; color:#ccc; margin-top:10px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 5px;">
+                CÂU HỎI SỐ: <span id="pvpQIndex" style="color:#ffd700;">1</span> / 21
+            </div>
+
             <div class="battle-body">
                 <div class="lock-overlay" id="lockOverlay">
                     <div class="lock-text" id="lockMsg">ĐỐI THỦ ĐÃ CHỘP TRƯỚC!</div>
                 </div>
-                <div id="pvpWaitMsg" style="font-size:20px; color:#aaa; margin-bottom: 20px;">Đang đợi hệ thống phát đề...</div>
-                <div class="battle-question" id="pvpQuestion" style="display:none;">APPLE</div>
+                
+                <div id="pvpWaitMsg" style="font-size:18px; color:#aaa; text-align:center;">Đang đợi hiệu lệnh từ bệ hạ...</div>
+                
+                <div class="battle-question" id="pvpQuestion" style="display:none; margin-top: 20px;">READY?</div>
+                
                 <div class="battle-options" id="pvpOptions" style="display:none;">
-                    <button class="btn-ans" onclick="submitPvPAnswer(0)" id="pvpOpt0">Quả táo</button>
-                    <button class="btn-ans" onclick="submitPvPAnswer(1)" id="pvpOpt1">Quả cam</button>
-                    <button class="btn-ans" onclick="submitPvPAnswer(2)" id="pvpOpt2">Quả chuối</button>
-                    <button class="btn-ans" onclick="submitPvPAnswer(3)" id="pvpOpt3">Quả lựu</button>
+                    <button class="btn-ans" onclick="submitPvPAnswer(0)" id="pvpOpt0">-</button>
+                    <button class="btn-ans" onclick="submitPvPAnswer(1)" id="pvpOpt1">-</button>
+                    <button class="btn-ans" onclick="submitPvPAnswer(2)" id="pvpOpt2">-</button>
+                    <button class="btn-ans" onclick="submitPvPAnswer(3)" id="pvpOpt3">-</button>
                 </div>
             </div>
         </div>
@@ -560,99 +576,106 @@
         }
 
         // ==========================================
-// LÕI ĐẤU TRƯỜNG SINH TỬ - PHIÊN BẢN CHÍNH THỨC
+// ĐẠO LUẬT ĐẤU TRƯỜNG 21 CÂU - PHIÊN BẢN HOÀNG GIA
 // ==========================================
 
-// 1. HÀM DÀNH CHO GIÁO VIÊN: KHAI CHIẾN THEO BỘ ĐỀ ĐÃ TICK
-async function adminStartPvP(p1, p2, matchIndex) {
-    if(!confirm(`Bệ hạ muốn khai chiến trận giữa ${p1} và ${p2}?`)) return;
+let pvpQuestionBank = []; // Lưu 21 câu trích xuất từ giáo trình bệ hạ đã chọn
 
-    // Lấy danh sách đề thi bệ hạ đã tick từ Realtime DB
+async function adminStartPvP(p1, p2, matchIndex) {
+    if(!confirm(`Bệ hạ muốn bắt đầu trận đấu 21 câu giữa ${p1} và ${p2}?`)) return;
+
+    // 1. Lấy danh sách đề bệ hạ đã tick
     const syllabusSnap = await rtdb.ref('tournament_status/syllabus').once('value');
     const selectedLessons = syllabusSnap.val();
-    
-    if(!selectedLessons || selectedLessons.length === 0) {
-        return alert("Bệ hạ chưa tick chọn giáo trình nào ở Ngự Thiện Phòng!");
-    }
+    if(!selectedLessons || selectedLessons.length === 0) return alert("Bệ hạ chưa chọn giáo trình!");
 
-    // Thu thập từ vựng từ các bài đã chọn (quét qua allLessons đã tải từ Sheets)
-    let questionBank = [];
-    // [Suy luận] Đoạn này giả định bệ hạ đã lưu data từ Sheets vào một biến toàn cục
-    // Để demo mượt mà, thần sẽ tự động tạo bộ đề ngẫu nhiên nếu ngân hàng trống
-    questionBank = [
-        {en: "Accomplish", vi: "Hoàn thành", opts: ["Hoàn thành", "Bắt đầu", "Hủy bỏ", "Trì hoãn"]},
-        {en: "Strategy", vi: "Chiến thuật", opts: ["Hậu phương", "Chiến thuật", "Vũ khí", "Kẻ thù"]},
-        {en: "Champion", vi: "Nhà vô địch", opts: ["Kẻ thua cuộc", "Nhà vô địch", "Trọng tài", "Khán giả"]},
-        {en: "Challenge", vi: "Thử thách", opts: ["An nhàn", "Thử thách", "Kết quả", "Phần thưởng"]}
-    ];
+    // 2. TỔNG HỢP TỪ VỰNG THẬT TỪ CÁC BÀI ĐÃ CHỌN
+    let allVocab = [];
+    // allLessonsData là biến lưu trữ toàn bộ dữ liệu từ Sheets mà thần đã tối ưu
+    // Chạy vòng lặp quét qua các bài học bệ hạ đã tick
+    selectedLessons.forEach(lessonName => {
+        let lesson = allLessonsData.find(l => l.name === lessonName);
+        if(lesson) allVocab = allVocab.concat(lesson.vocab);
+    });
 
-    // Khởi tạo trận đấu 3 Hiệp (Thắng 2 là thắng chung cuộc)
+    if(allVocab.length < 21) return alert(`Giáo trình bệ hạ chọn chỉ có ${allVocab.length} từ, không đủ 21 câu thi đấu!`);
+
+    // 3. XÓC ĐỀ & CHỌN 21 CÂU MÙ
+    allVocab.sort(() => Math.random() - 0.5);
+    pvpQuestionBank = allVocab.slice(0, 21).map(v => {
+        // Tạo 4 đáp án (1 đúng 3 sai ngẫu nhiên)
+        let wrong = allVocab.filter(x => x.vi !== v.vi).sort(() => Math.random() - 0.5).slice(0, 3);
+        let opts = [v.vi, ...wrong.map(w => w.vi)].sort(() => Math.random() - 0.5);
+        return { en: v.en, vi: v.vi, opts: opts };
+    });
+
+    // 4. KHAI THÔNG FIREBASE
     rtdb.ref('active_pvp_match').set({
         id: 'match_' + matchIndex,
         p1: p1, p2: p2,
-        p1_score: 0, p2_score: 0,
+        p1_set: 0, p2_set: 0,       // Tỉ số Set (nhỏ bên dưới)
+        p1_correct: 0, p2_correct: 0, // Tỉ số câu đúng (lớn ở giữa)
         status: 'playing',
-        round: 1, 
-        max_rounds: 3,
-        current_q: questionBank[Math.floor(Math.random() * questionBank.length)],
+        q_idx: 1, // Đang ở câu thứ mấy
+        current_q: pvpQuestionBank[0],
         locked_by: "",
-        winner: ""
+        question_bank: pvpQuestionBank // Gửi đề lên máy chủ
     });
 }
 
-// 2. HÀM XỬ LÝ KHI HỌC SINH CHỌN ĐÁP ÁN
 function submitPvPAnswer(optIndex) {
-    const selectedText = document.getElementById('pvpOpt' + optIndex).innerText;
-    
     rtdb.ref('active_pvp_match').once('value').then(snapshot => {
         let match = snapshot.val();
         if(!match || match.status !== 'playing' || match.locked_by !== "") return;
 
+        const selectedText = match.current_q.opts[optIndex];
         let isCorrect = selectedText === match.current_q.vi;
         let updates = { locked_by: userData.displayName };
 
         if(isCorrect) {
-            // Ai đúng mới được cộng điểm hiệp đó
-            if(userData.displayName === match.p1) updates.p1_score = match.p1_score + 1;
-            if(userData.displayName === match.p2) updates.p2_score = match.p2_score + 1;
-            
-            // Hiệu ứng ăn mừng tạm thời
-            document.getElementById('pvpOpt' + optIndex).classList.add('correct');
-        } else {
-            document.getElementById('pvpOpt' + optIndex).classList.add('wrong');
+            if(userData.displayName === match.p1) updates.p1_correct = match.p1_correct + 1;
+            if(userData.displayName === match.p2) updates.p2_correct = match.p2_correct + 1;
         }
 
         rtdb.ref('active_pvp_match').update(updates).then(() => {
-            // Đợi 2 giây để xem kết quả hiệp, sau đó tự động sang hiệp mới hoặc kết thúc
-            setTimeout(() => checkMatchStatus(match), 2000);
+            setTimeout(() => nextQuestionOrSet(match), 1500);
         });
     });
 }
 
-// 3. THUẬT TOÁN ĐIỀU PHỐI TRẬN ĐẤU (TỰ ĐỘNG PHÁT ĐỀ TIẾP THEO)
-async function checkMatchStatus(match) {
-    rtdb.ref('active_pvp_match').once('value').then(async (snap) => {
-        let currentMatch = snap.val();
-        
-        // Kiểm tra xem đã có ai thắng chung cuộc (thắng 2 hiệp) chưa
-        if(currentMatch.p1_score >= 2 || currentMatch.p2_score >= 2) {
-            let finalWinner = currentMatch.p1_score >= 2 ? currentMatch.p1 : currentMatch.p2;
+async function nextQuestionOrSet(match) {
+    rtdb.ref('active_pvp_match').once('value').then(snap => {
+        let m = snap.val();
+        let nextIdx = m.q_idx + 1;
+
+        // KIỂM TRA KẾT THÚC SET
+        if(m.q_idx === 10 || m.q_idx === 20) {
+            let p1_s = m.p1_set; let p2_s = m.p2_set;
+            // So sánh câu đúng để định đoạt Set
+            if(m.p1_correct > m.p2_correct) p1_s++;
+            else if(m.p2_correct > m.p1_correct) p2_s++;
+
             rtdb.ref('active_pvp_match').update({
-                status: 'finished',
-                winner: finalWinner
+                p1_set: p1_s, p2_set: p2_s,
+                p1_correct: 0, p2_correct: 0, // Reset điểm câu đúng cho Set mới
+                q_idx: nextIdx,
+                current_q: m.question_bank[nextIdx - 1],
+                locked_by: ""
             });
-        } else {
-            // Nếu chưa đủ 2 hiệp thắng, phát câu hỏi tiếp theo
-            // [Suy luận] Lấy lại bộ đề từ Ngự Thiện Phòng
-            const dummyQ = [
-                {en: "Determination", vi: "Quyết tâm", opts: ["Do dự", "Lười biếng", "Quyết tâm", "Sợ hãi"]},
-                {en: "Victory", vi: "Chiến thắng", opts: ["Thất bại", "Chiến thắng", "Hòa", "Bỏ cuộc"]}
-            ];
-            
+            alert(`KẾT THÚC SET ${m.q_idx === 10 ? 1 : 2}! Tỉ số Set hiện tại: ${p1_s} - ${p2_s}`);
+        } 
+        // TRẬN ĐẤU KẾT THÚC (SAU CÂU 21 HOẶC THẮNG TUYỆT ĐỐI 2-0)
+        else if (nextIdx > 21 || (m.p1_set === 2 || m.p2_set === 2)) {
+             let winner = m.p1_set > m.p2_set ? m.p1 : m.p2;
+             if(m.p1_set === m.p2_set) winner = m.p1_correct > m.p2_correct ? m.p1 : m.p2; // Golden Goal
+             rtdb.ref('active_pvp_match').update({ status: 'finished', winner: winner });
+        }
+        // TIẾP TỤC CÂU TIẾP THEO TRONG SET
+        else {
             rtdb.ref('active_pvp_match').update({
-                round: currentMatch.round + 1,
-                current_q: dummyQ[Math.floor(Math.random() * dummyQ.length)],
-                locked_by: "" // Mở khóa cho hiệp mới
+                q_idx: nextIdx,
+                current_q: m.question_bank[nextIdx - 1],
+                locked_by: ""
             });
         }
     });
