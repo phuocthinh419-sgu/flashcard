@@ -9,6 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
         :root { --primary: #1a237e; --secondary: #2962ff; --success: #00c853; --danger: #d50000; --bg-color: #f0f2f5; --text-main: #333; --sidebar-w: 250px; }
@@ -249,26 +250,28 @@
 
     <script>
         // ==========================================
-        // CẤU HÌNH FIREBASE - BỆ HẠ ĐIỀN VÀO ĐÂY NHÉ
+        // CẤU HÌNH FIREBASE KẾT HỢP REALTIME DATABASE
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyAmDqBfe4JRBKDGVwqVS0yI9_P2O2WIzxI",
             authDomain: "academic-planner-v100.firebaseapp.com",
+            databaseURL: "https://academic-planner-v100-default-rtdb.asia-southeast1.firebasedatabase.app/",
             projectId: "academic-planner-v100",
             storageBucket: "academic-planner-v100.firebasestorage.app",
             messagingSenderId: "80448326816",
             appId: "1:80448326816:web:15e6dda33c3be03be90dc5"
         };
 
-        let db, auth;
+        let db, auth, rtdb;
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
             auth = firebase.auth();
+            rtdb = firebase.database(); // Đã kết nối thành công Long Mạch thời gian thực!
         } catch (e) { console.error("Không thể kết nối Firebase!"); }
 
         // ==========================================
-        // QUẢN LÝ NGƯỜI DÙNG & TÚI ĐỒ (ĐÃ CẬP NHẬT 24H)
+        // QUẢN LÝ NGƯỜI DÙNG & TÚI ĐỒ
         // ==========================================
         let currentUser = null;
         let userData = { role: 'student', gold: 0, xp: 0, streak: 1, displayName: '', lastLogin: '', hasShield: false, potionExpiry: null, maskExpiry: null, magnifyingGlass: 0 };
@@ -368,7 +371,7 @@
         }
 
         // ==========================================
-        // MUA SẮM VẬT PHẨM (LOGIC 24H)
+        // MUA SẮM VẬT PHẨM
         // ==========================================
         function buyItem(itemType, price) {
             if (!currentUser) return alert("Vui lòng đăng nhập để thực hiện giao dịch!");
@@ -381,10 +384,10 @@
                         userData.hasShield = true;
                     } else if (itemType === 'potion') {
                         if(userData.potionExpiry && userData.potionExpiry > now) return alert("Bình Tiên của bạn vẫn đang linh nghiệm (chưa hết 24h)!");
-                        userData.potionExpiry = now + (24 * 60 * 60 * 1000); // +24 tiếng
+                        userData.potionExpiry = now + (24 * 60 * 60 * 1000); 
                     } else if (itemType === 'mask') {
                         if(userData.maskExpiry && userData.maskExpiry > now) return alert("Bạn đang đeo Mặt Nạ Hắc Ám rồi!");
-                        userData.maskExpiry = now + (24 * 60 * 60 * 1000); // +24 tiếng
+                        userData.maskExpiry = now + (24 * 60 * 60 * 1000); 
                     } else if (itemType === 'glass') {
                         userData.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
                     }
@@ -392,18 +395,17 @@
                     userData.gold -= price; 
                     alert("Giao dịch thành công!");
                     syncStatsToCloud(); 
-                    if(itemType === 'mask') fetchLeaderboard(); // Tải lại bảng vàng để ẩn tên
+                    if(itemType === 'mask') fetchLeaderboard(); 
                 }
             } else alert("Không đủ Vàng! Vui lòng học thêm bài mới để tích lũy.");
         }
 
-        // LẮNG NGHE LÒ ĐÚC (KHI TRẢ LỜI ĐÚNG VÀ KHI DÙNG KÍNH LÚP)
+        // LẮNG NGHE LÒ ĐÚC
         window.addEventListener('message', function(event) {
             if (event.data === 'CORRECT') {
                 let goldEarned = 10; let xpEarned = 15;
                 const now = new Date().getTime();
                 
-                // Nếu Bình Tiên còn linh nghiệm
                 if(userData.potionExpiry && userData.potionExpiry > now) { 
                     xpEarned *= 2; goldEarned *= 2; 
                 }
@@ -416,13 +418,11 @@
                 anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 2000);
             }
             
-            // Lắng nghe lệnh xài Kính Lúp
             if (event.data === 'REQ_GLASS') {
                 if(userData.magnifyingGlass > 0) {
                     userData.magnifyingGlass -= 1;
                     syncStatsToCloud();
                     
-                    // Báo lại cho Lò Đúc là đã duyệt
                     const iframe = document.getElementById('modalFrame');
                     if(iframe && iframe.contentWindow) iframe.contentWindow.postMessage('APPROVE_GLASS', '*');
                     
@@ -436,13 +436,12 @@
         });
 
         // ==========================================
-        // BẢNG XẾP HẠNG (CHỨC NĂNG MẶT NẠ ẨN DANH)
+        // BẢNG XẾP HẠNG
         // ==========================================
         async function fetchLeaderboard() {
             if(!db) return;
             const lbContainer = document.getElementById('leaderboardData'); lbContainer.innerHTML = '<div class="loader"></div>';
             try {
-                // Sắp xếp theo XP trên đám mây (Kẻ dùng mặt nạ vẫn xếp đúng thứ tự)
                 const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').limit(30).get();
                 let html = ''; let rank = 1;
                 const now = new Date().getTime();
@@ -456,7 +455,6 @@
                         let displayXp = data.xp;
                         let displayName = data.displayName || 'Ẩn danh';
                         
-                        // Kích hoạt Mặt Nạ Hắc Ám
                         if (data.maskExpiry && data.maskExpiry > now) {
                             displayName = '🕵️ ??? (Đang ẩn mình)';
                             displayXp = '???';
@@ -482,7 +480,7 @@
         function savePin() { localStorage.setItem('teacherPin', document.getElementById('teacherPin').value); alert("Đã lưu mã PIN mới!"); document.getElementById('teacherPin').value = ''; }
 
         // ==========================================
-        // LÒ ĐÚC MÃ TỰ ĐỘNG - ĐÃ TÍCH HỢP NÚT KÍNH LÚP
+        // LÒ ĐÚC MÃ TỰ ĐỘNG
         // ==========================================
         function generateCode() {
             const raw = document.getElementById('rawInput').value.trim();
@@ -624,7 +622,7 @@
             const correctWord = vocabList[quizOrder[currentQuizIndex]];
             
             Array.from(optionsContainer.children).forEach(child => {
-                child.style.visibility = 'visible'; // Hủy ẩn của Kính lúp nếu có
+                child.style.visibility = 'visible'; 
                 if (child.innerText === correctWord.vi) child.classList.add('correct');
                 else child.classList.add('wrong');
             });
@@ -685,7 +683,6 @@
                 const correctWord = vocabList[quizOrder[currentQuizIndex]];
                 let hiddenCount = 0;
                 
-                // Lấp đi 2 đáp án sai
                 Array.from(optionsContainer.children).forEach(btn => {
                     if(btn.innerText !== correctWord.vi && hiddenCount < 2) {
                         btn.style.visibility = 'hidden'; 
