@@ -371,8 +371,16 @@
                             if(!userData.lastLogin) userData.lastLogin = todayStr;
                             if (userData.lastLogin !== todayStr) {
                                 const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-                                if (userData.lastLogin === yesterday.toLocaleDateString('en-GB')) userData.streak += 1;
-                                else { userData.streak = userData.hasShield ? (userData.hasShield = false, alert("Bùa cứu chuỗi!"), userData.streak) : 1; }
+                                if (userData.lastLogin === yesterday.toLocaleDateString('en-GB')) {
+                                    userData.streak += 1;
+                                } else { 
+                                    if (userData.hasShield) {
+                                        userData.hasShield = false;
+                                        alert("🛡️ Bùa Bảo Hộ đã phát huy tác dụng! Chuỗi của bệ hạ được giữ nguyên.");
+                                    } else {
+                                        userData.streak = 1; 
+                                    }
+                                }
                                 userData.lastLogin = todayStr;
                                 db.collection('vocab_users').doc(user.uid).update({ streak: userData.streak, lastLogin: todayStr, hasShield: userData.hasShield });
                             }
@@ -434,9 +442,13 @@
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     if (data.role !== 'teacher') {
+                        let isMaskActive = data.maskExpiry && data.maskExpiry > Date.now();
+                        let dName = isMaskActive ? "???" : (data.displayName || 'Ẩn danh');
+                        let dXp = isMaskActive ? "???" : data.xp;
+                        
                         let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '.';
                         let rankClass = rank <= 3 ? `lb-rank-${rank}` : '';
-                        html += `<div class="lb-row ${rankClass}"><span>${medal} ${data.displayName || 'Ẩn danh'}</span><span style="color:var(--secondary)">⭐ ${data.xp} XP</span></div>`;
+                        html += `<div class="lb-row ${rankClass}"><span>${medal} ${dName}</span><span style="color:var(--secondary)">⭐ ${dXp} XP</span></div>`;
                         rank++;
                     }
                 });
@@ -546,7 +558,7 @@
         }
 
         // ==========================================
-        // ĐẠO LUẬT PVP - LOCAL TIMER BẤT TỬ
+        // ĐẠO LUẬT PVP
         // ==========================================
 
         async function adminStartPvP(p1, p2, matchIndex) {
@@ -789,7 +801,7 @@
                         if(oppAns !== "") { botStatus.innerText = "Đối thủ đã chốt!"; botStatus.style.color = "#ff1744"; }
                         else { botStatus.innerText = "Đối thủ đang suy nghĩ..."; botStatus.style.color = "#00e676"; }
 
-                        // LOCAL TIMER ĐẾM NGƯỢC
+                        // BỘ ĐẾM GIỜ CỤC BỘ
                         if (window.currentPlayingQIdx !== m.q_idx) {
                             window.currentPlayingQIdx = m.q_idx;
                             window.localPvPTime = 15;
@@ -876,6 +888,7 @@
             } else alert("Mã PIN sai!");
         }
 
+        // HÀM MUA VẬT PHẨM
         function buyItem(itemType, price) { 
             if (!currentUser) return alert("Vui lòng đăng nhập để mua hàng!");
             if (userData.gold < price) {
@@ -893,6 +906,8 @@
                 db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
                     userData.gold -= price;
                     if(updates.hasShield) userData.hasShield = true;
+                    if(updates.potionExpiry) userData.potionExpiry = updates.potionExpiry;
+                    if(updates.maskExpiry) userData.maskExpiry = updates.maskExpiry;
                     if(updates.magnifyingGlass) userData.magnifyingGlass = updates.magnifyingGlass;
                     
                     updateUI();
@@ -905,15 +920,20 @@
             }
         }
 
+        // LẮNG NGHE TÍN HIỆU TỪ FLASHCARD VÀ KIỂM TRA BÌNH TIÊN XP
         window.addEventListener('message', function(e) {
             if (e.data === 'CORRECT') {
                 if (currentUser && userData) {
-                    userData.xp = (userData.xp || 0) + 15;
-                    userData.gold = (userData.gold || 0) + 10;
+                    let isPotionActive = userData.potionExpiry && userData.potionExpiry > Date.now();
+                    let xpGained = isPotionActive ? 30 : 15;
+                    let goldGained = isPotionActive ? 20 : 10;
+                    
+                    userData.xp = (userData.xp || 0) + xpGained;
+                    userData.gold = (userData.gold || 0) + goldGained;
                     syncStatsToCloud();
                     
                     let anim = document.getElementById('rewardAnim');
-                    anim.innerText = "🎉 +10 🪙 | +15 ⭐";
+                    anim.innerText = isPotionActive ? `🧪 ĐANG X2! +${goldGained} 🪙 | +${xpGained} ⭐` : `🎉 +${goldGained} 🪙 | +${xpGained} ⭐`;
                     anim.classList.add('show');
                     setTimeout(() => anim.classList.remove('show'), 2000);
                 }
@@ -928,6 +948,7 @@
             }
         });
 
+        // LÒ ĐÚC MÃ
         function generateCode() {
             const raw = document.getElementById('rawInput').value.trim();
             if(!raw) return alert("Vui lòng nhập từ vựng!");
