@@ -317,21 +317,37 @@
     <div class="modal" id="pvpModal">
         <div class="battle-arena">
             <div class="battle-header">
-                <div class="fighter" id="pvpP1Name">Tuyển thủ 1 <span id="pvpP1Score">0</span></div>
+                <div class="fighter">
+                    <div id="pvpP1Name" style="font-weight:bold;">Tuyển thủ 1</div>
+                    <span id="pvpP1Correct" style="font-size: 50px; font-weight: 900; color: #fff;">0</span> 
+                    <div style="font-size: 14px; color: #ffd700;">Set Score: <b id="pvpP1Set">0</b></div> 
+                </div>
                 <div class="vs-badge">VS</div>
-                <div class="fighter" id="pvpP2Name">Tuyển thủ 2 <span id="pvpP2Score">0</span></div>
+                <div class="fighter">
+                    <div id="pvpP2Name" style="font-weight:bold;">Tuyển thủ 2</div>
+                    <span id="pvpP2Correct" style="font-size: 50px; font-weight: 900; color: #fff;">0</span>
+                    <div style="font-size: 14px; color: #ffd700;">Set Score: <b id="pvpP2Set">0</b></div>
+                </div>
             </div>
+
+            <div style="text-align:center; color:#ccc; margin-top:10px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 5px;">
+                CÂU HỎI SỐ: <span id="pvpQIndex" style="color:#ffd700;">1</span> / 21
+            </div>
+
             <div class="battle-body">
                 <div class="lock-overlay" id="lockOverlay">
                     <div class="lock-text" id="lockMsg">ĐỐI THỦ ĐÃ CHỘP TRƯỚC!</div>
                 </div>
-                <div id="pvpWaitMsg" style="font-size:20px; color:#aaa; margin-bottom: 20px;">Đang đợi hệ thống phát đề...</div>
-                <div class="battle-question" id="pvpQuestion" style="display:none;">APPLE</div>
+                
+                <div id="pvpWaitMsg" style="font-size:18px; color:#aaa; text-align:center;">Đang đợi hiệu lệnh từ bệ hạ...</div>
+                
+                <div class="battle-question" id="pvpQuestion" style="display:none; margin-top: 20px;">READY?</div>
+                
                 <div class="battle-options" id="pvpOptions" style="display:none;">
-                    <button class="btn-ans" onclick="submitPvPAnswer(0)" id="pvpOpt0">Quả táo</button>
-                    <button class="btn-ans" onclick="submitPvPAnswer(1)" id="pvpOpt1">Quả cam</button>
-                    <button class="btn-ans" onclick="submitPvPAnswer(2)" id="pvpOpt2">Quả chuối</button>
-                    <button class="btn-ans" onclick="submitPvPAnswer(3)" id="pvpOpt3">Quả lựu</button>
+                    <button class="btn-ans" onclick="submitPvPAnswer(0)" id="pvpOpt0">-</button>
+                    <button class="btn-ans" onclick="submitPvPAnswer(1)" id="pvpOpt1">-</button>
+                    <button class="btn-ans" onclick="submitPvPAnswer(2)" id="pvpOpt2">-</button>
+                    <button class="btn-ans" onclick="submitPvPAnswer(3)" id="pvpOpt3">-</button>
                 </div>
             </div>
         </div>
