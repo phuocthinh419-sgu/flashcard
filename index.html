@@ -461,31 +461,35 @@
         const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing';
         async function fetchFromSheets() {
             const container = document.getElementById('libraryContainer');
+            const syllabusDiv = document.getElementById('syllabusChecklist');
             if (!container) return;
-            container.innerHTML = '<p style="text-align:center; color:#888;">Đang tải dữ liệu từ kho...</p>';
             let sheetId = SHEET_LINK.includes('/d/') ? SHEET_LINK.split('/d/')[1].split('/')[0] : SHEET_LINK;
             const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&t=${new Date().getTime()}`;
             try {
-                const response = await fetch(url); const text = await response.text();
+                const response = await fetch(url);
+                const text = await response.text();
                 const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
                 const data = JSON.parse(jsonString);
-                
-                let htmlLib = ''; let htmlArena = ''; allLessons = [];
+                let htmlLib = ''; let htmlArena = ''; allLessonsData = [];
                 for (let i = 1; i < data.table.rows.length; i++) {
                     const r = data.table.rows[i];
-                    if (r && r.c && r.c[0] && r.c[1]) {
+                    if (r && r.c && r.c[0] && r.c[1] && r.c[1].v) {
                         const lessonName = r.c[0].v;
-                        allLessons.push(lessonName);
-                        htmlLib += `<div class="lib-card"><h3>${lessonName}</h3><button class="btn-run" style="margin-top:10px;" onclick="alert('Đang nâng cấp kho!')">▶ VÀO HỌC</button></div>`;
-                        htmlArena += `<label class="syllabus-item"><input type="checkbox" name="syllabusCheck" value="${lessonName}"> <span>${lessonName}</span></label>`;
+                        const rawHTML = r.c[1].v;
+                        let vocabMatch = rawHTML.match(/const vocabList = \[(.*?)\];/s);
+                        let currentVocab = [];
+                        if (vocabMatch) { try { currentVocab = eval("[" + vocabMatch[1] + "]"); } catch(e){} }
+                        allLessonsData.push({ name: lessonName, vocab: currentVocab, raw: rawHTML });
+                        
+                        // Đã sửa: Nút "Vào học" bây giờ sẽ gọi hàm viewCard() để mở bài học
+                        htmlLib += `<div class="lib-card"><h3>${lessonName}</h3><p style="font-size:11px;">${currentVocab.length} từ</p><button class="btn-run" style="margin-top:10px;" onclick="viewCard('${btoa(unescape(encodeURIComponent(rawHTML)))}')">▶ VÀO HỌC</button></div>`;
+                        
+                        htmlArena += `<label class="syllabus-item"><input type="checkbox" name="syllabusCheck" value="${lessonName}"> <span>${lessonName} (${currentVocab.length} từ)</span></label>`;
                     }
                 }
-                container.innerHTML = htmlLib || '<p>Kho trống.</p>';
-                document.getElementById('syllabusChecklist').innerHTML = htmlArena || '<p>Chưa có dữ liệu giáo trình.</p>';
-            } catch (e) { 
-                console.error(e); 
-                container.innerHTML = '<p style="color:red; text-align:center">Lỗi tải dữ liệu. Vui lòng kiểm tra Google Sheets.</p>'; 
-            }
+                container.innerHTML = htmlLib;
+                if(syllabusDiv) syllabusDiv.innerHTML = htmlArena;
+            } catch(e) { console.error("Lỗi tải Sheets:", e); }
         }
 
         // ĐÀI TỶ VÕ VÀ BỐC THĂM
