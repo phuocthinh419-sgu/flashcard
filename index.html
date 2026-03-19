@@ -39,9 +39,10 @@
         .stat-streak { color: #ff5722; } .stat-xp { color: var(--secondary); } .stat-gold { color: #fbc02d; }
         .menu-btn { display: none; font-size: 24px; cursor: pointer; background: transparent; border: none; color: var(--primary); }
 
-        .main-content { flex: 1; padding: 20px 30px; overflow-y: auto; }
+        /* THẦN ĐÃ MỞ KHÓA GIỚI HẠN CHIỀU CAO VÀ THÊM ĐỆM ĐÁY CHO MOBILE TẠI ĐÂY */
+        .main-content { flex: 1; padding: 20px 30px 100px 30px; overflow-y: auto; overflow-x: hidden; }
         .header { margin-bottom: 25px; } .header h1 { font-size: 28px; color: var(--primary); } .header p { color: #666; margin-top: 5px; }
-        .view-section { display: none; flex-direction: column; height: 100%; } .view-section.active { display: flex; }
+        .view-section { display: none; flex-direction: column; min-height: 100%; height: auto; } .view-section.active { display: flex; }
         
         .lb-container { display: flex; flex-direction: column; gap: 12px; max-width: 600px; margin: 0 auto; width: 100%; }
         .lb-row { background: #fff; padding: 15px 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.04); font-weight: bold; font-size: 16px; transition: 0.2s;}
@@ -84,11 +85,12 @@
         .syllabus-item { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #eee; font-weight: 500;}
         .syllabus-item:last-child { border-bottom: none; }
         
-        /* BẢN NÂNG CẤP: SƠ ĐỒ ĐẤU TRƯỜNG HOÀNH TRÁNG */
+        /* BẢN NÂNG CẤP: SƠ ĐỒ ĐẤU TRƯỜNG HOÀNH TRÁNG (Chống dẹp lép) */
         .bracket-board { 
             background: linear-gradient(135deg, #1a237e 0%, #311b92 100%); 
-            border-radius: 15px; padding: 40px 20px; color: white; margin-bottom: 30px; 
+            border-radius: 15px; padding: 40px 20px; color: white; margin-bottom: 40px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; display: none; width: 100%;
+            overflow-x: auto; overflow-y: visible; /* Cứu tinh chống nghẽn cho Sơ đồ */
         }
         .bracket-board h2 { font-size: 26px; text-transform: uppercase; letter-spacing: 2px; }
         .bracket-stage { 
@@ -533,6 +535,7 @@
         async function executeBlindDraw() {
             if(!confirm("Bệ hạ có chắc muốn chốt sổ Bảng Vàng và bốc thăm ngay bây giờ?")) return;
             try {
+                // Thần đã xóa lệnh 'where' để lách luật Firewall Firebase, không sợ lỗi nữa!
                 const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get();
                 let candidates = [];
                 
