@@ -45,7 +45,9 @@
         
         .lb-container { display: flex; flex-direction: column; gap: 12px; max-width: 600px; margin: 0 auto; width: 100%; }
         .lb-row { background: #fff; padding: 15px 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.04); font-weight: bold; font-size: 16px; transition: 0.2s;}
-        .lb-rank-1 { border-left: 6px solid #ffd700; background: linear-gradient(90deg, #fffdf0 0%, #ffffff 100%); }
+        .lb-rank-1 { border-left: 6px solid #ffd700; background: linear-gradient(90deg, #fffdf0 0%, #ffffff 100%); font-size: 18px;}
+        .lb-rank-2 { border-left: 6px solid #c0c0c0; background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%); font-size: 17px;}
+        .lb-rank-3 { border-left: 6px solid #cd7f32; background: linear-gradient(90deg, #fffaf0 0%, #ffffff 100%); }
         
         .library-grid, .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .lib-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; height: 160px; border-left: 5px solid var(--secondary);}
@@ -58,16 +60,21 @@
         .item-desc { font-size: 13px; color: #666; height: 50px;}
         .item-price { font-size: 22px; font-weight: 900; color: #fbc02d; margin: 15px 0; background: #fff9c4; padding: 5px; border-radius: 10px; display: inline-block; width: fit-content; margin-left: auto; margin-right: auto;}
         
-        .workspace { display: flex; flex-direction: column; gap: 20px; flex: 1; }
-        textarea { width: 100%; height: 200px; padding: 20px; border: 1px solid #ddd; outline: none; background: #fafafa; font-family: monospace; font-size: 14px; resize: none; border-radius: 8px;}
+        .workspace { display: flex; gap: 20px; flex: 1; min-height: 0; }
+        .panel { flex: 1; background: #fff; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .panel-header { background: #fafafa; padding: 15px; border-bottom: 1px solid #eee; font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
+        textarea { flex: 1; padding: 20px; border: none; outline: none; background: #fafafa; font-family: monospace; font-size: 14px; resize: none;}
+        iframe { width: 100%; height: 100%; border: none; }
 
         button { border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; color: white; }
-        .btn-run { background: var(--secondary); } .btn-save { background: var(--success); } .btn-danger { background: var(--danger); }
+        .btn-run { background: var(--secondary); } .btn-run:hover { background: #1c44b2; }
+        .btn-save { background: var(--success); } .btn-danger { background: var(--danger); }
         .btn-buy { background: linear-gradient(45deg, #fbc02d, #f57f17); width: 100%; font-size: 16px; padding: 12px; border-radius: 8px;}
         .btn-google { background: #db4437; width: 100%; padding: 12px; font-size: 16px;}
 
         .settings-card { background: #fff; padding: 25px; border-radius: 12px; max-width: 500px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
-        .form-group { margin-bottom: 15px; } .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+        .form-group { margin-bottom: 15px; } .form-group label { display: block; font-weight: bold; margin-bottom: 8px;}
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
         
         .arena-container { display: flex; gap: 20px; flex-wrap: wrap; }
         .arena-panel { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex: 1; min-width: 300px;}
@@ -124,8 +131,10 @@
             .sidebar.show { transform: translateX(0); }
             .menu-btn { display: block; }
             .top-stats-bar { justify-content: space-between; padding: 10px 15px; }
+            .workspace { flex-direction: column; display: block;} .panel { min-height: 400px; margin-bottom: 20px;}
+            .fighter { font-size: 16px; } .fighter span { font-size: 24px; }
+            .battle-question { font-size: 30px; } .btn-ans { font-size: 16px; padding: 15px; }
             .battle-options { grid-template-columns: 1fr; }
-            .battle-question { font-size: 28px; }
         }
     </style>
 </head>
@@ -184,14 +193,14 @@
                     <div class="shop-item">
                         <div class="item-icon">🧪</div>
                         <div class="item-title">Bình Tiên XP x2</div>
-                        <div class="item-desc">Tăng gấp đôi phần thưởng Vàng & XP. Tác dụng giới hạn trong 24 giờ.</div>
+                        <div class="item-desc">Tăng gấp đôi phần thưởng Vàng & XP. Tác dụng giới hạn 24 giờ.</div>
                         <div class="item-price">🪙 150</div>
                         <button class="btn-buy" onclick="buyItem('potion', 150)">Đổi Ngay</button>
                     </div>
                     <div class="shop-item">
                         <div class="item-icon">🎭</div>
                         <div class="item-title">Mặt Nạ Hắc Ám</div>
-                        <div class="item-desc">Ẩn tên và điểm số trên Bảng xếp hạng thành "???". Tác dụng 24 giờ.</div>
+                        <div class="item-desc">Ẩn tên và điểm số trên Bảng xếp hạng thành "???". Tác dụng 24h.</div>
                         <div class="item-price">🪙 250</div>
                         <button class="btn-buy" onclick="buyItem('mask', 250)">Đổi Ngay</button>
                     </div>
@@ -462,7 +471,7 @@
         }
 
         // ==========================================
-        // ĐẠO LUẬT PVP 30 CÂU & TRÍ TUỆ NHÂN TẠO (BOT)
+        // ĐẠO LUẬT PVP - BOT AI VÀ SỬA LỖI TIME
         // ==========================================
 
         async function adminStartPvP(p1, p2, matchIndex) {
@@ -478,7 +487,7 @@
                 if(lesson) allVocab = allVocab.concat(lesson.vocab);
             });
 
-            if(allVocab.length < 30) return alert(`Bộ đề chỉ có ${allVocab.length} từ, không đủ 30 câu (yêu cầu 20 câu chính + 10 câu hiệp phụ)!`);
+            if(allVocab.length < 30) return alert(`Bộ đề chỉ có ${allVocab.length} từ, không đủ 30 câu!`);
 
             allVocab.sort(() => Math.random() - 0.5);
             let pvpQuestionBank = allVocab.slice(0, 30).map(v => {
@@ -494,7 +503,7 @@
                 p1_score: 0, p2_score: 0, 
                 status: 'playing',
                 q_idx: 1, 
-                q_type: 'mcq', // 15s
+                q_type: 'mcq', 
                 q_end_time: Date.now() + 15000, 
                 current_q: pvpQuestionBank[0],
                 
@@ -557,7 +566,7 @@
                     
                     return m;
                 }
-                return; // Abort
+                return;
             }, (err, comm, snap) => {
                 if(comm && snap.val()) {
                     setTimeout(() => processNextRound(snap.val().q_idx), 3500); 
@@ -565,11 +574,10 @@
             });
         }
 
-        // Đảm bảo không bị lặp vòng
         function processNextRound(currentQIdx) {
             rtdb.ref('active_pvp_match').once('value').then(snap => {
                 let m = snap.val();
-                if(!m || m.q_idx !== currentQIdx || m.status !== 'showing_result') return; // Dừng nếu đã chạy rồi
+                if(!m || m.q_idx !== currentQIdx || m.status !== 'showing_result') return; 
 
                 let nextIdx = m.q_idx + 1;
                 let s1 = m.p1_score; let s2 = m.p2_score;
@@ -608,6 +616,7 @@
                     let nextType = nextIdx <= 10 ? 'mcq' : (nextIdx <= 20 ? 'fastest' : (Math.random() > 0.5 ? 'mcq' : 'fastest'));
                     let duration = nextType === 'mcq' ? 15000 : 30000;
                     
+                    updates.status = 'playing'; // LỖI CHẾT NGƯỜI ĐÃ ĐƯỢC VÁ Ở ĐÂY
                     updates.q_idx = nextIdx;
                     updates.q_type = nextType;
                     updates.q_end_time = Date.now() + duration;
@@ -618,7 +627,6 @@
             });
         }
 
-        // LẮNG NGHE SYNC TỪ FIREBASE
         if(rtdb) {
             rtdb.ref('tournament_status/bracket').on('value', (snapshot) => {
                 const data = snapshot.val();
@@ -654,7 +662,6 @@
                     
                     document.getElementById('pvpQIndex').innerText = m.q_idx;
 
-                    // KIỂM SOÁT GIAO DIỆN KHI ĐANG ĐÁNH
                     if(m.status === 'playing') {
                         document.getElementById('pvpWaitMsg').style.display = 'none';
                         document.getElementById('pvpQuestion').style.display = 'block';
@@ -678,18 +685,21 @@
                             }
                         }
 
-                        // CƠ CHẾ BOT: Nếu đối thủ có chữ "Cao thủ ảo", Bot tự chốt từ 3-8 giây
+                        // CƠ CHẾ BOT THÔNG MINH
                         let myRole = isP1 ? 'p1' : (isP2 ? 'p2' : null);
                         let oppRole = isP1 ? 'p2' : 'p1';
                         let oppName = isP1 ? m.p2 : m.p1;
+                        
                         if (myRole && oppName.includes("Cao thủ ảo") && !m.evaluating && m[oppRole+'_ans'] === "") {
                             if (window.pvpBotTimer) clearTimeout(window.pvpBotTimer);
-                            let delay = Math.floor(Math.random() * 5000) + 3000; // 3s đến 8s
+                            let maxWait = m.q_type === 'mcq' ? 10000 : 20000;
+                            let delay = Math.floor(Math.random() * maxWait) + 2000; 
+                            
                             window.pvpBotTimer = setTimeout(() => {
                                 rtdb.ref('active_pvp_match').once('value').then(s => {
                                     let cm = s.val();
                                     if (cm && cm.status === 'playing' && !cm.evaluating && cm[oppRole+'_ans'] === "") {
-                                        let isCorrect = Math.random() < 0.7; // Tỷ lệ đúng 70%
+                                        let isCorrect = Math.random() < 0.7; 
                                         let selected = isCorrect ? cm.current_q.vi : cm.current_q.opts.filter(o => o !== cm.current_q.vi)[0];
                                         let up = {}; up[oppRole+'_ans'] = selected; up[oppRole+'_time'] = Date.now();
                                         rtdb.ref('active_pvp_match').update(up);
@@ -698,17 +708,14 @@
                             }, delay);
                         }
 
-                        // Hiển thị trạng thái chờ Bot
                         let oppAns = isP1 ? m.p2_ans : m.p1_ans;
                         let botStatus = document.getElementById('botStatusMsg');
                         if(oppAns !== "") { botStatus.innerText = "Đối thủ đã chốt!"; botStatus.style.color = "#ff1744"; }
                         else { botStatus.innerText = "Đối thủ đang suy nghĩ..."; botStatus.style.color = "#00e676"; }
 
-                        // TIMER ĐẾM NGƯỢC
                         clearInterval(window.pvpTimer);
                         window.pvpTimer = setInterval(() => {
-                            let timeLeft = m.q_end_time - Date.now();
-                            let t = Math.max(0, Math.ceil(timeLeft / 1000));
+                            let t = Math.max(0, Math.ceil((m.q_end_time - Date.now())/1000));
                             document.getElementById('pvpTimerBanner').innerText = `⏳ ${t}s`;
                             if (t <= 0 && !m.evaluating) { clearInterval(window.pvpTimer); triggerEval(); }
                         }, 500);
@@ -717,7 +724,6 @@
                             clearInterval(window.pvpTimer); triggerEval();
                         }
                     } 
-                    // KIỂM SOÁT KHI HIỆN KẾT QUẢ CÂU HỎI
                     else if (m.status === 'showing_result') {
                         clearInterval(window.pvpTimer);
                         if (window.pvpBotTimer) clearTimeout(window.pvpBotTimer);
@@ -753,7 +759,6 @@
                             } else { btn.style.opacity = '0.3'; }
                         }
                     } 
-                    // KẾT THÚC TRẬN
                     else if (m.status === 'finished') {
                         clearInterval(window.pvpTimer);
                         if (window.pvpBotTimer) clearTimeout(window.pvpBotTimer);
@@ -769,7 +774,6 @@
             });
         }
 
-        // CÀI ĐẶT
         function switchTab(tabId) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -787,7 +791,6 @@
             } else alert("Mã PIN sai!");
         }
 
-        // LÒ ĐÚC MÃ (FULL GIAO DIỆN)
         function generateCode() {
             const raw = document.getElementById('rawInput').value.trim();
             if(!raw) return alert("Vui lòng nhập từ vựng!");
@@ -1030,7 +1033,7 @@
             document.getElementById('generatedCode').value = template;
         }
 
-        function copyCode() { document.getElementById('generatedCode').select(); document.execCommand("copy"); alert("Đã copy mã! Hãy dán đè vào Cột B của Google Sheets."); }
+        function copyCode() { document.getElementById('generatedCode').select(); document.execCommand("copy"); alert("Đã copy mã! Hãy dán vào Cột B của Google Sheets."); }
         function buyItem(itemType, price) { alert('Đã mua ' + itemType + ' với giá ' + price + ' Vàng!'); }
 
         updateUI(); fetchLeaderboard(); fetchFromSheets(); 
