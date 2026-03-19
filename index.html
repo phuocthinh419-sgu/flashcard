@@ -181,8 +181,9 @@
                         <button class="btn-save" style="width: 100%;" onclick="saveSyllabusSelection()">💾 Khóa Đề Thi</button>
                     </div>
                     <div class="arena-panel">
-                        <div class="arena-title">2. Lò Bát Quái (Bốc thăm)</div>
-                        <button class="btn-danger" style="width: 100%; padding: 15px;" onclick="executeBlindDraw()">🎲 CHỐT SỔ & BỐC THĂM MÙ</button>
+                        <div class="arena-title">2. Lò Bát Quái (Điều hành Nhánh)</div>
+                        <button class="btn-danger" style="width: 100%; padding: 15px; font-size: 18px; font-weight: 900;" onclick="executeBlindDraw()">🎲 BỐC THĂM SƠ ĐỒ MỚI</button>
+                        <button class="btn-run" style="width: 100%; padding: 15px; font-size: 18px; font-weight: 900; margin-top: 10px;" onclick="advanceTournament()">⏭️ TỔNG KẾT & LÊN VÒNG TRONG</button>
                     </div>
                 </div>
             </div>
@@ -190,34 +191,10 @@
             <div id="view-shop" class="view-section">
                 <div class="header"><h1>🛒 Cửa Hàng</h1><p>Đổi vật phẩm bằng Vàng.</p></div>
                 <div class="shop-grid">
-                    <div class="shop-item">
-                        <div class="item-icon">🧪</div>
-                        <div class="item-title">Bình Tiên XP x2</div>
-                        <div class="item-desc">Tăng gấp đôi phần thưởng Vàng & XP. Tác dụng giới hạn 24 giờ.</div>
-                        <div class="item-price">🪙 150</div>
-                        <button class="btn-buy" onclick="buyItem('potion', 150)">Đổi Ngay</button>
-                    </div>
-                    <div class="shop-item">
-                        <div class="item-icon">🎭</div>
-                        <div class="item-title">Mặt Nạ Hắc Ám</div>
-                        <div class="item-desc">Ẩn tên và điểm số trên Bảng xếp hạng thành "???". Tác dụng 24h.</div>
-                        <div class="item-price">🪙 250</div>
-                        <button class="btn-buy" onclick="buyItem('mask', 250)">Đổi Ngay</button>
-                    </div>
-                    <div class="shop-item">
-                        <div class="item-icon">🔍</div>
-                        <div class="item-title">Kính Lúp Thám Tử</div>
-                        <div class="item-desc">Loại bỏ 2 đáp án sai trong lúc làm Trắc nghiệm (Dùng 1 lần/kính).</div>
-                        <div class="item-price">🪙 200</div>
-                        <button class="btn-buy" onclick="buyItem('glass', 200)">Đổi Ngay</button>
-                    </div>
-                    <div class="shop-item">
-                        <div class="item-icon">🛡️</div>
-                        <div class="item-title">Bùa Bảo Hộ</div>
-                        <div class="item-desc">Cứu chuỗi ngày học liên tiếp nếu lỡ quên học 1 ngày.</div>
-                        <div class="item-price">🪙 200</div>
-                        <button class="btn-buy" onclick="buyItem('shield', 200)">Đổi Ngay</button>
-                    </div>
+                    <div class="shop-item"><div class="item-icon">🧪</div><div class="item-title">Bình Tiên XP x2</div><div class="item-desc">Tăng gấp đôi phần thưởng Vàng & XP. Tác dụng 24h.</div><div class="item-price">🪙 150</div><button class="btn-buy" onclick="buyItem('potion', 150)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🎭</div><div class="item-title">Mặt Nạ Hắc Ám</div><div class="item-desc">Ẩn tên và điểm số trên Bảng xếp hạng. Tác dụng 24h.</div><div class="item-price">🪙 250</div><button class="btn-buy" onclick="buyItem('mask', 250)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🔍</div><div class="item-title">Kính Lúp Thám Tử</div><div class="item-desc">Loại bỏ 2 đáp án sai trong lúc làm bài (Dùng 1 lần/kính).</div><div class="item-price">🪙 200</div><button class="btn-buy" onclick="buyItem('glass', 200)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🛡️</div><div class="item-title">Bùa Bảo Hộ</div><div class="item-desc">Cứu chuỗi ngày học liên tiếp nếu lỡ quên học 1 ngày.</div><div class="item-price">🪙 200</div><button class="btn-buy" onclick="buyItem('shield', 200)">Đổi Ngay</button></div>
                 </div>
             </div>
 
@@ -470,8 +447,41 @@
             alert("Đã bốc thăm xong! Sơ đồ nằm ở tab Xếp Hạng.");
         }
 
+        async function advanceTournament() {
+            if(!confirm("Tổng kết vòng đấu hiện tại và xếp cặp cho vòng tiếp theo?")) return;
+            const snap = await rtdb.ref('tournament_status/bracket').once('value');
+            const data = snap.val();
+            if(!data || !data.matches) return;
+
+            let winners = []; let losers = []; let allFinished = true;
+            data.matches.forEach(m => {
+                if(m.winner) { winners.push(m.winner); losers.push(m.winner === m.player1 ? m.player2 : m.player1); } 
+                else { allFinished = false; }
+            });
+
+            if(!allFinished) return alert("Vẫn còn trận đấu chưa kết thúc! Yêu cầu hoàn tất toàn bộ trước khi lên vòng.");
+            if(winners.length === 1) return alert("🏆 GIẢI ĐẤU KẾT THÚC! NHÀ VÔ ĐỊCH: " + winners[0]);
+
+            let nextStage = "VÒNG TIẾP THEO"; let nextMatches = [];
+            if(data.stage === "VÒNG 1/8") {
+                nextStage = "TỨ KẾT";
+                for(let i=0; i<winners.length; i+=2) nextMatches.push({ player1: winners[i], player2: winners[i+1] });
+            } else if(data.stage === "TỨ KẾT") {
+                nextStage = "BÁN KẾT";
+                for(let i=0; i<winners.length; i+=2) nextMatches.push({ player1: winners[i], player2: winners[i+1] });
+            } else if(data.stage === "BÁN KẾT") {
+                nextStage = "CHUNG KẾT & TRANH HẠNG 3";
+                nextMatches.push({ player1: winners[0], player2: winners[1] }); 
+                if(losers.length >= 2) nextMatches.push({ player1: losers[0], player2: losers[1] }); 
+            } else if(data.stage.includes("CHUNG KẾT")) {
+                return alert("🏆 GIẢI ĐẤU ĐÃ CÓ CHỦ NHÂN: " + winners[0]);
+            }
+            rtdb.ref('tournament_status/bracket').set({ stage: nextStage, matches: nextMatches, timestamp: Date.now() });
+            alert("Đã chuyển sang " + nextStage + "!");
+        }
+
         // ==========================================
-        // ĐẠO LUẬT PVP - BOT AI VÀ SỬA LỖI TIME
+        // ĐẠO LUẬT PVP - 30 CÂU TRẮC NGHIỆM ĐỒNG NHẤT 15 GIÂY
         // ==========================================
 
         async function adminStartPvP(p1, p2, matchIndex) {
@@ -503,7 +513,6 @@
                 p1_score: 0, p2_score: 0, 
                 status: 'playing',
                 q_idx: 1, 
-                q_type: 'mcq', 
                 q_end_time: Date.now() + 15000, 
                 current_q: pvpQuestionBank[0],
                 
@@ -566,7 +575,7 @@
                     
                     return m;
                 }
-                return;
+                return; 
             }, (err, comm, snap) => {
                 if(comm && snap.val()) {
                     setTimeout(() => processNextRound(snap.val().q_idx), 3500); 
@@ -613,17 +622,23 @@
                     updates.status = 'finished';
                     updates.winner = winner;
                 } else {
-                    let nextType = nextIdx <= 10 ? 'mcq' : (nextIdx <= 20 ? 'fastest' : (Math.random() > 0.5 ? 'mcq' : 'fastest'));
-                    let duration = nextType === 'mcq' ? 15000 : 30000;
-                    
-                    updates.status = 'playing'; // LỖI CHẾT NGƯỜI ĐÃ ĐƯỢC VÁ Ở ĐÂY
+                    updates.status = 'playing'; 
                     updates.q_idx = nextIdx;
-                    updates.q_type = nextType;
-                    updates.q_end_time = Date.now() + duration;
+                    updates.q_end_time = Date.now() + 15000; 
                     updates.current_q = m.question_bank[nextIdx - 1];
                 }
 
-                rtdb.ref('active_pvp_match').update(updates);
+                rtdb.ref('active_pvp_match').update(updates).then(() => {
+                    if (status === 'finished') {
+                        rtdb.ref('active_pvp_match/id').once('value').then(idSnap => {
+                            let matchId = idSnap.val();
+                            if(matchId) {
+                                let matchIndex = parseInt(matchId.split('_')[1]);
+                                rtdb.ref('tournament_status/bracket/matches/' + matchIndex).update({ winner: winner });
+                            }
+                        });
+                    }
+                });
             });
         }
 
@@ -635,8 +650,13 @@
                     document.getElementById('bracketStatus').innerText = `GIAI ĐOẠN: ${data.stage} | Trạng thái: Chờ thi đấu`;
                     let matchHtml = '';
                     data.matches.forEach((m, index) => {
-                        let fightBtn = userData.role === 'teacher' ? `<button class="btn-fight" style="display:block;" onclick="adminStartPvP('${m.player1}', '${m.player2}', ${index})">⚔️ ÉP KHAI CHIẾN</button>` : '';
-                        matchHtml += `<div class="match-box"><div style="font-size:10px; color:#aaa; margin-bottom:5px;">Trận ${index + 1}</div><div class="player-name">${m.player1}</div><div class="vs-text">VS</div><div class="player-name">${m.player2}</div>${fightBtn}</div>`;
+                        let isFinished = !!m.winner;
+                        let fightBtn = (userData.role === 'teacher' && !isFinished) ? `<button class="btn-fight" style="display:block;" onclick="adminStartPvP('${m.player1}', '${m.player2}', ${index})">⚔️ ÉP KHAI CHIẾN</button>` : '';
+                        let winnerTag = isFinished ? `<div style="color:#00e676; font-weight:bold; margin-top:10px; font-size: 14px;">👑 Thắng: ${m.winner}</div>` : '';
+                        let matchTitle = `Trận ${index + 1}`;
+                        if(data.stage.includes("CHUNG KẾT")) matchTitle = index === 0 ? "CHUNG KẾT" : "TRANH HẠNG 3";
+
+                        matchHtml += `<div class="match-box"><div style="font-size:10px; color:#aaa; margin-bottom:5px;">${matchTitle}</div><div class="player-name">${m.player1}</div><div class="vs-text">VS</div><div class="player-name">${m.player2}</div>${winnerTag}${fightBtn}</div>`;
                     });
                     document.getElementById('bracketMatches').innerHTML = matchHtml;
                 }
@@ -669,8 +689,8 @@
                         document.getElementById('pvpQuestion').innerText = m.current_q.en;
 
                         let typeBanner = document.getElementById('pvpTypeBanner');
-                        if(m.q_type === 'mcq') { typeBanner.innerText = "[TRẮC NGHIỆM]"; typeBanner.style.color = "#00e676"; }
-                        else { typeBanner.innerText = "[FASTEST FINGER]"; typeBanner.style.color = "#ff1744"; }
+                        typeBanner.innerText = "[TRẮC NGHIỆM]"; 
+                        typeBanner.style.color = "#00e676";
 
                         let myAns = isP1 ? m.p1_ans : (isP2 ? m.p2_ans : "");
                         if(myAns === "") {
@@ -685,15 +705,13 @@
                             }
                         }
 
-                        // CƠ CHẾ BOT THÔNG MINH
                         let myRole = isP1 ? 'p1' : (isP2 ? 'p2' : null);
                         let oppRole = isP1 ? 'p2' : 'p1';
                         let oppName = isP1 ? m.p2 : m.p1;
                         
                         if (myRole && oppName.includes("Cao thủ ảo") && !m.evaluating && m[oppRole+'_ans'] === "") {
                             if (window.pvpBotTimer) clearTimeout(window.pvpBotTimer);
-                            let maxWait = m.q_type === 'mcq' ? 10000 : 20000;
-                            let delay = Math.floor(Math.random() * maxWait) + 2000; 
+                            let delay = Math.floor(Math.random() * 7000) + 3000; 
                             
                             window.pvpBotTimer = setTimeout(() => {
                                 rtdb.ref('active_pvp_match').once('value').then(s => {
@@ -841,7 +859,6 @@
     <div id="quiz-section" class="hidden w-full max-w-md mx-auto relative">
         <div class="text-center mb-4">
             <span class="inline-block px-4 py-1 bg-yellow-100 text-yellow-800 font-bold rounded-full text-sm mb-2">Bài Tập Trắc Nghiệm 🪙</span>
-            
             <div id="timer-display" style="position: relative; width: 70px; height: 70px; margin: 0 auto 10px auto;">
                 <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg);" viewBox="0 0 100 100">
                     <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"></circle>
@@ -849,9 +866,7 @@
                 </svg>
                 <div id="timer-text" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; color: #ef4444;">15</div>
             </div>
-            
             <button id="glass-btn" onclick="requestGlass()" class="px-3 py-1 bg-blue-100 text-blue-700 font-bold rounded-lg text-sm mb-4 hover:bg-blue-200 transition">🔍 Dùng Kính Lúp (50/50)</button>
-
             <h2 id="quiz-question" class="text-4xl font-extrabold text-indigo-900 mt-2">Word</h2>
         </div>
         <div id="quiz-options" class="w-full"></div>
@@ -1033,7 +1048,7 @@
             document.getElementById('generatedCode').value = template;
         }
 
-        function copyCode() { document.getElementById('generatedCode').select(); document.execCommand("copy"); alert("Đã copy mã! Hãy dán vào Cột B của Google Sheets."); }
+        function copyCode() { document.getElementById('generatedCode').select(); document.execCommand("copy"); alert("Đã copy mã! Hãy dán đè vào Cột B của Google Sheets."); }
         function buyItem(itemType, price) { alert('Đã mua ' + itemType + ' với giá ' + price + ' Vàng!'); }
 
         updateUI(); fetchLeaderboard(); fetchFromSheets(); 
