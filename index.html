@@ -90,23 +90,12 @@
             overflow-x: auto; overflow-y: visible;
         }
         .bracket-board h2 { font-size: 26px; text-transform: uppercase; letter-spacing: 2px; }
-        .bracket-stage { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
-            gap: 25px; margin-top: 30px; padding: 20px; 
-            background: rgba(255,255,255,0.05); border-radius: 12px;
-        }
-        .match-box { 
-            background: rgba(255, 255, 255, 0.1); border: 2px solid #5c6bc0; 
-            border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-            backdrop-filter: blur(5px); transition: transform 0.2s, border-color 0.2s; position: relative;
-        }
+        .bracket-stage { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; margin-top: 30px; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 12px; }
+        .match-box { background: rgba(255, 255, 255, 0.1); border: 2px solid #5c6bc0; border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); backdrop-filter: blur(5px); transition: transform 0.2s, border-color 0.2s; position: relative; }
         .match-box:hover { transform: translateY(-5px); border-color: #ffd700; }
         .player-name { padding: 10px; font-weight: bold; font-size: 16px; border-bottom: 1px dashed rgba(255,255,255,0.2); }
         .player-name:last-child { border-bottom: none; }
-        .vs-text { 
-            font-size: 14px; color: #ffeb3b; font-style: italic; margin: 10px 0; font-weight: 900; 
-            background: rgba(0,0,0,0.3); display: inline-block; padding: 4px 12px; border-radius: 12px;
-        }
+        .vs-text { font-size: 14px; color: #ffeb3b; font-style: italic; margin: 10px 0; font-weight: 900; background: rgba(0,0,0,0.3); display: inline-block; padding: 4px 12px; border-radius: 12px; }
         .btn-fight { display:none; background: #ff5252; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; margin-top: 10px; cursor: pointer; width: 100%; font-weight: bold; border: none;}
         .btn-fight:hover { background: #d50000; }
 
@@ -129,13 +118,6 @@
         .battle-options { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; max-width: 600px; }
         .btn-ans { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); padding: 20px; border-radius: 15px; font-size: 20px; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; backdrop-filter: blur(5px); }
         .btn-ans:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
-        .btn-ans.correct { background: #00c853; border-color: #00e676; }
-        .btn-ans.wrong { background: #d50000; border-color: #ff1744; }
-        .btn-ans.locked { opacity: 0.5; pointer-events: none; }
-        
-        .lock-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 10; flex-direction: column; }
-        .lock-overlay.active { display: flex; }
-        .lock-text { font-size: 30px; color: #ffeb3b; font-weight: bold; text-align: center; }
 
         .reward-anim { position: fixed; bottom: 20px; right: 20px; background: #00c853; color: white; padding: 15px 25px; border-radius: 30px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 15px rgba(0,200,83,0.4); transform: translateY(100px); opacity: 0; transition: 0.5s; z-index: 9999;}
         .reward-anim.show { transform: translateY(0); opacity: 1; }
@@ -156,7 +138,6 @@
     <div id="sidebarOverlay" class="overlay" onclick="toggleSidebar()"></div>
     <aside class="sidebar" id="sidebar">
         <div class="brand">🎓 VocabForge</div>
-        
         <div class="user-profile">
             <div class="user-avatar" id="sidebarAvatar">👤</div>
             <div class="user-name" id="sidebarName">Khách vãng lai</div>
@@ -191,9 +172,8 @@
             <div id="view-arena" class="view-section">
                 <div class="header">
                     <h1 style="color: var(--danger);">⚔️ Đài Tỷ Võ - Vòng Sinh Tử</h1>
-                    <p>Trung tâm điều binh khiển tướng dành riêng cho Bệ hạ.</p>
+                    <p>Trung tâm điều binh khiển tướng dành riêng cho hệ thống.</p>
                 </div>
-                
                 <div class="arena-container">
                     <div class="arena-panel">
                         <div class="arena-title">1. Ngự Thiện Phòng (Tuyển chọn đề thi)</div>
@@ -203,70 +183,33 @@
                         </div>
                         <button class="btn-save" style="width: 100%; padding: 12px; font-size: 16px;" onclick="saveSyllabusSelection()">💾 Khóa Đề Thi</button>
                     </div>
-
                     <div class="arena-panel">
                         <div class="arena-title">2. Lò Bát Quái (Thiên Mệnh Phân Nhánh)</div>
                         <p style="font-size: 14px; color: #666; margin-bottom: 15px;">Hệ thống sẽ tự động quét Bảng Vàng, cắt Top người giỏi nhất và bốc thăm mù chia cặp.</p>
-                        <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 10px; margin-bottom: 20px; font-size: 14px;">
-                            <b>Luật lệ Vòng Loại:</b><br>
-                            - Sĩ số dưới 16 người: Lấy <b>Top 4</b> (Bán kết)<br>
-                            - Sĩ số từ 16 - 23 người: Lấy <b>Top 8</b> (Tứ kết)<br>
-                            - Sĩ số từ 24 trở lên: Lấy <b>Top 16</b> (Vòng 1/8)
-                        </div>
                         <button class="btn-danger" style="width: 100%; padding: 15px; font-size: 18px; font-weight: 900;" onclick="executeBlindDraw()">🎲 CHỐT SỔ & BỐC THĂM MÙ</button>
                     </div>
                 </div>
             </div>
 
             <div id="view-shop" class="view-section">
-                <div class="header">
-                    <h1>🛒 Trung Tâm Thương Mại</h1>
-                    <p>Sử dụng Vàng 🪙 tích lũy được để đổi các vật phẩm hữu ích.</p>
-                </div>
+                <div class="header"><h1>🛒 Trung Tâm Thương Mại</h1></div>
                 <div class="shop-grid">
-                    <div class="shop-item">
-                        <div class="item-icon">🧪</div>
-                        <div class="item-title">Bình Tiên XP x2</div>
-                        <div class="item-desc">Tăng gấp đôi phần thưởng Vàng & XP. Tác dụng giới hạn trong 24 giờ.</div>
-                        <div class="item-price">🪙 150</div>
-                        <button class="btn-buy" onclick="buyItem('potion', 150)">Đổi Ngay</button>
-                    </div>
-                    <div class="shop-item">
-                        <div class="item-icon">🎭</div>
-                        <div class="item-title">Mặt Nạ Hắc Ám</div>
-                        <div class="item-desc">Ẩn tên và điểm số trên Bảng xếp hạng thành "???". Tác dụng 24 giờ.</div>
-                        <div class="item-price">🪙 250</div>
-                        <button class="btn-buy" onclick="buyItem('mask', 250)">Đổi Ngay</button>
-                    </div>
-                    <div class="shop-item">
-                        <div class="item-icon">🔍</div>
-                        <div class="item-title">Kính Lúp Thám Tử</div>
-                        <div class="item-desc">Loại bỏ 2 đáp án sai trong lúc làm Trắc nghiệm (Dùng 1 lần/kính).</div>
-                        <div class="item-price">🪙 200</div>
-                        <button class="btn-buy" onclick="buyItem('glass', 200)">Đổi Ngay</button>
-                    </div>
-                    <div class="shop-item">
-                        <div class="item-icon">🛡️</div>
-                        <div class="item-title">Bùa Bảo Hộ</div>
-                        <div class="item-desc">Cứu chuỗi ngày học liên tiếp nếu lỡ quên học 1 ngày.</div>
-                        <div class="item-price">🪙 200</div>
-                        <button class="btn-buy" onclick="buyItem('shield', 200)">Đổi Ngay</button>
-                    </div>
+                    <div class="shop-item"><div class="item-icon">🧪</div><div class="item-title">Bình Tiên XP x2</div><div class="item-price">🪙 150</div><button class="btn-buy" onclick="buyItem('potion', 150)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🎭</div><div class="item-title">Mặt Nạ Hắc Ám</div><div class="item-price">🪙 250</div><button class="btn-buy" onclick="buyItem('mask', 250)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🔍</div><div class="item-title">Kính Lúp Thám Tử</div><div class="item-price">🪙 200</div><button class="btn-buy" onclick="buyItem('glass', 200)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🛡️</div><div class="item-title">Bùa Bảo Hộ</div><div class="item-price">🪙 200</div><button class="btn-buy" onclick="buyItem('shield', 200)">Đổi Ngay</button></div>
                 </div>
             </div>
 
             <div id="view-leaderboard" class="view-section">
                 <div class="header" style="text-align: center;">
                     <h1>🏆 Bảng Xếp Hạng Điểm Số</h1>
-                    <p>Tôn vinh nỗ lực học tập. Kẻ mạnh nhất sẽ lọt vào vòng Knock-out!</p>
                 </div>
-                
                 <div class="bracket-board" id="bracketBoard">
                     <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 SƠ ĐỒ NHÁNH ĐẤU KNOCK-OUT 🏆</h2>
                     <p id="bracketStatus" style="margin-bottom: 20px; color: #ccc;">Sẵn sàng khai chiến!</p>
                     <div class="bracket-stage" id="bracketMatches"></div>
                 </div>
-
                 <div class="lb-container" id="leaderboardData">
                     <p style="text-align:center; color:#888;">Đang tải dữ liệu từ máy chủ...</p>
                 </div>
@@ -293,10 +236,10 @@
                     <div id="authSection"><button class="btn-google" onclick="loginWithGoogle()">🌐 Đăng nhập bằng Google</button></div>
                 </div>
                 <div class="settings-card">
-                    <h3>🎭 Quyền Kiểm Soát (Dành cho Giáo Viên)</h3>
+                    <h3>🎭 Quyền Kiểm Soát</h3>
                     <div class="form-group">
                         <label>Mã PIN xác thực:</label>
-                        <input type="password" id="teacherPinCheck" placeholder="Nhập PIN để cấp quyền giáo viên...">
+                        <input type="password" id="teacherPinCheck" placeholder="Nhập PIN...">
                         <button class="btn-run" onclick="attemptTeacherLogin()" style="width: 100%; margin-top: 10px;">Xác nhận</button>
                     </div>
                 </div>
@@ -344,13 +287,9 @@
             </div>
 
             <div class="battle-body">
-                <div class="lock-overlay" id="lockOverlay">
-                    <div class="lock-text" id="lockMsg">ĐỐI THỦ ĐÃ CHỘP TRƯỚC!</div>
-                </div>
+                <div id="pvpWaitMsg" style="font-size:24px; font-weight:bold; color:#ffd700; text-align:center; display:none; margin-bottom:15px;">Đang đợi hiệu lệnh...</div>
                 
-                <div id="pvpWaitMsg" style="font-size:18px; color:#aaa; text-align:center;">Đang đợi hiệu lệnh...</div>
-                
-                <div class="battle-question" id="pvpQuestion" style="display:none; margin-top: 20px;">READY?</div>
+                <div class="battle-question" id="pvpQuestion" style="display:none; margin-top: 10px;">READY?</div>
                 
                 <div class="battle-options" id="pvpOptions" style="display:none;">
                     <button class="btn-ans" onclick="submitPvPAnswer(0)" id="pvpOpt0">-</button>
@@ -383,6 +322,7 @@
         let userData = { role: 'student', gold: 0, xp: 0, streak: 1, displayName: '', lastLogin: '', hasShield: false, potionExpiry: null, maskExpiry: null, magnifyingGlass: 0 };
         let currentPvPMatchId = null;
 
+        // AUTHENTICATION
         if(auth) {
             auth.onAuthStateChanged(user => {
                 if (user) {
@@ -423,17 +363,10 @@
             });
         }
 
-        function syncStatsToCloud() {
-            if (currentUser && db) db.collection('vocab_users').doc(currentUser.uid).update({ 
-                gold: userData.gold, xp: userData.xp, streak: userData.streak, displayName: userData.displayName
-            }); updateUI();
-        }
-
         function updateUI() {
             document.getElementById('ui-gold').innerText = userData.gold; document.getElementById('ui-xp').innerText = userData.xp;
             document.getElementById('ui-streak').innerText = userData.streak; 
             document.getElementById('sidebarName').innerText = userData.displayName || "Khách vãng lai";
-            
             const badge = document.getElementById('sidebarRole');
             if(userData.role === 'teacher') {
                 badge.className = 'user-badge badge-teacher'; badge.innerText = '👨‍🏫 Giáo Viên';
@@ -444,30 +377,28 @@
             }
         }
 
-        function buyItem(itemType, price) { /* Giữ gọn để test */ }
-
         async function fetchLeaderboard() {
             if(!db) return;
-            const lbContainer = document.getElementById('leaderboardData'); lbContainer.innerHTML = '<div class="loader"></div>';
+            const lbContainer = document.getElementById('leaderboardData'); lbContainer.innerHTML = '<p style="text-align:center">Đang tải...</p>';
             try {
                 const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').limit(30).get();
-                let html = ''; let rank = 1; const now = new Date().getTime();
+                let html = ''; let rank = 1;
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     if (data.role !== 'teacher') {
                         let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '.';
                         let rankClass = rank <= 3 ? `lb-rank-${rank}` : '';
-                        let displayXp = data.xp; let displayName = data.displayName || 'Ẩn danh';
-                        html += `<div class="lb-row ${rankClass}"><span>${medal} ${displayName}</span><span style="color:var(--secondary)">⭐ ${displayXp} XP</span></div>`;
+                        html += `<div class="lb-row ${rankClass}"><span>${medal} ${data.displayName || 'Ẩn danh'}</span><span style="color:var(--secondary)">⭐ ${data.xp} XP</span></div>`;
                         rank++;
                     }
                 });
                 lbContainer.innerHTML = html || '<p style="text-align:center">Chưa có người dùng nào ghi danh.</p>';
-            } catch (err) { lbContainer.innerHTML = '<p style="color:red; text-align:center">Lỗi tải dữ liệu bảng xếp hạng.</p>'; }
+            } catch (err) { lbContainer.innerHTML = '<p style="color:red; text-align:center">Lỗi bảng xếp hạng.</p>'; }
         }
 
-        // TẢI KHO BÀI HỌC VÀ GỌI VIEW CARD
+        // TẢI GOOGLE SHEETS
         const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing';
+        let allLessonsData = [];
         async function fetchFromSheets() {
             const container = document.getElementById('libraryContainer');
             const syllabusDiv = document.getElementById('syllabusChecklist');
@@ -491,16 +422,13 @@
                         allLessonsData.push({ name: lessonName, vocab: currentVocab, raw: rawHTML });
                         
                         htmlLib += `<div class="lib-card"><h3>${lessonName}</h3><p style="font-size:11px;">${currentVocab.length} từ</p><button class="btn-run" style="margin-top:10px;" onclick="viewCard('${btoa(unescape(encodeURIComponent(rawHTML)))}')">▶ VÀO HỌC</button></div>`;
-                        
                         htmlArena += `<label class="syllabus-item"><input type="checkbox" name="syllabusCheck" value="${lessonName}"> <span>${lessonName} (${currentVocab.length} từ)</span></label>`;
                     }
                 }
-                container.innerHTML = htmlLib;
-                if(syllabusDiv) syllabusDiv.innerHTML = htmlArena;
+                container.innerHTML = htmlLib; if(syllabusDiv) syllabusDiv.innerHTML = htmlArena;
             } catch(e) { console.error("Lỗi tải Sheets:", e); }
         }
 
-        // KHÔI PHỤC CHỨC NĂNG MỞ FLASHCARD
         function viewCard(base64) {
             document.getElementById('modalFrame').srcdoc = decodeURIComponent(escape(atob(base64)));
             document.getElementById('previewModal').classList.add('active');
@@ -510,108 +438,44 @@
             document.getElementById('modalFrame').srcdoc = '';
         }
 
-        // ĐÀI TỶ VÕ VÀ BỐC THĂM
-        function saveSyllabusSelection() { alert("Đã khóa danh sách Đề Thi cho Vòng Knock-out!"); }
+        // BỐC THĂM SƠ ĐỒ
+        function saveSyllabusSelection() {
+            const checks = document.querySelectorAll('input[name="syllabusCheck"]:checked');
+            let selected = []; checks.forEach(c => selected.push(c.value));
+            rtdb.ref('tournament_status/syllabus').set(selected); alert("Đã khóa đề thi!");
+        }
 
         async function executeBlindDraw() {
-            if(!confirm("Xác nhận bốc thăm ngay bây giờ?")) return;
-            try {
-                const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get();
-                let candidates = [];
-                snapshot.forEach(doc => { if(doc.data().role !== 'teacher') candidates.push(doc.data().displayName || "Ẩn danh"); });
-                
-                const N = candidates.length; if(N < 4) return alert("Chưa đủ 4 người để bốc thăm!");
-                let topCount = 4; let stageName = "BÁN KẾT";
-                if(N >= 24) { topCount = 16; stageName = "VÒNG 1/8"; } else if(N >= 16) { topCount = 8; stageName = "TỨ KẾT"; }
-
-                let qualifiedPlayers = candidates.slice(0, topCount);
-                for (let i = qualifiedPlayers.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [qualifiedPlayers[i], qualifiedPlayers[j]] = [qualifiedPlayers[j], qualifiedPlayers[i]];
-                }
-
-                let matches = [];
-                for(let i = 0; i < qualifiedPlayers.length; i+=2) { matches.push({ player1: qualifiedPlayers[i], player2: qualifiedPlayers[i+1] }); }
-
-                rtdb.ref('tournament_status/bracket').set({ stage: stageName, matches: matches, timestamp: new Date().getTime() });
-                alert(`Đã bốc thăm xong! Nhánh đấu nằm ở tab Xếp Hạng.`);
-            } catch(e) { alert("Lỗi khi bốc thăm: " + e.message); }
-        }
-
-        // LẮNG NGHE SƠ ĐỒ VÀ PVP
-        if(rtdb) {
-            rtdb.ref('tournament_status/bracket').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if(data) {
-                    document.getElementById('bracketBoard').style.display = 'block';
-                    document.getElementById('bracketStatus').innerText = `GIAI ĐOẠN: ${data.stage} | Trạng thái: Chờ thi đấu`;
-                    let matchHtml = '';
-                    data.matches.forEach((m, index) => {
-                        let fightBtn = userData.role === 'teacher' ? `<button class="btn-fight" style="display:block;" onclick="adminStartPvP('${m.player1}', '${m.player2}', ${index})">⚔️ ÉP KHAI CHIẾN</button>` : '';
-                        matchHtml += `
-                        <div class="match-box">
-                            <div style="font-size:10px; color:#aaa; margin-bottom:5px;">Trận ${index + 1}</div>
-                            <div class="player-name">${m.player1}</div>
-                            <div class="vs-text">VS</div>
-                            <div class="player-name">${m.player2}</div>
-                            ${fightBtn}
-                        </div>`;
-                    });
-                    document.getElementById('bracketMatches').innerHTML = matchHtml;
-                }
-            });
+            if(!confirm("Xác nhận bốc thăm giải đấu mới?")) return;
+            const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get();
+            let candidates = [];
+            snapshot.forEach(doc => { if(doc.data().role !== 'teacher') candidates.push(doc.data().displayName || "Ẩn danh"); });
+            if(candidates.length < 4) return alert("Chưa đủ 4 học sinh để bốc thăm!");
+            let topCount = candidates.length >= 24 ? 16 : (candidates.length >= 16 ? 8 : 4);
+            let stageName = topCount === 16 ? "VÒNG 1/8" : (topCount === 8 ? "TỨ KẾT" : "BÁN KẾT");
             
-            rtdb.ref('active_pvp_match').on('value', (snapshot) => {
-                const match = snapshot.val();
-                if(match && (userData.displayName === match.p1 || userData.displayName === match.p2)) {
-                    currentPvPMatchId = match.id;
-                    document.getElementById('pvpModal').classList.add('active');
-                    document.getElementById('pvpP1Name').innerHTML = `${match.p1}`;
-                    document.getElementById('pvpP1Correct').innerText = match.p1_correct;
-                    document.getElementById('pvpP1Set').innerText = match.p1_set;
-                    
-                    document.getElementById('pvpP2Name').innerHTML = `${match.p2}`;
-                    document.getElementById('pvpP2Correct').innerText = match.p2_correct;
-                    document.getElementById('pvpP2Set').innerText = match.p2_set;
-                    
-                    document.getElementById('pvpQIndex').innerText = match.q_idx;
-                    
-                    if(match.status === 'playing') {
-                        document.getElementById('pvpWaitMsg').style.display = 'none';
-                        document.getElementById('pvpQuestion').style.display = 'block';
-                        document.getElementById('pvpOptions').style.display = 'grid';
-                        document.getElementById('pvpQuestion').innerText = match.current_q.en;
-                        for(let i=0; i<4; i++) {
-                            let btn = document.getElementById('pvpOpt' + i);
-                            btn.innerText = match.current_q.opts[i]; btn.className = 'btn-ans'; 
-                        }
-                        if(match.locked_by !== "") {
-                            document.getElementById('lockOverlay').classList.add('active');
-                            if(match.locked_by === userData.displayName) document.getElementById('lockMsg').innerText = "BẠN ĐÃ CHỌN ĐÁP ÁN!";
-                            else document.getElementById('lockMsg').innerText = `${match.locked_by} ĐÃ CƯỚP ĐIỂM!`;
-                        } else {
-                            document.getElementById('lockOverlay').classList.remove('active');
-                        }
-                    } else if (match.status === 'finished') {
-                        document.getElementById('pvpWaitMsg').style.display = 'block';
-                        document.getElementById('pvpWaitMsg').innerText = "Trận đấu kết thúc! Người thắng: " + match.winner;
-                        document.getElementById('pvpQuestion').style.display = 'none';
-                        document.getElementById('pvpOptions').style.display = 'none';
-                        document.getElementById('lockOverlay').classList.remove('active');
-                        setTimeout(() => document.getElementById('pvpModal').classList.remove('active'), 5000);
-                    }
-                }
-            });
+            let qualified = candidates.slice(0, topCount);
+            for (let i = qualified.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [qualified[i], qualified[j]] = [qualified[j], qualified[i]];
+            }
+            let matches = [];
+            for(let i = 0; i < qualified.length; i+=2) { matches.push({ player1: qualified[i], player2: qualified[i+1] }); }
+
+            rtdb.ref('tournament_status/bracket').set({ stage: stageName, matches: matches, timestamp: Date.now() });
+            alert("Đã bốc thăm xong! Sơ đồ nằm ở tab Xếp Hạng.");
         }
 
-        let pvpQuestionBank = []; 
+        // ==========================================
+        // ĐẠO LUẬT PVP 21 CÂU - ĐỘC LẬP & NHANH NHẤT
+        // ==========================================
 
         async function adminStartPvP(p1, p2, matchIndex) {
-            if(!confirm(`Xác nhận bắt đầu trận đấu 21 câu giữa ${p1} và ${p2}?`)) return;
+            if(!confirm(`Bắt đầu trận đấu 30 câu giữa ${p1} và ${p2}?`)) return;
 
             const syllabusSnap = await rtdb.ref('tournament_status/syllabus').once('value');
             const selectedLessons = syllabusSnap.val();
-            if(!selectedLessons || selectedLessons.length === 0) return alert("Vui lòng chọn giáo trình!");
+            if(!selectedLessons || selectedLessons.length === 0) return alert("Chưa có giáo trình nào được chọn!");
 
             let allVocab = [];
             selectedLessons.forEach(lessonName => {
@@ -619,10 +483,10 @@
                 if(lesson) allVocab = allVocab.concat(lesson.vocab);
             });
 
-            if(allVocab.length < 21) return alert(`Giáo trình chọn chỉ có ${allVocab.length} từ, không đủ 21 câu thi đấu!`);
+           if(allVocab.length < 30) return alert(`Bộ đề chỉ có ${allVocab.length} từ, không đủ 30 câu thi đấu!`);
 
             allVocab.sort(() => Math.random() - 0.5);
-            pvpQuestionBank = allVocab.slice(0, 21).map(v => {
+           let pvpQuestionBank = allVocab.slice(0, 30).map(v => {
                 let wrong = allVocab.filter(x => x.vi !== v.vi).sort(() => Math.random() - 0.5).slice(0, 3);
                 let opts = [v.vi, ...wrong.map(w => w.vi)].sort(() => Math.random() - 0.5);
                 return { en: v.en, vi: v.vi, opts: opts };
@@ -632,88 +496,256 @@
                 id: 'match_' + matchIndex,
                 p1: p1, p2: p2,
                 p1_set: 0, p2_set: 0,       
-                p1_correct: 0, p2_correct: 0, 
+                p1_score: 0, p2_score: 0, // Điểm câu đúng trong set
                 status: 'playing',
                 q_idx: 1, 
                 current_q: pvpQuestionBank[0],
-                locked_by: "",
+                
+                // Trạng thái độc lập của 2 người chơi
+                p1_ans: "", p1_time: 0,
+                p2_ans: "", p2_time: 0,
+                evaluating: false, // Cờ khóa xử lý chống chạy 2 lần
+                
                 question_bank: pvpQuestionBank 
             });
         }
 
-        function submitPvPAnswer(optIndex) {
-            rtdb.ref('active_pvp_match').once('value').then(snapshot => {
-                let match = snapshot.val();
-                if(!match || match.status !== 'playing' || match.locked_by !== "") return;
-
-                const selectedText = match.current_q.opts[optIndex];
-                let isCorrect = selectedText === match.current_q.vi;
-                let updates = { locked_by: userData.displayName };
-
-                if(isCorrect) {
-                    if(userData.displayName === match.p1) updates.p1_correct = match.p1_correct + 1;
-                    if(userData.displayName === match.p2) updates.p2_correct = match.p2_correct + 1;
-                }
-
-                rtdb.ref('active_pvp_match').update(updates).then(() => {
-                    setTimeout(() => nextQuestionOrSet(match), 1500);
-                });
-            });
-        }
-
-        async function nextQuestionOrSet(match) {
+        // KHI NGƯỜI CHƠI BẤM ĐÁP ÁN (ĐỘC LẬP)
+        function submitPvPAnswer(idx) {
             rtdb.ref('active_pvp_match').once('value').then(snap => {
                 let m = snap.val();
-                let nextIdx = m.q_idx + 1;
+                if(!m || m.status !== 'playing' || m.evaluating) return;
+                
+                let isP1 = userData.displayName === m.p1;
+                let isP2 = userData.displayName === m.p2;
+                
+                // Tránh việc 1 người bấm 2 lần
+                if(isP1 && m.p1_ans !== "") return;
+                if(isP2 && m.p2_ans !== "") return;
 
-                if(m.q_idx === 10 || m.q_idx === 20) {
-                    let p1_s = m.p1_set; let p2_s = m.p2_set;
-                    if(m.p1_correct > m.p2_correct) p1_s++;
-                    else if(m.p2_correct > m.p1_correct) p2_s++;
+                const selectedText = m.current_q.opts[idx];
+                const isCorrect = selectedText === m.current_q.vi;
 
-                    rtdb.ref('active_pvp_match').update({
-                        p1_set: p1_s, p2_set: p2_s,
-                        p1_correct: 0, p2_correct: 0, 
-                        q_idx: nextIdx,
-                        current_q: m.question_bank[nextIdx - 1],
-                        locked_by: ""
-                    });
-                } 
-                else if (nextIdx > 21 || (m.p1_set === 2 || m.p2_set === 2)) {
-                     let winner = m.p1_set > m.p2_set ? m.p1 : m.p2;
-                     if(m.p1_set === m.p2_set) winner = m.p1_correct > m.p2_correct ? m.p1 : m.p2; 
-                     rtdb.ref('active_pvp_match').update({ status: 'finished', winner: winner });
+                // Giao diện (Màu Đỏ/Xanh) phản hồi tức thì
+                let btn = document.getElementById('pvpOpt' + idx);
+                btn.style.backgroundColor = isCorrect ? '#00c853' : '#d50000';
+                btn.style.borderColor = isCorrect ? '#00e676' : '#ff1744';
+                
+                // Khóa toàn bộ nút của BẢN THÂN
+                for(let i=0; i<4; i++) {
+                    document.getElementById('pvpOpt'+i).style.pointerEvents = 'none';
                 }
-                else {
-                    rtdb.ref('active_pvp_match').update({
-                        q_idx: nextIdx,
-                        current_q: m.question_bank[nextIdx - 1],
-                        locked_by: ""
+
+                // Hiện thông báo chờ
+                let waitMsg = document.getElementById('pvpWaitMsg');
+                waitMsg.style.display = 'block';
+                waitMsg.style.color = '#ffd700';
+                waitMsg.innerText = "ĐÃ KHÓA ĐÁP ÁN! CHỜ ĐỐI THỦ...";
+
+                // Đẩy đáp án và timestamp lên DB
+                let updates = {};
+                if(isP1) { updates.p1_ans = selectedText; updates.p1_time = Date.now(); }
+                if(isP2) { updates.p2_ans = selectedText; updates.p2_time = Date.now(); }
+
+                rtdb.ref('active_pvp_match').update(updates);
+            });
+        }
+
+       // CHUYỂN CÂU HOẶC KẾT THÚC SET
+        function processNextRound(m, s1, s2) {
+            let nextIdx = m.q_idx + 1;
+            let set1 = m.p1_set; let set2 = m.p2_set;
+            let status = 'playing'; let winner = "";
+
+            // Xử lý cuối Set 1 (Q10) hoặc Set 2 (Q20)
+            if(m.q_idx === 10 || m.q_idx === 20) {
+                if(s1 > s2) set1++;
+                else if(s2 > s1) set2++;
+                
+                s1 = 0; s2 = 0; // Reset điểm câu đúng về 0
+
+                // Xử lý sau Set 2 (Câu 20)
+                if(m.q_idx === 20) {
+                    if(set1 === 2 || set1 > set2) { status = 'finished'; winner = m.p1; }
+                    else if(set2 === 2 || set2 > set1) { status = 'finished'; winner = m.p2; }
+                    // Nếu 1-1, trận đấu tự động bước sang câu 21 (Hiệp phụ)
+                }
+            } 
+            // XỬ LÝ LUẬT GOLDEN GOAL TỪ CÂU 21 TRỞ ĐI (SUDDEN DEATH)
+            else if (m.q_idx >= 21) {
+                if(s1 > s2) { set1++; winner = m.p1; status = 'finished'; }
+                else if (s2 > s1) { set2++; winner = m.p2; status = 'finished'; }
+                else { 
+                    // Nếu cả 2 đều sai -> Chuyển sang câu tiếp theo
+                    if (nextIdx > m.question_bank.length) {
+                        winner = "HÒA NHAU! (HẾT CÂU HỎI DỰ PHÒNG)";
+                        status = 'finished';
+                    } else {
+                        status = 'playing'; // Đánh tiếp câu kế
+                    }
+                }
+            }
+
+            // PHẦN NÀY RẤT QUAN TRỌNG (Đẩy dữ liệu lên máy chủ)
+            let updates = {
+                p1_score: s1, p2_score: s2, p1_set: set1, p2_set: set2,
+                p1_ans: "", p2_ans: "", p1_time: 0, p2_time: 0, evaluating: false
+            };
+
+            if(status === 'finished') {
+                updates.status = 'finished';
+                updates.winner = winner;
+            } else {
+                updates.q_idx = nextIdx;
+                updates.current_q = m.question_bank[nextIdx - 1];
+            }
+
+            rtdb.ref('active_pvp_match').update(updates);
+        }
+
+        // LẮNG NGHE SYNC TỪ FIREBASE
+        if(rtdb) {
+            // Lắng nghe bốc thăm
+            rtdb.ref('tournament_status/bracket').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if(data) {
+                    document.getElementById('bracketBoard').style.display = 'block';
+                    document.getElementById('bracketStatus').innerText = `GIAI ĐOẠN: ${data.stage} | Trạng thái: Chờ thi đấu`;
+                    let matchHtml = '';
+                    data.matches.forEach((m, index) => {
+                        let fightBtn = userData.role === 'teacher' ? `<button class="btn-fight" style="display:block;" onclick="adminStartPvP('${m.player1}', '${m.player2}', ${index})">⚔️ ÉP KHAI CHIẾN</button>` : '';
+                        matchHtml += `<div class="match-box"><div style="font-size:10px; color:#aaa; margin-bottom:5px;">Trận ${index + 1}</div><div class="player-name">${m.player1}</div><div class="vs-text">VS</div><div class="player-name">${m.player2}</div>${fightBtn}</div>`;
                     });
+                    document.getElementById('bracketMatches').innerHTML = matchHtml;
+                }
+            });
+
+            // Lắng nghe Trận đấu PVP
+            rtdb.ref('active_pvp_match').on('value', (snap) => {
+                let m = snap.val();
+                if(!m) return;
+
+                let isP1 = userData.displayName === m.p1;
+                let isP2 = userData.displayName === m.p2;
+
+                if(isP1 || isP2) {
+                    document.getElementById('pvpModal').classList.add('active');
+                    
+                    // Cập nhật Bảng Điểm
+                    document.getElementById('pvpP1Name').innerText = m.p1;
+                    document.getElementById('pvpP1Correct').innerText = m.p1_score;
+                    document.getElementById('pvpP1Set').innerText = m.p1_set;
+                    
+                    document.getElementById('pvpP2Name').innerText = m.p2;
+                    document.getElementById('pvpP2Correct').innerText = m.p2_score;
+                    document.getElementById('pvpP2Set').innerText = m.p2_set;
+                    
+                    document.getElementById('pvpQIndex').innerText = m.q_idx;
+
+                    if(m.status === 'playing') {
+                        document.getElementById('pvpQuestion').style.display = 'block';
+                        document.getElementById('pvpOptions').style.display = 'grid';
+                        document.getElementById('pvpQuestion').innerText = m.current_q.en;
+
+                        let myAns = isP1 ? m.p1_ans : (isP2 ? m.p2_ans : "");
+                        
+                        // NẾU BẢN THÂN CHƯA TRẢ LỜI -> Reset Giao Diện Nút Mới
+                        if(myAns === "") {
+                            document.getElementById('pvpWaitMsg').style.display = 'none';
+                            for(let i=0; i<4; i++) {
+                                let btn = document.getElementById('pvpOpt'+i);
+                                btn.innerText = m.current_q.opts[i];
+                                btn.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                                btn.style.borderColor = 'rgba(255,255,255,0.3)';
+                                btn.style.pointerEvents = 'auto';
+                                btn.style.opacity = '1';
+                            }
+                        }
+
+                        // KHI CẢ 2 NGƯỜI ĐỀU ĐÃ TRẢ LỜI
+                        if(m.p1_ans !== "" && m.p2_ans !== "" && !m.evaluating) {
+                            let p1_correct = m.p1_ans === m.current_q.vi;
+                            let p2_correct = m.p2_ans === m.current_q.vi;
+                            let p1_wins = false; let p2_wins = false;
+
+                            // Luật phân xử Điểm Câu Đúng VÀ Nhanh Nhất
+                            if(p1_correct && p2_correct) {
+                                if(m.p1_time <= m.p2_time) p1_wins = true;
+                                else p2_wins = true;
+                            } else if(p1_correct) { p1_wins = true; }
+                              else if(p2_correct) { p2_wins = true; }
+
+                            // Hiển thị thông báo người thắng hiệp
+                            let msg = "CẢ HAI ĐỀU SAI!";
+                            let color = '#ccc';
+                            
+                            if(isP1) {
+                                if(p1_wins) { msg = "🎉 BẠN NHANH VÀ CHÍNH XÁC HƠN! +1 Điểm"; color = '#00e676'; }
+                                else if(p2_wins) { msg = "❌ ĐỐI THỦ NHANH HOẶC CHÍNH XÁC HƠN!"; color = '#ff1744'; }
+                            } else if(isP2) {
+                                if(p2_wins) { msg = "🎉 BẠN NHANH VÀ CHÍNH XÁC HƠN! +1 Điểm"; color = '#00e676'; }
+                                else if(p1_wins) { msg = "❌ ĐỐI THỦ NHANH HOẶC CHÍNH XÁC HƠN!"; color = '#ff1744'; }
+                            }
+
+                            let waitMsg = document.getElementById('pvpWaitMsg');
+                            waitMsg.innerText = msg;
+                            waitMsg.style.color = color;
+                            waitMsg.style.display = 'block';
+
+                            // Bật sáng đáp án đúng lên cho cả 2 cùng thấy
+                            for(let i=0; i<4; i++) {
+                                let btn = document.getElementById('pvpOpt'+i);
+                                if(btn.innerText === m.current_q.vi) {
+                                    btn.style.backgroundColor = '#00c853';
+                                    btn.style.borderColor = '#00e676';
+                                    btn.style.opacity = '1';
+                                } else {
+                                    btn.style.opacity = '0.3';
+                                }
+                            }
+
+                            // P1 CHỊU TRÁCH NHIỆM TÍNH ĐIỂM VÀ LẬT SANG CÂU TIẾP THEO SAU 3 GIÂY
+                            if(isP1) {
+                                rtdb.ref('active_pvp_match').update({ evaluating: true }).then(() => {
+                                    setTimeout(() => {
+                                        let s1 = m.p1_score + (p1_wins ? 1 : 0);
+                                        let s2 = m.p2_score + (p2_wins ? 1 : 0);
+                                        processNextRound(m, s1, s2);
+                                    }, 3000);
+                                });
+                            }
+                        }
+
+                    } else if (m.status === 'finished') {
+                        document.getElementById('pvpWaitMsg').style.display = 'block';
+                        document.getElementById('pvpWaitMsg').style.color = '#ffd700';
+                        document.getElementById('pvpWaitMsg').innerText = "🏆 TRẬN ĐẤU KẾT THÚC! NGƯỜI THẮNG: " + m.winner;
+                        document.getElementById('pvpQuestion').style.display = 'none';
+                        document.getElementById('pvpOptions').style.display = 'none';
+                        setTimeout(() => document.getElementById('pvpModal').classList.remove('active'), 5000);
+                    }
                 }
             });
         }
 
-        function attemptTeacherLogin() {
-            if (document.getElementById('teacherPinCheck').value === localStorage.getItem('teacherPin')) {
-                userData.role = 'teacher'; db.collection('vocab_users').doc(currentUser.uid).update({ role: 'teacher' }); updateUI(); alert("Đã vào quyền Admin!");
-            } else alert("Mã PIN sai!");
-        }
-        function savePin() { localStorage.setItem('teacherPin', document.getElementById('teacherPin').value); alert("Lưu PIN!"); }
-
+        // CÀI ĐẶT CHUNG
         function switchTab(tabId) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('view-' + tabId).classList.add('active');
             const navBtn = document.getElementById('nav-' + tabId); if(navBtn) navBtn.classList.add('active');
             if (window.innerWidth <= 768) toggleSidebar();
-            
             if (tabId === 'library') fetchFromSheets();
             if (tabId === 'leaderboard') fetchLeaderboard();
         }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); document.getElementById('sidebarOverlay').style.display = document.getElementById('sidebar').classList.contains('show') ? 'block' : 'none'; }
+        
+        function attemptTeacherLogin() {
+            if (document.getElementById('teacherPinCheck').value === localStorage.getItem('teacherPin')) {
+                userData.role = 'teacher'; db.collection('vocab_users').doc(currentUser.uid).update({ role: 'teacher' }); updateUI(); alert("Đã cấp quyền!");
+            } else alert("Mã PIN sai!");
+        }
 
-        // KHÔI PHỤC TÍNH NĂNG TẠO MÃ Ở LÒ ĐÚC
         function generateCode() {
             const raw = document.getElementById('rawInput').value.trim();
             if(!raw) return alert("Vui lòng nhập từ vựng!");
@@ -722,7 +754,7 @@
             const template = `<!DOCTYPE html><html><head><meta charset="UTF-8"><script src="https://cdn.tailwindcss.com"><\/script></head><body class="p-4 bg-indigo-50"><script>const vocabList = [${vocabArray.join(',')}];<\/script><h1 class="text-2xl font-bold text-center text-indigo-900 mt-10">Bài học đã nạp thành công! Hãy Copy và dán vào Sheets.</h1></body></html>`;
             document.getElementById('generatedCode').value = template;
         }
-        function copyCode() { document.getElementById('generatedCode').select(); document.execCommand("copy"); alert("Đã copy mã!"); }
+        function copyCode() { document.getElementById('generatedCode').select(); document.execCommand("copy"); alert("Đã copy!"); }
 
         updateUI(); fetchLeaderboard(); fetchFromSheets(); 
     </script>
