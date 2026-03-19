@@ -107,7 +107,6 @@
             font-size: 14px; color: #ffeb3b; font-style: italic; margin: 10px 0; font-weight: 900; 
             background: rgba(0,0,0,0.3); display: inline-block; padding: 4px 12px; border-radius: 12px;
         }
-        /* Nút dành cho Admin ép Khai Chiến */
         .btn-fight { display:none; background: #ff5252; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; margin-top: 10px; cursor: pointer; width: 100%; font-weight: bold; border: none;}
         .btn-fight:hover { background: #d50000; }
 
@@ -420,7 +419,7 @@
             }
         }
 
-        function buyItem(itemType, price) { /* Lược bớt để dồn lực vào PvP, đã chạy tốt ở trên */ }
+        function buyItem(itemType, price) { /* Giữ gọn để test */ }
 
         async function fetchLeaderboard() {
             if(!db) return;
@@ -442,7 +441,38 @@
             } catch (err) { lbContainer.innerHTML = '<p style="color:red; text-align:center">Lỗi tải dữ liệu bảng xếp hạng.</p>'; }
         }
 
-        // ĐÀI TỶ VÕ (KNOCK-OUT) VÀ PVP
+        // TẢI KHO BÀI HỌC (ĐÃ PHỤC HỒI)
+        const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing';
+        async function fetchFromSheets() {
+            const container = document.getElementById('libraryContainer');
+            if (!container) return;
+            container.innerHTML = '<p style="text-align:center; color:#888;">Đang tải dữ liệu từ kho...</p>';
+            let sheetId = SHEET_LINK.includes('/d/') ? SHEET_LINK.split('/d/')[1].split('/')[0] : SHEET_LINK;
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&t=${new Date().getTime()}`;
+            try {
+                const response = await fetch(url); const text = await response.text();
+                const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+                const data = JSON.parse(jsonString);
+                
+                let htmlLib = ''; let htmlArena = ''; allLessons = [];
+                for (let i = 1; i < data.table.rows.length; i++) {
+                    const r = data.table.rows[i];
+                    if (r && r.c && r.c[0] && r.c[1]) {
+                        const lessonName = r.c[0].v;
+                        allLessons.push(lessonName);
+                        htmlLib += `<div class="lib-card"><h3>${lessonName}</h3><button class="btn-run" style="margin-top:10px;" onclick="alert('Đang nâng cấp kho!')">▶ VÀO HỌC</button></div>`;
+                        htmlArena += `<label class="syllabus-item"><input type="checkbox" name="syllabusCheck" value="${lessonName}"> <span>${lessonName}</span></label>`;
+                    }
+                }
+                container.innerHTML = htmlLib || '<p>Kho trống.</p>';
+                document.getElementById('syllabusChecklist').innerHTML = htmlArena || '<p>Chưa có dữ liệu giáo trình.</p>';
+            } catch (e) { 
+                console.error(e); 
+                container.innerHTML = '<p style="color:red; text-align:center">Lỗi tải dữ liệu. Vui lòng kiểm tra Google Sheets.</p>'; 
+            }
+        }
+
+        // ĐÀI TỶ VÕ VÀ BỐC THĂM
         function saveSyllabusSelection() { alert("Đã khóa danh sách Đề Thi cho Vòng Knock-out!"); }
 
         async function executeBlindDraw() {
@@ -470,7 +500,7 @@
             } catch(e) { alert("Lỗi khi bốc thăm: " + e.message); }
         }
 
-        // LẮNG NGHE SƠ ĐỒ
+        // LẮNG NGHE SƠ ĐỒ VÀ PVP
         if(rtdb) {
             rtdb.ref('tournament_status/bracket').on('value', (snapshot) => {
                 const data = snapshot.val();
@@ -493,7 +523,6 @@
                 }
             });
             
-            // LẮNG NGHE LỆNH GỌI VÀO PHÒNG TỶ VÕ (REAL-TIME SYNC)
             rtdb.ref('active_pvp_match').on('value', (snapshot) => {
                 const match = snapshot.val();
                 if(match && (userData.displayName === match.p1 || userData.displayName === match.p2)) {
@@ -509,11 +538,8 @@
                         document.getElementById('pvpQuestion').innerText = match.current_q.en;
                         for(let i=0; i<4; i++) {
                             let btn = document.getElementById('pvpOpt' + i);
-                            btn.innerText = match.current_q.opts[i];
-                            btn.className = 'btn-ans'; // Reset color
+                            btn.innerText = match.current_q.opts[i]; btn.className = 'btn-ans'; 
                         }
-                        
-                        // Kiểm tra xem đã có ai cướp cờ chưa
                         if(match.locked_by !== "") {
                             document.getElementById('lockOverlay').classList.add('active');
                             if(match.locked_by === userData.displayName) document.getElementById('lockMsg').innerText = "BẠN ĐÃ CHỌN ĐÁP ÁN!";
@@ -533,44 +559,26 @@
             });
         }
 
-        // GIÁO VIÊN BẤM NÚT ÉP KHAI CHIẾN (TẠO TRẬN ĐẤU GIẢ LẬP)
         function adminStartPvP(p1, p2, matchIndex) {
             if(!confirm(`Bệ hạ muốn bắt đầu trận đấu giữa ${p1} và ${p2}?`)) return;
-            
-            // Tạo 1 câu hỏi giả lập để test tốc độ
-            const dummyQ = {
-                en: "APPLE", ans: "Quả táo",
-                opts: ["Quả chuối", "Quả táo", "Quả cam", "Quả lựu"]
-            };
-            
+            const dummyQ = { en: "APPLE", ans: "Quả táo", opts: ["Quả chuối", "Quả táo", "Quả cam", "Quả lựu"] };
             rtdb.ref('active_pvp_match').set({
-                id: 'match_' + matchIndex,
-                p1: p1, p2: p2,
-                p1_score: 0, p2_score: 0,
-                status: 'playing',
-                current_q: dummyQ,
-                locked_by: "", // Chưa ai giành
-                winner: ""
+                id: 'match_' + matchIndex, p1: p1, p2: p2, p1_score: 0, p2_score: 0, status: 'playing', current_q: dummyQ, locked_by: "", winner: ""
             });
         }
 
-        // HỌC SINH BẤM CHỌN ĐÁP ÁN
         function submitPvPAnswer(optIndex) {
             const selectedText = document.getElementById('pvpOpt' + optIndex).innerText;
-            // Bắn tín hiệu lên Firebase ngay lập tức
             rtdb.ref('active_pvp_match').once('value').then(snapshot => {
                 let match = snapshot.val();
-                if(match && match.locked_by === "") { // Nếu chưa ai nhanh tay hơn
+                if(match && match.locked_by === "") {
                     let isCorrect = selectedText === match.current_q.ans;
-                    
                     let updates = { locked_by: userData.displayName };
                     if(isCorrect) {
                         if(userData.displayName === match.p1) updates.p1_score = match.p1_score + 1;
                         if(userData.displayName === match.p2) updates.p2_score = match.p2_score + 1;
                     }
-                    
                     rtdb.ref('active_pvp_match').update(updates).then(() => {
-                        // Đợi 2s rồi kết thúc giả lập
                         setTimeout(() => rtdb.ref('active_pvp_match').update({ status: 'finished' }), 2000);
                     });
                 }
@@ -590,10 +598,15 @@
             document.getElementById('view-' + tabId).classList.add('active');
             const navBtn = document.getElementById('nav-' + tabId); if(navBtn) navBtn.classList.add('active');
             if (window.innerWidth <= 768) toggleSidebar();
+            
+            // ĐÃ KHÔI PHỤC: Tải lại kho bài học và bảng vàng khi bấm chuyển tab
+            if (tabId === 'library') fetchFromSheets();
+            if (tabId === 'leaderboard') fetchLeaderboard();
         }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); document.getElementById('sidebarOverlay').style.display = document.getElementById('sidebar').classList.contains('show') ? 'block' : 'none'; }
 
-        updateUI(); fetchLeaderboard();
+        // ĐÃ KHÔI PHỤC: Lệnh đánh thức kho bài học khi vừa mở trang
+        updateUI(); fetchLeaderboard(); fetchFromSheets(); 
     </script>
 </body>
 </html>
