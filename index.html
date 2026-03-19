@@ -39,18 +39,16 @@
         .stat-streak { color: #ff5722; } .stat-xp { color: var(--secondary); } .stat-gold { color: #fbc02d; }
         .menu-btn { display: none; font-size: 24px; cursor: pointer; background: transparent; border: none; color: var(--primary); }
 
-        .main-content { flex: 1; padding: 20px 30px 100px 30px; overflow-y: auto; overflow-x: hidden; }
+        .main-content { flex: 1; padding: 20px 30px 120px 30px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .header { margin-bottom: 25px; } .header h1 { font-size: 28px; color: var(--primary); } .header p { color: #666; margin-top: 5px; }
-        .view-section { display: none; flex-direction: column; min-height: 100%; height: auto; } .view-section.active { display: flex; }
+        .view-section { display: none; flex-direction: column; height: auto; min-height: 100%; } .view-section.active { display: flex; }
         
         .lb-container { display: flex; flex-direction: column; gap: 12px; max-width: 600px; margin: 0 auto; width: 100%; }
         .lb-row { background: #fff; padding: 15px 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.04); font-weight: bold; font-size: 16px; transition: 0.2s;}
-        .lb-rank-1 { border-left: 6px solid #ffd700; background: linear-gradient(90deg, #fffdf0 0%, #ffffff 100%); font-size: 18px;}
-        .lb-rank-2 { border-left: 6px solid #c0c0c0; background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%); font-size: 17px;}
-        .lb-rank-3 { border-left: 6px solid #cd7f32; background: linear-gradient(90deg, #fffaf0 0%, #ffffff 100%); }
+        .lb-rank-1 { border-left: 6px solid #ffd700; background: linear-gradient(90deg, #fffdf0 0%, #ffffff 100%); }
         
         .library-grid, .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .lib-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; height: 150px; border-left: 5px solid var(--secondary);}
+        .lib-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; height: 160px; border-left: 5px solid var(--secondary);}
         .lib-actions { display: flex; gap: 8px; margin-top: 10px; } .lib-actions button { flex: 1; }
         
         .shop-item { background: #fff; padding: 25px 20px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center; border: 2px solid transparent; transition: all 0.3s ease;}
@@ -60,21 +58,16 @@
         .item-desc { font-size: 13px; color: #666; height: 50px;}
         .item-price { font-size: 22px; font-weight: 900; color: #fbc02d; margin: 15px 0; background: #fff9c4; padding: 5px; border-radius: 10px; display: inline-block; width: fit-content; margin-left: auto; margin-right: auto;}
         
-        .workspace { display: flex; gap: 20px; flex: 1; min-height: 0; }
-        .panel { flex: 1; background: #fff; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .panel-header { background: #fafafa; padding: 15px; border-bottom: 1px solid #eee; font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
-        textarea { flex: 1; padding: 20px; border: none; outline: none; background: #fafafa; font-family: monospace; font-size: 14px; resize: none;}
-        iframe { width: 100%; height: 100%; border: none; }
+        .workspace { display: flex; flex-direction: column; gap: 20px; flex: 1; }
+        textarea { width: 100%; height: 200px; padding: 20px; border: 1px solid #ddd; outline: none; background: #fafafa; font-family: monospace; font-size: 14px; resize: none; border-radius: 8px;}
 
         button { border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; color: white; }
-        .btn-run { background: var(--secondary); } .btn-run:hover { background: #1c44b2; }
-        .btn-save { background: var(--success); } .btn-danger { background: var(--danger); }
+        .btn-run { background: var(--secondary); } .btn-save { background: var(--success); } .btn-danger { background: var(--danger); }
         .btn-buy { background: linear-gradient(45deg, #fbc02d, #f57f17); width: 100%; font-size: 16px; padding: 12px; border-radius: 8px;}
         .btn-google { background: #db4437; width: 100%; padding: 12px; font-size: 16px;}
 
         .settings-card { background: #fff; padding: 25px; border-radius: 12px; max-width: 500px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
-        .form-group { margin-bottom: 15px; } .form-group label { display: block; font-weight: bold; margin-bottom: 8px;}
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+        .form-group { margin-bottom: 15px; } .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
         
         .arena-container { display: flex; gap: 20px; flex-wrap: wrap; }
         .arena-panel { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex: 1; min-width: 300px;}
@@ -90,9 +83,13 @@
         }
         .bracket-board h2 { font-size: 26px; text-transform: uppercase; letter-spacing: 2px; }
         .bracket-stage { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; margin-top: 30px; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 12px; }
-        .match-box { background: rgba(255, 255, 255, 0.1); border: 2px solid #5c6bc0; border-radius: 12px; padding: 15px; position: relative; }
+        .match-box { background: rgba(255, 255, 255, 0.1); border: 2px solid #5c6bc0; border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); backdrop-filter: blur(5px); transition: transform 0.2s, border-color 0.2s; position: relative; }
+        .match-box:hover { transform: translateY(-5px); border-color: #ffd700; }
+        .player-name { padding: 10px; font-weight: bold; font-size: 16px; border-bottom: 1px dashed rgba(255,255,255,0.2); }
+        .player-name:last-child { border-bottom: none; }
         .vs-text { font-size: 14px; color: #ffeb3b; font-style: italic; margin: 10px 0; font-weight: 900; background: rgba(0,0,0,0.3); display: inline-block; padding: 4px 12px; border-radius: 12px; }
-        .btn-fight { background: #ff5252; color: white; padding: 8px; border-radius: 5px; font-size: 12px; margin-top: 10px; cursor: pointer; width: 100%; font-weight: bold; border: none;}
+        .btn-fight { display:none; background: #ff5252; color: white; padding: 8px; border-radius: 5px; font-size: 12px; margin-top: 10px; cursor: pointer; width: 100%; font-weight: bold; border: none;}
+        .btn-fight:hover { background: #d50000; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; padding: 15px; }
         .modal.active { display: flex; }
@@ -114,9 +111,13 @@
         .btn-ans.correct { background: #00c853 !important; border-color: #00e676 !important; opacity: 1 !important; }
         .btn-ans.wrong { background: #d50000 !important; border-color: #ff1744 !important; opacity: 1 !important;}
         
-        .lock-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 10; }
+        .lock-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 10; flex-direction: column; }
         .lock-overlay.active { display: flex; }
-        .lock-text { font-size: 24px; color: #ffeb3b; font-weight: bold; text-align: center; }
+        .lock-text { font-size: 24px; color: #ffeb3b; font-weight: bold; text-align: center; margin-bottom: 10px; }
+        .bot-thinking { color: #00e676; font-size: 18px; font-style: italic; }
+
+        .reward-anim { position: fixed; bottom: 20px; right: 20px; background: #00c853; color: white; padding: 15px 25px; border-radius: 30px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 15px rgba(0,200,83,0.4); transform: translateY(100px); opacity: 0; transition: 0.5s; z-index: 9999;}
+        .reward-anim.show { transform: translateY(0); opacity: 1; }
 
         @media (max-width: 768px) {
             .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
@@ -180,10 +181,34 @@
             <div id="view-shop" class="view-section">
                 <div class="header"><h1>🛒 Cửa Hàng</h1><p>Đổi vật phẩm bằng Vàng.</p></div>
                 <div class="shop-grid">
-                    <div class="shop-item"><div class="item-icon">🧪</div><div class="item-title">Bình Tiên XP x2</div><div class="item-desc">Tăng gấp đôi phần thưởng Vàng & XP. Tác dụng 24h.</div><div class="item-price">🪙 150</div><button class="btn-buy" onclick="buyItem('potion', 150)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🎭</div><div class="item-title">Mặt Nạ Hắc Ám</div><div class="item-desc">Ẩn tên và điểm số trên Bảng xếp hạng. Tác dụng 24h.</div><div class="item-price">🪙 250</div><button class="btn-buy" onclick="buyItem('mask', 250)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🔍</div><div class="item-title">Kính Lúp Thám Tử</div><div class="item-desc">Loại bỏ 2 đáp án sai trong lúc làm bài (Dùng 1 lần/kính).</div><div class="item-price">🪙 200</div><button class="btn-buy" onclick="buyItem('glass', 200)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🛡️</div><div class="item-title">Bùa Bảo Hộ</div><div class="item-desc">Cứu chuỗi ngày học liên tiếp nếu lỡ quên học 1 ngày.</div><div class="item-price">🪙 200</div><button class="btn-buy" onclick="buyItem('shield', 200)">Đổi Ngay</button></div>
+                    <div class="shop-item">
+                        <div class="item-icon">🧪</div>
+                        <div class="item-title">Bình Tiên XP x2</div>
+                        <div class="item-desc">Tăng gấp đôi phần thưởng Vàng & XP. Tác dụng giới hạn trong 24 giờ.</div>
+                        <div class="item-price">🪙 150</div>
+                        <button class="btn-buy" onclick="buyItem('potion', 150)">Đổi Ngay</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="item-icon">🎭</div>
+                        <div class="item-title">Mặt Nạ Hắc Ám</div>
+                        <div class="item-desc">Ẩn tên và điểm số trên Bảng xếp hạng thành "???". Tác dụng 24 giờ.</div>
+                        <div class="item-price">🪙 250</div>
+                        <button class="btn-buy" onclick="buyItem('mask', 250)">Đổi Ngay</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="item-icon">🔍</div>
+                        <div class="item-title">Kính Lúp Thám Tử</div>
+                        <div class="item-desc">Loại bỏ 2 đáp án sai trong lúc làm Trắc nghiệm (Dùng 1 lần/kính).</div>
+                        <div class="item-price">🪙 200</div>
+                        <button class="btn-buy" onclick="buyItem('glass', 200)">Đổi Ngay</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="item-icon">🛡️</div>
+                        <div class="item-title">Bùa Bảo Hộ</div>
+                        <div class="item-desc">Cứu chuỗi ngày học liên tiếp nếu lỡ quên học 1 ngày.</div>
+                        <div class="item-price">🪙 200</div>
+                        <button class="btn-buy" onclick="buyItem('shield', 200)">Đổi Ngay</button>
+                    </div>
                 </div>
             </div>
 
@@ -259,7 +284,8 @@
 
             <div class="battle-body">
                 <div class="lock-overlay" id="lockOverlay">
-                    <div class="lock-text" id="lockMsg">ĐÃ CHỐT ĐÁP ÁN! CHỜ ĐỐI THỦ...</div>
+                    <div class="lock-text" id="lockMsg">ĐÃ CHỐT ĐÁP ÁN!</div>
+                    <div class="bot-thinking" id="botStatusMsg">Chờ đối thủ...</div>
                 </div>
                 
                 <div id="pvpWaitMsg" style="font-size:24px; font-weight:bold; color:#ffd700; text-align:center; display:none; margin-bottom:15px;">Đang đợi hiệu lệnh...</div>
@@ -294,7 +320,6 @@
         let currentUser = null;
         let userData = { role: 'student', gold: 0, xp: 0, streak: 1, displayName: '', lastLogin: '', hasShield: false, potionExpiry: null, maskExpiry: null, magnifyingGlass: 0 };
 
-        // AUTHENTICATION
         if(auth) {
             auth.onAuthStateChanged(user => {
                 if (user) {
@@ -368,7 +393,6 @@
             } catch (err) { lbContainer.innerHTML = '<p style="color:red; text-align:center">Lỗi bảng xếp hạng.</p>'; }
         }
 
-        // TẢI GOOGLE SHEETS & BÓC TÁCH TỪ VỰNG
         const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing';
         let allLessonsData = [];
         async function fetchFromSheets() {
@@ -410,7 +434,6 @@
             document.getElementById('modalFrame').srcdoc = '';
         }
 
-        // BỐC THĂM SƠ ĐỒ
         function saveSyllabusSelection() {
             const checks = document.querySelectorAll('input[name="syllabusCheck"]:checked');
             let selected = []; checks.forEach(c => selected.push(c.value));
@@ -439,7 +462,7 @@
         }
 
         // ==========================================
-        // ĐẠO LUẬT PVP 30 CÂU - ĐÚNG VÀ NHANH NHẤT (THỐNG NHẤT TOÀN BỘ)
+        // ĐẠO LUẬT PVP 30 CÂU & TRÍ TUỆ NHÂN TẠO (BOT)
         // ==========================================
 
         async function adminStartPvP(p1, p2, matchIndex) {
@@ -471,7 +494,7 @@
                 p1_score: 0, p2_score: 0, 
                 status: 'playing',
                 q_idx: 1, 
-                q_type: 'mcq', // Set 1 là Trắc Nghiệm 15s
+                q_type: 'mcq', // 15s
                 q_end_time: Date.now() + 15000, 
                 current_q: pvpQuestionBank[0],
                 
@@ -490,23 +513,19 @@
                 let isP1 = userData.displayName === m.p1;
                 let isP2 = userData.displayName === m.p2;
                 
-                // Khóa không cho bấm 2 lần
                 if(isP1 && m.p1_ans !== "") return;
                 if(isP2 && m.p2_ans !== "") return;
 
                 const selectedText = m.current_q.opts[idx];
                 const isCorrect = selectedText === m.current_q.vi;
 
-                // Phản hồi UI tức thì (Đổi màu Xanh/Đỏ trên máy của người vừa bấm)
                 let btn = document.getElementById('pvpOpt' + idx);
                 btn.style.backgroundColor = isCorrect ? '#00c853' : '#d50000';
                 btn.style.borderColor = isCorrect ? '#00e676' : '#ff1744';
                 
-                // Khóa màn hình (chỉ của người bấm)
                 for(let i=0; i<4; i++) { document.getElementById('pvpOpt'+i).style.pointerEvents = 'none'; }
                 document.getElementById('lockOverlay').classList.add('active');
 
-                // Bắn đáp án lên máy chủ
                 let updates = {};
                 if(isP1) { updates.p1_ans = selectedText; updates.p1_time = Date.now(); }
                 if(isP2) { updates.p2_ans = selectedText; updates.p2_time = Date.now(); }
@@ -515,7 +534,6 @@
             });
         }
 
-        // HÀM CHẤM ĐIỂM THEO LUẬT MỚI: CHỈ 1 NGƯỜI ĐƯỢC ĐIỂM NẾU ĐÚNG VÀ NHANH NHẤT
         function triggerEval() {
             rtdb.ref('active_pvp_match').transaction(m => {
                 if (m && m.status === 'playing' && m.evaluating === false) {
@@ -526,7 +544,6 @@
                     let p2_c = m.p2_ans === m.current_q.vi;
                     let p1_w = false; let p2_w = false;
                     
-                    // THỐNG NHẤT LUẬT: Ai đúng VÀ nhanh hơn sẽ được cộng 1 điểm
                     if (p1_c && p2_c) {
                         if (m.p1_time <= m.p2_time) p1_w = true; else p2_w = true;
                     } else if (p1_c) { p1_w = true; }
@@ -543,58 +560,62 @@
                 return; // Abort
             }, (err, comm, snap) => {
                 if(comm && snap.val()) {
-                    setTimeout(() => processNextRound(snap.val()), 3500); // Xem kết quả trong 3.5 giây rồi chuyển câu
+                    setTimeout(() => processNextRound(snap.val().q_idx), 3500); 
                 }
             });
         }
 
-        // CHUYỂN CÂU HOẶC KẾT THÚC
-        function processNextRound(m) {
-            let nextIdx = m.q_idx + 1;
-            let s1 = m.p1_score; let s2 = m.p2_score;
-            let set1 = m.p1_set; let set2 = m.p2_set;
-            let status = 'playing'; let winner = "";
+        // Đảm bảo không bị lặp vòng
+        function processNextRound(currentQIdx) {
+            rtdb.ref('active_pvp_match').once('value').then(snap => {
+                let m = snap.val();
+                if(!m || m.q_idx !== currentQIdx || m.status !== 'showing_result') return; // Dừng nếu đã chạy rồi
 
-            if(m.q_idx === 10 || m.q_idx === 20) {
-                if(s1 > s2) set1++;
-                else if(s2 > s1) set2++;
-                s1 = 0; s2 = 0; 
+                let nextIdx = m.q_idx + 1;
+                let s1 = m.p1_score; let s2 = m.p2_score;
+                let set1 = m.p1_set; let set2 = m.p2_set;
+                let status = 'playing'; let winner = "";
 
-                if(m.q_idx === 20) {
-                    if(set1 === 2 || set1 > set2) { status = 'finished'; winner = m.p1; }
-                    else if(set2 === 2 || set2 > set1) { status = 'finished'; winner = m.p2; }
+                if(m.q_idx === 10 || m.q_idx === 20) {
+                    if(s1 > s2) set1++;
+                    else if(s2 > s1) set2++;
+                    s1 = 0; s2 = 0; 
+
+                    if(m.q_idx === 20) {
+                        if(set1 === 2 || set1 > set2) { status = 'finished'; winner = m.p1; }
+                        else if(set2 === 2 || set2 > set1) { status = 'finished'; winner = m.p2; }
+                    }
+                } 
+                else if (m.q_idx >= 21) {
+                    if(s1 > s2) { set1++; winner = m.p1; status = 'finished'; }
+                    else if (s2 > s1) { set2++; winner = m.p2; status = 'finished'; }
+                    else { 
+                        if (nextIdx > m.question_bank.length) { winner = "HÒA NHAU! (HẾT CÂU HỎI)"; status = 'finished'; } 
+                        else { status = 'playing'; }
+                    }
                 }
-            } 
-            else if (m.q_idx >= 21) {
-                if(s1 > s2) { set1++; winner = m.p1; status = 'finished'; }
-                else if (s2 > s1) { set2++; winner = m.p2; status = 'finished'; }
-                else { 
-                    if (nextIdx > m.question_bank.length) { winner = "HÒA NHAU! (HẾT CÂU HỎI)"; status = 'finished'; } 
-                    else { status = 'playing'; }
+
+                let updates = {
+                    p1_score: s1, p2_score: s2, p1_set: set1, p2_set: set2,
+                    p1_ans: "", p2_ans: "", p1_time: 0, p2_time: 0, evaluating: false,
+                    p1_won_this_round: null, p2_won_this_round: null
+                };
+
+                if(status === 'finished') {
+                    updates.status = 'finished';
+                    updates.winner = winner;
+                } else {
+                    let nextType = nextIdx <= 10 ? 'mcq' : (nextIdx <= 20 ? 'fastest' : (Math.random() > 0.5 ? 'mcq' : 'fastest'));
+                    let duration = nextType === 'mcq' ? 15000 : 30000;
+                    
+                    updates.q_idx = nextIdx;
+                    updates.q_type = nextType;
+                    updates.q_end_time = Date.now() + duration;
+                    updates.current_q = m.question_bank[nextIdx - 1];
                 }
-            }
 
-            let updates = {
-                p1_score: s1, p2_score: s2, p1_set: set1, p2_set: set2,
-                p1_ans: "", p2_ans: "", p1_time: 0, p2_time: 0, evaluating: false,
-                p1_won_this_round: null, p2_won_this_round: null
-            };
-
-            if(status === 'finished') {
-                updates.status = 'finished';
-                updates.winner = winner;
-            } else {
-                // Xác định mốc thời gian: Câu 1-10 (MCQ: 15s), Câu 11-20 (Fastest: 30s), Câu 21+ (Random 15s hoặc 30s)
-                let nextType = nextIdx <= 10 ? 'mcq' : (nextIdx <= 20 ? 'fastest' : (Math.random() > 0.5 ? 'mcq' : 'fastest'));
-                let duration = nextType === 'mcq' ? 15000 : 30000;
-                
-                updates.q_idx = nextIdx;
-                updates.q_type = nextType;
-                updates.q_end_time = Date.now() + duration;
-                updates.current_q = m.question_bank[nextIdx - 1];
-            }
-
-            rtdb.ref('active_pvp_match').update(updates);
+                rtdb.ref('active_pvp_match').update(updates);
+            });
         }
 
         // LẮNG NGHE SYNC TỪ FIREBASE
@@ -633,7 +654,7 @@
                     
                     document.getElementById('pvpQIndex').innerText = m.q_idx;
 
-                    // HIỂN THỊ KHI ĐANG TRẢ LỜI
+                    // KIỂM SOÁT GIAO DIỆN KHI ĐANG ĐÁNH
                     if(m.status === 'playing') {
                         document.getElementById('pvpWaitMsg').style.display = 'none';
                         document.getElementById('pvpQuestion').style.display = 'block';
@@ -657,22 +678,49 @@
                             }
                         }
 
+                        // CƠ CHẾ BOT: Nếu đối thủ có chữ "Cao thủ ảo", Bot tự chốt từ 3-8 giây
+                        let myRole = isP1 ? 'p1' : (isP2 ? 'p2' : null);
+                        let oppRole = isP1 ? 'p2' : 'p1';
+                        let oppName = isP1 ? m.p2 : m.p1;
+                        if (myRole && oppName.includes("Cao thủ ảo") && !m.evaluating && m[oppRole+'_ans'] === "") {
+                            if (window.pvpBotTimer) clearTimeout(window.pvpBotTimer);
+                            let delay = Math.floor(Math.random() * 5000) + 3000; // 3s đến 8s
+                            window.pvpBotTimer = setTimeout(() => {
+                                rtdb.ref('active_pvp_match').once('value').then(s => {
+                                    let cm = s.val();
+                                    if (cm && cm.status === 'playing' && !cm.evaluating && cm[oppRole+'_ans'] === "") {
+                                        let isCorrect = Math.random() < 0.7; // Tỷ lệ đúng 70%
+                                        let selected = isCorrect ? cm.current_q.vi : cm.current_q.opts.filter(o => o !== cm.current_q.vi)[0];
+                                        let up = {}; up[oppRole+'_ans'] = selected; up[oppRole+'_time'] = Date.now();
+                                        rtdb.ref('active_pvp_match').update(up);
+                                    }
+                                });
+                            }, delay);
+                        }
+
+                        // Hiển thị trạng thái chờ Bot
+                        let oppAns = isP1 ? m.p2_ans : m.p1_ans;
+                        let botStatus = document.getElementById('botStatusMsg');
+                        if(oppAns !== "") { botStatus.innerText = "Đối thủ đã chốt!"; botStatus.style.color = "#ff1744"; }
+                        else { botStatus.innerText = "Đối thủ đang suy nghĩ..."; botStatus.style.color = "#00e676"; }
+
                         // TIMER ĐẾM NGƯỢC
                         clearInterval(window.pvpTimer);
                         window.pvpTimer = setInterval(() => {
-                            let t = Math.max(0, Math.ceil((m.q_end_time - Date.now())/1000));
+                            let timeLeft = m.q_end_time - Date.now();
+                            let t = Math.max(0, Math.ceil(timeLeft / 1000));
                             document.getElementById('pvpTimerBanner').innerText = `⏳ ${t}s`;
                             if (t <= 0 && !m.evaluating) { clearInterval(window.pvpTimer); triggerEval(); }
                         }, 500);
 
-                        // Trigger chấm điểm nếu cả 2 đã bấm
                         if (m.p1_ans !== "" && m.p2_ans !== "" && !m.evaluating) {
                             clearInterval(window.pvpTimer); triggerEval();
                         }
                     } 
-                    // HIỂN THỊ KẾT QUẢ ĐÚNG/SAI
+                    // KIỂM SOÁT KHI HIỆN KẾT QUẢ CÂU HỎI
                     else if (m.status === 'showing_result') {
                         clearInterval(window.pvpTimer);
+                        if (window.pvpBotTimer) clearTimeout(window.pvpBotTimer);
                         document.getElementById('pvpTimerBanner').innerText = `⏳ 0s`;
                         
                         let myWin = (isP1 && m.p1_won_this_round) || (isP2 && m.p2_won_this_round);
@@ -708,6 +756,7 @@
                     // KẾT THÚC TRẬN
                     else if (m.status === 'finished') {
                         clearInterval(window.pvpTimer);
+                        if (window.pvpBotTimer) clearTimeout(window.pvpBotTimer);
                         document.getElementById('pvpWaitMsg').style.display = 'block';
                         document.getElementById('pvpWaitMsg').style.color = '#ffd700';
                         document.getElementById('pvpWaitMsg').innerText = "🏆 TRẬN ĐẤU KẾT THÚC! NGƯỜI THẮNG: " + m.winner;
@@ -738,7 +787,7 @@
             } else alert("Mã PIN sai!");
         }
 
-        // LÒ ĐÚC MÃ MỚI BỊ THIẾU
+        // LÒ ĐÚC MÃ (FULL GIAO DIỆN)
         function generateCode() {
             const raw = document.getElementById('rawInput').value.trim();
             if(!raw) return alert("Vui lòng nhập từ vựng!");
@@ -981,9 +1030,8 @@
             document.getElementById('generatedCode').value = template;
         }
 
-        function copyCode() { document.getElementById('generatedCode').select(); document.execCommand("copy"); alert("Đã copy mã! Hãy dán vào Cột B của Google Sheets."); }
-
-        function buyItem(itemType, price) { /* Hàm giả lập để test giao diện Cửa Hàng */ alert('Đã mua ' + itemType + ' với giá ' + price + ' Vàng!'); }
+        function copyCode() { document.getElementById('generatedCode').select(); document.execCommand("copy"); alert("Đã copy mã! Hãy dán đè vào Cột B của Google Sheets."); }
+        function buyItem(itemType, price) { alert('Đã mua ' + itemType + ' với giá ' + price + ' Vàng!'); }
 
         updateUI(); fetchLeaderboard(); fetchFromSheets(); 
     </script>
