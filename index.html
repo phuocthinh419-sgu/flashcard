@@ -142,7 +142,7 @@
                     <div class="shop-item">
                         <div class="item-icon">🧪</div>
                         <div class="item-title">Bình Tiên XP x2</div>
-                        <div class="item-desc">Tăng gấp đôi điểm kinh nghiệm nhận được trong thời gian giới hạn.</div>
+                        <div class="item-desc">Tăng gấp đôi phần thưởng. Tác dụng vĩnh viễn (Demo).</div>
                         <div class="item-price">🪙 150</div>
                         <button class="btn-buy" onclick="buyItem('potion', 150)">Đổi Ngay</button>
                     </div>
@@ -166,7 +166,7 @@
             <div id="view-leaderboard" class="view-section">
                 <div class="header" style="text-align: center;">
                     <h1>🏆 Bảng Xếp Hạng Điểm Số</h1>
-                    <p>Tôn vinh nỗ lực học tập của các học viên. (Tài khoản giáo viên không tham gia xếp hạng)</p>
+                    <p>Tôn vinh nỗ lực học tập. (Tài khoản giáo viên không tham gia xếp hạng)</p>
                 </div>
                 <div class="lb-container" id="leaderboardData">
                     <p style="text-align:center; color:#888;">Đang tải dữ liệu từ máy chủ...</p>
@@ -191,12 +191,12 @@
                             <span>⚙️ Mã HTML (Thành phẩm)</span>
                             <button class="btn-save" onclick="copyCode()">📋 Copy Mã</button>
                         </div>
-                        <textarea id="generatedCode" readonly style="background:#e8eaf6; font-size: 12px;" placeholder="Bấm Tạo Mã, sau đó Copy đoạn mã xuất hiện ở đây đem dán vào Cột B của Google Sheets."></textarea>
+                        <textarea id="generatedCode" readonly style="background:#e8eaf6; font-size: 12px;" placeholder="Bấm Tạo Mã, sau đó Copy đem dán vào Cột B của Google Sheets."></textarea>
                     </div>
                 </div>
                 <div class="panel" style="margin-top:20px; height: 400px;">
                     <div class="panel-header"><span>📱 Xem trước giao diện</span></div>
-                    <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+                    <iframe id="previewFrame" style="width:100%; height:100%; border:none; min-height: 350px;" sandbox="allow-scripts allow-same-origin"></iframe>
                 </div>
             </div>
 
@@ -237,7 +237,7 @@
     <div class="modal" id="nameModal">
         <div class="modal-content name-modal-content">
             <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 22px;">Thông Tin Cá Nhân</h3>
-            <p style="color: #555; margin-bottom: 20px;">Vui lòng nhập tên hiển thị thật của bạn để giáo viên dễ dàng theo dõi:</p>
+            <p style="color: #555; margin-bottom: 20px;">Vui lòng nhập tên hiển thị thật để giáo viên dễ dàng theo dõi:</p>
             <input type="text" id="displayNameInput" placeholder="Ví dụ: Nguyễn Văn A..." style="width: 100%; padding: 12px; border: 2px solid var(--secondary); border-radius: 8px; margin-bottom: 15px; font-size: 16px;">
             <button class="btn-save" style="width: 100%; padding: 12px;" onclick="saveDisplayName()">Lưu Tên Hiển Thị</button>
             <button class="btn-close" style="width: 100%; padding: 12px; margin-top: 10px; display: none;" id="closeNameModalBtn" onclick="document.getElementById('nameModal').classList.remove('active')">Hủy bỏ</button>
@@ -248,7 +248,7 @@
 
     <script>
         // ==========================================
-        // CẤU HÌNH FIREBASE
+        // CẤU HÌNH FIREBASE - BỆ HẠ ĐIỀN VÀO ĐÂY NHÉ
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyAmDqBfe4JRBKDGVwqVS0yI9_P2O2WIzxI",
@@ -267,19 +267,47 @@
         } catch (e) { console.error("Không thể kết nối Firebase!"); }
 
         // ==========================================
-        // QUẢN LÝ NGƯỜI DÙNG
+        // QUẢN LÝ NGƯỜI DÙNG & STREAK LOGIC (ĐÃ SỬA LỖI 0)
         // ==========================================
         let currentUser = null;
-        let userData = { role: 'student', gold: 0, xp: 0, streak: 1, displayName: '' };
+        let userData = { role: 'student', gold: 0, xp: 0, streak: 1, displayName: '', lastLogin: '', hasShield: false, hasDoubleXp: false };
 
         if(auth) {
             auth.onAuthStateChanged(user => {
                 if (user) {
                     currentUser = user;
+                    const todayStr = new Date().toLocaleDateString('en-GB'); 
+                    
                     db.collection('vocab_users').doc(user.uid).get().then(doc => {
                         if (doc.exists) {
-                            userData = doc.data(); updateUI();
+                            userData = doc.data();
+                            
+                            // FAIL-SAFE: Ép streak lên 1 nếu bằng 0
+                            if(!userData.streak || userData.streak === 0) userData.streak = 1;
+                            
+                            if(!userData.lastLogin) userData.lastLogin = todayStr;
+                            
+                            if (userData.lastLogin !== todayStr) {
+                                const yesterday = new Date();
+                                yesterday.setDate(yesterday.getDate() - 1);
+                                const yesterdayStr = yesterday.toLocaleDateString('en-GB');
+
+                                if (userData.lastLogin === yesterdayStr) {
+                                    userData.streak += 1;
+                                } else {
+                                    if(userData.hasShield) {
+                                        userData.hasShield = false; 
+                                        alert("Bạn đã bỏ lỡ 1 ngày học, nhưng Bùa Bảo Hộ đã cứu chuỗi của bạn!");
+                                    } else {
+                                        userData.streak = 1; 
+                                    }
+                                }
+                                userData.lastLogin = todayStr;
+                                db.collection('vocab_users').doc(user.uid).update({ streak: userData.streak, lastLogin: todayStr, hasShield: userData.hasShield });
+                            }
+                            updateUI();
                         } else {
+                            userData.lastLogin = todayStr; 
                             document.getElementById('nameModal').classList.add('active');
                         }
                     });
@@ -309,7 +337,9 @@
         }
 
         function syncStatsToCloud() {
-            if (currentUser && db) db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, xp: userData.xp, streak: userData.streak, displayName: userData.displayName });
+            if (currentUser && db) db.collection('vocab_users').doc(currentUser.uid).update({ 
+                gold: userData.gold, xp: userData.xp, streak: userData.streak, displayName: userData.displayName, hasShield: userData.hasShield || false, hasDoubleXp: userData.hasDoubleXp || false
+            });
             updateUI();
         }
 
@@ -337,15 +367,21 @@
             if (!currentUser) return alert("Vui lòng đăng nhập để thực hiện giao dịch!");
             if (userData.gold >= price) {
                 if(confirm(`Xác nhận đổi vật phẩm này với ${price} Vàng?`)) {
-                    userData.gold -= price;
-                    if (itemType === 'crown') {
-                        if(!userData.displayName.includes('👑')) { userData.displayName = '👑 ' + userData.displayName; alert("Đã trang bị Vương Miện thành công!"); }
-                        else { alert("Bạn đã sở hữu Vương Miện rồi!"); userData.gold += price; return; }
+                    if (itemType === 'shield') {
+                        if(userData.hasShield) return alert("Bạn đang có Bùa Bảo Hộ rồi!");
+                        userData.hasShield = true;
+                    } else if (itemType === 'potion') {
+                        if(userData.hasDoubleXp) return alert("Bạn đang có hiệu ứng x2 rồi!");
+                        userData.hasDoubleXp = true;
+                    } else if (itemType === 'crown') {
+                        if(!userData.displayName.includes('👑')) { userData.displayName = '👑 ' + userData.displayName; }
+                        else return alert("Bạn đã sở hữu Vương Miện rồi!");
                     } else if (itemType === 'rename') {
                         document.getElementById('nameModal').classList.add('active');
                         document.getElementById('closeNameModalBtn').style.display = 'block';
                         document.getElementById('displayNameInput').value = userData.displayName.replace('👑 ', '');
-                    } else alert("Giao dịch thành công!");
+                    }
+                    userData.gold -= price; alert("Giao dịch thành công!");
                     syncStatsToCloud(); if(itemType === 'crown') fetchLeaderboard();
                 }
             } else alert("Không đủ Vàng! Vui lòng học thêm bài mới để tích lũy.");
@@ -353,8 +389,11 @@
 
         window.addEventListener('message', function(event) {
             if (event.data === 'CORRECT') {
-                userData.gold += 10; userData.xp += 15; syncStatsToCloud(); 
+                let goldEarned = 10; let xpEarned = 15;
+                if(userData.hasDoubleXp) { xpEarned *= 2; goldEarned *= 2; }
+                userData.gold += goldEarned; userData.xp += xpEarned; syncStatsToCloud(); 
                 const anim = document.getElementById('rewardAnim');
+                anim.innerText = `🎉 +${goldEarned} 🪙 | +${xpEarned} ⭐`;
                 anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 2000);
             }
         });
@@ -387,13 +426,13 @@
             const enteredPin = document.getElementById('teacherPinCheck').value;
             if (savedPin && enteredPin === savedPin) {
                 userData.role = 'teacher'; db.collection('vocab_users').doc(currentUser.uid).update({ role: 'teacher' });
-                updateUI(); alert("Đã chuyển sang chế độ Giáo Viên! Tài khoản sẽ được ẩn khỏi bảng xếp hạng học sinh."); document.getElementById('teacherPinCheck').value = '';
+                updateUI(); alert("Đã chuyển sang chế độ Giáo Viên!"); document.getElementById('teacherPinCheck').value = '';
             } else alert("❌ Mã PIN không chính xác!");
         }
         function savePin() { localStorage.setItem('teacherPin', document.getElementById('teacherPin').value); alert("Đã lưu mã PIN mới!"); document.getElementById('teacherPin').value = ''; }
 
         // ==========================================
-        // LÒ ĐÚC MÃ TỰ ĐỘNG
+        // LÒ ĐÚC MÃ TỰ ĐỘNG - VÒNG TRÒN AI LÀ TRIỆU PHÚ
         // ==========================================
         function generateCode() {
             const raw = document.getElementById('rawInput').value.trim();
@@ -449,20 +488,31 @@
             <button onclick="nextCard()" id="next-btn" class="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700">Tiếp ➡</button>
         </div>
     </div>
+    
     <div id="quiz-section" class="hidden w-full max-w-md mx-auto">
-        <div class="text-center mb-6">
-            <span class="inline-block px-4 py-1 bg-yellow-100 text-yellow-800 font-bold rounded-full text-sm mb-2">Bài Tập Trắc Nghiệm 🪙</span>
+        <div class="text-center mb-4">
+            <span class="inline-block px-4 py-1 bg-yellow-100 text-yellow-800 font-bold rounded-full text-sm mb-4">Bài Tập Trắc Nghiệm 🪙</span>
+            
+            <div id="timer-display" style="position: relative; width: 70px; height: 70px; margin: 0 auto 15px auto;">
+                <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg);" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"></circle>
+                    <circle id="timer-circle" cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"></circle>
+                </svg>
+                <div id="timer-text" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; color: #ef4444;">15</div>
+            </div>
+
             <h2 id="quiz-question" class="text-4xl font-extrabold text-indigo-900 mt-2">Word</h2>
-            <p class="text-gray-500 mt-1">Chọn nghĩa đúng nhất</p>
         </div>
         <div id="quiz-options" class="w-full"></div>
     </div>
+
     <script>
         const vocabList = [
             ${vocabArray.join(',\n            ')}
         ];
         let currentIndex = 0;
         const flashcardEl = document.getElementById('flashcard');
+        
         function loadCard(index) {
             flashcardEl.classList.remove('flipped');
             setTimeout(() => {
@@ -490,8 +540,51 @@
                 startQuiz();
             }
         }
+        
         let currentQuizIndex = 0;
         let quizOrder = [];
+        let timerId;
+        let timeLeft = 15;
+
+        function startTimer() {
+            timeLeft = 15;
+            document.getElementById('timer-circle').style.strokeDashoffset = '0';
+            document.getElementById('timer-text').innerText = timeLeft;
+            clearInterval(timerId);
+            
+            timerId = setInterval(() => {
+                timeLeft--;
+                const offset = 283 - (timeLeft / 15) * 283;
+                document.getElementById('timer-circle').style.strokeDashoffset = offset;
+                document.getElementById('timer-text').innerText = timeLeft;
+                
+                if(timeLeft <= 0) {
+                    clearInterval(timerId);
+                    timeOut();
+                }
+            }, 1000);
+        }
+
+        function timeOut() {
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.classList.add('disabled'); 
+            const correctWord = vocabList[quizOrder[currentQuizIndex]];
+            
+            Array.from(optionsContainer.children).forEach(child => {
+                if (child.innerText === correctWord.vi) child.classList.add('correct');
+                else child.classList.add('wrong');
+            });
+
+            setTimeout(() => {
+                currentQuizIndex++;
+                if (currentQuizIndex < vocabList.length) loadQuizQuestion();
+                else {
+                    optionsContainer.innerHTML = '<div class="text-center p-6 bg-green-100 text-green-800 rounded-xl font-bold text-xl">🎉 Đã hoàn thành! Hãy ôn lại để nắm vững bài hơn nhé!</div>';
+                    document.getElementById('timer-display').style.display = 'none';
+                }
+            }, 2000);
+        }
+
         function startQuiz() {
             document.getElementById('flashcard-section').classList.add('hidden');
             document.getElementById('quiz-section').classList.remove('hidden');
@@ -499,17 +592,21 @@
             currentQuizIndex = 0;
             loadQuizQuestion();
         }
+
         function loadQuizQuestion() {
             const optionsContainer = document.getElementById('quiz-options');
             optionsContainer.innerHTML = ''; 
             optionsContainer.classList.remove('disabled');
+            
             const correctWord = vocabList[quizOrder[currentQuizIndex]];
             document.getElementById('quiz-question').innerText = correctWord.en;
+            
             let options = [correctWord.vi];
             let wrongOptions = vocabList.filter(w => w.en !== correctWord.en).map(w => w.vi);
             wrongOptions = wrongOptions.sort(() => Math.random() - 0.5).slice(0, 3);
             options = options.concat(wrongOptions);
             options.sort(() => Math.random() - 0.5); 
+            
             options.forEach(opt => {
                 const btn = document.createElement('button');
                 btn.className = 'quiz-btn';
@@ -517,10 +614,15 @@
                 btn.onclick = () => checkAnswer(btn, opt, correctWord.vi);
                 optionsContainer.appendChild(btn);
             });
+
+            startTimer();
         }
+
         function checkAnswer(btn, selectedVi, correctVi) {
+            clearInterval(timerId); 
             const optionsContainer = document.getElementById('quiz-options');
             optionsContainer.classList.add('disabled'); 
+            
             if (selectedVi === correctVi) {
                 btn.classList.add('correct');
                 if(window.parent) window.parent.postMessage('CORRECT', '*');
@@ -530,6 +632,7 @@
                         loadQuizQuestion();
                     } else {
                         optionsContainer.innerHTML = '<div class="text-center p-6 bg-green-100 text-green-800 rounded-xl font-bold text-xl">🎉 Chúc mừng! Bạn đã hoàn thành bài học và nhận được phần thưởng!</div>';
+                        document.getElementById('timer-display').style.display = 'none';
                     }
                 }, 1500);
             } else {
@@ -540,7 +643,10 @@
                 setTimeout(() => {
                     currentQuizIndex++;
                     if (currentQuizIndex < vocabList.length) loadQuizQuestion();
-                    else optionsContainer.innerHTML = '<div class="text-center p-6 bg-green-100 text-green-800 rounded-xl font-bold text-xl">🎉 Đã hoàn thành! Hãy ôn lại để nắm vững bài hơn nhé!</div>';
+                    else {
+                        optionsContainer.innerHTML = '<div class="text-center p-6 bg-green-100 text-green-800 rounded-xl font-bold text-xl">🎉 Đã hoàn thành! Hãy ôn lại để nắm vững bài hơn nhé!</div>';
+                        document.getElementById('timer-display').style.display = 'none';
+                    }
                 }, 2000);
             }
         }
