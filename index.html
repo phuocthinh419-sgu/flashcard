@@ -394,21 +394,39 @@
                             userData = doc.data();
                             if(!userData.streak || userData.streak === 0) userData.streak = 1;
                             if(!userData.lastLogin) userData.lastLogin = todayStr;
-                            if (userData.lastLogin !== todayStr) {
-                                const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-                                if (userData.lastLogin === yesterday.toLocaleDateString('en-GB')) {
+                            
+                            // THUẬT TOÁN ĐẾM CHUỖI MỚI CHÍNH XÁC TUYỆT ĐỐI
+                            let lastParts = userData.lastLogin.split('/');
+                            if (lastParts.length === 3) {
+                                let today = new Date();
+                                let lastDate = new Date(lastParts[2], lastParts[1] - 1, lastParts[0]);
+                                let todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                                let diffDays = Math.round((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+                                
+                                if (diffDays === 1) {
                                     userData.streak += 1;
-                                } else { 
+                                    userData.lastLogin = todayStr;
+                                    db.collection('vocab_users').doc(user.uid).update({ streak: userData.streak, lastLogin: todayStr });
+                                } else if (diffDays > 1) {
                                     if (userData.hasShield) {
                                         userData.hasShield = false;
+                                        userData.lastLogin = todayStr;
+                                        db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr, hasShield: false });
                                         alert("🛡️ Bùa Bảo Hộ đã phát huy tác dụng! Chuỗi của bệ hạ được giữ nguyên.");
                                     } else {
-                                        userData.streak = 1; 
+                                        userData.streak = 1;
+                                        userData.lastLogin = todayStr;
+                                        db.collection('vocab_users').doc(user.uid).update({ streak: 1, lastLogin: todayStr });
                                     }
+                                } else if (diffDays === 0 && userData.lastLogin !== todayStr) {
+                                    userData.lastLogin = todayStr;
+                                    db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr });
                                 }
+                            } else {
                                 userData.lastLogin = todayStr;
-                                db.collection('vocab_users').doc(user.uid).update({ streak: userData.streak, lastLogin: todayStr, hasShield: userData.hasShield });
+                                db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr });
                             }
+
                             updateUI();
                         } else {
                             userData.lastLogin = todayStr; 
@@ -635,7 +653,7 @@
         }
 
         // ==========================================
-        // ĐẠO LUẬT PVP - LOCAL TIMER BẤT TỬ
+        // ĐẠO LUẬT PVP
         // ==========================================
 
         async function adminStartPvP(p1, p2, matchIndex) {
@@ -799,7 +817,7 @@
                 renderBracket();
             });
 
-            // LẮNG NGHE TÍN HIỆU BẢNG PHONG THẦN (CHUNG KẾT)
+            // LẮNG NGHE TÍN HIỆU BẢNG PHONG THẦN
             rtdb.ref('tournament_status/result').on('value', (snap) => {
                 const res = snap.val();
                 if(res) {
@@ -878,7 +896,6 @@
                         if(oppAns !== "") { botStatus.innerText = "Đối thủ đã chốt!"; botStatus.style.color = "#ff1744"; }
                         else { botStatus.innerText = "Đối thủ đang suy nghĩ..."; botStatus.style.color = "#00e676"; }
 
-                        // BỘ ĐẾM GIỜ CỤC BỘ
                         if (window.currentPlayingQIdx !== m.q_idx) {
                             window.currentPlayingQIdx = m.q_idx;
                             window.localPvPTime = 15;
