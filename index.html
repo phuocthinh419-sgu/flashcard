@@ -721,16 +721,38 @@
                 const data = snapshot.val();
                 if(data) {
                     document.getElementById('bracketBoard').style.display = 'block';
-                    document.getElementById('bracketStatus').innerText = `GIAI ĐOẠN: ${data.stage} | Trạng thái: Chờ thi đấu`;
+                    document.getElementById('bracketStatus').innerText = `GIAI ĐOẠN: ${data.stage} | Trạng thái: Đang diễn ra`;
                     let matchHtml = '';
+                    
                     data.matches.forEach((m, index) => {
                         let isFinished = !!m.winner;
                         let fightBtn = (userData.role === 'teacher' && !isFinished) ? `<button class="btn-fight" style="display:block;" onclick="adminStartPvP('${m.player1}', '${m.player2}', ${index})">⚔️ ÉP KHAI CHIẾN</button>` : '';
-                        let winnerTag = isFinished ? `<div style="color:#00e676; font-weight:bold; margin-top:10px; font-size: 14px;">👑 Thắng: ${m.winner}</div>` : '';
+                        
+                        // XỬ LÝ HIỆU ỨNG TÊN NGƯỜI CHIẾN THẮNG
+                        let p1Display = m.player1;
+                        let p2Display = m.player2;
+                        
+                        if (isFinished) {
+                            if (m.winner === m.player1) {
+                                p1Display = `<span style="color: #00e676; font-weight: 900;">${m.player1} ⭐</span>`;
+                                p2Display = `<span style="opacity: 0.4; text-decoration: line-through;">${m.player2}</span>`;
+                            } else if (m.winner === m.player2) {
+                                p2Display = `<span style="color: #00e676; font-weight: 900;">${m.player2} ⭐</span>`;
+                                p1Display = `<span style="opacity: 0.4; text-decoration: line-through;">${m.player1}</span>`;
+                            }
+                        }
+
                         let matchTitle = `Trận ${index + 1}`;
                         if(data.stage.includes("CHUNG KẾT")) matchTitle = index === 0 ? "CHUNG KẾT" : "TRANH HẠNG 3";
 
-                        matchHtml += `<div class="match-box"><div style="font-size:10px; color:#aaa; margin-bottom:5px;">${matchTitle}</div><div class="player-name">${m.player1}</div><div class="vs-text">VS</div><div class="player-name">${m.player2}</div>${winnerTag}${fightBtn}</div>`;
+                        matchHtml += `
+                        <div class="match-box">
+                            <div style="font-size:10px; color:#aaa; margin-bottom:5px;">${matchTitle}</div>
+                            <div class="player-name">${p1Display}</div>
+                            <div class="vs-text">VS</div>
+                            <div class="player-name">${p2Display}</div>
+                            ${fightBtn}
+                        </div>`;
                     });
                     document.getElementById('bracketMatches').innerHTML = matchHtml;
                 }
