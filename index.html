@@ -431,16 +431,20 @@
             }
 
             auth.signInWithEmailAndPassword(email, pass).catch(function(error) {
-                if (error.code === 'auth/user-not-found') {
-                    if(confirm("Tài khoản này chưa tồn tại! Bạn có muốn đăng ký mới bằng thông tin vừa nhập không?")) {
+                if (error.message.includes("INVALID_LOGIN_CREDENTIALS") || error.code === 'auth/invalid-login-credentials' || error.code === 'auth/user-not-found') {
+                    if(confirm("Tài khoản chưa tồn tại hoặc sai mật khẩu!\n\nNếu muốn tạo tài khoản mới, bạn có muốn ĐĂNG KÝ luôn với thông tin này không?")) {
                         auth.createUserWithEmailAndPassword(email, pass).catch(function(err) {
-                            alert("Không thể đăng ký: " + err.message);
+                            if (err.code === 'auth/email-already-in-use') {
+                                alert("Tài khoản đã tồn tại. Có vẻ bạn nhập sai mật khẩu!");
+                            } else if (err.code === 'auth/weak-password') {
+                                alert("Mật khẩu phải có ít nhất 6 ký tự!");
+                            } else {
+                                alert("Lỗi đăng ký: " + err.message);
+                            }
                         });
                     }
-                } else if (error.code === 'auth/wrong-password') {
-                    alert("Mật khẩu không chính xác. Xin vui lòng thử lại!");
                 } else if (error.code === 'auth/invalid-email') {
-                    alert("Tên tài khoản không đúng định dạng. (Gợi ý: phải có chữ @vocab.com)");
+                    alert("Tài khoản không hợp lệ (phải có đuôi @vocab.com).");
                 } else {
                     alert("Lỗi đăng nhập: " + error.message);
                 }
