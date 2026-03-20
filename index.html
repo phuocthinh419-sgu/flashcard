@@ -278,6 +278,29 @@
         </main>
     </div>
 
+    <div class="modal" id="podiumModal">
+        <div class="modal-content" style="max-width: 600px; text-align: center; background: linear-gradient(135deg, #1a237e 0%, #311b92 100%); color: white; padding: 30px; border: 4px solid #ffd700; height: auto; max-height: 90vh; overflow-y: auto;">
+            <h2 style="color: #ffd700; font-size: 32px; margin-bottom: 20px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">🏆 BẢNG PHONG THẦN 🏆</h2>
+            <div style="display: flex; flex-direction: column; gap: 15px; text-align: left;">
+                <div style="background: rgba(255,215,0,0.2); padding: 15px; border-radius: 10px; border-left: 5px solid #ffd700; font-size: 22px; font-weight: bold; display: flex; align-items: center; justify-content: space-between;">
+                    <span>🥇 VÔ ĐỊCH:</span> <span id="rank1Name" style="color: #ffd700;">---</span>
+                </div>
+                <div style="background: rgba(192,192,192,0.2); padding: 15px; border-radius: 10px; border-left: 5px solid #c0c0c0; font-size: 20px; font-weight: bold; display: flex; align-items: center; justify-content: space-between;">
+                    <span>🥈 Á QUÂN:</span> <span id="rank2Name" style="color: #c0c0c0;">---</span>
+                </div>
+                <div style="background: rgba(205,127,50,0.2); padding: 15px; border-radius: 10px; border-left: 5px solid #cd7f32; font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: space-between;">
+                    <span>🥉 QUÝ QUÂN:</span> <span id="rank3Name" style="color: #cd7f32;">---</span>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; border-left: 5px solid #888; font-size: 16px; font-weight: bold;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;"><span>🎖️ HẠNG 4:</span> <span id="rank4Name" style="color: #ddd;">---</span></div>
+                    <div style="font-size: 12px; color: #aaa; font-style: italic; text-align: right;">(Tuyên dương nỗ lực xuất sắc lọt vào Top 4 chung cuộc)</div>
+                </div>
+            </div>
+            <p style="margin-top: 25px; color: #ffeb3b; font-style: italic; font-size: 14px;">* Lưu ý: Nhà vô địch, Á quân, Hạng 3 chung cuộc sẽ được nhận trọng thưởng từ Ban Tổ Chức!</p>
+            <button class="btn-save" style="margin-top: 20px; font-size: 18px; padding: 12px 30px; width: 100%;" onclick="document.getElementById('podiumModal').classList.remove('active')">Đóng Lại</button>
+        </div>
+    </div>
+
     <div class="modal" id="nameModal">
         <div class="modal-content name-modal-content">
             <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 22px;">Thông Tin Cá Nhân</h3>
@@ -545,7 +568,7 @@
         }
 
         async function executeBlindDraw() {
-            if(!confirm("Xác nhận bốc thăm giải đấu mới?")) return;
+            if(!confirm("Xác nhận bốc thăm giải đấu mới? Bảng Phong Thần cũ sẽ bị xóa.")) return;
             const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get();
             let candidates = [];
             snapshot.forEach(doc => { if(doc.data().role !== 'teacher') candidates.push(doc.data().displayName || "Ẩn danh"); });
@@ -561,6 +584,7 @@
             let matches = [];
             for(let i = 0; i < qualified.length; i+=2) { matches.push({ player1: qualified[i], player2: qualified[i+1] }); }
 
+            rtdb.ref('tournament_status/result').remove(); // Thu hồi Bảng Phong Thần cũ
             rtdb.ref('tournament_status/bracket').set({ stage: stageName, matches: matches, timestamp: Date.now() });
             alert("Đã bốc thăm xong! Sơ đồ nằm ở tab Xếp Hạng.");
         }
@@ -578,7 +602,21 @@
             });
 
             if(!allFinished) return alert("Vẫn còn trận đấu chưa kết thúc! Yêu cầu hoàn tất toàn bộ trước khi lên vòng.");
-            if(winners.length === 1) return alert("🏆 GIẢI ĐẤU KẾT THÚC! NHÀ VÔ ĐỊCH: " + winners[0]);
+            
+            // XỬ LÝ KHÉP LẠI CHUNG KẾT & TẠO BẢNG PHONG THẦN
+            if(data.stage.includes("CHUNG KẾT")) {
+                let rank1 = data.matches[0].winner;
+                let rank2 = (data.matches[0].winner === data.matches[0].player1) ? data.matches[0].player2 : data.matches[0].player1;
+                let rank3 = "Không có"; let rank4 = "Không có";
+                
+                if(data.matches.length > 1 && data.matches[1]) {
+                    rank3 = data.matches[1].winner;
+                    rank4 = (data.matches[1].winner === data.matches[1].player1) ? data.matches[1].player2 : data.matches[1].player1;
+                }
+
+                rtdb.ref('tournament_status/result').set({ rank1: rank1, rank2: rank2, rank3: rank3, rank4: rank4, timestamp: Date.now() });
+                return alert("🏆 GIẢI ĐẤU ĐÃ KẾT THÚC! Bảng Phong Thần sẽ hiện ra ngay lập tức cho tất cả mọi người.");
+            }
 
             let nextStage = "VÒNG TIẾP THEO"; let nextMatches = [];
             if(data.stage === "VÒNG 1/8") {
@@ -591,9 +629,7 @@
                 nextStage = "CHUNG KẾT & TRANH HẠNG 3";
                 nextMatches.push({ player1: winners[0], player2: winners[1] }); 
                 if(losers.length >= 2) nextMatches.push({ player1: losers[0], player2: losers[1] }); 
-            } else if(data.stage.includes("CHUNG KẾT")) {
-                return alert("🏆 GIẢI ĐẤU ĐÃ CÓ CHỦ NHÂN: " + winners[0]);
-            }
+            } 
             rtdb.ref('tournament_status/bracket').set({ stage: nextStage, matches: nextMatches, timestamp: Date.now() });
             alert("Đã chuyển sang " + nextStage + "!");
         }
@@ -761,6 +797,20 @@
             rtdb.ref('tournament_status/bracket').on('value', (snapshot) => {
                 currentBracketData = snapshot.val();
                 renderBracket();
+            });
+
+            // LẮNG NGHE TÍN HIỆU BẢNG PHONG THẦN (CHUNG KẾT)
+            rtdb.ref('tournament_status/result').on('value', (snap) => {
+                const res = snap.val();
+                if(res) {
+                    document.getElementById('rank1Name').innerText = res.rank1;
+                    document.getElementById('rank2Name').innerText = res.rank2;
+                    document.getElementById('rank3Name').innerText = res.rank3;
+                    document.getElementById('rank4Name').innerText = res.rank4;
+                    document.getElementById('podiumModal').classList.add('active');
+                } else {
+                    document.getElementById('podiumModal').classList.remove('active');
+                }
             });
 
             rtdb.ref('active_pvp_match').on('value', (snap) => {
