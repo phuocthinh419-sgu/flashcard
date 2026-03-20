@@ -342,6 +342,8 @@
     <div id="rewardAnim" class="reward-anim">🎉 +10 🪙 | +15 ⭐</div>
 
     <script>
+        let currentBracketData = null;
+
         const firebaseConfig = {
             apiKey: "AIzaSyAmDqBfe4JRBKDGVwqVS0yI9_P2O2WIzxI",
             authDomain: "academic-planner-v100.firebaseapp.com",
@@ -431,6 +433,45 @@
                 badge.className = 'user-badge badge-student'; badge.innerText = '👨‍🎓 Học Sinh';
                 document.getElementById('nav-creator').style.display = 'none'; document.getElementById('nav-arena').style.display = 'none';
             }
+            if (typeof renderBracket === 'function') renderBracket();
+        }
+
+        function renderBracket() {
+            if (!currentBracketData) return;
+            document.getElementById('bracketBoard').style.display = 'block';
+            document.getElementById('bracketStatus').innerText = `GIAI ĐOẠN: ${currentBracketData.stage} | Trạng thái: Đang diễn ra`;
+            let matchHtml = '';
+            
+            currentBracketData.matches.forEach((m, index) => {
+                let isFinished = !!m.winner;
+                let fightBtn = (userData.role === 'teacher' && !isFinished) ? `<button class="btn-fight" style="display:block;" onclick="adminStartPvP('${m.player1}', '${m.player2}', ${index})">⚔️ ÉP KHAI CHIẾN</button>` : '';
+                
+                let p1Display = m.player1;
+                let p2Display = m.player2;
+                
+                if (isFinished) {
+                    if (m.winner === m.player1) {
+                        p1Display = `<span style="color: #00e676; font-weight: 900;">${m.player1} ⭐</span>`;
+                        p2Display = `<span style="opacity: 0.4; text-decoration: line-through;">${m.player2}</span>`;
+                    } else if (m.winner === m.player2) {
+                        p2Display = `<span style="color: #00e676; font-weight: 900;">${m.player2} ⭐</span>`;
+                        p1Display = `<span style="opacity: 0.4; text-decoration: line-through;">${m.player1}</span>`;
+                    }
+                }
+
+                let matchTitle = `Trận ${index + 1}`;
+                if(currentBracketData.stage.includes("CHUNG KẾT")) matchTitle = index === 0 ? "CHUNG KẾT" : "TRANH HẠNG 3";
+
+                matchHtml += `
+                <div class="match-box">
+                    <div style="font-size:10px; color:#aaa; margin-bottom:5px;">${matchTitle}</div>
+                    <div class="player-name">${p1Display}</div>
+                    <div class="vs-text">VS</div>
+                    <div class="player-name">${p2Display}</div>
+                    ${fightBtn}
+                </div>`;
+            });
+            document.getElementById('bracketMatches').innerHTML = matchHtml;
         }
 
         async function fetchLeaderboard() {
@@ -558,7 +599,7 @@
         }
 
         // ==========================================
-        // ĐẠO LUẬT PVP
+        // ĐẠO LUẬT PVP - LOCAL TIMER BẤT TỬ
         // ==========================================
 
         async function adminStartPvP(p1, p2, matchIndex) {
@@ -718,44 +759,8 @@
 
         if(rtdb) {
             rtdb.ref('tournament_status/bracket').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if(data) {
-                    document.getElementById('bracketBoard').style.display = 'block';
-                    document.getElementById('bracketStatus').innerText = `GIAI ĐOẠN: ${data.stage} | Trạng thái: Đang diễn ra`;
-                    let matchHtml = '';
-                    
-                    data.matches.forEach((m, index) => {
-                        let isFinished = !!m.winner;
-                        let fightBtn = (userData.role === 'teacher' && !isFinished) ? `<button class="btn-fight" style="display:block;" onclick="adminStartPvP('${m.player1}', '${m.player2}', ${index})">⚔️ ÉP KHAI CHIẾN</button>` : '';
-                        
-                        // XỬ LÝ HIỆU ỨNG TÊN NGƯỜI CHIẾN THẮNG
-                        let p1Display = m.player1;
-                        let p2Display = m.player2;
-                        
-                        if (isFinished) {
-                            if (m.winner === m.player1) {
-                                p1Display = `<span style="color: #00e676; font-weight: 900;">${m.player1} ⭐</span>`;
-                                p2Display = `<span style="opacity: 0.4; text-decoration: line-through;">${m.player2}</span>`;
-                            } else if (m.winner === m.player2) {
-                                p2Display = `<span style="color: #00e676; font-weight: 900;">${m.player2} ⭐</span>`;
-                                p1Display = `<span style="opacity: 0.4; text-decoration: line-through;">${m.player1}</span>`;
-                            }
-                        }
-
-                        let matchTitle = `Trận ${index + 1}`;
-                        if(data.stage.includes("CHUNG KẾT")) matchTitle = index === 0 ? "CHUNG KẾT" : "TRANH HẠNG 3";
-
-                        matchHtml += `
-                        <div class="match-box">
-                            <div style="font-size:10px; color:#aaa; margin-bottom:5px;">${matchTitle}</div>
-                            <div class="player-name">${p1Display}</div>
-                            <div class="vs-text">VS</div>
-                            <div class="player-name">${p2Display}</div>
-                            ${fightBtn}
-                        </div>`;
-                    });
-                    document.getElementById('bracketMatches').innerHTML = matchHtml;
-                }
+                currentBracketData = snapshot.val();
+                renderBracket();
             });
 
             rtdb.ref('active_pvp_match').on('value', (snap) => {
@@ -910,7 +915,6 @@
             } else alert("Mã PIN sai!");
         }
 
-        // HÀM MUA VẬT PHẨM
         function buyItem(itemType, price) { 
             if (!currentUser) return alert("Vui lòng đăng nhập để mua hàng!");
             if (userData.gold < price) {
@@ -942,7 +946,6 @@
             }
         }
 
-        // LẮNG NGHE TÍN HIỆU TỪ FLASHCARD VÀ KIỂM TRA BÌNH TIÊN XP
         window.addEventListener('message', function(e) {
             if (e.data === 'CORRECT') {
                 if (currentUser && userData) {
@@ -970,7 +973,6 @@
             }
         });
 
-        // LÒ ĐÚC MÃ
         function generateCode() {
             const raw = document.getElementById('rawInput').value.trim();
             if(!raw) return alert("Vui lòng nhập từ vựng!");
