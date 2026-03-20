@@ -35,6 +35,7 @@
         
         .main-wrapper { flex: 1; display: flex; flex-direction: column; width: 100%; overflow: hidden;}
         .top-stats-bar { background: #fff; padding: 15px 30px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: flex-end; align-items: center; gap: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: background-color 0.3s; }
+        .stats-wrapper { display: flex; gap: 15px; }
         .stat-box { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 16px; padding: 6px 12px; border-radius: 20px; background: #f8f9fa; transition: background-color 0.3s; }
         .stat-streak { color: #ff5722; } .stat-xp { color: var(--secondary); } .stat-gold { color: #fbc02d; }
         .menu-btn { display: none; font-size: 24px; cursor: pointer; background: transparent; border: none; color: var(--primary); }
@@ -139,11 +140,16 @@
         body.dark-mode .user-name { color: #9fa8da; }
         body.dark-mode .btn-close { background: #444; color: #fff; }
 
+        /* CSS MỚI CHO ĐIỆN THOẠI ĐỂ KHÔNG BỊ KHUẤT SỐ VÀNG */
         @media (max-width: 768px) {
             .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
             .sidebar.show { transform: translateX(0); }
-            .menu-btn { display: block; }
-            .top-stats-bar { justify-content: space-between; padding: 10px 15px; }
+            .menu-btn { display: block; font-size: 20px; }
+            .top-stats-bar { padding: 10px 5px; justify-content: space-between;}
+            .stats-wrapper { gap: 4px; }
+            .stat-box { font-size: 12px; padding: 4px 6px; gap: 3px; }
+            #themeToggleBtn { padding-left: 5px !important; font-size: 20px !important; }
+            
             .workspace { flex-direction: column; display: block;} .panel { min-height: 400px; margin-bottom: 20px;}
             .fighter { font-size: 16px; } .fighter span { font-size: 24px; }
             .battle-question { font-size: 30px; } .btn-ans { font-size: 16px; padding: 15px; }
@@ -172,8 +178,8 @@
     <div class="main-wrapper">
         <div class="top-stats-bar">
             <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-            <button id="themeToggleBtn" onclick="toggleDarkMode()" style="background: none; border: none; font-size: 24px; cursor: pointer; margin-right: auto; padding-left: 15px;">🌙</button>
-            <div style="display: flex; gap: 15px;">
+            <button id="themeToggleBtn" onclick="toggleDarkMode()" style="background: none; border: none; font-size: 20px; cursor: pointer; margin-right: auto; padding-left: 10px;">🌙</button>
+            <div class="stats-wrapper">
                 <div class="stat-box stat-streak">🔥 <span id="ui-streak">0</span></div>
                 <div class="stat-box stat-xp">⭐ <span id="ui-xp">0</span></div>
                 <div class="stat-box stat-gold">🪙 <span id="ui-gold">0</span></div>
@@ -384,6 +390,25 @@
         let currentUser = null;
         let userData = { role: 'student', gold: 0, xp: 0, streak: 1, displayName: '', lastLogin: '', hasShield: false, potionExpiry: null, maskExpiry: null, magnifyingGlass: 0 };
 
+        function loginWithGoogle() {
+            if (!auth) return;
+            var ua = navigator.userAgent || navigator.vendor || window.opera;
+            var isInApp = (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Zalo") > -1) || (ua.indexOf("Instagram") > -1) || (ua.indexOf("Messenger") > -1) || (ua.indexOf("Line") > -1);
+            
+            if (isInApp) {
+                alert("⚠️ THÔNG BÁO TỪ HỆ THỐNG:\n\nGoogle không cho phép đăng nhập bên trong Zalo/Messenger/Facebook để bảo vệ mật khẩu của bạn!\n\n👉 Vui lòng bấm vào biểu tượng [⋮] (3 chấm) hoặc nút CHIA SẺ ở góc màn hình, sau đó chọn 'MỞ BẰNG TRÌNH DUYỆT' (Safari / Chrome) để đăng nhập bình thường!");
+                return;
+            }
+
+            var provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(function(error) {
+                console.error("Lỗi đăng nhập:", error);
+                if (error.code === 'auth/web-storage-unsupported' || (error.message && error.message.includes("disallowed_useragent"))) {
+                    alert("⚠️ Lỗi bảo mật của trình duyệt! Xin hãy mở trang web này bằng trình duyệt Safari hoặc Chrome (nằm ngoài ứng dụng chat) để đăng nhập.");
+                }
+            });
+        }
+
         if(auth) {
             auth.onAuthStateChanged(user => {
                 if (user) {
@@ -395,7 +420,6 @@
                             if(!userData.streak || userData.streak === 0) userData.streak = 1;
                             if(!userData.lastLogin) userData.lastLogin = todayStr;
                             
-                            // THUẬT TOÁN ĐẾM CHUỖI MỚI CHÍNH XÁC TUYỆT ĐỐI
                             let lastParts = userData.lastLogin.split('/');
                             if (lastParts.length === 3) {
                                 let today = new Date();
@@ -412,7 +436,7 @@
                                         userData.hasShield = false;
                                         userData.lastLogin = todayStr;
                                         db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr, hasShield: false });
-                                        alert("🛡️ Bùa Bảo Hộ đã phát huy tác dụng! Chuỗi của bệ hạ được giữ nguyên.");
+                                        alert("🛡️ Bùa Bảo Hộ đã phát huy tác dụng! Chuỗi học tập của bạn được giữ nguyên.");
                                     } else {
                                         userData.streak = 1;
                                         userData.lastLogin = todayStr;
@@ -438,8 +462,6 @@
                 }
             });
         }
-
-        function loginWithGoogle() { if(auth) auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
 
         function saveDisplayName() {
             const name = document.getElementById('displayNameInput').value.trim();
@@ -590,7 +612,7 @@
             const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get();
             let candidates = [];
             snapshot.forEach(doc => { if(doc.data().role !== 'teacher') candidates.push(doc.data().displayName || "Ẩn danh"); });
-            if(candidates.length < 4) return alert("Chưa đủ 4 học sinh để bốc thăm!");
+            if(candidates.length < 4) return alert("Vui lòng đảm bảo có đủ 4 người dùng để bốc thăm!");
             let topCount = candidates.length >= 24 ? 16 : (candidates.length >= 16 ? 8 : 4);
             let stageName = topCount === 16 ? "VÒNG 1/8" : (topCount === 8 ? "TỨ KẾT" : "BÁN KẾT");
             
@@ -602,7 +624,7 @@
             let matches = [];
             for(let i = 0; i < qualified.length; i+=2) { matches.push({ player1: qualified[i], player2: qualified[i+1] }); }
 
-            rtdb.ref('tournament_status/result').remove(); // Thu hồi Bảng Phong Thần cũ
+            rtdb.ref('tournament_status/result').remove();
             rtdb.ref('tournament_status/bracket').set({ stage: stageName, matches: matches, timestamp: Date.now() });
             alert("Đã bốc thăm xong! Sơ đồ nằm ở tab Xếp Hạng.");
         }
@@ -621,7 +643,6 @@
 
             if(!allFinished) return alert("Vẫn còn trận đấu chưa kết thúc! Yêu cầu hoàn tất toàn bộ trước khi lên vòng.");
             
-            // XỬ LÝ KHÉP LẠI CHUNG KẾT & TẠO BẢNG PHONG THẦN
             if(data.stage.includes("CHUNG KẾT")) {
                 let rank1 = data.matches[0].winner;
                 let rank2 = (data.matches[0].winner === data.matches[0].player1) ? data.matches[0].player2 : data.matches[0].player1;
@@ -651,10 +672,6 @@
             rtdb.ref('tournament_status/bracket').set({ stage: nextStage, matches: nextMatches, timestamp: Date.now() });
             alert("Đã chuyển sang " + nextStage + "!");
         }
-
-        // ==========================================
-        // ĐẠO LUẬT PVP
-        // ==========================================
 
         async function adminStartPvP(p1, p2, matchIndex) {
             if(!confirm(`Bắt đầu trận đấu (30 Câu Trắc Nghiệm - 15s/câu) giữa ${p1} và ${p2}?`)) return;
@@ -817,7 +834,6 @@
                 renderBracket();
             });
 
-            // LẮNG NGHE TÍN HIỆU BẢNG PHONG THẦN
             rtdb.ref('tournament_status/result').on('value', (snap) => {
                 const res = snap.val();
                 if(res) {
