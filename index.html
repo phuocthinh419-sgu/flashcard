@@ -270,6 +270,17 @@
                 <div class="header"><h1>⚙️ Cài Đặt Hệ Thống</h1></div>
                 <div class="settings-card">
                     <h3>🔐 Cổng Đăng Nhập</h3>
+                    
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <input type="email" id="loginEmail" placeholder="Tài khoản (VD: hs1@vocab.com)">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <input type="password" id="loginPass" placeholder="Mật khẩu">
+                    </div>
+                    <button class="btn-run" style="width: 100%; padding: 12px; font-size: 16px; margin-bottom: 15px;" onclick="loginWithEmail()">🔑 Đăng Nhập / Đăng Ký</button>
+
+                    <div style="text-align: center; margin-bottom: 15px; color: #888; font-weight: bold;">HOẶC</div>
+
                     <div id="authSection"><button class="btn-google" onclick="loginWithGoogle()">🌐 Đăng nhập bằng Google</button></div>
                 </div>
                 <div class="settings-card">
@@ -405,6 +416,33 @@
                 console.error("Lỗi đăng nhập:", error);
                 if (error.code === 'auth/web-storage-unsupported' || (error.message && error.message.includes("disallowed_useragent"))) {
                     alert("⚠️ Lỗi bảo mật của trình duyệt! Xin hãy mở trang web này bằng trình duyệt Safari hoặc Chrome (nằm ngoài ứng dụng chat) để đăng nhập.");
+                }
+            });
+        }
+
+        // THUẬT TOÁN ĐĂNG NHẬP BẰNG TÀI KHOẢN TỰ TẠO
+        function loginWithEmail() {
+            if (!auth) return;
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+            
+            if (!email || !pass) {
+                return alert("Xin vui lòng nhập đầy đủ Tài khoản và Mật khẩu!");
+            }
+
+            auth.signInWithEmailAndPassword(email, pass).catch(function(error) {
+                if (error.code === 'auth/user-not-found') {
+                    if(confirm("Tài khoản này chưa tồn tại! Bạn có muốn đăng ký mới bằng thông tin vừa nhập không?")) {
+                        auth.createUserWithEmailAndPassword(email, pass).catch(function(err) {
+                            alert("Không thể đăng ký: " + err.message);
+                        });
+                    }
+                } else if (error.code === 'auth/wrong-password') {
+                    alert("Mật khẩu không chính xác. Xin vui lòng thử lại!");
+                } else if (error.code === 'auth/invalid-email') {
+                    alert("Tên tài khoản không đúng định dạng. (Gợi ý: phải có chữ @vocab.com)");
+                } else {
+                    alert("Lỗi đăng nhập: " + error.message);
                 }
             });
         }
@@ -624,7 +662,7 @@
             let matches = [];
             for(let i = 0; i < qualified.length; i+=2) { matches.push({ player1: qualified[i], player2: qualified[i+1] }); }
 
-            rtdb.ref('tournament_status/result').remove();
+            rtdb.ref('tournament_status/result').remove(); // Thu hồi Bảng Phong Thần cũ
             rtdb.ref('tournament_status/bracket').set({ stage: stageName, matches: matches, timestamp: Date.now() });
             alert("Đã bốc thăm xong! Sơ đồ nằm ở tab Xếp Hạng.");
         }
