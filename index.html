@@ -104,14 +104,16 @@
             padding: 6px 8px; font-weight: bold; font-size: 13px; border-bottom: 1px dashed rgba(255,255,255,0.2); 
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; justify-content: space-between; align-items: center;
         }
-        .player-name:last-child { border-bottom: none; }
-        .vs-text { 
-            font-size: 11px; color: #ffeb3b; font-style: italic; margin: 4px 0; font-weight: 900; 
-            background: rgba(0,0,0,0.3); display: inline-block; padding: 2px 8px; border-radius: 8px; 
+       .player-name { 
+            padding: 6px 8px; font-weight: bold; font-size: 13px; border-bottom: 1px dashed rgba(255,255,255,0.2); 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+            text-align: center; /* Căn giữa tên */
+            position: relative;
         }
-        .btn-fight { 
-            background: #ff5252; color: white; padding: 6px; border-radius: 4px; font-size: 11px; 
-            margin-top: 6px; cursor: pointer; width: 100%; font-weight: bold; border: none; display: none;
+        .player-name:last-child { border-bottom: none; }
+        .ready-badge { 
+            position: absolute; right: 5px; top: 50%; transform: translateY(-50%); /* Neo dấu tích ở mép phải */
+            color: #00e676; font-size: 12px; font-weight: bold; 
         }
         .btn-fight:hover { background: #d50000; }
         .btn-schedule {
