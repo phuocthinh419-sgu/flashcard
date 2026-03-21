@@ -837,6 +837,7 @@
                 moveWinner(fb.qfr[0], 'sfr', 0, 'p1'); moveWinner(fb.qfr[1], 'sfr', 0, 'p2');
             }
             
+            // Xử lý Bán Kết đẩy xuống Hạng 3 và Chung Kết
             if(fb.sfl && fb.sfl.winner) {
                 moveWinner(fb.sfl, 'final', 0, 'p1');
                 let loser1 = fb.sfl.winner === fb.sfl.p1 ? fb.sfl.p2 : fb.sfl.p1;
@@ -855,6 +856,7 @@
                 alert("Chưa có trận nào mới kết thúc hoặc hệ thống đã cập nhật xong xuôi.");
             }
             
+            // ĐIỀU KIỆN KẾT THÚC GIẢI: Khi cả Chung kết và Hạng 3 đều đã đánh xong
             let isTournamentDone = false;
             if (fb.final && fb.final.winner && fb.third_place && fb.third_place.winner) {
                 isTournamentDone = true;
@@ -947,6 +949,7 @@
             });
         }
 
+        // ĐÂY LÀ ĐOẠN MÃ ĐÃ ĐƯỢC SỬA LỖI LƯU NHẦM CỘT
         function processNextRound(currentQIdx) {
             rtdb.ref('active_pvp_match').once('value').then(snap => {
                 let m = snap.val();
@@ -984,10 +987,12 @@
                             let matchInfo = matchSnap.val();
                             if(matchInfo.stage && matchInfo.match_idx !== undefined) {
                                 let key = `tournament_status/full_bracket/${matchInfo.stage}`;
-                                if(matchInfo.stage !== 'final' && matchInfo.stage !== 'third_place') { 
-                                    key += `/${matchInfo.match_idx}/winner`;
-                                } else { 
+                                
+                                // THUẬT TOÁN ĐÃ ĐƯỢC CHỈNH CHUẨN XÁC
+                                if(matchInfo.stage === 'sfl' || matchInfo.stage === 'sfr' || matchInfo.stage === 'final' || matchInfo.stage === 'third_place') { 
                                     key += `/winner`;
+                                } else { 
+                                    key += `/${matchInfo.match_idx}/winner`;
                                 }
                                 rtdb.ref(key).set(winner);
                             }
