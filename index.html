@@ -198,7 +198,7 @@
         <div class="nav-item active" id="nav-library" onclick="switchTab('library')">☁️ Kho Bài Học</div>
         <div class="nav-item" id="nav-shop" onclick="switchTab('shop')">🛒 Cửa Hàng</div>
         <div class="nav-item" id="nav-leaderboard" onclick="switchTab('leaderboard')">🏆 Xếp Hạng</div>
-        <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">⚙️ Cài Đặt Hệ Thống</div>
+        <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">⚙️ Cài Đặt Hệ thống</div>
     </aside>
 
     <div class="main-wrapper">
@@ -271,7 +271,7 @@
             <div id="view-leaderboard" class="view-section">
                 <div class="header" style="text-align: center;"><h1>🏆 Bảng Xếp Hạng</h1></div>
                 <div class="bracket-board" id="bracketBoard">
-                    <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 MES CHAMPIONS LEAGUE (Knock-out) 🏆</h2>
+                    <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 MES CHAMPIONS LEAGUE 🏆</h2>
                     <p id="bracketStatus" style="margin-bottom: 20px; color: #ccc;">Đang diễn ra</p>
                     <div class="full-bracket" id="bracketMatches"></div>
                 </div>
@@ -665,8 +665,18 @@
                     const data = doc.data();
                     if (data.role !== 'teacher') {
                         let isMaskActive = data.maskExpiry && data.maskExpiry > Date.now();
-                        let dName = isMaskActive ? "???" : (data.displayName || 'Ẩn danh');
-                        let dXp = isMaskActive ? "???" : data.xp;
+                        
+                        let dName = data.displayName || 'Ẩn danh';
+                        let dXp = data.xp;
+
+                        if (isMaskActive) {
+                            if (userData.role === 'teacher') {
+                                dName = dName + " 🎭(Ẩn)";
+                            } else {
+                                dName = "???";
+                                dXp = "???";
+                            }
+                        }
                         
                         let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '.';
                         let rankClass = rank <= 3 ? `lb-rank-${rank}` : '';
@@ -853,7 +863,6 @@
                 let rank3 = fb.third_place.winner;
                 let rank4 = (fb.third_place.winner === fb.third_place.p1) ? fb.third_place.p2 : fb.third_place.p1;
                 rtdb.ref('tournament_status/result').set({ rank1: rank1, rank2: rank2, rank3: rank3, rank4: rank4, timestamp: Date.now() });
-                // Không cần alert ở đây vì Bảng Phong Thần tự bật lên
             }
         }
 
