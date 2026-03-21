@@ -155,7 +155,7 @@
             .battle-options { grid-template-columns: 1fr; }
         }
 
-        /* NEW CSS FOR FA CUP STYLE BRACKET DYNAMIC */
+        /* NEW CSS FOR BRACKET DYNAMIC */
         .full-bracket {
             display: grid;
             gap: 20px;
@@ -228,7 +228,7 @@
                     </div>
                     <div class="arena-panel">
                         <div class="arena-title">2. Lò Bát Quái (Điều hành Nhánh)</div>
-                        <button class="btn-danger" style="width: 100%; padding: 15px; font-size: 18px; font-weight: 900;" onclick="executeBlindDraw()">🎲 BỐC THĂM SƠ ĐỒ MỚI (FA Cup)</button>
+                        <button class="btn-danger" style="width: 100%; padding: 15px; font-size: 18px; font-weight: 900;" onclick="executeBlindDraw()">🎲 BỐC THĂM MES CHAMPIONS LEAGUE</button>
                         <button class="btn-run" style="width: 100%; padding: 15px; font-size: 18px; font-weight: 900; margin-top: 10px;" onclick="advanceTournament()">⏭️ TỔNG KẾT & VÀO VÒNG TRONG</button>
                     </div>
                 </div>
@@ -271,7 +271,7 @@
             <div id="view-leaderboard" class="view-section">
                 <div class="header" style="text-align: center;"><h1>🏆 Bảng Xếp Hạng</h1></div>
                 <div class="bracket-board" id="bracketBoard">
-                    <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 SƠ ĐỒ NHÁNH ĐẤU FA CUP (Full) 🏆</h2>
+                    <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 MES CHAMPIONS LEAGUE (Knock-out) 🏆</h2>
                     <p id="bracketStatus" style="margin-bottom: 20px; color: #ccc;">Đang diễn ra</p>
                     <div class="full-bracket" id="bracketMatches"></div>
                 </div>
@@ -566,10 +566,11 @@
             if (typeof renderBracket === 'function') renderBracket();
         }
 
+        // TỰ ĐỘNG CO GIÃN SỐ CỘT VÀ CHÈN TRẬN HẠNG 3
         function renderBracket() {
             if (!currentFullBracketData) return;
             document.getElementById('bracketBoard').style.display = 'block';
-            document.getElementById('bracketStatus').innerText = `GIAI ĐOẠN: FA CUP (Sơ đồ tổng) | Trạng thái: Đang diễn ra`;
+            document.getElementById('bracketStatus').innerText = `GIAI ĐOẠN: Sơ đồ Knock-out | Trạng thái: Đang diễn ra`;
             
             const container = document.getElementById('bracketMatches');
             container.innerHTML = ''; 
@@ -578,7 +579,10 @@
             if (currentFullBracketData.r16l) columns.push({ title: 'Vòng 1/8', key: 'r16l' });
             if (currentFullBracketData.qfl) columns.push({ title: 'Tứ Kết', key: 'qfl' });
             if (currentFullBracketData.sfl) columns.push({ title: 'Bán Kết', key: 'sfl' });
-            columns.push({ title: 'CHUNG KẾT', key: 'final' });
+            
+            // Cột trung tâm đặc biệt
+            columns.push({ title: 'CHUNG KẾT & HẠNG 3', key: 'center_col' });
+            
             if (currentFullBracketData.sfr) columns.push({ title: 'Bán Kết', key: 'sfr' });
             if (currentFullBracketData.qfr) columns.push({ title: 'Tứ Kết', key: 'qfr' });
             if (currentFullBracketData.r16r) columns.push({ title: 'Vòng 1/8', key: 'r16r' });
@@ -594,16 +598,29 @@
                 colTitle.innerText = col.title;
                 colEl.appendChild(colTitle);
 
-                const data = currentFullBracketData[col.key];
-
-                if (Array.isArray(data)) { 
-                    data.forEach((m, index) => {
-                        colEl.appendChild(createMatchBox(m, col.key, index));
-                    });
-                } else if (data) { 
-                    colEl.appendChild(createMatchBox(data, col.key, 0));
+                if (col.key === 'center_col') {
+                    if (currentFullBracketData.final) {
+                        let fLabel = document.createElement('div');
+                        fLabel.innerHTML = '<div style="font-size:11px; color:#ffd700; margin-bottom:5px; font-weight:bold;">🥇 CHUNG KẾT</div>';
+                        colEl.appendChild(fLabel);
+                        colEl.appendChild(createMatchBox(currentFullBracketData.final, 'final', 0));
+                    }
+                    if (currentFullBracketData.third_place && currentFullBracketData.sfl) { // Chỉ có Hạng 3 khi có vòng Bán Kết
+                        let tLabel = document.createElement('div');
+                        tLabel.innerHTML = '<div style="font-size:11px; color:#cd7f32; margin-top:20px; margin-bottom:5px; font-weight:bold;">🥉 TRANH HẠNG 3</div>';
+                        colEl.appendChild(tLabel);
+                        colEl.appendChild(createMatchBox(currentFullBracketData.third_place, 'third_place', 0));
+                    }
+                } else {
+                    const data = currentFullBracketData[col.key];
+                    if (Array.isArray(data)) { 
+                        data.forEach((m, index) => {
+                            colEl.appendChild(createMatchBox(m, col.key, index));
+                        });
+                    } else if (data) { 
+                        colEl.appendChild(createMatchBox(data, col.key, 0));
+                    }
                 }
-
                 container.appendChild(colEl);
             });
         }
@@ -708,8 +725,9 @@
             rtdb.ref('tournament_status/syllabus').set(selected); alert("Đã khóa đề thi!");
         }
 
+        // BỐC THĂM MES CHAMPIONS LEAGUE
         async function executeBlindDraw() {
-            if(!confirm("Xác nhận bốc thăm giải đấu mới (FA Cup)? Nhánh đấu cũ sẽ bị xóa.")) return;
+            if(!confirm("Xác nhận bốc thăm giải đấu mới (MES Champions League)? Nhánh đấu cũ sẽ bị xóa.")) return;
             const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get();
             let candidates = [];
             snapshot.forEach(doc => { if(doc.data().role !== 'teacher') candidates.push(doc.data().displayName || "Ẩn danh"); });
@@ -727,7 +745,10 @@
             
             let qualified = candidates.slice(0, topCount).sort(() => Math.random() - 0.5);
             
-            let fullBracket = { final: { p1: null, p2: null, winner: null } };
+            let fullBracket = { 
+                final: { p1: null, p2: null, winner: null },
+                third_place: { p1: null, p2: null, winner: null } // Trận hạng 3 luôn chực chờ
+            };
 
             if (topCount === 16) {
                 fullBracket.r16l = [
@@ -758,9 +779,10 @@
 
             rtdb.ref('tournament_status/result').remove(); 
             rtdb.ref('tournament_status/full_bracket').set(fullBracket); 
-            alert(`Đã bốc thăm nhánh đấu (Dành cho Top ${topCount}) xong! Xin mời xem ở tab Xếp Hạng.`);
+            alert(`Đã bốc thăm MES Champions League (Top ${topCount}) xong! Xin mời xem ở tab Xếp Hạng.`);
         }
 
+        // TỔNG KẾT VÀ CHIA NHÁNH (THẮNG LÊN CHUNG KẾT, THUA XUỐNG HẠNG 3)
         async function advanceTournament() {
             if(!confirm("Tổng kết toàn bộ các trận đã kết thúc và xếp người thắng vào vòng trong?")) return;
             const snap = await rtdb.ref('tournament_status/full_bracket').once('value');
@@ -799,21 +821,39 @@
             if(fb.qfr) {
                 moveWinner(fb.qfr[0], 'sfr', 0, 'p1'); moveWinner(fb.qfr[1], 'sfr', 0, 'p2');
             }
-            if(fb.sfl) moveWinner(fb.sfl, 'final', 0, 'p1');
-            if(fb.sfr) moveWinner(fb.sfr, 'final', 0, 'p2');
+            
+            // Xử lý Bán Kết đẩy xuống Hạng 3 và Chung Kết
+            if(fb.sfl && fb.sfl.winner) {
+                moveWinner(fb.sfl, 'final', 0, 'p1');
+                let loser1 = fb.sfl.winner === fb.sfl.p1 ? fb.sfl.p2 : fb.sfl.p1;
+                if (fb.third_place.p1 !== loser1) { fb.third_place.p1 = loser1; updateNeeded = true; }
+            }
+            if(fb.sfr && fb.sfr.winner) {
+                moveWinner(fb.sfr, 'final', 0, 'p2');
+                let loser2 = fb.sfr.winner === fb.sfr.p1 ? fb.sfr.p2 : fb.sfr.p1;
+                if (fb.third_place.p2 !== loser2) { fb.third_place.p2 = loser2; updateNeeded = true; }
+            }
 
             if (updateNeeded) {
                 await rtdb.ref('tournament_status/full_bracket').set(fb);
-                alert("Đã tổng kết! Các sĩ tử chiến thắng đã được điền tên vào nhánh chờ tiếp theo.");
+                alert("Đã tổng kết! Các sĩ tử đã được điều động vào nhánh đấu tiếp theo.");
             } else {
                 alert("Chưa có trận nào mới kết thúc hoặc hệ thống đã cập nhật xong xuôi.");
             }
             
-            if(fb.final && fb.final.winner) {
+            // ĐIỀU KIỆN KẾT THÚC GIẢI: Khi cả Chung kết và Hạng 3 đều đã đánh xong
+            let isTournamentDone = false;
+            if (fb.final && fb.final.winner && fb.third_place && fb.third_place.winner) {
+                isTournamentDone = true;
+            }
+
+            if(isTournamentDone) {
                 let rank1 = fb.final.winner;
                 let rank2 = (fb.final.winner === fb.final.p1) ? fb.final.p2 : fb.final.p1;
-                rtdb.ref('tournament_status/result').set({ rank1: rank1, rank2: rank2, rank3: '---', rank4: '---', timestamp: Date.now() });
-                alert("🏆 GIẢI ĐẤU ĐÃ KẾT THÚC! Nhà vô địch đã được ghi danh lên Bảng Phong Thần.");
+                let rank3 = fb.third_place.winner;
+                let rank4 = (fb.third_place.winner === fb.third_place.p1) ? fb.third_place.p2 : fb.third_place.p1;
+                rtdb.ref('tournament_status/result').set({ rank1: rank1, rank2: rank2, rank3: rank3, rank4: rank4, timestamp: Date.now() });
+                // Không cần alert ở đây vì Bảng Phong Thần tự bật lên
             }
         }
 
@@ -932,7 +972,7 @@
                             let matchInfo = matchSnap.val();
                             if(matchInfo.stage && matchInfo.match_idx !== undefined) {
                                 let key = `tournament_status/full_bracket/${matchInfo.stage}`;
-                                if(matchInfo.stage !== 'final') { 
+                                if(matchInfo.stage !== 'final' && matchInfo.stage !== 'third_place') { 
                                     key += `/${matchInfo.match_idx}/winner`;
                                 } else { 
                                     key += `/winner`;
