@@ -84,12 +84,49 @@
         .syllabus-item { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #eee; font-weight: 500; transition: 0.3s;}
         .syllabus-item:last-child { border-bottom: none; }
         
+        /* BRACKET CSS */
         .bracket-board { 
             background: linear-gradient(135deg, #1a237e 0%, #311b92 100%); 
             border-radius: 15px; padding: 30px 15px; color: white; margin-bottom: 40px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; display: none; width: 100%; overflow-x: auto;
         }
         .bracket-board h2 { font-size: 24px; text-transform: uppercase; letter-spacing: 2px; }
+        .full-bracket { display: grid; gap: 10px; align-items: center; overflow-x: auto; padding: 10px; }
+        .bracket-column { display: flex; flex-direction: column; gap: 12px; height: 100%; justify-content: center; }
+        .match-box {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid #5c6bc0; border-radius: 8px; 
+            padding: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); backdrop-filter: blur(5px);
+            position: relative; min-width: 130px; 
+        }
+        .player-name.won { color: #00e676; font-weight: 900; }
+        .player-name.lost { opacity: 0.4; text-decoration: line-through; }
+        .player-name { 
+            padding: 6px 8px; font-weight: bold; font-size: 13px; border-bottom: 1px dashed rgba(255,255,255,0.2); 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; justify-content: space-between; align-items: center;
+        }
+        .player-name:last-child { border-bottom: none; }
+        .vs-text { 
+            font-size: 11px; color: #ffeb3b; font-style: italic; margin: 4px 0; font-weight: 900; 
+            background: rgba(0,0,0,0.3); display: inline-block; padding: 2px 8px; border-radius: 8px; 
+        }
+        .btn-fight { 
+            background: #ff5252; color: white; padding: 6px; border-radius: 4px; font-size: 11px; 
+            margin-top: 6px; cursor: pointer; width: 100%; font-weight: bold; border: none; display: none;
+        }
+        .btn-fight:hover { background: #d50000; }
+        .btn-schedule {
+            background: #ff9800; color: white; padding: 6px; border-radius: 4px; font-size: 11px; 
+            margin-top: 6px; cursor: pointer; width: 100%; font-weight: bold; border: none; display: none;
+        }
+        .btn-schedule:hover { background: #f57c00; }
+        .btn-join {
+            background: #00c853; color: white; padding: 8px; border-radius: 4px; font-size: 12px; 
+            margin-top: 6px; cursor: pointer; width: 100%; font-weight: bold; border: none; display: none;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 200, 83, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0, 200, 83, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 200, 83, 0); } }
+        .match-time { font-size: 10px; color: #ffd700; margin-top: 5px; font-weight: bold; }
+        .ready-badge { color: #00e676; font-size: 12px; font-weight: bold; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; padding: 15px; }
         .modal.active { display: flex; }
@@ -98,11 +135,11 @@
         .btn-close { background: #ccc; color: #333; padding: 8px 20px;}
         .name-modal-content { max-width: 400px; height: auto; text-align: center; padding: 30px; }
         
+        /* BATTLE ARENA */
         .battle-arena { background: linear-gradient(135deg, #111, #311b92); color: white; width: 100%; max-width: 800px; height: 90vh; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 50px rgba(0,0,0,0.8); border: 2px solid #5c6bc0;}
         .battle-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; background: rgba(0,0,0,0.5); border-bottom: 2px solid rgba(255,255,255,0.1); }
         .fighter { text-align: center; flex: 1; }
         .vs-badge { background: #d50000; padding: 10px 20px; border-radius: 30px; font-weight: 900; font-size: 20px; margin: 0 15px; }
-        
         .battle-body { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; position: relative; }
         .battle-question { font-size: 40px; font-weight: 900; color: #fff; text-align: center; margin-bottom: 40px; }
         .battle-options { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; max-width: 600px; }
@@ -119,7 +156,7 @@
         .reward-anim { position: fixed; bottom: 20px; right: 20px; background: #00c853; color: white; padding: 15px 25px; border-radius: 30px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 15px rgba(0,200,83,0.4); transform: translateY(100px); opacity: 0; transition: 0.5s; z-index: 9999;}
         .reward-anim.show { transform: translateY(0); opacity: 1; }
 
-        /* CHẾ ĐỘ TỐI (DARK MODE) */
+        /* DARK MODE */
         body.dark-mode { --bg-color: #121212; --text-main: #e0e0e0; }
         body.dark-mode .sidebar, body.dark-mode .top-stats-bar, body.dark-mode .lb-row, body.dark-mode .lib-card, body.dark-mode .shop-item, body.dark-mode .panel, body.dark-mode .settings-card, body.dark-mode .arena-panel, body.dark-mode .modal-content { background: #1e1e1e; border-color: #333; color: #e0e0e0; box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
         body.dark-mode .stat-box, body.dark-mode .nav-item:hover, body.dark-mode .nav-item.active { background: #333; }
@@ -132,7 +169,6 @@
         body.dark-mode .user-name { color: #9fa8da; }
         body.dark-mode .btn-close { background: #444; color: #fff; }
 
-        /* CSS MỚI CHO ĐIỆN THOẠI */
         @media (max-width: 768px) {
             .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
             .sidebar.show { transform: translateX(0); }
@@ -141,75 +177,11 @@
             .stats-wrapper { gap: 4px; }
             .stat-box { font-size: 12px; padding: 4px 6px; gap: 3px; }
             #themeToggleBtn { padding-left: 5px !important; font-size: 20px !important; }
-            
             .workspace { flex-direction: column; display: block;} .panel { min-height: 400px; margin-bottom: 20px;}
             .fighter { font-size: 16px; } .fighter span { font-size: 24px; }
             .battle-question { font-size: 30px; } .btn-ans { font-size: 16px; padding: 15px; }
             .battle-options { grid-template-columns: 1fr; }
         }
-
-        /* NEW CSS FOR BRACKET DYNAMIC - THU GỌN GIAO DIỆN */
-        .full-bracket {
-            display: grid;
-            gap: 10px; 
-            align-items: center;
-            overflow-x: auto;
-            padding: 10px;
-        }
-        .bracket-column {
-            display: flex;
-            flex-direction: column;
-            gap: 12px; 
-            height: 100%;
-            justify-content: center;
-        }
-        .match-box {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #5c6bc0; 
-            border-radius: 8px; 
-            padding: 8px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            backdrop-filter: blur(5px);
-            position: relative;
-            min-width: 130px; 
-        }
-        .player-name.won { color: #00e676; font-weight: 900; }
-        .player-name.lost { opacity: 0.4; text-decoration: line-through; }
-        .player-name { 
-            padding: 6px 8px; 
-            font-weight: bold; 
-            font-size: 13px; 
-            border-bottom: 1px dashed rgba(255,255,255,0.2); 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-        }
-        .player-name:last-child { border-bottom: none; }
-        .vs-text { 
-            font-size: 11px; 
-            color: #ffeb3b; 
-            font-style: italic; 
-            margin: 4px 0; 
-            font-weight: 900; 
-            background: rgba(0,0,0,0.3); 
-            display: inline-block; 
-            padding: 2px 8px; 
-            border-radius: 8px; 
-        }
-        .btn-fight { 
-            display:none; 
-            background: #ff5252; 
-            color: white; 
-            padding: 6px; 
-            border-radius: 4px; 
-            font-size: 11px; 
-            margin-top: 6px; 
-            cursor: pointer; 
-            width: 100%; 
-            font-weight: bold; 
-            border: none;
-        }
-        .btn-fight:hover { background: #d50000; }
     </style>
 </head>
 <body>
@@ -357,6 +329,16 @@
         </main>
     </div>
 
+    <div class="modal" id="scheduleModal">
+        <div class="modal-content name-modal-content">
+            <h3 style="color: var(--danger); margin-bottom: 15px; font-size: 22px;">⏰ Định Ngày Tỷ Võ</h3>
+            <p style="color: #555; margin-bottom: 20px;">Phòng thi sẽ mở đúng giờ và tự đóng sau 10 phút. Ai vắng mặt bị xử thua!</p>
+            <input type="datetime-local" id="scheduleInput" style="width: 100%; padding: 12px; border: 2px solid var(--secondary); border-radius: 8px; margin-bottom: 15px; font-size: 16px;">
+            <button class="btn-save" style="width: 100%; padding: 12px;" onclick="saveSchedule()">Lưu Lịch Thi Đấu</button>
+            <button class="btn-close" style="width: 100%; padding: 12px; margin-top: 10px;" onclick="document.getElementById('scheduleModal').classList.remove('active')">Hủy bỏ</button>
+        </div>
+    </div>
+
     <div class="modal" id="podiumModal">
         <div class="modal-content" style="max-width: 600px; text-align: center; background: linear-gradient(135deg, #1a237e 0%, #311b92 100%); color: white; padding: 30px; border: 4px solid #ffd700; height: auto; max-height: 90vh; overflow-y: auto;">
             <h2 style="color: #ffd700; font-size: 32px; margin-bottom: 20px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">🏆 BẢNG PHONG THẦN 🏆</h2>
@@ -375,7 +357,6 @@
                     <div style="font-size: 12px; color: #aaa; font-style: italic; text-align: right;">(Tuyên dương nỗ lực xuất sắc lọt vào Top 4 chung cuộc)</div>
                 </div>
             </div>
-            <p style="margin-top: 25px; color: #ffeb3b; font-style: italic; font-size: 14px;">* Lưu ý: Nhà vô địch, Á quân, Hạng 3 chung cuộc sẽ được nhận trọng thưởng từ Ban Tổ Chức!</p>
             <button class="btn-save" style="margin-top: 20px; font-size: 18px; padding: 12px 30px; width: 100%;" onclick="document.getElementById('podiumModal').classList.remove('active')">Đóng Lại</button>
         </div>
     </div>
@@ -386,7 +367,6 @@
             <p style="color: #555; margin-bottom: 20px;">Vui lòng nhập tên hiển thị thật:</p>
             <input type="text" id="displayNameInput" placeholder="Ví dụ: Nguyễn Văn A..." style="width: 100%; padding: 12px; border: 2px solid var(--secondary); border-radius: 8px; margin-bottom: 15px; font-size: 16px;">
             <button class="btn-save" style="width: 100%; padding: 12px;" onclick="saveDisplayName()">Lưu Tên Hiển Thị</button>
-            <button class="btn-close" style="width: 100%; padding: 12px; margin-top: 10px; display: none;" id="closeNameModalBtn" onclick="document.getElementById('nameModal').classList.remove('active')">Hủy bỏ</button>
         </div>
     </div>
 
@@ -467,102 +447,46 @@
             if (!auth) return;
             var ua = navigator.userAgent || navigator.vendor || window.opera;
             var isInApp = (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Zalo") > -1) || (ua.indexOf("Instagram") > -1) || (ua.indexOf("Messenger") > -1) || (ua.indexOf("Line") > -1);
-            
-            if (isInApp) {
-                alert("⚠️ THÔNG BÁO TỪ HỆ THỐNG:\n\nGoogle không cho phép đăng nhập bên trong Zalo/Messenger/Facebook để bảo vệ mật khẩu của bạn!\n\n👉 Vui lòng bấm vào biểu tượng [⋮] (3 chấm) hoặc nút CHIA SẺ ở góc màn hình, sau đó chọn 'MỞ BẰNG TRÌNH DUYỆT' (Safari / Chrome) để đăng nhập bình thường!");
-                return;
-            }
-
+            if (isInApp) { alert("⚠️ Mở bằng trình duyệt Safari/Chrome để đăng nhập!"); return; }
             var provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch(function(error) {
-                console.error("Lỗi đăng nhập:", error);
-                if (error.code === 'auth/web-storage-unsupported' || (error.message && error.message.includes("disallowed_useragent"))) {
-                    alert("⚠️ Lỗi bảo mật của trình duyệt! Xin hãy mở trang web này bằng trình duyệt Safari hoặc Chrome (nằm ngoài ứng dụng chat) để đăng nhập.");
-                }
-            });
+            auth.signInWithPopup(provider).catch(function(error) { console.error("Lỗi đăng nhập:", error); });
         }
 
         function loginWithEmail() {
             if (!auth) return;
-            const email = document.getElementById('loginEmail').value.trim();
-            const pass = document.getElementById('loginPass').value.trim();
-            
-            if (!email || !pass) {
-                return alert("Xin vui lòng nhập đầy đủ Tài khoản và Mật khẩu!");
-            }
-
+            const email = document.getElementById('loginEmail').value.trim(); const pass = document.getElementById('loginPass').value.trim();
+            if (!email || !pass) return alert("Xin vui lòng nhập đầy đủ Tài khoản và Mật khẩu!");
             auth.signInWithEmailAndPassword(email, pass).catch(function(error) {
-                if (error.message.includes("INVALID_LOGIN_CREDENTIALS") || error.code === 'auth/invalid-login-credentials' || error.code === 'auth/user-not-found') {
-                    if(confirm("Tài khoản chưa tồn tại hoặc sai mật khẩu!\n\nNếu muốn tạo tài khoản mới, bạn có muốn ĐĂNG KÝ luôn với thông tin này không?")) {
-                        auth.createUserWithEmailAndPassword(email, pass).catch(function(err) {
-                            if (err.code === 'auth/email-already-in-use') {
-                                alert("Tài khoản đã tồn tại. Có vẻ bạn nhập sai mật khẩu!");
-                            } else if (err.code === 'auth/weak-password') {
-                                alert("Mật khẩu phải có ít nhất 6 ký tự!");
-                            } else {
-                                alert("Lỗi đăng ký: " + err.message);
-                            }
-                        });
+                if (error.code === 'auth/invalid-login-credentials' || error.code === 'auth/user-not-found') {
+                    if(confirm("Tài khoản chưa tồn tại hoặc sai mật khẩu! Bạn có muốn ĐĂNG KÝ?")) {
+                        auth.createUserWithEmailAndPassword(email, pass).catch(err => alert("Lỗi đăng ký: " + err.message));
                     }
-                } else if (error.code === 'auth/invalid-email') {
-                    alert("Tài khoản không hợp lệ (phải có đuôi @vocab.com).");
-                } else {
-                    alert("Lỗi đăng nhập: " + error.message);
-                }
+                } else alert("Lỗi: " + error.message);
             });
         }
 
         if(auth) {
             auth.onAuthStateChanged(user => {
                 if (user) {
-                    currentUser = user;
-                    const todayStr = new Date().toLocaleDateString('en-GB'); 
+                    currentUser = user; const todayStr = new Date().toLocaleDateString('en-GB'); 
                     db.collection('vocab_users').doc(user.uid).get().then(doc => {
                         if (doc.exists) {
                             userData = doc.data();
-                            if(!userData.streak || userData.streak === 0) userData.streak = 1;
-                            if(!userData.lastLogin) userData.lastLogin = todayStr;
-                            
+                            if(!userData.streak) userData.streak = 1; if(!userData.lastLogin) userData.lastLogin = todayStr;
                             let lastParts = userData.lastLogin.split('/');
                             if (lastParts.length === 3) {
-                                let today = new Date();
-                                let lastDate = new Date(lastParts[2], lastParts[1] - 1, lastParts[0]);
-                                let todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                                let diffDays = Math.round((todayDate - lastDate) / (1000 * 60 * 60 * 24));
-                                
-                                if (diffDays === 1) {
-                                    userData.streak += 1;
-                                    userData.lastLogin = todayStr;
-                                    db.collection('vocab_users').doc(user.uid).update({ streak: userData.streak, lastLogin: todayStr });
-                                } else if (diffDays > 1) {
-                                    if (userData.hasShield) {
-                                        userData.hasShield = false;
-                                        userData.lastLogin = todayStr;
-                                        db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr, hasShield: false });
-                                        alert("🛡️ Bùa Bảo Hộ đã phát huy tác dụng! Chuỗi học tập của bạn được giữ nguyên.");
-                                    } else {
-                                        userData.streak = 1;
-                                        userData.lastLogin = todayStr;
-                                        db.collection('vocab_users').doc(user.uid).update({ streak: 1, lastLogin: todayStr });
-                                    }
-                                } else if (diffDays === 0 && userData.lastLogin !== todayStr) {
-                                    userData.lastLogin = todayStr;
-                                    db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr });
-                                }
-                            } else {
-                                userData.lastLogin = todayStr;
-                                db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr });
+                                let todayDate = new Date(); let lastDate = new Date(lastParts[2], lastParts[1] - 1, lastParts[0]);
+                                let diffDays = Math.round((new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate()) - lastDate) / 86400000);
+                                if (diffDays === 1) { userData.streak += 1; userData.lastLogin = todayStr; db.collection('vocab_users').doc(user.uid).update({ streak: userData.streak, lastLogin: todayStr }); } 
+                                else if (diffDays > 1) {
+                                    if (userData.hasShield) { userData.hasShield = false; userData.lastLogin = todayStr; db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr, hasShield: false }); alert("🛡️ Bùa Bảo Hộ đã cứu chuỗi ngày học!"); } 
+                                    else { userData.streak = 1; userData.lastLogin = todayStr; db.collection('vocab_users').doc(user.uid).update({ streak: 1, lastLogin: todayStr }); }
+                                } else if (diffDays === 0 && userData.lastLogin !== todayStr) { userData.lastLogin = todayStr; db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr }); }
                             }
-
                             updateUI();
-                        } else {
-                            userData.lastLogin = todayStr; 
-                            document.getElementById('nameModal').classList.add('active');
-                        }
+                        } else { userData.lastLogin = todayStr; document.getElementById('nameModal').classList.add('active'); }
                     });
-                } else {
-                    currentUser = null; userData = { role: 'student', gold: 0, xp: 0, streak: 0, displayName: 'Khách' }; updateUI();
-                }
+                } else { currentUser = null; userData = { role: 'student', gold: 0, xp: 0, streak: 0, displayName: 'Khách' }; updateUI(); }
             });
         }
 
@@ -570,27 +494,17 @@
             const name = document.getElementById('displayNameInput').value.trim();
             if (!name) return alert("Vui lòng không để trống tên!");
             userData.displayName = name; userData.email = currentUser.email;
-            db.collection('vocab_users').doc(currentUser.uid).set(userData, {merge: true}).then(() => {
-                document.getElementById('nameModal').classList.remove('active'); updateUI(); fetchLeaderboard();
-            });
+            db.collection('vocab_users').doc(currentUser.uid).set(userData, {merge: true}).then(() => { document.getElementById('nameModal').classList.remove('active'); updateUI(); fetchLeaderboard(); });
         }
 
         function syncStatsToCloud() {
-            if (currentUser && db) {
-                db.collection('vocab_users').doc(currentUser.uid).update({ 
-                    gold: userData.gold, xp: userData.xp, streak: userData.streak, 
-                    displayName: userData.displayName, magnifyingGlass: userData.magnifyingGlass || 0
-                }); 
-                updateUI();
-            }
+            if (currentUser && db) { db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, xp: userData.xp, streak: userData.streak, displayName: userData.displayName, magnifyingGlass: userData.magnifyingGlass || 0 }); updateUI(); }
         }
 
         function updateUI() {
             document.getElementById('ui-gold').innerText = userData.gold; document.getElementById('ui-xp').innerText = userData.xp;
-            document.getElementById('ui-streak').innerText = userData.streak; 
-            document.getElementById('sidebarName').innerText = userData.displayName || "Khách";
+            document.getElementById('ui-streak').innerText = userData.streak; document.getElementById('sidebarName').innerText = userData.displayName || "Khách";
             document.getElementById('ui-glass-count').innerText = userData.magnifyingGlass || 0;
-
             const badge = document.getElementById('sidebarRole');
             if(userData.role === 'teacher') {
                 badge.className = 'user-badge badge-teacher'; badge.innerText = '👨‍🏫 Giáo Viên';
@@ -602,58 +516,106 @@
             if (typeof renderBracket === 'function') renderBracket();
         }
 
+        /* --- PHẦN LÊN LỊCH & KIỂM TRA PHÒNG THI TỰ ĐỘNG --- */
+        let windowStageToSchedule = "";
+        let windowIndexToSchedule = 0;
+
+        function openScheduleModal(stageKey, matchIndex) {
+            windowStageToSchedule = stageKey; windowIndexToSchedule = matchIndex;
+            document.getElementById('scheduleModal').classList.add('active');
+        }
+
+        function saveSchedule() {
+            let val = document.getElementById('scheduleInput').value;
+            if(!val) return alert("Vui lòng chọn ngày giờ!");
+            let ts = new Date(val).getTime();
+            let key = `tournament_status/full_bracket/${windowStageToSchedule}`;
+            if(windowStageToSchedule !== 'sfl' && windowStageToSchedule !== 'sfr' && windowStageToSchedule !== 'final' && windowStageToSchedule !== 'third_place') {
+                key += `/${windowIndexToSchedule}`;
+            }
+            rtdb.ref(key).update({ schedule: ts }).then(() => {
+                alert("Đã khóa lịch thi đấu! Phòng thi sẽ tự mở đúng giờ.");
+                document.getElementById('scheduleModal').classList.remove('active');
+            });
+        }
+
+        function joinMatch(stageKey, matchIndex, playerSlot) {
+            let key = `tournament_status/full_bracket/${stageKey}`;
+            if(stageKey !== 'sfl' && stageKey !== 'sfr' && stageKey !== 'final' && stageKey !== 'third_place') { key += `/${matchIndex}`; }
+            let updateData = {}; updateData[playerSlot + "_ready"] = true;
+            rtdb.ref(key).update(updateData);
+        }
+
+        // Kiểm tra xử thua tự động (Chỉ chạy trên máy Admin)
+        setInterval(() => {
+            if(!currentFullBracketData || userData.role !== 'teacher') return;
+            let now = Date.now();
+            let updates = {}; let needsUpdate = false;
+
+            function checkWalkover(m, stage, idx) {
+                if(m && m.p1 && m.p2 && m.p1 !== "---" && m.p2 !== "---" && !m.winner && m.schedule) {
+                    let diff = m.schedule - now;
+                    if(diff <= -600000) { // Quá 10 phút
+                        let winner = "";
+                        if(m.p1_ready && !m.p2_ready) winner = m.p1;
+                        else if(!m.p1_ready && m.p2_ready) winner = m.p2;
+                        else if(!m.p1_ready && !m.p2_ready) winner = Math.random() > 0.5 ? m.p1 : m.p2;
+                        
+                        if(winner !== "") {
+                            let k = (stage === 'sfl' || stage === 'sfr' || stage === 'final' || stage === 'third_place') 
+                                ? `tournament_status/full_bracket/${stage}/winner` 
+                                : `tournament_status/full_bracket/${stage}/${idx}/winner`;
+                            updates[k] = winner; needsUpdate = true;
+                        }
+                    }
+                }
+            }
+
+            if(currentFullBracketData.r16l) currentFullBracketData.r16l.forEach((m, i) => checkWalkover(m, 'r16l', i));
+            if(currentFullBracketData.r16r) currentFullBracketData.r16r.forEach((m, i) => checkWalkover(m, 'r16r', i));
+            if(currentFullBracketData.qfl) currentFullBracketData.qfl.forEach((m, i) => checkWalkover(m, 'qfl', i));
+            if(currentFullBracketData.qfr) currentFullBracketData.qfr.forEach((m, i) => checkWalkover(m, 'qfr', i));
+            checkWalkover(currentFullBracketData.sfl, 'sfl', 0); checkWalkover(currentFullBracketData.sfr, 'sfr', 0);
+            checkWalkover(currentFullBracketData.final, 'final', 0); checkWalkover(currentFullBracketData.third_place, 'third_place', 0);
+
+            if(needsUpdate) { rtdb.ref().update(updates); }
+        }, 5000); // 5s quét 1 lần
+
+        // Giao diện Sơ Đồ
         function renderBracket() {
             if (!currentFullBracketData) return;
             document.getElementById('bracketBoard').style.display = 'block';
             document.getElementById('bracketStatus').innerText = `GIAI ĐOẠN: Sơ đồ Knock-out | Trạng thái: Đang diễn ra`;
-            
-            const container = document.getElementById('bracketMatches');
-            container.innerHTML = ''; 
+            const container = document.getElementById('bracketMatches'); container.innerHTML = ''; 
 
             const columns = [];
             if (currentFullBracketData.r16l) columns.push({ title: 'Vòng 1/8', key: 'r16l' });
             if (currentFullBracketData.qfl) columns.push({ title: 'Tứ Kết', key: 'qfl' });
             if (currentFullBracketData.sfl) columns.push({ title: 'Bán Kết', key: 'sfl' });
-            
             columns.push({ title: 'CHUNG KẾT & HẠNG 3', key: 'center_col' });
-            
             if (currentFullBracketData.sfr) columns.push({ title: 'Bán Kết', key: 'sfr' });
             if (currentFullBracketData.qfr) columns.push({ title: 'Tứ Kết', key: 'qfr' });
             if (currentFullBracketData.r16r) columns.push({ title: 'Vòng 1/8', key: 'r16r' });
 
-            container.style.gridTemplateColumns = `repeat(${columns.length}, minmax(120px, 1fr))`;
+            container.style.gridTemplateColumns = `repeat(${columns.length}, minmax(130px, 1fr))`;
 
             columns.forEach(col => {
-                const colEl = document.createElement('div');
-                colEl.className = 'bracket-column';
-
-                const colTitle = document.createElement('div');
-                colTitle.style.cssText = 'font-size: 12px; font-weight: bold; color: #ffd700; text-align: center; margin-bottom: 10px;';
-                colTitle.innerText = col.title;
-                colEl.appendChild(colTitle);
+                const colEl = document.createElement('div'); colEl.className = 'bracket-column';
+                const colTitle = document.createElement('div'); colTitle.style.cssText = 'font-size: 12px; font-weight: bold; color: #ffd700; text-align: center; margin-bottom: 10px;'; colTitle.innerText = col.title; colEl.appendChild(colTitle);
 
                 if (col.key === 'center_col') {
                     if (currentFullBracketData.final) {
-                        let fLabel = document.createElement('div');
-                        fLabel.innerHTML = '<div style="font-size:11px; color:#ffd700; margin-bottom:5px; font-weight:bold;">🥇 CHUNG KẾT</div>';
-                        colEl.appendChild(fLabel);
+                        let fLabel = document.createElement('div'); fLabel.innerHTML = '<div style="font-size:11px; color:#ffd700; margin-bottom:5px; font-weight:bold;">🥇 CHUNG KẾT</div>'; colEl.appendChild(fLabel);
                         colEl.appendChild(createMatchBox(currentFullBracketData.final, 'final', 0));
                     }
                     if (currentFullBracketData.third_place && (currentFullBracketData.sfl || currentFullBracketData.sfr)) { 
-                        let tLabel = document.createElement('div');
-                        tLabel.innerHTML = '<div style="font-size:11px; color:#cd7f32; margin-top:20px; margin-bottom:5px; font-weight:bold;">🥉 TRANH HẠNG 3</div>';
-                        colEl.appendChild(tLabel);
+                        let tLabel = document.createElement('div'); tLabel.innerHTML = '<div style="font-size:11px; color:#cd7f32; margin-top:20px; margin-bottom:5px; font-weight:bold;">🥉 TRANH HẠNG 3</div>'; colEl.appendChild(tLabel);
                         colEl.appendChild(createMatchBox(currentFullBracketData.third_place, 'third_place', 0));
                     }
                 } else {
                     const data = currentFullBracketData[col.key];
-                    if (Array.isArray(data)) { 
-                        data.forEach((m, index) => {
-                            colEl.appendChild(createMatchBox(m, col.key, index));
-                        });
-                    } else if (data) { 
-                        colEl.appendChild(createMatchBox(data, col.key, 0));
-                    }
+                    if (Array.isArray(data)) { data.forEach((m, index) => { colEl.appendChild(createMatchBox(m, col.key, index)); }); } 
+                    else if (data) { colEl.appendChild(createMatchBox(data, col.key, 0)); }
                 }
                 container.appendChild(colEl);
             });
@@ -661,33 +623,73 @@
 
         function createMatchBox(m, stageKey, matchIndex) {
             const isFinished = !!m.winner;
-            let fightBtn = (userData.role === 'teacher' && m.p1 && m.p2 && m.p1 !== "---" && m.p2 !== "---" && !isFinished) ? `<button class="btn-fight" style="display:block;" onclick="adminStartPvP('${stageKey}', ${matchIndex})">⚔️ KHAI CHIẾN</button>` : '';
-            
-            let p1Name = m.p1 || '---';
-            let p2Name = m.p2 || '---';
-            let p1Class = '';
-            let p2Class = '';
-            let p1Star = '';
-            let p2Star = '';
+            let p1Name = m.p1 || '---'; let p2Name = m.p2 || '---';
+            let p1Class = ''; let p2Class = ''; let p1Star = ''; let p2Star = '';
             
             if (isFinished) {
-                if (m.winner === m.p1) {
-                    p1Class = 'won'; p2Class = 'lost'; p1Star = ' ⭐';
-                } else if (m.winner === m.p2) {
-                    p2Class = 'won'; p1Class = 'lost'; p2Star = ' ⭐';
+                if (m.winner === m.p1) { p1Class = 'won'; p2Class = 'lost'; p1Star = ' ⭐'; } 
+                else if (m.winner === m.p2) { p2Class = 'won'; p1Class = 'lost'; p2Star = ' ⭐'; }
+            }
+
+            // Xử lý Giao diện Hẹn giờ & Nút
+            let timeInfo = ''; let btnAction = '';
+            let validMatch = m.p1 && m.p2 && m.p1 !== "---" && m.p2 !== "---" && !isFinished;
+            
+            if(validMatch) {
+                let now = Date.now();
+                if(m.schedule) {
+                    let diff = m.schedule - now;
+                    if(diff > 0) { // Tương lai
+                        let d = new Date(m.schedule);
+                        timeInfo = `<div class="match-time">🕒 Lịch: ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')} ${d.getDate()}/${d.getMonth()+1}</div>`;
+                    } else if (diff <= 0 && diff > -600000) { // Đang mở (10 phút)
+                        let minsLeft = Math.floor((600000 + diff)/60000) + 1;
+                        timeInfo = `<div class="match-time" style="color:#00e676; animation: pulse 1s infinite;">🟢 ĐANG MỞ (Còn ${minsLeft}p)</div>`;
+                        
+                        // Nếu là học sinh có tên trong trận
+                        let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
+                        if(isP1 && !m.p1_ready) btnAction = `<button class="btn-join" style="display:block;" onclick="joinMatch('${stageKey}', ${matchIndex}, 'p1')">🚪 VÀO PHÒNG P1</button>`;
+                        if(isP2 && !m.p2_ready) btnAction = `<button class="btn-join" style="display:block;" onclick="joinMatch('${stageKey}', ${matchIndex}, 'p2')">🚪 VÀO PHÒNG P2</button>`;
+                        
+                        // Kích hoạt trận đấu tự động nếu cả 2 đã ready
+                        if(m.p1_ready && m.p2_ready) {
+                            timeInfo = `<div class="match-time" style="color:#ff5252;">⚔️ ĐANG TỶ VÕ...</div>`;
+                            // Để tránh gọi nhiều lần, chỉ 1 máy gọi adminStartPvP. Máy admin ưu tiên, nếu không có máy p2 gọi
+                            if(userData.role === 'teacher' || isP2) {
+                                rtdb.ref('active_pvp_match').once('value').then(s => {
+                                    if(!s.val() || s.val().stage !== stageKey || s.val().status === 'finished') {
+                                        adminStartPvP(stageKey, matchIndex, m.p1, m.p2);
+                                    }
+                                });
+                            }
+                        }
+                    } else { // Quá giờ mà chưa xử lý xong
+                        timeInfo = `<div class="match-time" style="color:#ff5252;">⏳ Đang chờ phán quyết...</div>`;
+                    }
+                }
+                
+                // Quyền Admin luôn thấy nút Định giờ và Khai chiến ép buộc
+                if (userData.role === 'teacher') {
+                    btnAction += `<button class="btn-schedule" style="display:block;" onclick="openScheduleModal('${stageKey}', ${matchIndex})">⏰ LÊN LỊCH</button>`;
+                    btnAction += `<button class="btn-fight" style="display:block;" onclick="adminStartPvP('${stageKey}', ${matchIndex}, '${m.p1}', '${m.p2}')">⚔️ ÉP KHAI CHIẾN</button>`;
                 }
             }
 
-            const matchEl = document.createElement('div');
-            matchEl.className = 'bracket-match';
+            let p1Badge = m.p1_ready && !isFinished ? `<span class="ready-badge">✅</span>` : '';
+            let p2Badge = m.p2_ready && !isFinished ? `<span class="ready-badge">✅</span>` : '';
+
+            const matchEl = document.createElement('div'); matchEl.className = 'bracket-match';
             matchEl.innerHTML = `
-                <div class="player-name ${p1Class}">${p1Name}${p1Star}</div>
+                <div class="player-name ${p1Class}"><span>${p1Name}${p1Star}</span> ${p1Badge}</div>
                 <div class="vs-text">VS</div>
-                <div class="player-name ${p2Class}">${p2Name}${p2Star}</div>
-                ${fightBtn}
+                <div class="player-name ${p2Class}"><span>${p2Name}${p2Star}</span> ${p2Badge}</div>
+                ${timeInfo}
+                ${btnAction}
             `;
             return matchEl;
         }
+
+        setInterval(renderBracket, 10000); // Tự làm mới giao diện đếm lùi 10s/lần
 
         async function fetchLeaderboard() {
             if(!db) return;
@@ -699,19 +701,8 @@
                     const data = doc.data();
                     if (data.role !== 'teacher') {
                         let isMaskActive = data.maskExpiry && data.maskExpiry > Date.now();
-                        
-                        let dName = data.displayName || 'Ẩn danh';
-                        let dXp = data.xp;
-
-                        if (isMaskActive) {
-                            if (userData.role === 'teacher') {
-                                dName = dName + " 🎭(Ẩn)";
-                            } else {
-                                dName = "???";
-                                dXp = "???";
-                            }
-                        }
-                        
+                        let dName = data.displayName || 'Ẩn danh'; let dXp = data.xp;
+                        if (isMaskActive) { if (userData.role === 'teacher') dName = dName + " 🎭(Ẩn)"; else { dName = "???"; dXp = "???"; } }
                         let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '.';
                         let rankClass = rank <= 3 ? `lb-rank-${rank}` : '';
                         html += `<div class="lb-row ${rankClass}"><span>${medal} ${dName}</span><span style="color:var(--secondary)">⭐ ${dXp} XP</span></div>`;
@@ -725,244 +716,125 @@
         const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing';
         let allLessonsData = [];
         async function fetchFromSheets() {
-            const container = document.getElementById('libraryContainer');
-            const syllabusDiv = document.getElementById('syllabusChecklist');
-            if (!container) return;
+            const container = document.getElementById('libraryContainer'); const syllabusDiv = document.getElementById('syllabusChecklist'); if (!container) return;
             let sheetId = SHEET_LINK.includes('/d/') ? SHEET_LINK.split('/d/')[1].split('/')[0] : SHEET_LINK;
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&t=${new Date().getTime()}`;
             try {
-                const response = await fetch(url);
-                const text = await response.text();
-                const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-                const data = JSON.parse(jsonString);
+                const response = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&t=${new Date().getTime()}`); const text = await response.text();
+                const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1); const data = JSON.parse(jsonString);
                 let htmlLib = ''; let htmlArena = ''; allLessonsData = [];
                 for (let i = 1; i < data.table.rows.length; i++) {
                     const r = data.table.rows[i];
                     if (r && r.c && r.c[0] && r.c[1] && r.c[1].v) {
-                        const lessonName = r.c[0].v;
-                        const rawHTML = r.c[1].v;
-                        let vocabMatch = rawHTML.match(/const vocabList = \[(.*?)\];/s);
-                        let currentVocab = [];
+                        const lessonName = r.c[0].v; const rawHTML = r.c[1].v;
+                        let vocabMatch = rawHTML.match(/const vocabList = \[(.*?)\];/s); let currentVocab = [];
                         if (vocabMatch) { try { currentVocab = eval("[" + vocabMatch[1] + "]"); } catch(e){} }
                         allLessonsData.push({ name: lessonName, vocab: currentVocab, raw: rawHTML });
-                        
                         htmlLib += `<div class="lib-card"><h3>${lessonName}</h3><p style="font-size:11px;">${currentVocab.length} từ</p><button class="btn-run" style="margin-top:10px;" onclick="viewCard('${btoa(unescape(encodeURIComponent(rawHTML)))}')">▶ VÀO HỌC</button></div>`;
                         htmlArena += `<label class="syllabus-item"><input type="checkbox" name="syllabusCheck" value="${lessonName}"> <span>${lessonName} (${currentVocab.length} từ)</span></label>`;
                     }
                 }
                 container.innerHTML = htmlLib; if(syllabusDiv) syllabusDiv.innerHTML = htmlArena;
-            } catch(e) { console.error("Lỗi tải Sheets:", e); }
+            } catch(e) {}
         }
 
-        function viewCard(base64) {
-            document.getElementById('modalFrame').srcdoc = decodeURIComponent(escape(atob(base64)));
-            document.getElementById('previewModal').classList.add('active');
-        }
-        function closeModal() {
-            document.getElementById('previewModal').classList.remove('active');
-            document.getElementById('modalFrame').srcdoc = '';
-        }
-
+        function viewCard(base64) { document.getElementById('modalFrame').srcdoc = decodeURIComponent(escape(atob(base64))); document.getElementById('previewModal').classList.add('active'); }
+        function closeModal() { document.getElementById('previewModal').classList.remove('active'); document.getElementById('modalFrame').srcdoc = ''; }
         function saveSyllabusSelection() {
-            const checks = document.querySelectorAll('input[name="syllabusCheck"]:checked');
-            let selected = []; checks.forEach(c => selected.push(c.value));
-            rtdb.ref('tournament_status/syllabus').set(selected); alert("Đã khóa đề thi!");
+            const checks = document.querySelectorAll('input[name="syllabusCheck"]:checked'); let selected = []; checks.forEach(c => selected.push(c.value)); rtdb.ref('tournament_status/syllabus').set(selected); alert("Đã khóa đề thi!");
         }
 
-        // BỐC THĂM LẠI BẰNG KÝ TỰ "---" ĐỂ FIREBASE KHÔNG XÓA
         async function executeBlindDraw() {
             if(!confirm("Xác nhận bốc thăm giải đấu mới (MES Champions League)? Nhánh đấu cũ sẽ bị xóa.")) return;
-            const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get();
-            let candidates = [];
+            const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get(); let candidates = [];
             snapshot.forEach(doc => { if(doc.data().role !== 'teacher') candidates.push(doc.data().displayName || "Ẩn danh"); });
-            
             let topCount = 4;
-            if (candidates.length >= 24) {
-                topCount = 16; 
-            } else if (candidates.length >= 16) {
-                topCount = 8; 
-            } else if (candidates.length >= 4) {
-                topCount = 4; 
-            } else {
-                return alert("Bẩm bệ hạ, phải có ít nhất 4 sĩ tử mới đủ mở giải đấu!");
-            }
+            if (candidates.length >= 24) topCount = 16; else if (candidates.length >= 16) topCount = 8; else if (candidates.length >= 4) topCount = 4; 
+            else return alert("Bẩm bệ hạ, phải có ít nhất 4 sĩ tử mới đủ mở giải đấu!");
             
             let qualified = candidates.slice(0, topCount).sort(() => Math.random() - 0.5);
-            
-            let fullBracket = { 
-                final: { p1: "---", p2: "---", winner: "" },
-                third_place: { p1: "---", p2: "---", winner: "" } 
-            };
+            let fullBracket = { final: { p1: "---", p2: "---", winner: "" }, third_place: { p1: "---", p2: "---", winner: "" } };
 
             if (topCount === 16) {
-                fullBracket.r16l = [
-                    { p1: qualified[0], p2: qualified[1], winner: "" }, { p1: qualified[2], p2: qualified[3], winner: "" },
-                    { p1: qualified[4], p2: qualified[5], winner: "" }, { p1: qualified[6], p2: qualified[7], winner: "" }
-                ];
-                fullBracket.qfl = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }];
-                fullBracket.sfl = { p1: "---", p2: "---", winner: "" };
-                fullBracket.sfr = { p1: "---", p2: "---", winner: "" };
-                fullBracket.qfr = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }];
-                fullBracket.r16r = [
-                    { p1: qualified[8], p2: qualified[9], winner: "" }, { p1: qualified[10], p2: qualified[11], winner: "" },
-                    { p1: qualified[12], p2: qualified[13], winner: "" }, { p1: qualified[14], p2: qualified[15], winner: "" }
-                ];
+                fullBracket.r16l = [{ p1: qualified[0], p2: qualified[1], winner: "" }, { p1: qualified[2], p2: qualified[3], winner: "" }, { p1: qualified[4], p2: qualified[5], winner: "" }, { p1: qualified[6], p2: qualified[7], winner: "" }];
+                fullBracket.qfl = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; fullBracket.sfl = { p1: "---", p2: "---", winner: "" }; fullBracket.sfr = { p1: "---", p2: "---", winner: "" }; fullBracket.qfr = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }];
+                fullBracket.r16r = [{ p1: qualified[8], p2: qualified[9], winner: "" }, { p1: qualified[10], p2: qualified[11], winner: "" }, { p1: qualified[12], p2: qualified[13], winner: "" }, { p1: qualified[14], p2: qualified[15], winner: "" }];
             } else if (topCount === 8) {
-                fullBracket.qfl = [
-                    { p1: qualified[0], p2: qualified[1], winner: "" }, { p1: qualified[2], p2: qualified[3], winner: "" }
-                ];
-                fullBracket.sfl = { p1: "---", p2: "---", winner: "" };
-                fullBracket.sfr = { p1: "---", p2: "---", winner: "" };
-                fullBracket.qfr = [
-                    { p1: qualified[4], p2: qualified[5], winner: "" }, { p1: qualified[6], p2: qualified[7], winner: "" }
-                ];
+                fullBracket.qfl = [{ p1: qualified[0], p2: qualified[1], winner: "" }, { p1: qualified[2], p2: qualified[3], winner: "" }];
+                fullBracket.sfl = { p1: "---", p2: "---", winner: "" }; fullBracket.sfr = { p1: "---", p2: "---", winner: "" };
+                fullBracket.qfr = [{ p1: qualified[4], p2: qualified[5], winner: "" }, { p1: qualified[6], p2: qualified[7], winner: "" }];
             } else if (topCount === 4) {
-                fullBracket.sfl = { p1: qualified[0], p2: qualified[1], winner: "" };
-                fullBracket.sfr = { p1: qualified[2], p2: qualified[3], winner: "" };
+                fullBracket.sfl = { p1: qualified[0], p2: qualified[1], winner: "" }; fullBracket.sfr = { p1: qualified[2], p2: qualified[3], winner: "" };
             }
 
-            rtdb.ref('tournament_status/result').remove(); 
-            rtdb.ref('tournament_status/full_bracket').set(fullBracket); 
-            alert(`Đã bốc thăm MES Champions League (Top ${topCount}) xong! Xin mời xem ở tab Xếp Hạng.`);
+            rtdb.ref('tournament_status/result').remove(); rtdb.ref('tournament_status/full_bracket').set(fullBracket); alert(`Đã bốc thăm MES Champions League xong!`);
         }
 
         async function advanceTournament() {
             if(!confirm("Tổng kết toàn bộ các trận đã kết thúc và xếp người thắng vào vòng trong?")) return;
-            const snap = await rtdb.ref('tournament_status/full_bracket').once('value');
-            let fb = snap.val();
-            if(!fb) return alert("Chưa có sơ đồ giải đấu!");
+            const snap = await rtdb.ref('tournament_status/full_bracket').once('value'); let fb = snap.val(); if(!fb) return alert("Chưa có sơ đồ giải đấu!");
 
             let updateNeeded = false;
-
-            // BÙ ĐẮP DỮ LIỆU NẾU BỊ FIREBASE XÓA NHẦM (FIX LỖI MẤT CỘT)
-            if (!fb.final) fb.final = { p1: "---", p2: "---", winner: "" };
-            if (!fb.third_place) fb.third_place = { p1: "---", p2: "---", winner: "" };
+            if (!fb.final) fb.final = { p1: "---", p2: "---", winner: "" }; if (!fb.third_place) fb.third_place = { p1: "---", p2: "---", winner: "" };
             if (fb.r16l && !fb.qfl) fb.qfl = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }];
             if (fb.r16r && !fb.qfr) fb.qfr = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }];
-            if (fb.qfl && !fb.sfl) fb.sfl = { p1: "---", p2: "---", winner: "" };
-            if (fb.qfr && !fb.sfr) fb.sfr = { p1: "---", p2: "---", winner: "" };
+            if (fb.qfl && !fb.sfl) fb.sfl = { p1: "---", p2: "---", winner: "" }; if (fb.qfr && !fb.sfr) fb.sfr = { p1: "---", p2: "---", winner: "" };
 
             function moveWinner(sourceMatch, targetStage, targetIdx, targetPlayerSlot) {
                 if (sourceMatch && sourceMatch.winner && sourceMatch.winner !== "" && fb[targetStage]) {
                     if (Array.isArray(fb[targetStage])) {
-                        if (fb[targetStage][targetIdx][targetPlayerSlot] !== sourceMatch.winner) {
-                            fb[targetStage][targetIdx][targetPlayerSlot] = sourceMatch.winner;
-                            updateNeeded = true;
-                        }
+                        if (fb[targetStage][targetIdx][targetPlayerSlot] !== sourceMatch.winner) { fb[targetStage][targetIdx][targetPlayerSlot] = sourceMatch.winner; updateNeeded = true; }
                     } else { 
-                        if (fb[targetStage][targetPlayerSlot] !== sourceMatch.winner) {
-                            fb[targetStage][targetPlayerSlot] = sourceMatch.winner;
-                            updateNeeded = true;
-                        }
+                        if (fb[targetStage][targetPlayerSlot] !== sourceMatch.winner) { fb[targetStage][targetPlayerSlot] = sourceMatch.winner; updateNeeded = true; }
                     }
                 }
             }
 
-            if(fb.r16l) {
-                moveWinner(fb.r16l[0], 'qfl', 0, 'p1'); moveWinner(fb.r16l[1], 'qfl', 0, 'p2');
-                moveWinner(fb.r16l[2], 'qfl', 1, 'p1'); moveWinner(fb.r16l[3], 'qfl', 1, 'p2');
-            }
-            if(fb.r16r) {
-                moveWinner(fb.r16r[0], 'qfr', 0, 'p1'); moveWinner(fb.r16r[1], 'qfr', 0, 'p2');
-                moveWinner(fb.r16r[2], 'qfr', 1, 'p1'); moveWinner(fb.r16r[3], 'qfr', 1, 'p2');
-            }
-            if(fb.qfl) {
-                moveWinner(fb.qfl[0], 'sfl', 0, 'p1'); moveWinner(fb.qfl[1], 'sfl', 0, 'p2');
-            }
-            if(fb.qfr) {
-                moveWinner(fb.qfr[0], 'sfr', 0, 'p1'); moveWinner(fb.qfr[1], 'sfr', 0, 'p2');
-            }
+            if(fb.r16l) { moveWinner(fb.r16l[0], 'qfl', 0, 'p1'); moveWinner(fb.r16l[1], 'qfl', 0, 'p2'); moveWinner(fb.r16l[2], 'qfl', 1, 'p1'); moveWinner(fb.r16l[3], 'qfl', 1, 'p2'); }
+            if(fb.r16r) { moveWinner(fb.r16r[0], 'qfr', 0, 'p1'); moveWinner(fb.r16r[1], 'qfr', 0, 'p2'); moveWinner(fb.r16r[2], 'qfr', 1, 'p1'); moveWinner(fb.r16r[3], 'qfr', 1, 'p2'); }
+            if(fb.qfl) { moveWinner(fb.qfl[0], 'sfl', 0, 'p1'); moveWinner(fb.qfl[1], 'sfl', 0, 'p2'); }
+            if(fb.qfr) { moveWinner(fb.qfr[0], 'sfr', 0, 'p1'); moveWinner(fb.qfr[1], 'sfr', 0, 'p2'); }
             
             if(fb.sfl && fb.sfl.winner && fb.sfl.winner !== "") {
-                moveWinner(fb.sfl, 'final', 0, 'p1');
-                let loser1 = fb.sfl.winner === fb.sfl.p1 ? fb.sfl.p2 : fb.sfl.p1;
+                moveWinner(fb.sfl, 'final', 0, 'p1'); let loser1 = fb.sfl.winner === fb.sfl.p1 ? fb.sfl.p2 : fb.sfl.p1;
                 if (fb.third_place.p1 !== loser1) { fb.third_place.p1 = loser1; updateNeeded = true; }
             }
             if(fb.sfr && fb.sfr.winner && fb.sfr.winner !== "") {
-                moveWinner(fb.sfr, 'final', 0, 'p2');
-                let loser2 = fb.sfr.winner === fb.sfr.p1 ? fb.sfr.p2 : fb.sfr.p1;
+                moveWinner(fb.sfr, 'final', 0, 'p2'); let loser2 = fb.sfr.winner === fb.sfr.p1 ? fb.sfr.p2 : fb.sfr.p1;
                 if (fb.third_place.p2 !== loser2) { fb.third_place.p2 = loser2; updateNeeded = true; }
             }
 
-            if (updateNeeded) {
-                await rtdb.ref('tournament_status/full_bracket').set(fb);
-                alert("Đã tổng kết! Các sĩ tử đã được điều động vào nhánh đấu tiếp theo.");
-            } else {
-                alert("Chưa có trận nào mới kết thúc hoặc hệ thống đã cập nhật xong xuôi.");
-            }
+            if (updateNeeded) { await rtdb.ref('tournament_status/full_bracket').set(fb); alert("Đã tổng kết và đưa thí sinh vào nhánh mới!"); } 
+            else { alert("Không có trận nào mới hoặc hệ thống đã cập nhật xong."); }
             
-            let isTournamentDone = false;
-            if (fb.final && fb.final.winner && fb.final.winner !== "" && 
-                fb.third_place && fb.third_place.winner && fb.third_place.winner !== "") {
-                isTournamentDone = true;
-            }
-
-            if(isTournamentDone) {
-                let rank1 = fb.final.winner;
-                let rank2 = (fb.final.winner === fb.final.p1) ? fb.final.p2 : fb.final.p1;
-                let rank3 = fb.third_place.winner;
-                let rank4 = (fb.third_place.winner === fb.third_place.p1) ? fb.third_place.p2 : fb.third_place.p1;
-                rtdb.ref('tournament_status/result').set({ rank1: rank1, rank2: rank2, rank3: rank3, rank4: rank4, timestamp: Date.now() });
+            if (fb.final && fb.final.winner && fb.final.winner !== "" && fb.third_place && fb.third_place.winner && fb.third_place.winner !== "") {
+                rtdb.ref('tournament_status/result').set({ rank1: fb.final.winner, rank2: (fb.final.winner === fb.final.p1) ? fb.final.p2 : fb.final.p1, rank3: fb.third_place.winner, rank4: (fb.third_place.winner === fb.third_place.p1) ? fb.third_place.p2 : fb.third_place.p1, timestamp: Date.now() });
             }
         }
 
-        async function adminStartPvP(stageKey, matchIndex) {
-            const m = currentFullBracketData[stageKey];
-            let match;
-            if (Array.isArray(m)) { match = m[matchIndex]; } else { match = m; }
-            
-            const p1 = match.p1;
-            const p2 = match.p2;
-
-            if(!confirm(`Ép trận đấu (30 Câu - 15s/câu) giữa ${p1} và ${p2}?`)) return;
-
-            const syllabusSnap = await rtdb.ref('tournament_status/syllabus').once('value');
-            const selectedLessons = syllabusSnap.val();
+        async function adminStartPvP(stageKey, matchIndex, p1Name, p2Name) {
+            const syllabusSnap = await rtdb.ref('tournament_status/syllabus').once('value'); const selectedLessons = syllabusSnap.val();
             if(!selectedLessons || selectedLessons.length === 0) return alert("Chưa có giáo trình nào được chọn!");
-
-            let allVocab = [];
-            selectedLessons.forEach(lessonName => {
-                let lesson = allLessonsData.find(l => l.name === lessonName);
-                if(lesson) allVocab = allVocab.concat(lesson.vocab);
-            });
+            let allVocab = []; selectedLessons.forEach(ln => { let lesson = allLessonsData.find(l => l.name === ln); if(lesson) allVocab = allVocab.concat(lesson.vocab); });
             if(allVocab.length < 30) return alert(`Bộ đề chỉ có ${allVocab.length} từ, không đủ 30 câu!`);
+            
             allVocab.sort(() => Math.random() - 0.5);
             let pvpQuestionBank = allVocab.slice(0, 30).map(v => {
                 let wrong = allVocab.filter(x => x.vi !== v.vi).sort(() => Math.random() - 0.5).slice(0, 3);
-                let opts = [v.vi, ...wrong.map(w => w.vi)].sort(() => Math.random() - 0.5);
-                return { en: v.en, vi: v.vi, opts: opts };
+                let opts = [v.vi, ...wrong.map(w => w.vi)].sort(() => Math.random() - 0.5); return { en: v.en, vi: v.vi, opts: opts };
             });
 
-            rtdb.ref('active_pvp_match').set({
-                stage: stageKey, match_idx: matchIndex,
-                p1: p1, p2: p2,
-                p1_set: 0, p2_set: 0,       
-                p1_score: 0, p2_score: 0, 
-                status: 'playing',
-                q_idx: 1, current_q: pvpQuestionBank[0],
-                p1_ans: "", p1_time: 0, p2_ans: "", p2_time: 0,
-                evaluating: false, question_bank: pvpQuestionBank 
-            });
+            rtdb.ref('active_pvp_match').set({ stage: stageKey, match_idx: matchIndex, p1: p1Name, p2: p2Name, p1_set: 0, p2_set: 0, p1_score: 0, p2_score: 0, status: 'playing', q_idx: 1, current_q: pvpQuestionBank[0], p1_ans: "", p1_time: 0, p2_ans: "", p2_time: 0, evaluating: false, question_bank: pvpQuestionBank });
         }
 
         function submitPvPAnswer(idx) {
             rtdb.ref('active_pvp_match').once('value').then(snap => {
-                let m = snap.val();
-                if(!m || m.status !== 'playing' || m.evaluating) return;
-                
-                let isP1 = userData.displayName === m.p1;
-                let isP2 = userData.displayName === m.p2;
-                if(isP1 && m.p1_ans !== "") return;
-                if(isP2 && m.p2_ans !== "") return;
-                const selectedText = m.current_q.opts[idx];
-                const isCorrect = selectedText === m.current_q.vi;
-                let btn = document.getElementById('pvpOpt' + idx);
-                btn.style.backgroundColor = isCorrect ? '#00c853' : '#d50000';
-                btn.style.borderColor = isCorrect ? '#00e676' : '#ff1744';
-                for(let i=0; i<4; i++) { document.getElementById('pvpOpt'+i).style.pointerEvents = 'none'; }
-                document.getElementById('lockOverlay').classList.add('active');
-                let updates = {}; if(isP1) { updates.p1_ans = selectedText; updates.p1_time = Date.now(); }
-                if(isP2) { updates.p2_ans = selectedText; updates.p2_time = Date.now(); }
+                let m = snap.val(); if(!m || m.status !== 'playing' || m.evaluating) return;
+                let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
+                if((isP1 && m.p1_ans !== "") || (isP2 && m.p2_ans !== "")) return;
+                const selectedText = m.current_q.opts[idx]; const isCorrect = selectedText === m.current_q.vi;
+                let btn = document.getElementById('pvpOpt' + idx); btn.style.backgroundColor = isCorrect ? '#00c853' : '#d50000'; btn.style.borderColor = isCorrect ? '#00e676' : '#ff1744';
+                for(let i=0; i<4; i++) { document.getElementById('pvpOpt'+i).style.pointerEvents = 'none'; } document.getElementById('lockOverlay').classList.add('active');
+                let updates = {}; if(isP1) { updates.p1_ans = selectedText; updates.p1_time = Date.now(); } if(isP2) { updates.p2_ans = selectedText; updates.p2_time = Date.now(); }
                 rtdb.ref('active_pvp_match').update(updates);
             });
         }
@@ -971,49 +843,28 @@
             rtdb.ref('active_pvp_match').transaction(m => {
                 if (m && m.status === 'playing' && m.evaluating === false) {
                     m.evaluating = true; m.status = 'showing_result';
-                    let p1_c = m.p1_ans === m.current_q.vi; let p2_c = m.p2_ans === m.current_q.vi;
-                    let p1_w = false; let p2_w = false;
-                    if (p1_c && p2_c) { if (m.p1_time <= m.p2_time) p1_w = true; else p2_w = true; } 
-                    else if (p1_c) { p1_w = true; } else if (p2_c) { p2_w = true; }
-                    m.p1_score += p1_w ? 1 : 0; m.p2_score += p2_w ? 1 : 0;
-                    m.p1_won_this_round = p1_w; m.p2_won_this_round = p2_w;
-                    return m;
+                    let p1_c = m.p1_ans === m.current_q.vi; let p2_c = m.p2_ans === m.current_q.vi; let p1_w = false; let p2_w = false;
+                    if (p1_c && p2_c) { if (m.p1_time <= m.p2_time) p1_w = true; else p2_w = true; } else if (p1_c) { p1_w = true; } else if (p2_c) { p2_w = true; }
+                    m.p1_score += p1_w ? 1 : 0; m.p2_score += p2_w ? 1 : 0; m.p1_won_this_round = p1_w; m.p2_won_this_round = p2_w; return m;
                 } return; 
-            }, (err, comm, snap) => {
-                if(comm && snap.val()) { setTimeout(() => processNextRound(snap.val().q_idx), 3500); }
-            });
+            }, (err, comm, snap) => { if(comm && snap.val()) setTimeout(() => processNextRound(snap.val().q_idx), 3500); });
         }
 
         function processNextRound(currentQIdx) {
             rtdb.ref('active_pvp_match').once('value').then(snap => {
-                let m = snap.val();
-                if(!m || m.q_idx !== currentQIdx || m.status !== 'showing_result') return; 
-
-                let nextIdx = m.q_idx + 1;
-                let s1 = m.p1_score; let s2 = m.p2_score;
-                let set1 = m.p1_set; let set2 = m.p2_set;
-                let status = 'playing'; let winner = "";
+                let m = snap.val(); if(!m || m.q_idx !== currentQIdx || m.status !== 'showing_result') return; 
+                let nextIdx = m.q_idx + 1; let s1 = m.p1_score; let s2 = m.p2_score; let set1 = m.p1_set; let set2 = m.p2_set; let status = 'playing'; let winner = "";
 
                 if(m.q_idx === 10 || m.q_idx === 20) {
                     if(s1 > s2) set1++; else if(s2 > s1) set2++; s1 = 0; s2 = 0; 
-                    if(m.q_idx === 20) {
-                        if(set1 === 2 || set1 > set2) { status = 'finished'; winner = m.p1; }
-                        else if(set2 === 2 || set2 > set1) { status = 'finished'; winner = m.p2; }
-                    }
-                } 
-                else if (m.q_idx >= 21) {
-                    if(s1 > s2) { set1++; winner = m.p1; status = 'finished'; }
-                    else if (s2 > s1) { set2++; winner = m.p2; status = 'finished'; }
+                    if(m.q_idx === 20) { if(set1 === 2 || set1 > set2) { status = 'finished'; winner = m.p1; } else if(set2 === 2 || set2 > set1) { status = 'finished'; winner = m.p2; } }
+                } else if (m.q_idx >= 21) {
+                    if(s1 > s2) { set1++; winner = m.p1; status = 'finished'; } else if (s2 > s1) { set2++; winner = m.p2; status = 'finished'; }
                     else { if (nextIdx > m.question_bank.length) { winner = "HÒA NHAU! (HẾT CÂU)"; status = 'finished'; } else { status = 'playing'; } }
                 }
 
-                let updates = {
-                    p1_score: s1, p2_score: s2, p1_set: set1, p2_set: set2, p1_ans: "", p2_ans: "", p1_time: 0, p2_time: 0, evaluating: false,
-                    p1_won_this_round: null, p2_won_this_round: null
-                };
-
-                if(status === 'finished') { updates.status = 'finished'; updates.winner = winner; } 
-                else { updates.status = 'playing'; updates.q_idx = nextIdx; updates.current_q = m.question_bank[nextIdx - 1]; }
+                let updates = { p1_score: s1, p2_score: s2, p1_set: set1, p2_set: set2, p1_ans: "", p2_ans: "", p1_time: 0, p2_time: 0, evaluating: false, p1_won_this_round: null, p2_won_this_round: null };
+                if(status === 'finished') { updates.status = 'finished'; updates.winner = winner; } else { updates.status = 'playing'; updates.q_idx = nextIdx; updates.current_q = m.question_bank[nextIdx - 1]; }
 
                 rtdb.ref('active_pvp_match').update(updates).then(() => {
                     if (status === 'finished' && winner !== "HÒA NHAU!") {
@@ -1021,11 +872,7 @@
                             let matchInfo = matchSnap.val();
                             if(matchInfo.stage && matchInfo.match_idx !== undefined) {
                                 let key = `tournament_status/full_bracket/${matchInfo.stage}`;
-                                if(matchInfo.stage === 'sfl' || matchInfo.stage === 'sfr' || matchInfo.stage === 'final' || matchInfo.stage === 'third_place') { 
-                                    key += `/winner`;
-                                } else { 
-                                    key += `/${matchInfo.match_idx}/winner`;
-                                }
+                                if(matchInfo.stage === 'sfl' || matchInfo.stage === 'sfr' || matchInfo.stage === 'final' || matchInfo.stage === 'third_place') { key += `/winner`; } else { key += `/${matchInfo.match_idx}/winner`; }
                                 rtdb.ref(key).set(winner);
                             }
                         });
@@ -1035,20 +882,11 @@
         }
 
         if(rtdb) {
-            rtdb.ref('tournament_status/full_bracket').on('value', (snapshot) => {
-                currentFullBracketData = snapshot.val();
-                renderBracket();
-            });
-
+            rtdb.ref('tournament_status/full_bracket').on('value', (snapshot) => { currentFullBracketData = snapshot.val(); renderBracket(); });
             rtdb.ref('tournament_status/result').on('value', (snap) => {
                 const res = snap.val();
-                if(res) {
-                    document.getElementById('rank1Name').innerText = res.rank1; document.getElementById('rank2Name').innerText = res.rank2;
-                    document.getElementById('rank3Name').innerText = res.rank3; document.getElementById('rank4Name').innerText = res.rank4;
-                    document.getElementById('podiumModal').classList.add('active');
-                } else { document.getElementById('podiumModal').classList.remove('active'); }
+                if(res) { document.getElementById('rank1Name').innerText = res.rank1; document.getElementById('rank2Name').innerText = res.rank2; document.getElementById('rank3Name').innerText = res.rank3; document.getElementById('rank4Name').innerText = res.rank4; document.getElementById('podiumModal').classList.add('active'); } else { document.getElementById('podiumModal').classList.remove('active'); }
             });
-
             rtdb.ref('active_pvp_match').on('value', (snap) => {
                 let m = snap.val(); if(!m) return;
                 let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
@@ -1062,10 +900,7 @@
                         let myAns = isP1 ? m.p1_ans : (isP2 ? m.p2_ans : "");
                         if(myAns === "") {
                             document.getElementById('lockOverlay').classList.remove('active');
-                            for(let i=0; i<4; i++) {
-                                let btn = document.getElementById('pvpOpt'+i); btn.innerText = m.current_q.opts[i]; btn.style.backgroundColor = 'rgba(255,255,255,0.1)';
-                                btn.style.borderColor = 'rgba(255,255,255,0.3)'; btn.style.pointerEvents = 'auto'; btn.style.opacity = '1';
-                            }
+                            for(let i=0; i<4; i++) { let btn = document.getElementById('pvpOpt'+i); btn.innerText = m.current_q.opts[i]; btn.style.backgroundColor = 'rgba(255,255,255,0.1)'; btn.style.borderColor = 'rgba(255,255,255,0.3)'; btn.style.pointerEvents = 'auto'; btn.style.opacity = '1'; }
                         }
                         let oppAns = isP1 ? m.p2_ans : m.p1_ans; let botStatus = document.getElementById('botStatusMsg');
                         if(oppAns !== "") { botStatus.innerText = "Đối thủ đã chốt!"; botStatus.style.color = "#ff1744"; } else { botStatus.innerText = "Đối thủ đang suy nghĩ..."; botStatus.style.color = "#00e676"; }
@@ -1074,333 +909,44 @@
                         if (m.p1_ans !== "" && m.p2_ans !== "" && !m.evaluating) { clearInterval(window.pvpTimer); triggerEval(); }
                     } else if (m.status === 'showing_result') {
                         clearInterval(window.pvpTimer); document.getElementById('pvpTimerBanner').innerText = `⏳ 0s`;
-                        let myWin = (isP1 && m.p1_won_this_round) || (isP2 && m.p2_won_this_round); let waitMsg = document.getElementById('pvpWaitMsg');
-                        waitMsg.style.display = 'block';
-                        if (myWin) { waitMsg.innerText = "🎉 BẠN NHANH VÀ CHÍNH XÁC HƠN! (+1 Điểm)"; waitMsg.style.color = "#00e676"; } 
-                        else { let wasWrong = false; let myAns = isP1 ? m.p1_ans : m.p2_ans; if(myAns !== "" && myAns !== m.current_q.vi) wasWrong = true;
-                            if(!wasWrong && myAns !== "") waitMsg.innerText = "❌ BẠN CHỌN ĐÚNG NHƯNG CHẬM HƠN!"; else if(wasWrong) waitMsg.innerText = "❌ BẠN ĐÃ TRẢ LỜI SAI!"; else waitMsg.innerText = "❌ BẠN ĐÃ HẾT GIỜ!"; waitMsg.style.color = "#ff1744";
-                        }
+                        let myWin = (isP1 && m.p1_won_this_round) || (isP2 && m.p2_won_this_round); let waitMsg = document.getElementById('pvpWaitMsg'); waitMsg.style.display = 'block';
+                        if (myWin) { waitMsg.innerText = "🎉 BẠN NHANH VÀ CHÍNH XÁC HƠN! (+1 Điểm)"; waitMsg.style.color = "#00e676"; } else { let wasWrong = false; let myAns = isP1 ? m.p1_ans : m.p2_ans; if(myAns !== "" && myAns !== m.current_q.vi) wasWrong = true; if(!wasWrong && myAns !== "") waitMsg.innerText = "❌ BẠN CHỌN ĐÚNG NHƯNG CHẬM HƠN!"; else if(wasWrong) waitMsg.innerText = "❌ BẠN ĐÃ TRẢ LỜI SAI!"; else waitMsg.innerText = "❌ BẠN ĐÃ HẾT GIỜ!"; waitMsg.style.color = "#ff1744"; }
                         document.getElementById('lockOverlay').classList.remove('active');
-                        for(let i=0; i<4; i++) {
-                            let btn = document.getElementById('pvpOpt'+i); btn.style.pointerEvents = 'none';
-                            if (btn.innerText === m.current_q.vi) { btn.style.backgroundColor = '#00c853'; btn.style.borderColor = '#00e676'; btn.style.opacity = '1'; } else { btn.style.opacity = '0.3'; }
-                        }
+                        for(let i=0; i<4; i++) { let btn = document.getElementById('pvpOpt'+i); btn.style.pointerEvents = 'none'; if (btn.innerText === m.current_q.vi) { btn.style.backgroundColor = '#00c853'; btn.style.borderColor = '#00e676'; btn.style.opacity = '1'; } else { btn.style.opacity = '0.3'; } }
                     } else if (m.status === 'finished') {
-                        clearInterval(window.pvpTimer); document.getElementById('pvpWaitMsg').style.display = 'block'; document.getElementById('pvpWaitMsg').style.color = '#ffd700';
-                        document.getElementById('pvpWaitMsg').innerText = "🏆 KẾT THÚC! NGƯỜI THẮNG: " + m.winner;
-                        document.getElementById('pvpQuestion').style.display = 'none'; document.getElementById('pvpOptions').style.display = 'none'; document.getElementById('lockOverlay').classList.remove('active');
-                        setTimeout(() => document.getElementById('pvpModal').classList.remove('active'), 5000);
+                        clearInterval(window.pvpTimer); document.getElementById('pvpWaitMsg').style.display = 'block'; document.getElementById('pvpWaitMsg').style.color = '#ffd700'; document.getElementById('pvpWaitMsg').innerText = "🏆 KẾT THÚC! NGƯỜI THẮNG: " + m.winner;
+                        document.getElementById('pvpQuestion').style.display = 'none'; document.getElementById('pvpOptions').style.display = 'none'; document.getElementById('lockOverlay').classList.remove('active'); setTimeout(() => document.getElementById('pvpModal').classList.remove('active'), 5000);
                     }
                 }
             });
         }
 
-        function switchTab(tabId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById('view-' + tabId).classList.add('active');
-            const navBtn = document.getElementById('nav-' + tabId); if(navBtn) navBtn.classList.add('active');
-            if (window.innerWidth <= 768) toggleSidebar();
-            if (tabId === 'library') fetchFromSheets();
-            if (tabId === 'leaderboard') fetchLeaderboard();
-        }
+        function switchTab(tabId) { document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); document.getElementById('view-' + tabId).classList.add('active'); const navBtn = document.getElementById('nav-' + tabId); if(navBtn) navBtn.classList.add('active'); if (window.innerWidth <= 768) toggleSidebar(); if (tabId === 'library') fetchFromSheets(); if (tabId === 'leaderboard') fetchLeaderboard(); }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); document.getElementById('sidebarOverlay').style.display = document.getElementById('sidebar').classList.contains('show') ? 'block' : 'none'; }
+        function attemptTeacherLogin() { if (document.getElementById('teacherPinCheck').value === localStorage.getItem('teacherPin')) { userData.role = 'teacher'; db.collection('vocab_users').doc(currentUser.uid).update({ role: 'teacher' }); updateUI(); alert("Đã cấp quyền Admin!"); } else alert("Mã PIN sai!"); }
         
-        function attemptTeacherLogin() {
-            if (document.getElementById('teacherPinCheck').value === localStorage.getItem('teacherPin')) {
-                userData.role = 'teacher'; db.collection('vocab_users').doc(currentUser.uid).update({ role: 'teacher' }); updateUI(); alert("Đã cấp quyền Admin!");
-            } else alert("Mã PIN sai!");
-        }
-
         function buyItem(itemType, price) { 
-            if (!currentUser) return alert("Vui lòng đăng nhập để mua hàng!");
-            if (userData.gold < price) return alert("Bạn không đủ Vàng!");
+            if (!currentUser) return alert("Vui lòng đăng nhập để mua hàng!"); if (userData.gold < price) return alert("Bạn không đủ Vàng!");
             if(confirm(`Dùng ${price} Vàng đổi vật phẩm?`)) {
                 let updates = { gold: userData.gold - price };
-                
-                if (itemType === 'rename') {
-                    let newName = prompt("Xin vui lòng nhập danh xưng mới của bạn:");
-                    if (!newName || newName.trim() === "") {
-                        alert("Đã hủy giao dịch đổi tên!");
-                        return; 
-                    }
-                    updates.displayName = newName.trim();
-                }
-
-                if (itemType === 'shield') updates.hasShield = true;
-                if (itemType === 'potion') updates.potionExpiry = Date.now() + 86400000;
-                if (itemType === 'mask') updates.maskExpiry = Date.now() + 86400000;
-                if (itemType === 'glass') updates.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
-                
+                if (itemType === 'rename') { let newName = prompt("Nhập danh xưng mới:"); if (!newName || newName.trim() === "") return alert("Đã hủy giao dịch!"); updates.displayName = newName.trim(); }
+                if (itemType === 'shield') updates.hasShield = true; if (itemType === 'potion') updates.potionExpiry = Date.now() + 86400000; if (itemType === 'mask') updates.maskExpiry = Date.now() + 86400000; if (itemType === 'glass') updates.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
                 db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
-                    userData.gold -= price;
-                    if(updates.hasShield) userData.hasShield = true; 
-                    if(updates.potionExpiry) userData.potionExpiry = updates.potionExpiry; 
-                    if(updates.maskExpiry) userData.maskExpiry = updates.maskExpiry; 
-                    if(updates.magnifyingGlass) userData.magnifyingGlass = updates.magnifyingGlass;
-                    if(updates.displayName) userData.displayName = updates.displayName;
-
-                    updateUI();
-                    if (itemType === 'rename') fetchLeaderboard();
-
-                    let anim = document.getElementById('rewardAnim'); anim.innerText = `🛒 Mua thành công! Còn ${userData.gold} 🪙`; anim.classList.add('show');
-                    setTimeout(() => anim.classList.remove('show'), 3000);
+                    userData.gold -= price; if(updates.hasShield) userData.hasShield = true; if(updates.potionExpiry) userData.potionExpiry = updates.potionExpiry; if(updates.maskExpiry) userData.maskExpiry = updates.maskExpiry; if(updates.magnifyingGlass) userData.magnifyingGlass = updates.magnifyingGlass; if(updates.displayName) userData.displayName = updates.displayName;
+                    updateUI(); if (itemType === 'rename') fetchLeaderboard(); let anim = document.getElementById('rewardAnim'); anim.innerText = `🛒 Mua thành công! Còn ${userData.gold} 🪙`; anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 3000);
                 });
             }
         }
 
         window.addEventListener('message', function(e) {
-            if (e.data === 'CORRECT') {
-                if (currentUser && userData) {
-                    let isPotionActive = userData.potionExpiry && userData.potionExpiry > Date.now();
-                    let xpGained = isPotionActive ? 30 : 15; let goldGained = isPotionActive ? 20 : 10;
-                    userData.xp = (userData.xp || 0) + xpGained; userData.gold = (userData.gold || 0) + goldGained;
-                    syncStatsToCloud();
-                    let anim = document.getElementById('rewardAnim'); anim.innerText = isPotionActive ? `🧪 ĐANG X2! +${goldGained} 🪙 | +${xpGained} ⭐` : `🎉 +${goldGained} 🪙 | +${xpGained} ⭐`;
-                    anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 2000);
-                }
-            } else if (e.data === 'REQ_GLASS') {
-                if (userData.magnifyingGlass > 0) { userData.magnifyingGlass--; syncStatsToCloud(); document.getElementById('modalFrame').contentWindow.postMessage('APPROVE_GLASS', '*'); } 
-                else { alert("Hết Kính Lúp! Hãy vào Cửa Hàng."); }
-            }
+            if (e.data === 'CORRECT') { if (currentUser && userData) { let isPotionActive = userData.potionExpiry && userData.potionExpiry > Date.now(); let xpGained = isPotionActive ? 30 : 15; let goldGained = isPotionActive ? 20 : 10; userData.xp = (userData.xp || 0) + xpGained; userData.gold = (userData.gold || 0) + goldGained; syncStatsToCloud(); let anim = document.getElementById('rewardAnim'); anim.innerText = isPotionActive ? `🧪 ĐANG X2! +${goldGained} 🪙 | +${xpGained} ⭐` : `🎉 +${goldGained} 🪙 | +${xpGained} ⭐`; anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 2000); } }
+            else if (e.data === 'REQ_GLASS') { if (userData.magnifyingGlass > 0) { userData.magnifyingGlass--; syncStatsToCloud(); document.getElementById('modalFrame').contentWindow.postMessage('APPROVE_GLASS', '*'); } else { alert("Hết Kính Lúp! Hãy vào Cửa Hàng."); } }
         });
 
         function generateCode() {
-            const raw = document.getElementById('rawInput').value.trim();
-            if(!raw) return alert("Vui lòng nhập từ vựng!");
-            const lines = raw.split('\n'); let vocabArray = [];
-            for(let line of lines) { let parts = line.split('|').map(s => s.trim()); if(parts.length >= 2) vocabArray.push(`{ en: "${parts[0]}", vi: "${parts[1]}", pro: "${parts[2] || ''}", type: "${parts[3] || ''}" }`); }
-            
-            const template = `<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"><\/script>
-    <style>
-        body { background-color: transparent; margin: 0; padding: 10px; font-family: 'Segoe UI', sans-serif; }
-        .perspective { perspective: 1000px; }
-        .transform-style-3d { transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
-        .backface-hidden { backface-visibility: hidden; }
-        .rotate-y-180 { transform: rotateY(180deg); }
-        .flipped .transform-style-3d { transform: rotateY(180deg); }
-        .quiz-btn { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 2px solid #e0e7ff; background: white; font-weight: bold; color: #3730a3; transition: 0.2s; text-align: left; font-size: 16px; cursor: pointer;}
-        .quiz-btn:hover { border-color: #4f46e5; background: #e0e7ff; }
-        .quiz-btn.correct { background: #10b981; color: white; border-color: #059669; }
-        .quiz-btn.wrong { background: #ef4444; color: white; border-color: #b91c1c; }
-        .disabled { pointer-events: none; }
-    </style>
-</head>
-<body>
-    <div id="flashcard-section" class="flex flex-col items-center w-full max-w-md mx-auto">
-        <div class="text-center mb-4 text-indigo-800 font-bold" id="card-counter">Thẻ 1 / ${vocabArray.length}</div>
-        <div id="flashcard" class="perspective w-full h-80 cursor-pointer mb-6" onclick="flipCard()">
-            <div class="transform-style-3d relative w-full h-full rounded-2xl shadow-lg">
-                <div id="card-front" class="backface-hidden absolute w-full h-full bg-white rounded-2xl flex flex-col items-center justify-center p-6 border-2 border-indigo-100">
-                    <div id="word-en" class="text-5xl font-extrabold text-indigo-900 mb-2">Word</div>
-                    <div id="word-pro" class="text-lg text-gray-500 mb-4 font-mono">/pronunciation/</div>
-                    <span id="word-type" class="px-4 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold uppercase">Type</span>
-                </div>
-                <div id="card-back" class="backface-hidden rotate-y-180 absolute w-full h-full bg-gradient-to-br from-indigo-600 to-blue-800 rounded-2xl flex flex-col items-center justify-center p-6 text-white text-center">
-                    <div id="word-vi" class="text-3xl font-bold text-yellow-300">Nghĩa</div>
-                </div>
-            </div>
-        </div>
-        <div class="flex gap-4 w-full">
-            <button onclick="prevCard()" class="flex-1 py-3 rounded-xl bg-gray-200 text-gray-700 font-bold hover:bg-gray-300">⬅ Trước</button>
-            <button onclick="nextCard()" id="next-btn" class="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700">Tiếp ➡</button>
-        </div>
-    </div>
-    
-    <div id="quiz-section" class="hidden w-full max-w-md mx-auto relative">
-        <div class="text-center mb-4">
-            <span class="inline-block px-4 py-1 bg-yellow-100 text-yellow-800 font-bold rounded-full text-sm mb-2">Bài Tập Trắc Nghiệm 🪙</span>
-            <div id="timer-display" style="position: relative; width: 70px; height: 70px; margin: 0 auto 10px auto;">
-                <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg);" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"></circle>
-                    <circle id="timer-circle" cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"></circle>
-                </svg>
-                <div id="timer-text" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; color: #ef4444;">15</div>
-            </div>
-            <button id="glass-btn" onclick="requestGlass()" class="px-3 py-1 bg-blue-100 text-blue-700 font-bold rounded-lg text-sm mb-4 hover:bg-blue-200 transition">🔍 Dùng Kính Lúp (50/50)</button>
-            <h2 id="quiz-question" class="text-4xl font-extrabold text-indigo-900 mt-2">Word</h2>
-        </div>
-        <div id="quiz-options" class="w-full"></div>
-    </div>
-
-    <script>
-        const vocabList = [
-            ${vocabArray.join(',\n            ')}
-        ];
-        let currentIndex = 0;
-        const flashcardEl = document.getElementById('flashcard');
-        
-        function loadCard(index) {
-            flashcardEl.classList.remove('flipped');
-            setTimeout(() => {
-                document.getElementById('word-en').innerText = vocabList[index].en;
-                document.getElementById('word-pro').innerText = vocabList[index].pro;
-                document.getElementById('word-type').innerText = vocabList[index].type;
-                document.getElementById('word-vi').innerText = vocabList[index].vi;
-                document.getElementById('card-counter').innerText = 'Thẻ ' + (index + 1) + ' / ' + vocabList.length;
-                const nextBtn = document.getElementById('next-btn');
-                if (index === vocabList.length - 1) {
-                    nextBtn.innerText = "Làm Trắc Nghiệm";
-                    nextBtn.className = "flex-1 py-3 rounded-xl bg-yellow-500 text-white font-bold hover:bg-yellow-600";
-                } else {
-                    nextBtn.innerText = "Tiếp ➡";
-                    nextBtn.className = "flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700";
-                }
-            }, 150);
-        }
-        function flipCard() { flashcardEl.classList.toggle('flipped'); }
-        function prevCard() { if (currentIndex > 0) { currentIndex--; loadCard(currentIndex); } }
-        function nextCard() {
-            if (currentIndex < vocabList.length - 1) {
-                currentIndex++; loadCard(currentIndex);
-            } else {
-                startQuiz();
-            }
-        }
-        
-        let currentQuizIndex = 0;
-        let quizOrder = [];
-        let timerId;
-        let timeLeft = 15;
-        let glassUsedThisQuestion = false;
-
-        function startTimer() {
-            timeLeft = 15;
-            document.getElementById('timer-circle').style.strokeDashoffset = '0';
-            document.getElementById('timer-text').innerText = timeLeft;
-            clearInterval(timerId);
-            
-            timerId = setInterval(() => {
-                timeLeft--;
-                const offset = 283 - (timeLeft / 15) * 283;
-                document.getElementById('timer-circle').style.strokeDashoffset = offset;
-                document.getElementById('timer-text').innerText = timeLeft;
-                
-                if(timeLeft <= 0) {
-                    clearInterval(timerId);
-                    timeOut();
-                }
-            }, 1000);
-        }
-
-        function timeOut() {
-            const optionsContainer = document.getElementById('quiz-options');
-            optionsContainer.classList.add('disabled'); 
-            const correctWord = vocabList[quizOrder[currentQuizIndex]];
-            
-            Array.from(optionsContainer.children).forEach(child => {
-                child.style.visibility = 'visible'; 
-                if (child.innerText === correctWord.vi) child.classList.add('correct');
-                else child.classList.add('wrong');
-            });
-
-            setTimeout(() => {
-                currentQuizIndex++;
-                if (currentQuizIndex < vocabList.length) loadQuizQuestion();
-                else finishQuiz();
-            }, 2000);
-        }
-
-        function startQuiz() {
-            document.getElementById('flashcard-section').classList.add('hidden');
-            document.getElementById('quiz-section').classList.remove('hidden');
-            quizOrder = [...Array(vocabList.length).keys()].sort(() => Math.random() - 0.5);
-            currentQuizIndex = 0;
-            loadQuizQuestion();
-        }
-
-        function loadQuizQuestion() {
-            glassUsedThisQuestion = false;
-            document.getElementById('glass-btn').classList.remove('hidden');
-            const optionsContainer = document.getElementById('quiz-options');
-            optionsContainer.innerHTML = ''; 
-            optionsContainer.classList.remove('disabled');
-            
-            const correctWord = vocabList[quizOrder[currentQuizIndex]];
-            document.getElementById('quiz-question').innerText = correctWord.en;
-            
-            let options = [correctWord.vi];
-            let wrongOptions = vocabList.filter(w => w.en !== correctWord.en).map(w => w.vi);
-            wrongOptions = wrongOptions.sort(() => Math.random() - 0.5).slice(0, 3);
-            options = options.concat(wrongOptions);
-            options.sort(() => Math.random() - 0.5); 
-            
-            options.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.className = 'quiz-btn';
-                btn.innerText = opt;
-                btn.onclick = () => checkAnswer(btn, opt, correctWord.vi);
-                optionsContainer.appendChild(btn);
-            });
-
-            startTimer();
-        }
-
-        function requestGlass() {
-            if(glassUsedThisQuestion) return;
-            if(window.parent) window.parent.postMessage('REQ_GLASS', '*');
-        }
-
-        window.addEventListener('message', function(e) {
-            if(e.data === 'APPROVE_GLASS') {
-                glassUsedThisQuestion = true;
-                document.getElementById('glass-btn').classList.add('hidden');
-                
-                const optionsContainer = document.getElementById('quiz-options');
-                const correctWord = vocabList[quizOrder[currentQuizIndex]];
-                let hiddenCount = 0;
-                
-                Array.from(optionsContainer.children).forEach(btn => {
-                    if(btn.innerText !== correctWord.vi && hiddenCount < 2) {
-                        btn.style.visibility = 'hidden'; 
-                        hiddenCount++;
-                    }
-                });
-            }
-        });
-
-        function finishQuiz() {
-            const optionsContainer = document.getElementById('quiz-options');
-            optionsContainer.innerHTML = '<div class="text-center p-6 bg-green-100 text-green-800 rounded-xl font-bold text-xl">🎉 Đã hoàn thành! Nhấn F5 để ôn lại hoặc ra ngoài học bài khác.</div>';
-            document.getElementById('timer-display').style.display = 'none';
-            document.getElementById('glass-btn').style.display = 'none';
-        }
-
-        function checkAnswer(btn, selectedVi, correctVi) {
-            clearInterval(timerId); 
-            const optionsContainer = document.getElementById('quiz-options');
-            optionsContainer.classList.add('disabled'); 
-            
-            if (selectedVi === correctVi) {
-                btn.classList.add('correct');
-                if(window.parent) window.parent.postMessage('CORRECT', '*');
-                setTimeout(() => {
-                    currentQuizIndex++;
-                    if (currentQuizIndex < vocabList.length) loadQuizQuestion();
-                    else finishQuiz();
-                }, 1500);
-            } else {
-                btn.classList.add('wrong');
-                Array.from(optionsContainer.children).forEach(child => {
-                    child.style.visibility = 'visible'; 
-                    if (child.innerText === correctVi) child.classList.add('correct');
-                });
-                setTimeout(() => {
-                    currentQuizIndex++;
-                    if (currentQuizIndex < vocabList.length) loadQuizQuestion();
-                    else finishQuiz();
-                }, 2000);
-            }
-        }
-        loadCard(0);
-    <\/script>
-</body>
-</html>`;
+            const raw = document.getElementById('rawInput').value.trim(); if(!raw) return alert("Vui lòng nhập từ vựng!");
+            const lines = raw.split('\n'); let vocabArray = []; for(let line of lines) { let parts = line.split('|').map(s => s.trim()); if(parts.length >= 2) vocabArray.push(`{ en: "${parts[0]}", vi: "${parts[1]}", pro: "${parts[2] || ''}", type: "${parts[3] || ''}" }`); }
+            const template = `<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://cdn.tailwindcss.com"><\/script><style>body { background-color: transparent; margin: 0; padding: 10px; font-family: 'Segoe UI', sans-serif; } .perspective { perspective: 1000px; } .transform-style-3d { transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); } .backface-hidden { backface-visibility: hidden; } .rotate-y-180 { transform: rotateY(180deg); } .flipped .transform-style-3d { transform: rotateY(180deg); } .quiz-btn { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 2px solid #e0e7ff; background: white; font-weight: bold; color: #3730a3; transition: 0.2s; text-align: left; font-size: 16px; cursor: pointer;} .quiz-btn:hover { border-color: #4f46e5; background: #e0e7ff; } .quiz-btn.correct { background: #10b981; color: white; border-color: #059669; } .quiz-btn.wrong { background: #ef4444; color: white; border-color: #b91c1c; } .disabled { pointer-events: none; }</style></head><body><div id="flashcard-section" class="flex flex-col items-center w-full max-w-md mx-auto"><div class="text-center mb-4 text-indigo-800 font-bold" id="card-counter">Thẻ 1 / ${vocabArray.length}</div><div id="flashcard" class="perspective w-full h-80 cursor-pointer mb-6" onclick="flipCard()"><div class="transform-style-3d relative w-full h-full rounded-2xl shadow-lg"><div id="card-front" class="backface-hidden absolute w-full h-full bg-white rounded-2xl flex flex-col items-center justify-center p-6 border-2 border-indigo-100"><div id="word-en" class="text-5xl font-extrabold text-indigo-900 mb-2">Word</div><div id="word-pro" class="text-lg text-gray-500 mb-4 font-mono">/pronunciation/</div><span id="word-type" class="px-4 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold uppercase">Type</span></div><div id="card-back" class="backface-hidden rotate-y-180 absolute w-full h-full bg-gradient-to-br from-indigo-600 to-blue-800 rounded-2xl flex flex-col items-center justify-center p-6 text-white text-center"><div id="word-vi" class="text-3xl font-bold text-yellow-300">Nghĩa</div></div></div></div><div class="flex gap-4 w-full"><button onclick="prevCard()" class="flex-1 py-3 rounded-xl bg-gray-200 text-gray-700 font-bold hover:bg-gray-300">⬅ Trước</button><button onclick="nextCard()" id="next-btn" class="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700">Tiếp ➡</button></div></div><div id="quiz-section" class="hidden w-full max-w-md mx-auto relative"><div class="text-center mb-4"><span class="inline-block px-4 py-1 bg-yellow-100 text-yellow-800 font-bold rounded-full text-sm mb-2">Bài Tập Trắc Nghiệm 🪙</span><div id="timer-display" style="position: relative; width: 70px; height: 70px; margin: 0 auto 10px auto;"><svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg);" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"></circle><circle id="timer-circle" cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"></circle></svg><div id="timer-text" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; color: #ef4444;">15</div></div><button id="glass-btn" onclick="requestGlass()" class="px-3 py-1 bg-blue-100 text-blue-700 font-bold rounded-lg text-sm mb-4 hover:bg-blue-200 transition">🔍 Dùng Kính Lúp (50/50)</button><h2 id="quiz-question" class="text-4xl font-extrabold text-indigo-900 mt-2">Word</h2></div><div id="quiz-options" class="w-full"></div></div><script>const vocabList = [${vocabArray.join(',\n            ')}]; let currentIndex = 0; const flashcardEl = document.getElementById('flashcard'); function loadCard(index) { flashcardEl.classList.remove('flipped'); setTimeout(() => { document.getElementById('word-en').innerText = vocabList[index].en; document.getElementById('word-pro').innerText = vocabList[index].pro; document.getElementById('word-type').innerText = vocabList[index].type; document.getElementById('word-vi').innerText = vocabList[index].vi; document.getElementById('card-counter').innerText = 'Thẻ ' + (index + 1) + ' / ' + vocabList.length; const nextBtn = document.getElementById('next-btn'); if (index === vocabList.length - 1) { nextBtn.innerText = "Làm Trắc Nghiệm"; nextBtn.className = "flex-1 py-3 rounded-xl bg-yellow-500 text-white font-bold hover:bg-yellow-600"; } else { nextBtn.innerText = "Tiếp ➡"; nextBtn.className = "flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700"; } }, 150); } function flipCard() { flashcardEl.classList.toggle('flipped'); } function prevCard() { if (currentIndex > 0) { currentIndex--; loadCard(currentIndex); } } function nextCard() { if (currentIndex < vocabList.length - 1) { currentIndex++; loadCard(currentIndex); } else { startQuiz(); } } let currentQuizIndex = 0; let quizOrder = []; let timerId; let timeLeft = 15; let glassUsedThisQuestion = false; function startTimer() { timeLeft = 15; document.getElementById('timer-circle').style.strokeDashoffset = '0'; document.getElementById('timer-text').innerText = timeLeft; clearInterval(timerId); timerId = setInterval(() => { timeLeft--; const offset = 283 - (timeLeft / 15) * 283; document.getElementById('timer-circle').style.strokeDashoffset = offset; document.getElementById('timer-text').innerText = timeLeft; if(timeLeft <= 0) { clearInterval(timerId); timeOut(); } }, 1000); } function timeOut() { const optionsContainer = document.getElementById('quiz-options'); optionsContainer.classList.add('disabled'); const correctWord = vocabList[quizOrder[currentQuizIndex]]; Array.from(optionsContainer.children).forEach(child => { child.style.visibility = 'visible'; if (child.innerText === correctWord.vi) child.classList.add('correct'); else child.classList.add('wrong'); }); setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadQuizQuestion(); else finishQuiz(); }, 2000); } function startQuiz() { document.getElementById('flashcard-section').classList.add('hidden'); document.getElementById('quiz-section').classList.remove('hidden'); quizOrder = [...Array(vocabList.length).keys()].sort(() => Math.random() - 0.5); currentQuizIndex = 0; loadQuizQuestion(); } function loadQuizQuestion() { glassUsedThisQuestion = false; document.getElementById('glass-btn').classList.remove('hidden'); const optionsContainer = document.getElementById('quiz-options'); optionsContainer.innerHTML = ''; optionsContainer.classList.remove('disabled'); const correctWord = vocabList[quizOrder[currentQuizIndex]]; document.getElementById('quiz-question').innerText = correctWord.en; let options = [correctWord.vi]; let wrongOptions = vocabList.filter(w => w.en !== correctWord.en).map(w => w.vi); wrongOptions = wrongOptions.sort(() => Math.random() - 0.5).slice(0, 3); options = options.concat(wrongOptions); options.sort(() => Math.random() - 0.5); options.forEach(opt => { const btn = document.createElement('button'); btn.className = 'quiz-btn'; btn.innerText = opt; btn.onclick = () => checkAnswer(btn, opt, correctWord.vi); optionsContainer.appendChild(btn); }); startTimer(); } function requestGlass() { if(glassUsedThisQuestion) return; if(window.parent) window.parent.postMessage('REQ_GLASS', '*'); } window.addEventListener('message', function(e) { if(e.data === 'APPROVE_GLASS') { glassUsedThisQuestion = true; document.getElementById('glass-btn').classList.add('hidden'); const optionsContainer = document.getElementById('quiz-options'); const correctWord = vocabList[quizOrder[currentQuizIndex]]; let hiddenCount = 0; Array.from(optionsContainer.children).forEach(btn => { if(btn.innerText !== correctWord.vi && hiddenCount < 2) { btn.style.visibility = 'hidden'; hiddenCount++; } }); } }); function finishQuiz() { const optionsContainer = document.getElementById('quiz-options'); optionsContainer.innerHTML = '<div class="text-center p-6 bg-green-100 text-green-800 rounded-xl font-bold text-xl">🎉 Đã hoàn thành! Nhấn F5 để ôn lại hoặc ra ngoài học bài khác.</div>'; document.getElementById('timer-display').style.display = 'none'; document.getElementById('glass-btn').style.display = 'none'; } function checkAnswer(btn, selectedVi, correctVi) { clearInterval(timerId); const optionsContainer = document.getElementById('quiz-options'); optionsContainer.classList.add('disabled'); if (selectedVi === correctVi) { btn.classList.add('correct'); if(window.parent) window.parent.postMessage('CORRECT', '*'); setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadQuizQuestion(); else finishQuiz(); }, 1500); } else { btn.classList.add('wrong'); Array.from(optionsContainer.children).forEach(child => { child.style.visibility = 'visible'; if (child.innerText === correctVi) child.classList.add('correct'); }); setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadQuizQuestion(); else finishQuiz(); }, 2000); } } loadCard(0); <\/script></body></html>`;
             document.getElementById('generatedCode').value = template;
         }
         function copyCode() { document.getElementById('generatedCode').select(); document.execCommand("copy"); alert("Đã copy mã!"); }
