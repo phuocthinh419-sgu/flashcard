@@ -198,7 +198,7 @@
         <div class="nav-item active" id="nav-library" onclick="switchTab('library')">☁️ Kho Bài Học</div>
         <div class="nav-item" id="nav-shop" onclick="switchTab('shop')">🛒 Cửa Hàng</div>
         <div class="nav-item" id="nav-leaderboard" onclick="switchTab('leaderboard')">🏆 Xếp Hạng</div>
-        <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">⚙️ Cài Đặt Hệ thống</div>
+        <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">⚙️ Cài Đặt Hệ Thống</div>
     </aside>
 
     <div class="main-wrapper">
@@ -237,6 +237,13 @@
             <div id="view-shop" class="view-section">
                 <div class="header"><h1>🛒 Cửa Hàng</h1><p>Đổi vật phẩm bằng Vàng.</p></div>
                 <div class="shop-grid">
+                    <div class="shop-item">
+                        <div class="item-icon">🪪</div>
+                        <div class="item-title">Thẻ Đổi Tên</div>
+                        <div class="item-desc">Thay đổi danh xưng trên Bảng Phong Thần. Có hiệu lực ngay lập tức.</div>
+                        <div class="item-price">🪙 1000</div>
+                        <button class="btn-buy" onclick="buyItem('rename', 1000)">Đổi Ngay</button>
+                    </div>
                     <div class="shop-item">
                         <div class="item-icon">🧪</div>
                         <div class="item-title">Bình Tiên XP x2</div>
@@ -566,7 +573,6 @@
             if (typeof renderBracket === 'function') renderBracket();
         }
 
-        // TỰ ĐỘNG CO GIÃN SỐ CỘT VÀ CHÈN TRẬN HẠNG 3
         function renderBracket() {
             if (!currentFullBracketData) return;
             document.getElementById('bracketBoard').style.display = 'block';
@@ -580,7 +586,6 @@
             if (currentFullBracketData.qfl) columns.push({ title: 'Tứ Kết', key: 'qfl' });
             if (currentFullBracketData.sfl) columns.push({ title: 'Bán Kết', key: 'sfl' });
             
-            // Cột trung tâm đặc biệt
             columns.push({ title: 'CHUNG KẾT & HẠNG 3', key: 'center_col' });
             
             if (currentFullBracketData.sfr) columns.push({ title: 'Bán Kết', key: 'sfr' });
@@ -605,7 +610,7 @@
                         colEl.appendChild(fLabel);
                         colEl.appendChild(createMatchBox(currentFullBracketData.final, 'final', 0));
                     }
-                    if (currentFullBracketData.third_place && currentFullBracketData.sfl) { // Chỉ có Hạng 3 khi có vòng Bán Kết
+                    if (currentFullBracketData.third_place && currentFullBracketData.sfl) { 
                         let tLabel = document.createElement('div');
                         tLabel.innerHTML = '<div style="font-size:11px; color:#cd7f32; margin-top:20px; margin-bottom:5px; font-weight:bold;">🥉 TRANH HẠNG 3</div>';
                         colEl.appendChild(tLabel);
@@ -832,7 +837,6 @@
                 moveWinner(fb.qfr[0], 'sfr', 0, 'p1'); moveWinner(fb.qfr[1], 'sfr', 0, 'p2');
             }
             
-            // Xử lý Bán Kết đẩy xuống Hạng 3 và Chung Kết
             if(fb.sfl && fb.sfl.winner) {
                 moveWinner(fb.sfl, 'final', 0, 'p1');
                 let loser1 = fb.sfl.winner === fb.sfl.p1 ? fb.sfl.p2 : fb.sfl.p1;
@@ -851,7 +855,6 @@
                 alert("Chưa có trận nào mới kết thúc hoặc hệ thống đã cập nhật xong xuôi.");
             }
             
-            // ĐIỀU KIỆN KẾT THÚC GIẢI: Khi cả Chung kết và Hạng 3 đều đã đánh xong
             let isTournamentDone = false;
             if (fb.final && fb.final.winner && fb.third_place && fb.third_place.winner) {
                 isTournamentDone = true;
@@ -1077,14 +1080,32 @@
             if (userData.gold < price) return alert("Bạn không đủ Vàng!");
             if(confirm(`Dùng ${price} Vàng đổi vật phẩm?`)) {
                 let updates = { gold: userData.gold - price };
+                
+                if (itemType === 'rename') {
+                    let newName = prompt("Xin vui lòng nhập danh xưng mới của bạn:");
+                    if (!newName || newName.trim() === "") {
+                        alert("Đã hủy giao dịch đổi tên!");
+                        return; 
+                    }
+                    updates.displayName = newName.trim();
+                }
+
                 if (itemType === 'shield') updates.hasShield = true;
                 if (itemType === 'potion') updates.potionExpiry = Date.now() + 86400000;
                 if (itemType === 'mask') updates.maskExpiry = Date.now() + 86400000;
                 if (itemType === 'glass') updates.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
+                
                 db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
                     userData.gold -= price;
-                    if(updates.hasShield) userData.hasShield = true; if(updates.potionExpiry) userData.potionExpiry = updates.potionExpiry; if(updates.maskExpiry) userData.maskExpiry = updates.maskExpiry; if(updates.magnifyingGlass) userData.magnifyingGlass = updates.magnifyingGlass;
+                    if(updates.hasShield) userData.hasShield = true; 
+                    if(updates.potionExpiry) userData.potionExpiry = updates.potionExpiry; 
+                    if(updates.maskExpiry) userData.maskExpiry = updates.maskExpiry; 
+                    if(updates.magnifyingGlass) userData.magnifyingGlass = updates.magnifyingGlass;
+                    if(updates.displayName) userData.displayName = updates.displayName;
+
                     updateUI();
+                    if (itemType === 'rename') fetchLeaderboard();
+
                     let anim = document.getElementById('rewardAnim'); anim.innerText = `🛒 Mua thành công! Còn ${userData.gold} 🪙`; anim.classList.add('show');
                     setTimeout(() => anim.classList.remove('show'), 3000);
                 });
