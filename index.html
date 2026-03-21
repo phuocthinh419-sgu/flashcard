@@ -151,7 +151,7 @@
         /* NEW CSS FOR BRACKET DYNAMIC - THU GỌN GIAO DIỆN */
         .full-bracket {
             display: grid;
-            gap: 10px; /* Giảm khoảng trống giữa các cột */
+            gap: 10px; 
             align-items: center;
             overflow-x: auto;
             padding: 10px;
@@ -159,34 +159,34 @@
         .bracket-column {
             display: flex;
             flex-direction: column;
-            gap: 12px; /* Giảm khoảng trống giữa các trận */
+            gap: 12px; 
             height: 100%;
             justify-content: center;
         }
         .match-box {
             background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #5c6bc0; /* Viền mỏng hơn */
-            border-radius: 8px; /* Bo góc nhỏ hơn */
-            padding: 8px; /* Giảm độ phồng của khung */
+            border: 1px solid #5c6bc0; 
+            border-radius: 8px; 
+            padding: 8px; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             backdrop-filter: blur(5px);
             position: relative;
-            min-width: 130px; /* Giới hạn độ hẹp */
+            min-width: 130px; 
         }
         .player-name.won { color: #00e676; font-weight: 900; }
         .player-name.lost { opacity: 0.4; text-decoration: line-through; }
         .player-name { 
-            padding: 6px 8px; /* Thu gọn chữ */
+            padding: 6px 8px; 
             font-weight: bold; 
-            font-size: 13px; /* Cỡ chữ nhỏ lại */
+            font-size: 13px; 
             border-bottom: 1px dashed rgba(255,255,255,0.2); 
             white-space: nowrap; 
             overflow: hidden; 
-            text-overflow: ellipsis; /* Nếu tên quá dài sẽ hiện ... */
+            text-overflow: ellipsis; 
         }
         .player-name:last-child { border-bottom: none; }
         .vs-text { 
-            font-size: 11px; /* VS nhỏ lại */
+            font-size: 11px; 
             color: #ffeb3b; 
             font-style: italic; 
             margin: 4px 0; 
@@ -639,7 +639,7 @@
                         colEl.appendChild(fLabel);
                         colEl.appendChild(createMatchBox(currentFullBracketData.final, 'final', 0));
                     }
-                    if (currentFullBracketData.third_place && currentFullBracketData.sfl) { 
+                    if (currentFullBracketData.third_place && (currentFullBracketData.sfl || currentFullBracketData.sfr)) { 
                         let tLabel = document.createElement('div');
                         tLabel.innerHTML = '<div style="font-size:11px; color:#cd7f32; margin-top:20px; margin-bottom:5px; font-weight:bold;">🥉 TRANH HẠNG 3</div>';
                         colEl.appendChild(tLabel);
@@ -661,7 +661,7 @@
 
         function createMatchBox(m, stageKey, matchIndex) {
             const isFinished = !!m.winner;
-            let fightBtn = (userData.role === 'teacher' && m.p1 && m.p2 && !isFinished) ? `<button class="btn-fight" style="display:block;" onclick="adminStartPvP('${stageKey}', ${matchIndex})">⚔️ KHAI CHIẾN</button>` : '';
+            let fightBtn = (userData.role === 'teacher' && m.p1 && m.p2 && m.p1 !== "---" && m.p2 !== "---" && !isFinished) ? `<button class="btn-fight" style="display:block;" onclick="adminStartPvP('${stageKey}', ${matchIndex})">⚔️ KHAI CHIẾN</button>` : '';
             
             let p1Name = m.p1 || '---';
             let p2Name = m.p2 || '---';
@@ -769,6 +769,7 @@
             rtdb.ref('tournament_status/syllabus').set(selected); alert("Đã khóa đề thi!");
         }
 
+        // BỐC THĂM LẠI BẰNG KÝ TỰ "---" ĐỂ FIREBASE KHÔNG XÓA
         async function executeBlindDraw() {
             if(!confirm("Xác nhận bốc thăm giải đấu mới (MES Champions League)? Nhánh đấu cũ sẽ bị xóa.")) return;
             const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get();
@@ -789,35 +790,35 @@
             let qualified = candidates.slice(0, topCount).sort(() => Math.random() - 0.5);
             
             let fullBracket = { 
-                final: { p1: null, p2: null, winner: null },
-                third_place: { p1: null, p2: null, winner: null } 
+                final: { p1: "---", p2: "---", winner: "" },
+                third_place: { p1: "---", p2: "---", winner: "" } 
             };
 
             if (topCount === 16) {
                 fullBracket.r16l = [
-                    { p1: qualified[0], p2: qualified[1], winner: null }, { p1: qualified[2], p2: qualified[3], winner: null },
-                    { p1: qualified[4], p2: qualified[5], winner: null }, { p1: qualified[6], p2: qualified[7], winner: null }
+                    { p1: qualified[0], p2: qualified[1], winner: "" }, { p1: qualified[2], p2: qualified[3], winner: "" },
+                    { p1: qualified[4], p2: qualified[5], winner: "" }, { p1: qualified[6], p2: qualified[7], winner: "" }
                 ];
-                fullBracket.qfl = [{ p1: null, p2: null, winner: null }, { p1: null, p2: null, winner: null }];
-                fullBracket.sfl = { p1: null, p2: null, winner: null };
-                fullBracket.sfr = { p1: null, p2: null, winner: null };
-                fullBracket.qfr = [{ p1: null, p2: null, winner: null }, { p1: null, p2: null, winner: null }];
+                fullBracket.qfl = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }];
+                fullBracket.sfl = { p1: "---", p2: "---", winner: "" };
+                fullBracket.sfr = { p1: "---", p2: "---", winner: "" };
+                fullBracket.qfr = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }];
                 fullBracket.r16r = [
-                    { p1: qualified[8], p2: qualified[9], winner: null }, { p1: qualified[10], p2: qualified[11], winner: null },
-                    { p1: qualified[12], p2: qualified[13], winner: null }, { p1: qualified[14], p2: qualified[15], winner: null }
+                    { p1: qualified[8], p2: qualified[9], winner: "" }, { p1: qualified[10], p2: qualified[11], winner: "" },
+                    { p1: qualified[12], p2: qualified[13], winner: "" }, { p1: qualified[14], p2: qualified[15], winner: "" }
                 ];
             } else if (topCount === 8) {
                 fullBracket.qfl = [
-                    { p1: qualified[0], p2: qualified[1], winner: null }, { p1: qualified[2], p2: qualified[3], winner: null }
+                    { p1: qualified[0], p2: qualified[1], winner: "" }, { p1: qualified[2], p2: qualified[3], winner: "" }
                 ];
-                fullBracket.sfl = { p1: null, p2: null, winner: null };
-                fullBracket.sfr = { p1: null, p2: null, winner: null };
+                fullBracket.sfl = { p1: "---", p2: "---", winner: "" };
+                fullBracket.sfr = { p1: "---", p2: "---", winner: "" };
                 fullBracket.qfr = [
-                    { p1: qualified[4], p2: qualified[5], winner: null }, { p1: qualified[6], p2: qualified[7], winner: null }
+                    { p1: qualified[4], p2: qualified[5], winner: "" }, { p1: qualified[6], p2: qualified[7], winner: "" }
                 ];
             } else if (topCount === 4) {
-                fullBracket.sfl = { p1: qualified[0], p2: qualified[1], winner: null };
-                fullBracket.sfr = { p1: qualified[2], p2: qualified[3], winner: null };
+                fullBracket.sfl = { p1: qualified[0], p2: qualified[1], winner: "" };
+                fullBracket.sfr = { p1: qualified[2], p2: qualified[3], winner: "" };
             }
 
             rtdb.ref('tournament_status/result').remove(); 
@@ -833,8 +834,16 @@
 
             let updateNeeded = false;
 
+            // BÙ ĐẮP DỮ LIỆU NẾU BỊ FIREBASE XÓA NHẦM (FIX LỖI MẤT CỘT)
+            if (!fb.final) fb.final = { p1: "---", p2: "---", winner: "" };
+            if (!fb.third_place) fb.third_place = { p1: "---", p2: "---", winner: "" };
+            if (fb.r16l && !fb.qfl) fb.qfl = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }];
+            if (fb.r16r && !fb.qfr) fb.qfr = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }];
+            if (fb.qfl && !fb.sfl) fb.sfl = { p1: "---", p2: "---", winner: "" };
+            if (fb.qfr && !fb.sfr) fb.sfr = { p1: "---", p2: "---", winner: "" };
+
             function moveWinner(sourceMatch, targetStage, targetIdx, targetPlayerSlot) {
-                if (sourceMatch && sourceMatch.winner && fb[targetStage]) {
+                if (sourceMatch && sourceMatch.winner && sourceMatch.winner !== "" && fb[targetStage]) {
                     if (Array.isArray(fb[targetStage])) {
                         if (fb[targetStage][targetIdx][targetPlayerSlot] !== sourceMatch.winner) {
                             fb[targetStage][targetIdx][targetPlayerSlot] = sourceMatch.winner;
@@ -864,12 +873,12 @@
                 moveWinner(fb.qfr[0], 'sfr', 0, 'p1'); moveWinner(fb.qfr[1], 'sfr', 0, 'p2');
             }
             
-            if(fb.sfl && fb.sfl.winner) {
+            if(fb.sfl && fb.sfl.winner && fb.sfl.winner !== "") {
                 moveWinner(fb.sfl, 'final', 0, 'p1');
                 let loser1 = fb.sfl.winner === fb.sfl.p1 ? fb.sfl.p2 : fb.sfl.p1;
                 if (fb.third_place.p1 !== loser1) { fb.third_place.p1 = loser1; updateNeeded = true; }
             }
-            if(fb.sfr && fb.sfr.winner) {
+            if(fb.sfr && fb.sfr.winner && fb.sfr.winner !== "") {
                 moveWinner(fb.sfr, 'final', 0, 'p2');
                 let loser2 = fb.sfr.winner === fb.sfr.p1 ? fb.sfr.p2 : fb.sfr.p1;
                 if (fb.third_place.p2 !== loser2) { fb.third_place.p2 = loser2; updateNeeded = true; }
@@ -883,7 +892,8 @@
             }
             
             let isTournamentDone = false;
-            if (fb.final && fb.final.winner && fb.third_place && fb.third_place.winner) {
+            if (fb.final && fb.final.winner && fb.final.winner !== "" && 
+                fb.third_place && fb.third_place.winner && fb.third_place.winner !== "") {
                 isTournamentDone = true;
             }
 
