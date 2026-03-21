@@ -86,17 +86,10 @@
         
         .bracket-board { 
             background: linear-gradient(135deg, #1a237e 0%, #311b92 100%); 
-            border-radius: 15px; padding: 40px 20px; color: white; margin-bottom: 40px; 
+            border-radius: 15px; padding: 30px 15px; color: white; margin-bottom: 40px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; display: none; width: 100%; overflow-x: auto;
         }
-        .bracket-board h2 { font-size: 26px; text-transform: uppercase; letter-spacing: 2px; }
-        .match-box { background: rgba(255, 255, 255, 0.1); border: 2px solid #5c6bc0; border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); backdrop-filter: blur(5px); transition: transform 0.2s, border-color 0.2s; position: relative; }
-        .match-box:hover { transform: translateY(-5px); border-color: #ffd700; }
-        .player-name { padding: 10px; font-weight: bold; font-size: 16px; border-bottom: 1px dashed rgba(255,255,255,0.2); }
-        .player-name:last-child { border-bottom: none; }
-        .vs-text { font-size: 14px; color: #ffeb3b; font-style: italic; margin: 10px 0; font-weight: 900; background: rgba(0,0,0,0.3); display: inline-block; padding: 4px 12px; border-radius: 12px; }
-        .btn-fight { display:none; background: #ff5252; color: white; padding: 8px; border-radius: 5px; font-size: 12px; margin-top: 10px; cursor: pointer; width: 100%; font-weight: bold; border: none;}
-        .btn-fight:hover { background: #d50000; }
+        .bracket-board h2 { font-size: 24px; text-transform: uppercase; letter-spacing: 2px; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; padding: 15px; }
         .modal.active { display: flex; }
@@ -155,32 +148,68 @@
             .battle-options { grid-template-columns: 1fr; }
         }
 
-        /* NEW CSS FOR BRACKET DYNAMIC */
+        /* NEW CSS FOR BRACKET DYNAMIC - THU GỌN GIAO DIỆN */
         .full-bracket {
             display: grid;
-            gap: 20px;
+            gap: 10px; /* Giảm khoảng trống giữa các cột */
             align-items: center;
             overflow-x: auto;
-            padding: 20px;
+            padding: 10px;
         }
         .bracket-column {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 12px; /* Giảm khoảng trống giữa các trận */
             height: 100%;
             justify-content: center;
         }
-        .bracket-match {
+        .match-box {
             background: rgba(255, 255, 255, 0.1);
-            border: 2px solid #5c6bc0;
-            border-radius: 12px;
-            padding: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 1px solid #5c6bc0; /* Viền mỏng hơn */
+            border-radius: 8px; /* Bo góc nhỏ hơn */
+            padding: 8px; /* Giảm độ phồng của khung */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             backdrop-filter: blur(5px);
             position: relative;
+            min-width: 130px; /* Giới hạn độ hẹp */
         }
         .player-name.won { color: #00e676; font-weight: 900; }
         .player-name.lost { opacity: 0.4; text-decoration: line-through; }
+        .player-name { 
+            padding: 6px 8px; /* Thu gọn chữ */
+            font-weight: bold; 
+            font-size: 13px; /* Cỡ chữ nhỏ lại */
+            border-bottom: 1px dashed rgba(255,255,255,0.2); 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; /* Nếu tên quá dài sẽ hiện ... */
+        }
+        .player-name:last-child { border-bottom: none; }
+        .vs-text { 
+            font-size: 11px; /* VS nhỏ lại */
+            color: #ffeb3b; 
+            font-style: italic; 
+            margin: 4px 0; 
+            font-weight: 900; 
+            background: rgba(0,0,0,0.3); 
+            display: inline-block; 
+            padding: 2px 8px; 
+            border-radius: 8px; 
+        }
+        .btn-fight { 
+            display:none; 
+            background: #ff5252; 
+            color: white; 
+            padding: 6px; 
+            border-radius: 4px; 
+            font-size: 11px; 
+            margin-top: 6px; 
+            cursor: pointer; 
+            width: 100%; 
+            font-weight: bold; 
+            border: none;
+        }
+        .btn-fight:hover { background: #d50000; }
     </style>
 </head>
 <body>
@@ -194,11 +223,11 @@
             <div style="font-size: 12px; color: #666; margin-top: 5px;">🔍 Kính Lúp: <span id="ui-glass-count" style="font-weight:bold; color:var(--primary);">0</span></div>
         </div>
         <div class="nav-item" id="nav-creator" onclick="switchTab('creator')" style="display:none">⚡ Lò Đúc Bài Học</div>
-        <div class="nav-item nav-arena" id="nav-arena" onclick="switchTab('arena')" style="display:none">⚔️ Đài Tỷ Võ (Knock-out)</div>
+        <div class="nav-item nav-arena" id="nav-arena" onclick="switchTab('arena')" style="display:none">⚔️ Đài Tỷ Võ</div>
         <div class="nav-item active" id="nav-library" onclick="switchTab('library')">☁️ Kho Bài Học</div>
         <div class="nav-item" id="nav-shop" onclick="switchTab('shop')">🛒 Cửa Hàng</div>
         <div class="nav-item" id="nav-leaderboard" onclick="switchTab('leaderboard')">🏆 Xếp Hạng</div>
-        <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">⚙️ Cài Đặt Hệ Thống</div>
+        <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">⚙️ Cài Đặt</div>
     </aside>
 
     <div class="main-wrapper">
@@ -592,7 +621,7 @@
             if (currentFullBracketData.qfr) columns.push({ title: 'Tứ Kết', key: 'qfr' });
             if (currentFullBracketData.r16r) columns.push({ title: 'Vòng 1/8', key: 'r16r' });
 
-            container.style.gridTemplateColumns = `repeat(${columns.length}, minmax(150px, 1fr))`;
+            container.style.gridTemplateColumns = `repeat(${columns.length}, minmax(120px, 1fr))`;
 
             columns.forEach(col => {
                 const colEl = document.createElement('div');
@@ -740,7 +769,6 @@
             rtdb.ref('tournament_status/syllabus').set(selected); alert("Đã khóa đề thi!");
         }
 
-        // BỐC THĂM MES CHAMPIONS LEAGUE
         async function executeBlindDraw() {
             if(!confirm("Xác nhận bốc thăm giải đấu mới (MES Champions League)? Nhánh đấu cũ sẽ bị xóa.")) return;
             const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get();
@@ -762,7 +790,7 @@
             
             let fullBracket = { 
                 final: { p1: null, p2: null, winner: null },
-                third_place: { p1: null, p2: null, winner: null } // Trận hạng 3 luôn chực chờ
+                third_place: { p1: null, p2: null, winner: null } 
             };
 
             if (topCount === 16) {
@@ -797,7 +825,6 @@
             alert(`Đã bốc thăm MES Champions League (Top ${topCount}) xong! Xin mời xem ở tab Xếp Hạng.`);
         }
 
-        // TỔNG KẾT VÀ CHIA NHÁNH (THẮNG LÊN CHUNG KẾT, THUA XUỐNG HẠNG 3)
         async function advanceTournament() {
             if(!confirm("Tổng kết toàn bộ các trận đã kết thúc và xếp người thắng vào vòng trong?")) return;
             const snap = await rtdb.ref('tournament_status/full_bracket').once('value');
@@ -837,7 +864,6 @@
                 moveWinner(fb.qfr[0], 'sfr', 0, 'p1'); moveWinner(fb.qfr[1], 'sfr', 0, 'p2');
             }
             
-            // Xử lý Bán Kết đẩy xuống Hạng 3 và Chung Kết
             if(fb.sfl && fb.sfl.winner) {
                 moveWinner(fb.sfl, 'final', 0, 'p1');
                 let loser1 = fb.sfl.winner === fb.sfl.p1 ? fb.sfl.p2 : fb.sfl.p1;
@@ -856,7 +882,6 @@
                 alert("Chưa có trận nào mới kết thúc hoặc hệ thống đã cập nhật xong xuôi.");
             }
             
-            // ĐIỀU KIỆN KẾT THÚC GIẢI: Khi cả Chung kết và Hạng 3 đều đã đánh xong
             let isTournamentDone = false;
             if (fb.final && fb.final.winner && fb.third_place && fb.third_place.winner) {
                 isTournamentDone = true;
@@ -949,7 +974,6 @@
             });
         }
 
-        // ĐÂY LÀ ĐOẠN MÃ ĐÃ ĐƯỢC SỬA LỖI LƯU NHẦM CỘT
         function processNextRound(currentQIdx) {
             rtdb.ref('active_pvp_match').once('value').then(snap => {
                 let m = snap.val();
@@ -987,8 +1011,6 @@
                             let matchInfo = matchSnap.val();
                             if(matchInfo.stage && matchInfo.match_idx !== undefined) {
                                 let key = `tournament_status/full_bracket/${matchInfo.stage}`;
-                                
-                                // THUẬT TOÁN ĐÃ ĐƯỢC CHỈNH CHUẨN XÁC
                                 if(matchInfo.stage === 'sfl' || matchInfo.stage === 'sfr' || matchInfo.stage === 'final' || matchInfo.stage === 'third_place') { 
                                     key += `/winner`;
                                 } else { 
