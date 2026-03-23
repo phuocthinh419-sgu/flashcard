@@ -474,15 +474,27 @@
             if (!auth) return;
             const email = document.getElementById('loginEmail').value.trim(); const pass = document.getElementById('loginPass').value.trim();
             if (!email || !pass) return alert("Xin vui lòng nhập đầy đủ Tài khoản và Mật khẩu!");
+            
             auth.signInWithEmailAndPassword(email, pass).catch(function(error) {
-                if (error.code === 'auth/invalid-login-credentials' || error.code === 'auth/user-not-found') {
-                    if(confirm("Tài khoản chưa tồn tại hoặc sai mật khẩu! Bạn có muốn ĐĂNG KÝ?")) {
-                        auth.createUserWithEmailAndPassword(email, pass).catch(err => alert("Lỗi đăng ký: " + err.message));
+                // Cập nhật bắt trọn toàn bộ các mã lỗi mới nhất của Firebase
+                if (error.code === 'auth/invalid-credential' || error.code === 'auth/invalid-login-credentials' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    if(confirm("Tài khoản chưa tồn tại hoặc sai mật khẩu! Bệ hạ/Sĩ tử có muốn dùng thông tin này để ĐĂNG KÝ MỚI không?")) {
+                        auth.createUserWithEmailAndPassword(email, pass).then(() => {
+                            alert("🎉 Ghi danh Sổ Nam Tào thành công!");
+                        }).catch(err => {
+                            if (err.code === 'auth/weak-password') alert("⚠️ Mật khẩu quá yếu! Hệ thống bắt buộc phải từ 6 ký tự trở lên.");
+                            else if (err.code === 'auth/invalid-email') alert("⚠️ Cú pháp tên sai! Xin hãy có chữ '@' và dấu chấm (VD: hs@vocab.com).");
+                            else alert("Lỗi đăng ký: " + err.message);
+                        });
                     }
-                } else alert("Lỗi: " + error.message);
+                } else if (error.code === 'auth/invalid-email') {
+                    alert("⚠️ Cú pháp tên sai! Xin hãy có chữ '@' và dấu chấm (VD: hs@vocab.com).");
+                } else {
+                    alert("Lỗi cổng thành: " + error.message);
+                }
             });
         }
-
+        
      if(auth) {
             auth.onAuthStateChanged(user => {
                 if (user) {
