@@ -84,7 +84,7 @@
         .syllabus-item { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #eee; font-weight: 500; transition: 0.3s;}
         .syllabus-item:last-child { border-bottom: none; }
         
-        /* BRACKET CSS - CHUẨN XÁC KHÔNG TRÙNG LẶP */
+        /* BRACKET CSS */
         .bracket-board { 
             background: linear-gradient(135deg, #1a237e 0%, #311b92 100%); 
             border-radius: 15px; padding: 30px 15px; color: white; margin-bottom: 40px; 
@@ -334,6 +334,19 @@
         </main>
     </div>
 
+    <div class="modal" id="antiCheatModal">
+        <div class="modal-content name-modal-content" style="border: 3px solid var(--danger);">
+            <h3 style="color: var(--danger); margin-bottom: 15px; font-size: 20px;">⚠️ HỆ THỐNG GIÁM THỊ AI!</h3>
+            <div style="text-align: left; font-size: 14px; line-height: 1.6; color: #555; margin-bottom: 25px;">
+                <b>1.</b> Camera và Màn hình của bạn đang được theo dõi ngầm.<br><br>
+                <b>2.</b> Kể từ lúc bấm nút dưới đây, <b>nghiêm cấm mọi hành vi vuốt xem thông báo, thu nhỏ trình duyệt, hoặc chuyển sang ứng dụng khác</b>.<br><br>
+                <b>3.</b> Bất kỳ vi phạm nào sẽ bị máy chủ phát hiện và <b>XỬ THUA LẬP TỨC!</b>
+            </div>
+            <button class="btn-danger" style="width: 100%; padding: 15px; font-size: 16px; font-weight: bold;" onclick="confirmJoinMatch()">TÔI ĐÃ HIỂU VÀ SẴN SÀNG</button>
+            <button class="btn-close" style="width: 100%; padding: 10px; margin-top: 10px;" onclick="document.getElementById('antiCheatModal').classList.remove('active')">Rút lui</button>
+        </div>
+    </div>
+
     <div class="modal" id="scheduleModal">
         <div class="modal-content name-modal-content">
             <h3 style="color: var(--danger); margin-bottom: 15px; font-size: 22px;">⏰ Định Ngày Tỷ Võ</h3>
@@ -544,12 +557,62 @@
             });
         }
 
-        function joinMatch(stageKey, matchIndex, playerSlot) {
-            let key = `tournament_status/full_bracket/${stageKey}`;
-            if(stageKey !== 'sfl' && stageKey !== 'sfr' && stageKey !== 'final' && stageKey !== 'third_place') { key += `/${matchIndex}`; }
-            let updateData = {}; updateData[playerSlot + "_ready"] = true;
-            rtdb.ref(key).update(updateData);
+        /* --- THUẬT TOÁN ĐAO PHỦ (CHỐNG GIAN LẬN TAB) --- */
+        let isUnderSurveillance = false;
+        let surveillanceData = null;
+
+        function showAntiCheatModal(stageKey, matchIndex, playerSlot) {
+            let m = currentFullBracketData[stageKey];
+            if (Array.isArray(m)) m = m[matchIndex];
+            
+            surveillanceData = {
+                stageKey: stageKey, matchIndex: matchIndex, playerSlot: playerSlot,
+                myName: playerSlot === 'p1' ? m.p1 : m.p2,
+                oppName: playerSlot === 'p1' ? m.p2 : m.p1
+            };
+            document.getElementById('antiCheatModal').classList.add('active');
         }
+
+        function confirmJoinMatch() {
+            document.getElementById('antiCheatModal').classList.remove('active');
+            if (!surveillanceData) return;
+            
+            let key = `tournament_status/full_bracket/${surveillanceData.stageKey}`;
+            if (surveillanceData.stageKey !== 'sfl' && surveillanceData.stageKey !== 'sfr' && surveillanceData.stageKey !== 'final' && surveillanceData.stageKey !== 'third_place') { 
+                key += `/${surveillanceData.matchIndex}`; 
+            }
+            let updateData = {}; updateData[surveillanceData.playerSlot + "_ready"] = true;
+            rtdb.ref(key).update(updateData).then(() => {
+                isUnderSurveillance = true; // ⚠️ KÍCH HOẠT LƯỚI TRỜI NGAY LÚC NÀY
+            });
+        }
+
+        // Bắt lỗi chuyển Tab
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden && isUnderSurveillance) {
+                isUnderSurveillance = false; // Chỉ chém 1 lần để tránh lặp lệnh
+                alert("❌ HỆ THỐNG AI PHÁT HIỆN GIAN LẬN!\nBạn đã rời khỏi màn hình thi đấu. Chiếu theo quân luật, bạn bị XỬ THUA ngay lập tức!");
+                
+                // 1. Cập nhật nhánh đấu (Đối thủ tự động Win)
+                let key = `tournament_status/full_bracket/${surveillanceData.stageKey}`;
+                if (surveillanceData.stageKey !== 'sfl' && surveillanceData.stageKey !== 'sfr' && surveillanceData.stageKey !== 'final' && surveillanceData.stageKey !== 'third_place') { 
+                    key += `/${surveillanceData.matchIndex}`; 
+                }
+                rtdb.ref(key).update({ winner: surveillanceData.oppName });
+                
+                // 2. Nếu lỡ đang trong phòng đấu 30 câu thì đánh sập phòng
+                rtdb.ref('active_pvp_match').once('value').then(snap => {
+                    let m = snap.val();
+                    if(m && m.status !== 'finished' && (m.p1 === surveillanceData.myName || m.p2 === surveillanceData.myName)) {
+                        rtdb.ref('active_pvp_match').update({ status: 'finished', winner: surveillanceData.oppName });
+                    }
+                });
+                
+                // 3. Đuổi cổ ra ngoài
+                document.getElementById('pvpModal').classList.remove('active');
+            }
+        });
+        /* ---------------------------------------------------- */
 
         // Kiểm tra xử thua tự động (Chỉ chạy trên máy Admin)
         setInterval(() => {
@@ -653,8 +716,10 @@
                         
                         // Nếu là học sinh có tên trong trận
                         let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
-                        if(isP1 && !m.p1_ready) btnAction = `<button class="btn-join" style="display:block;" onclick="joinMatch('${stageKey}', ${matchIndex}, 'p1')">🚪 VÀO PHÒNG P1</button>`;
-                        if(isP2 && !m.p2_ready) btnAction = `<button class="btn-join" style="display:block;" onclick="joinMatch('${stageKey}', ${matchIndex}, 'p2')">🚪 VÀO PHÒNG P2</button>`;
+                        
+                        // Gắn bẫy Nội Quy vào Nút Vào Phòng
+                        if(isP1 && !m.p1_ready) btnAction = `<button class="btn-join" style="display:block;" onclick="showAntiCheatModal('${stageKey}', ${matchIndex}, 'p1')">🚪 VÀO PHÒNG P1</button>`;
+                        if(isP2 && !m.p2_ready) btnAction = `<button class="btn-join" style="display:block;" onclick="showAntiCheatModal('${stageKey}', ${matchIndex}, 'p2')">🚪 VÀO PHÒNG P2</button>`;
                         
                         // Kích hoạt trận đấu tự động nếu cả 2 đã ready
                         if(m.p1_ready && m.p2_ready) {
@@ -701,7 +766,6 @@
             const lbContainer = document.getElementById('leaderboardData'); 
             lbContainer.innerHTML = '<p style="text-align:center">Đang tải...</p>';
             
-            // DÙNG onSnapshot ĐỂ NGHE LÉN SỰ THAY ĐỔI 24/24
             db.collection('vocab_users').orderBy('xp', 'desc').limit(30).onSnapshot((snapshot) => {
                 let html = ''; let rank = 1;
                 snapshot.forEach(doc => {
@@ -726,6 +790,7 @@
                 lbContainer.innerHTML = '<p style="color:red; text-align:center">Lỗi bảng xếp hạng.</p>';
             });
         }
+
         const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing';
         let allLessonsData = [];
         async function fetchFromSheets() {
@@ -895,7 +960,20 @@
         }
 
         if(rtdb) {
-            rtdb.ref('tournament_status/full_bracket').on('value', (snapshot) => { currentFullBracketData = snapshot.val(); renderBracket(); });
+            rtdb.ref('tournament_status/full_bracket').on('value', (snapshot) => { 
+                currentFullBracketData = snapshot.val(); 
+                
+                // Xóa bẫy giám sát nếu trận đấu đã có kết quả (bị xử thua, đối thủ bỏ cuộc, v.v...)
+                if (isUnderSurveillance && surveillanceData) {
+                    let sm = currentFullBracketData[surveillanceData.stageKey];
+                    if (Array.isArray(sm)) sm = sm[surveillanceData.matchIndex];
+                    if (sm && sm.winner && sm.winner !== "") {
+                        isUnderSurveillance = false; 
+                    }
+                }
+                
+                renderBracket(); 
+            });
             rtdb.ref('tournament_status/result').on('value', (snap) => {
                 const res = snap.val();
                 if(res) { document.getElementById('rank1Name').innerText = res.rank1; document.getElementById('rank2Name').innerText = res.rank2; document.getElementById('rank3Name').innerText = res.rank3; document.getElementById('rank4Name').innerText = res.rank4; document.getElementById('podiumModal').classList.add('active'); } else { document.getElementById('podiumModal').classList.remove('active'); }
@@ -927,6 +1005,7 @@
                         document.getElementById('lockOverlay').classList.remove('active');
                         for(let i=0; i<4; i++) { let btn = document.getElementById('pvpOpt'+i); btn.style.pointerEvents = 'none'; if (btn.innerText === m.current_q.vi) { btn.style.backgroundColor = '#00c853'; btn.style.borderColor = '#00e676'; btn.style.opacity = '1'; } else { btn.style.opacity = '0.3'; } }
                     } else if (m.status === 'finished') {
+                        isUnderSurveillance = false; // Tắt bẫy khi thi xong
                         clearInterval(window.pvpTimer); document.getElementById('pvpWaitMsg').style.display = 'block'; document.getElementById('pvpWaitMsg').style.color = '#ffd700'; document.getElementById('pvpWaitMsg').innerText = "🏆 KẾT THÚC! NGƯỜI THẮNG: " + m.winner;
                         document.getElementById('pvpQuestion').style.display = 'none'; document.getElementById('pvpOptions').style.display = 'none'; document.getElementById('lockOverlay').classList.remove('active'); setTimeout(() => document.getElementById('pvpModal').classList.remove('active'), 5000);
                     }
