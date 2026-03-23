@@ -593,14 +593,14 @@
                 isUnderSurveillance = false; // Chỉ chém 1 lần để tránh lặp lệnh
                 alert("❌ HỆ THỐNG AI PHÁT HIỆN GIAN LẬN!\nBạn đã rời khỏi màn hình thi đấu. Chiếu theo quân luật, bạn bị XỬ THUA ngay lập tức!");
                 
-                // 1. Cập nhật nhánh đấu (Đối thủ tự động Win)
+                // Cập nhật nhánh đấu (Đối thủ tự động Win)
                 let key = `tournament_status/full_bracket/${surveillanceData.stageKey}`;
                 if (surveillanceData.stageKey !== 'sfl' && surveillanceData.stageKey !== 'sfr' && surveillanceData.stageKey !== 'final' && surveillanceData.stageKey !== 'third_place') { 
                     key += `/${surveillanceData.matchIndex}`; 
                 }
                 rtdb.ref(key).update({ winner: surveillanceData.oppName });
                 
-                // 2. Nếu lỡ đang trong phòng đấu 30 câu thì đánh sập phòng
+                // Đánh sập phòng đấu nếu đang mở
                 rtdb.ref('active_pvp_match').once('value').then(snap => {
                     let m = snap.val();
                     if(m && m.status !== 'finished' && (m.p1 === surveillanceData.myName || m.p2 === surveillanceData.myName)) {
@@ -608,7 +608,6 @@
                     }
                 });
                 
-                // 3. Đuổi cổ ra ngoài
                 document.getElementById('pvpModal').classList.remove('active');
             }
         });
@@ -716,8 +715,6 @@
                         
                         // Nếu là học sinh có tên trong trận
                         let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
-                        
-                        // Gắn bẫy Nội Quy vào Nút Vào Phòng
                         if(isP1 && !m.p1_ready) btnAction = `<button class="btn-join" style="display:block;" onclick="showAntiCheatModal('${stageKey}', ${matchIndex}, 'p1')">🚪 VÀO PHÒNG P1</button>`;
                         if(isP2 && !m.p2_ready) btnAction = `<button class="btn-join" style="display:block;" onclick="showAntiCheatModal('${stageKey}', ${matchIndex}, 'p2')">🚪 VÀO PHÒNG P2</button>`;
                         
