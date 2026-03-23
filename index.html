@@ -715,6 +715,8 @@
                         
                         // Nếu là học sinh có tên trong trận
                         let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
+                        
+                        // Gắn bẫy Nội Quy vào Nút Vào Phòng
                         if(isP1 && !m.p1_ready) btnAction = `<button class="btn-join" style="display:block;" onclick="showAntiCheatModal('${stageKey}', ${matchIndex}, 'p1')">🚪 VÀO PHÒNG P1</button>`;
                         if(isP2 && !m.p2_ready) btnAction = `<button class="btn-join" style="display:block;" onclick="showAntiCheatModal('${stageKey}', ${matchIndex}, 'p2')">🚪 VÀO PHÒNG P2</button>`;
                         
@@ -758,31 +760,44 @@
 
         setInterval(renderBracket, 10000); // Tự làm mới giao diện đếm lùi 10s/lần
 
+        /* --- CẬP NHẬT BẢNG XẾP HẠNG (LUẬT STREAK < 3) --- */
         async function fetchLeaderboard() {
             if(!db) return;
             const lbContainer = document.getElementById('leaderboardData'); 
             lbContainer.innerHTML = '<p style="text-align:center">Đang tải...</p>';
             
-            db.collection('vocab_users').orderBy('xp', 'desc').limit(30).onSnapshot((snapshot) => {
-                let html = ''; let rank = 1;
+            db.collection('vocab_users').orderBy('xp', 'desc').limit(50).onSnapshot((snapshot) => {
+                let qualifiedHtml = '';
+                let unqualifiedHtml = '';
+                let rank = 1;
+                
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     if (data.role !== 'teacher') {
-                        let isMaskActive = data.maskExpiry && data.maskExpiry > Date.now();
-                        let dName = data.displayName || 'Ẩn danh'; let dXp = data.xp;
+                        let dName = data.displayName || 'Ẩn danh'; 
+                        let dXp = data.xp;
+                        let dStreak = data.streak || 1; // Mặc định là 1 nếu chưa có
                         
-                        if (isMaskActive) { 
-                            if (userData.role === 'teacher') dName = dName + " 🎭(Ẩn)"; 
-                            else { dName = "???"; dXp = "???"; } 
+                        // Đủ tư cách góp mặt trên bảng phong thần (Streak >= 3)
+                        if (dStreak >= 3) {
+                            let isMaskActive = data.maskExpiry && data.maskExpiry > Date.now();
+                            if (isMaskActive) { 
+                                if (userData.role === 'teacher') dName = dName + " 🎭(Ẩn)"; 
+                                else { dName = "???"; dXp = "???"; } 
+                            }
+                            
+                            let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '.';
+                            let rankClass = rank <= 3 ? `lb-rank-${rank}` : '';
+                            qualifiedHtml += `<div class="lb-row ${rankClass}"><span>${medal} ${dName}</span><span style="color:var(--secondary)">⭐ ${dXp} XP</span></div>`;
+                            rank++;
+                        } else {
+                            // Không đủ tư cách (Streak < 3) -> Quẳng xuống đáy, khóa lại
+                            unqualifiedHtml += `<div class="lb-row" style="background:#f0f0f0; color:#888; border: 1px dashed #ccc; padding: 10px 25px;"><span>🔒 ${dName}</span><span style="font-size:12px; font-style:italic;">Chưa đủ 3-day streak để góp mặt vào bảng xếp hạng</span></div>`;
                         }
-                        
-                        let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '.';
-                        let rankClass = rank <= 3 ? `lb-rank-${rank}` : '';
-                        html += `<div class="lb-row ${rankClass}"><span>${medal} ${dName}</span><span style="color:var(--secondary)">⭐ ${dXp} XP</span></div>`;
-                        rank++;
                     }
                 });
-                lbContainer.innerHTML = html || '<p style="text-align:center">Chưa có người dùng nào ghi danh.</p>';
+                
+                lbContainer.innerHTML = qualifiedHtml + unqualifiedHtml || '<p style="text-align:center">Chưa có người dùng nào ghi danh.</p>';
             }, (err) => {
                 lbContainer.innerHTML = '<p style="color:red; text-align:center">Lỗi bảng xếp hạng.</p>';
             });
@@ -818,13 +833,23 @@
             const checks = document.querySelectorAll('input[name="syllabusCheck"]:checked'); let selected = []; checks.forEach(c => selected.push(c.value)); rtdb.ref('tournament_status/syllabus').set(selected); alert("Đã khóa đề thi!");
         }
 
+        /* --- CẬP NHẬT RÚT THĂM (BỎ QUA KẺ STREAK < 3) --- */
         async function executeBlindDraw() {
             if(!confirm("Xác nhận bốc thăm giải đấu mới (MES Champions League)? Nhánh đấu cũ sẽ bị xóa.")) return;
-            const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get(); let candidates = [];
-            snapshot.forEach(doc => { if(doc.data().role !== 'teacher') candidates.push(doc.data().displayName || "Ẩn danh"); });
+            const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get(); 
+            let candidates = [];
+            
+            snapshot.forEach(doc => { 
+                let d = doc.data();
+                // CHỈ CHỌN KẺ CÓ STREAK TỪ 3 TRỞ LÊN
+                if(d.role !== 'teacher' && (d.streak || 1) >= 3) {
+                    candidates.push(d.displayName || "Ẩn danh"); 
+                }
+            });
+            
             let topCount = 4;
             if (candidates.length >= 24) topCount = 16; else if (candidates.length >= 16) topCount = 8; else if (candidates.length >= 4) topCount = 4; 
-            else return alert("Bẩm bệ hạ, phải có ít nhất 4 sĩ tử mới đủ mở giải đấu!");
+            else return alert("Bẩm bệ hạ, hiện chỉ có " + candidates.length + " sĩ tử đủ điều kiện (Chuỗi ≥ 3). Phải có ít nhất 4 sĩ tử mới đủ mở giải đấu!");
             
             let qualified = candidates.slice(0, topCount).sort(() => Math.random() - 0.5);
             let fullBracket = { final: { p1: "---", p2: "---", winner: "" }, third_place: { p1: "---", p2: "---", winner: "" } };
