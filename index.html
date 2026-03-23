@@ -54,7 +54,7 @@
         .lib-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; height: 160px; border-left: 5px solid var(--secondary); transition: 0.3s;}
         .lib-actions { display: flex; gap: 8px; margin-top: 10px; } .lib-actions button { flex: 1; }
         
-        .shop-item { background: #fff; padding: 25px 20px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center; border: 2px solid transparent; transition: all 0.3s ease;}
+        .shop-item { background: #fff; padding: 25px 20px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center; border: 2px solid transparent; transition: all 0.3s ease; position: relative;}
         .shop-item:hover { border-color: #fbc02d; transform: translateY(-5px); }
         .item-icon { font-size: 55px; margin-bottom: 10px; }
         .item-title { font-size: 18px; color: var(--primary); margin-bottom: 5px; font-weight: bold;}
@@ -137,7 +137,7 @@
         .modal.active { display: flex; }
         .modal-content { background: white; width: 100%; max-width: 900px; height: 85vh; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: 0.3s;}
         .modal-header { padding: 15px 20px; background: #fafafa; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; transition: 0.3s;}
-        .btn-close { background: #ccc; color: #333; padding: 8px 20px;}
+        .btn-close { background: #ccc; color: #333; padding: 8px 20px; cursor: pointer; font-weight: bold;}
         .name-modal-content { max-width: 400px; height: auto; text-align: center; padding: 30px; }
         
         /* BATTLE ARENA */
@@ -160,6 +160,33 @@
 
         .reward-anim { position: fixed; bottom: 20px; right: 20px; background: #00c853; color: white; padding: 15px 25px; border-radius: 30px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 15px rgba(0,200,83,0.4); transform: translateY(100px); opacity: 0; transition: 0.5s; z-index: 9999;}
         .reward-anim.show { transform: translateY(0); opacity: 1; }
+
+        /* VÒNG QUAY CSS */
+        .wheel-container { position: relative; width: 280px; height: 280px; margin: 20px auto; }
+        .wheel { 
+            width: 100%; height: 100%; border-radius: 50%; 
+            background: conic-gradient(#ff5252 0 45deg, #ff4081 45deg 90deg, #e040fb 90deg 135deg, #7c4dff 135deg 180deg, #536dfe 180deg 225deg, #448aff 225deg 270deg, #40c4ff 270deg 315deg, #18ffff 315deg 360deg); 
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.1, 1); 
+            box-shadow: 0 0 20px rgba(0,0,0,0.5); border: 5px solid #fff; position: relative; overflow: hidden; 
+        }
+        .wheel-pointer { 
+            position: absolute; top: -15px; left: 50%; transform: translateX(-50%); 
+            width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #ffd700; 
+            z-index: 10; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); 
+        }
+        .wheel-text { 
+            position: absolute; top: 0; left: 50%; width: 30px; height: 140px; transform-origin: bottom center; 
+            font-weight: 900; font-size: 12px; color: white; display: flex; justify-content: center; padding-top: 15px; 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8); white-space: nowrap; writing-mode: vertical-rl; 
+        }
+        .wt-0 { transform: translateX(-50%) rotate(22.5deg); }
+        .wt-1 { transform: translateX(-50%) rotate(67.5deg); }
+        .wt-2 { transform: translateX(-50%) rotate(112.5deg); }
+        .wt-3 { transform: translateX(-50%) rotate(157.5deg); }
+        .wt-4 { transform: translateX(-50%) rotate(202.5deg); }
+        .wt-5 { transform: translateX(-50%) rotate(247.5deg); }
+        .wt-6 { transform: translateX(-50%) rotate(292.5deg); }
+        .wt-7 { transform: translateX(-50%) rotate(337.5deg); }
 
         /* DARK MODE */
         body.dark-mode { --bg-color: #121212; --text-main: #e0e0e0; }
@@ -241,8 +268,22 @@
             </div>
 
             <div id="view-shop" class="view-section">
-                <div class="header"><h1>🛒 Cửa Hàng</h1><p>Đổi vật phẩm bằng Vàng.</p></div>
+                <div class="header">
+                    <h1>🛒 Cửa Hàng</h1><p>Đổi vật phẩm bằng Vàng.</p>
+                    <div style="background: #fff9c4; padding: 10px; border-radius: 8px; font-weight: bold; margin-top: 10px; color: #f57f17; display: flex; justify-content: space-between; align-items: center;">
+                        <span>🎟️ Kho Voucher: <span id="ui-vouchers">Trống</span></span>
+                        <span style="font-size: 12px; font-style: italic;">(Sẽ tự động áp dụng mã to nhất khi mua hàng)</span>
+                    </div>
+                </div>
                 <div class="shop-grid">
+                    <div class="shop-item" style="border: 2px solid #ff9800; background: #fff8e1;">
+                        <div class="item-icon">🎡</div>
+                        <div class="item-title" style="color: #f57f17;">Vòng Quay Nhân Phẩm</div>
+                        <div class="item-desc">Đánh cược với Sổ Nam Tào! Quay thử vận may, trúng mánh hoặc mất trắng.</div>
+                        <div class="item-price" style="color: #f57f17; background: #ffecb3;">🪙 150</div>
+                        <button class="btn-buy" style="background: linear-gradient(45deg, #ff9800, #f57f17);" onclick="openWheelModal()">Quay Ngay</button>
+                    </div>
+
                     <div class="shop-item">
                         <div class="item-icon">🪪</div>
                         <div class="item-title">Thẻ Đổi Tên</div>
@@ -335,6 +376,28 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <div class="modal" id="wheelModal">
+        <div class="modal-content name-modal-content" style="background: linear-gradient(135deg, #1a237e 0%, #311b92 100%); color: white; border: 4px solid #ffd700; height: auto;">
+            <h3 style="color: #ffd700; margin-bottom: 10px; font-size: 24px; text-transform: uppercase;">🎡 Vòng Quay Nhân Phẩm</h3>
+            <p style="color: #ccc; margin-bottom: 10px;">Mỗi lượt 150 Vàng. Hôm nay còn <span id="ui-wheel-left" style="color: #00e676; font-weight: bold; font-size: 18px;">3</span> lượt.</p>
+            <div class="wheel-container">
+                <div class="wheel-pointer"></div>
+                <div class="wheel" id="spinningWheel">
+                    <div class="wheel-text wt-0">😭 Xui Quá</div>
+                    <div class="wheel-text wt-1">🪙 +50 Vàng</div>
+                    <div class="wheel-text wt-2">⭐ +150 XP</div>
+                    <div class="wheel-text wt-3">🎟️ Giảm 30%</div>
+                    <div class="wheel-text wt-4">🎟️ Giảm 50%</div>
+                    <div class="wheel-text wt-5">🛡️ Bùa Bảo Hộ</div>
+                    <div class="wheel-text wt-6">🔍 Kính Lúp</div>
+                    <div class="wheel-text wt-7">😭 Xui Quá</div>
+                </div>
+            </div>
+            <button class="btn-buy" id="btnSpin" style="font-size: 18px; padding: 15px; margin-top: 10px; font-weight: 900; box-shadow: 0 4px 15px rgba(251,192,45,0.5);" onclick="spinWheel()">QUAY NGAY (150 🪙)</button>
+            <button class="btn-close" style="width: 100%; padding: 10px; margin-top: 15px; background: rgba(255,255,255,0.2); color: white;" onclick="document.getElementById('wheelModal').classList.remove('active')">Rút Lui</button>
+        </div>
     </div>
 
     <div class="modal" id="antiCheatModal">
@@ -462,7 +525,7 @@
         catch (e) { console.error("Lỗi Firebase!"); }
 
         let currentUser = null;
-        let userData = { role: 'student', gold: 0, xp: 0, streak: 1, displayName: '', lastLogin: '', hasShield: false, potionExpiry: null, maskExpiry: null, magnifyingGlass: 0 };
+        let userData = { role: 'student', gold: 0, xp: 0, streak: 1, displayName: '', lastLogin: '', hasShield: false, potionExpiry: null, maskExpiry: null, magnifyingGlass: 0, vouchers: [], blindBoxCount: 0, lastBlindBoxDate: '' };
 
         function loginWithGoogle() {
             if (!auth) return;
@@ -517,6 +580,8 @@
                         if (doc.exists) {
                             userData = doc.data();
                             if(!userData.streak) userData.streak = 1; if(!userData.lastLogin) userData.lastLogin = todayStr;
+                            if(!userData.vouchers) userData.vouchers = [];
+                            
                             let lastParts = userData.lastLogin.split('/');
                             if (lastParts.length === 3) {
                                 let todayDate = new Date(); let lastDate = new Date(lastParts[2], lastParts[1] - 1, lastParts[0]);
@@ -524,7 +589,22 @@
                                 
                                 if (diffDays === 1) { 
                                     userData.streak += 1; userData.lastLogin = todayStr; 
-                                    db.collection('vocab_users').doc(user.uid).update({ streak: userData.streak, lastLogin: todayStr }); 
+                                    
+                                    // THUẬT TOÁN BAN THƯỞNG VOUCHER THEO CHUỖI NGÀY
+                                    let mod = userData.streak % 100;
+                                    let reward = 0;
+                                    if (mod === 15) reward = 20;
+                                    else if (mod === 30) reward = 35;
+                                    else if (mod === 60) reward = 50;
+                                    else if (mod === 0 && userData.streak >= 100) reward = 100;
+                                    
+                                    if (reward > 0) {
+                                        userData.vouchers.push(reward);
+                                        userData.vouchers.sort((a,b) => b - a); // Sắp xếp giảm dần, cái to dùng trước
+                                        alert(`🎉 CHÚC MỪNG CHUỖI ${userData.streak} NGÀY LIÊN TIẾP!\nHoàng ân hạo đãng, hệ thống ban thưởng: 1 Voucher Giảm ${reward}% cho món đồ bất kỳ trong Cửa Hàng!`);
+                                    }
+                                    
+                                    db.collection('vocab_users').doc(user.uid).update({ streak: userData.streak, lastLogin: todayStr, vouchers: userData.vouchers }); 
                                 } 
                                 else if (diffDays > 1) {
                                     if (userData.hasShield) { 
@@ -547,7 +627,7 @@
                                         db.collection('vocab_users').doc(user.uid).update({ 
                                             streak: 1, lastLogin: todayStr, xp: userData.xp, gold: userData.gold
                                         }).then(() => {
-                                            updateUI(); // 🔔 LỆNH NÀY SẼ ÉP CON SỐ TRÊN MÀN HÌNH NHẢY NGAY
+                                            updateUI(); 
                                             alert(`⚡ THIẾT QUÂN LUẬT!\n\nDo lười biếng bỏ học, Chuỗi của bạn đã đứt! Hệ thống giáng hình phạt thu hồi 20% tài sản.\n\n❌ Bị trừ: ${lostXp} XP\n❌ Bị trừ: ${lostGold} Vàng`);
                                         });
                                     }
@@ -558,7 +638,7 @@
                             updateUI();
                         } else { userData.lastLogin = todayStr; document.getElementById('nameModal').classList.add('active'); }
                     });
-                } else { currentUser = null; userData = { role: 'student', gold: 0, xp: 0, streak: 0, displayName: 'Khách' }; updateUI(); }
+                } else { currentUser = null; userData = { role: 'student', gold: 0, xp: 0, streak: 0, displayName: 'Khách', vouchers: [] }; updateUI(); }
             });
         }
 
@@ -570,13 +650,27 @@
         }
 
         function syncStatsToCloud() {
-            if (currentUser && db) { db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, xp: userData.xp, streak: userData.streak, displayName: userData.displayName, magnifyingGlass: userData.magnifyingGlass || 0 }); updateUI(); }
+            if (currentUser && db) { db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, xp: userData.xp, streak: userData.streak, displayName: userData.displayName, magnifyingGlass: userData.magnifyingGlass || 0, vouchers: userData.vouchers || [] }); updateUI(); }
         }
 
         function updateUI() {
             document.getElementById('ui-gold').innerText = userData.gold; document.getElementById('ui-xp').innerText = userData.xp;
             document.getElementById('ui-streak').innerText = userData.streak; document.getElementById('sidebarName').innerText = userData.displayName || "Khách";
             document.getElementById('ui-glass-count').innerText = userData.magnifyingGlass || 0;
+            
+            // Render Voucher list
+            let vText = "Trống";
+            if(userData.vouchers && userData.vouchers.length > 0) {
+                vText = userData.vouchers.map(v => `-${v}%`).join(', ');
+            }
+            if(document.getElementById('ui-vouchers')) document.getElementById('ui-vouchers').innerText = vText;
+            
+            // Render Wheel count
+            let todayStr = new Date().toLocaleDateString('en-GB');
+            let bbLeft = 3;
+            if (userData.lastBlindBoxDate === todayStr) { bbLeft = 3 - (userData.blindBoxCount || 0); }
+            if(document.getElementById('ui-wheel-left')) document.getElementById('ui-wheel-left').innerText = bbLeft;
+
             const badge = document.getElementById('sidebarRole');
             if(userData.role === 'teacher') {
                 badge.className = 'user-badge badge-teacher'; badge.innerText = '👨‍🏫 Giáo Viên';
@@ -793,8 +887,12 @@
                 
                 // Quyền Admin luôn thấy nút Định giờ và Khai chiến ép buộc
                 if (userData.role === 'teacher') {
+                    // Bọc giáp để vô hiệu hóa dấu nháy đơn trong tên (tránh vỡ code HTML)
+                    let safeP1 = (m.p1 || '').replace(/'/g, "\\'");
+                    let safeP2 = (m.p2 || '').replace(/'/g, "\\'");
+                    
                     btnAction += `<button class="btn-schedule" style="display:block;" onclick="openScheduleModal('${stageKey}', ${matchIndex})">⏰ LÊN LỊCH</button>`;
-                    btnAction += `<button class="btn-fight" style="display:block;" onclick="adminStartPvP('${stageKey}', ${matchIndex}, '${m.p1}', '${m.p2}')">⚔️ ÉP KHAI CHIẾN</button>`;
+                    btnAction += `<button class="btn-fight" style="display:block;" onclick="adminStartPvP('${stageKey}', ${matchIndex}, '${safeP1}', '${safeP2}')">⚔️ ÉP KHAI CHIẾN</button>`;
                 }
             }
 
@@ -1093,15 +1191,109 @@
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); document.getElementById('sidebarOverlay').style.display = document.getElementById('sidebar').classList.contains('show') ? 'block' : 'none'; }
         function attemptTeacherLogin() { if (document.getElementById('teacherPinCheck').value === localStorage.getItem('teacherPin')) { userData.role = 'teacher'; db.collection('vocab_users').doc(currentUser.uid).update({ role: 'teacher' }); updateUI(); alert("Đã cấp quyền Admin!"); } else alert("Mã PIN sai!"); }
         
-        function buyItem(itemType, price) { 
-            if (!currentUser) return alert("Vui lòng đăng nhập để mua hàng!"); if (userData.gold < price) return alert("Bạn không đủ Vàng!");
-            if(confirm(`Dùng ${price} Vàng đổi vật phẩm?`)) {
-                let updates = { gold: userData.gold - price };
+        function openWheelModal() {
+            if (!currentUser) return alert("Vui lòng đăng nhập!");
+            let todayStr = new Date().toLocaleDateString('en-GB');
+            if (userData.lastBlindBoxDate !== todayStr) { userData.blindBoxCount = 0; userData.lastBlindBoxDate = todayStr; }
+            document.getElementById('ui-wheel-left').innerText = 3 - (userData.blindBoxCount || 0);
+            document.getElementById('wheelModal').classList.add('active');
+        }
+
+        let isSpinning = false;
+        function spinWheel() {
+            if (isSpinning) return;
+            if (!currentUser) return alert("Vui lòng đăng nhập!");
+            let todayStr = new Date().toLocaleDateString('en-GB');
+            if (userData.lastBlindBoxDate !== todayStr) { userData.blindBoxCount = 0; userData.lastBlindBoxDate = todayStr; }
+            if ((userData.blindBoxCount || 0) >= 3) return alert("Hôm nay đã quay hết 3 lượt! Mai quay lại nhé.");
+            if (userData.gold < 150) return alert("Không đủ 150 Vàng để quay!");
+            
+            if(confirm("Dùng 150 Vàng mở Vòng Quay để thử vận may?")) {
+                isSpinning = true;
+                userData.gold -= 150; userData.blindBoxCount = (userData.blindBoxCount || 0) + 1;
+                document.getElementById('ui-wheel-left').innerText = 3 - userData.blindBoxCount;
+                updateUI();
+                
+                let r = Math.random(); 
+                let sliceIndex = 0; let msg = ""; if(!userData.vouchers) userData.vouchers = [];
+                
+                if (r < 0.10) { sliceIndex = 0; msg = "🥺 Đen thôi đỏ quên đi! Ngươi đã mất trắng 150 Vàng."; }
+                else if (r < 0.30) { sliceIndex = 1; userData.gold += 50; msg = "🪙 An ủi: Vớt vát được 50 Vàng!"; }
+                else if (r < 0.50) { sliceIndex = 2; userData.xp += 150; msg = "⭐ Bất ngờ: Nhận được 150 XP!"; }
+                else if (r < 0.70) { sliceIndex = 3; userData.vouchers.push(30); msg = "🎟️ Trúng mánh: 1 Voucher Giảm Giá 30%!"; }
+                else if (r < 0.80) { sliceIndex = 4; userData.vouchers.push(50); msg = "🎟️ Cực phẩm: 1 Voucher Giảm Giá 50%!"; }
+                else if (r < 0.85) { sliceIndex = 5; userData.hasShield = true; msg = "🛡️ Thần binh: 1 Bùa Bảo Hộ!"; }
+                else if (r < 0.90) { sliceIndex = 6; userData.magnifyingGlass = (userData.magnifyingGlass||0) + 1; msg = "🔍 Hiếm có: 1 Kính Lúp Thám Tử!"; }
+                else { sliceIndex = 7; msg = "🥺 Kim trượt qua Kính lúp... Xui quá, mất trắng rồi!"; }
+                
+                let randomOffset = Math.floor(Math.random() * 40) - 20; 
+                let targetDegree = 3600 - (sliceIndex * 45 + 22.5) + randomOffset; 
+
+                let wheelEl = document.getElementById('spinningWheel');
+                wheelEl.style.transition = 'none';
+                wheelEl.style.transform = `rotate(0deg)`;
+                void wheelEl.offsetWidth; // Ép trình duyệt reset lại vòng quay từ 0
+
+                wheelEl.style.transition = 'transform 4.2s cubic-bezier(0.17, 0.67, 0.1, 1)';
+                wheelEl.style.transform = `rotate(${targetDegree}deg)`;
+                
+                setTimeout(() => {
+                    isSpinning = false;
+                    userData.vouchers.sort((a,b) => b - a); 
+                    
+                    db.collection('vocab_users').doc(currentUser.uid).update({
+                        gold: userData.gold, xp: userData.xp, vouchers: userData.vouchers,
+                        hasShield: userData.hasShield, magnifyingGlass: userData.magnifyingGlass,
+                        blindBoxCount: userData.blindBoxCount, lastBlindBoxDate: userData.lastBlindBoxDate
+                    }).then(() => { updateUI(); alert(msg); });
+                }, 4400); // 4.4s đợi bánh xe dừng hẳn rồi mới báo kết quả
+            }
+        }
+
+        function buyItem(itemType, basePrice) { 
+            if (!currentUser) return alert("Vui lòng đăng nhập để mua hàng!"); 
+            
+            // Tìm voucher to nhất trong kho đồ
+            let bestVoucher = 0; let vIndex = -1;
+            if(userData.vouchers && userData.vouchers.length > 0) {
+                bestVoucher = userData.vouchers[0]; vIndex = 0;
+            }
+            
+            // Tính toán giá cuối cùng
+            let finalPrice = basePrice;
+            if (bestVoucher > 0) { finalPrice = Math.floor(basePrice * (100 - bestVoucher) / 100); }
+            
+            if (userData.gold < finalPrice) return alert(`Bạn không đủ Vàng! Cần ${finalPrice} 🪙.`);
+            
+            let confirmMsg = `Dùng ${finalPrice} Vàng đổi vật phẩm?`;
+            if (bestVoucher > 0) confirmMsg = `🎟️ Hệ thống áp dụng 1 Voucher Giảm ${bestVoucher}%!\nGiá giảm từ ${basePrice} xuống còn ${finalPrice} Vàng. Mua ngay?`;
+            
+            if(confirm(confirmMsg)) {
+                let updates = { gold: userData.gold - finalPrice };
+                if (vIndex > -1) { 
+                    userData.vouchers.splice(vIndex, 1); // Xóa 1 voucher đã dùng
+                    updates.vouchers = userData.vouchers; 
+                }
+                
                 if (itemType === 'rename') { let newName = prompt("Nhập danh xưng mới:"); if (!newName || newName.trim() === "") return alert("Đã hủy giao dịch!"); updates.displayName = newName.trim(); }
-                if (itemType === 'shield') updates.hasShield = true; if (itemType === 'potion') updates.potionExpiry = Date.now() + 86400000; if (itemType === 'mask') updates.maskExpiry = Date.now() + 86400000; if (itemType === 'glass') updates.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
+                if (itemType === 'shield') updates.hasShield = true; 
+                if (itemType === 'potion') updates.potionExpiry = Date.now() + 86400000; 
+                if (itemType === 'mask') updates.maskExpiry = Date.now() + 86400000; 
+                if (itemType === 'glass') updates.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
+                
                 db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
-                    userData.gold -= price; if(updates.hasShield) userData.hasShield = true; if(updates.potionExpiry) userData.potionExpiry = updates.potionExpiry; if(updates.maskExpiry) userData.maskExpiry = updates.maskExpiry; if(updates.magnifyingGlass) userData.magnifyingGlass = updates.magnifyingGlass; if(updates.displayName) userData.displayName = updates.displayName;
-                    updateUI(); if (itemType === 'rename') fetchLeaderboard(); let anim = document.getElementById('rewardAnim'); anim.innerText = `🛒 Mua thành công! Còn ${userData.gold} 🪙`; anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 3000);
+                    userData.gold -= finalPrice; 
+                    if(updates.hasShield) userData.hasShield = true; 
+                    if(updates.potionExpiry) userData.potionExpiry = updates.potionExpiry; 
+                    if(updates.maskExpiry) userData.maskExpiry = updates.maskExpiry; 
+                    if(updates.magnifyingGlass) userData.magnifyingGlass = updates.magnifyingGlass; 
+                    if(updates.displayName) userData.displayName = updates.displayName;
+                    
+                    updateUI(); 
+                    if (itemType === 'rename') fetchLeaderboard(); 
+                    let anim = document.getElementById('rewardAnim'); 
+                    anim.innerText = `🛒 Mua thành công! Còn ${userData.gold} 🪙`; 
+                    anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 3000);
                 });
             }
         }
