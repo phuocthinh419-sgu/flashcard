@@ -698,16 +698,23 @@
 
         async function fetchLeaderboard() {
             if(!db) return;
-            const lbContainer = document.getElementById('leaderboardData'); lbContainer.innerHTML = '<p style="text-align:center">Đang tải...</p>';
-            try {
-                const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').limit(30).get();
+            const lbContainer = document.getElementById('leaderboardData'); 
+            lbContainer.innerHTML = '<p style="text-align:center">Đang tải...</p>';
+            
+            // DÙNG onSnapshot ĐỂ NGHE LÉN SỰ THAY ĐỔI 24/24
+            db.collection('vocab_users').orderBy('xp', 'desc').limit(30).onSnapshot((snapshot) => {
                 let html = ''; let rank = 1;
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     if (data.role !== 'teacher') {
                         let isMaskActive = data.maskExpiry && data.maskExpiry > Date.now();
                         let dName = data.displayName || 'Ẩn danh'; let dXp = data.xp;
-                        if (isMaskActive) { if (userData.role === 'teacher') dName = dName + " 🎭(Ẩn)"; else { dName = "???"; dXp = "???"; } }
+                        
+                        if (isMaskActive) { 
+                            if (userData.role === 'teacher') dName = dName + " 🎭(Ẩn)"; 
+                            else { dName = "???"; dXp = "???"; } 
+                        }
+                        
                         let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '.';
                         let rankClass = rank <= 3 ? `lb-rank-${rank}` : '';
                         html += `<div class="lb-row ${rankClass}"><span>${medal} ${dName}</span><span style="color:var(--secondary)">⭐ ${dXp} XP</span></div>`;
@@ -715,9 +722,10 @@
                     }
                 });
                 lbContainer.innerHTML = html || '<p style="text-align:center">Chưa có người dùng nào ghi danh.</p>';
-            } catch (err) { lbContainer.innerHTML = '<p style="color:red; text-align:center">Lỗi bảng xếp hạng.</p>'; }
+            }, (err) => {
+                lbContainer.innerHTML = '<p style="color:red; text-align:center">Lỗi bảng xếp hạng.</p>';
+            });
         }
-
         const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing';
         let allLessonsData = [];
         async function fetchFromSheets() {
