@@ -316,7 +316,10 @@
                     <div class="form-group" style="margin-bottom: 15px;">
                         <input type="password" id="loginPass" placeholder="Mật khẩu">
                     </div>
-                    <button class="btn-run" style="width: 100%; padding: 12px; font-size: 16px; margin-bottom: 15px;" onclick="loginWithEmail()">🔑 Đăng Nhập / Đăng Ký</button>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button class="btn-run" style="flex: 1; padding: 12px; font-size: 16px;" onclick="loginWithEmail()">🔑 Đăng Nhập</button>
+                        <button class="btn-save" style="flex: 1; padding: 12px; font-size: 16px;" onclick="registerWithEmail()">📝 Đăng Ký</button>
+                    </div>
 
                     <div style="text-align: center; margin-bottom: 15px; color: #888; font-weight: bold;">HOẶC</div>
 
@@ -476,26 +479,37 @@
             if (!email || !pass) return alert("Xin vui lòng nhập đầy đủ Tài khoản và Mật khẩu!");
             
             auth.signInWithEmailAndPassword(email, pass).catch(function(error) {
-                // Cập nhật bắt trọn toàn bộ các mã lỗi mới nhất của Firebase
-                if (error.code === 'auth/invalid-credential' || error.code === 'auth/invalid-login-credentials' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                    if(confirm("Tài khoản chưa tồn tại hoặc sai mật khẩu! Bệ hạ/Sĩ tử có muốn dùng thông tin này để ĐĂNG KÝ MỚI không?")) {
-                        auth.createUserWithEmailAndPassword(email, pass).then(() => {
-                            alert("🎉 Ghi danh Sổ Nam Tào thành công!");
-                        }).catch(err => {
-                            if (err.code === 'auth/weak-password') alert("⚠️ Mật khẩu quá yếu! Hệ thống bắt buộc phải từ 6 ký tự trở lên.");
-                            else if (err.code === 'auth/invalid-email') alert("⚠️ Cú pháp tên sai! Xin hãy có chữ '@' và dấu chấm (VD: hs@vocab.com).");
-                            else alert("Lỗi đăng ký: " + err.message);
-                        });
-                    }
-                } else if (error.code === 'auth/invalid-email') {
-                    alert("⚠️ Cú pháp tên sai! Xin hãy có chữ '@' và dấu chấm (VD: hs@vocab.com).");
+                if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.message.includes('INVALID_LOGIN_CREDENTIALS')) {
+                    alert("❌ Tài khoản không tồn tại hoặc sai mật khẩu!\nNếu chưa có tài khoản, xin bệ hạ/sĩ tử hãy ấn nút [📝 Đăng Ký].");
+                } else if (error.code === 'auth/invalid-email' || error.message.includes('INVALID_EMAIL')) {
+                    alert("⚠️ Cú pháp email sai! Xin hãy có chữ '@' và dấu chấm (VD: hs@vocab.com).");
                 } else {
-                    alert("Lỗi cổng thành: " + error.message);
+                    alert("Lỗi đăng nhập: " + error.message);
+                }
+            });
+        }
+
+        function registerWithEmail() {
+            if (!auth) return;
+            const email = document.getElementById('loginEmail').value.trim(); const pass = document.getElementById('loginPass').value.trim();
+            if (!email || !pass) return alert("Xin vui lòng nhập đầy đủ Tài khoản và Mật khẩu!");
+            
+            auth.createUserWithEmailAndPassword(email, pass).then(() => {
+                alert("🎉 Ghi danh Sổ Nam Tào thành công! Xin hãy đăng nhập lại.");
+            }).catch(err => {
+                if (err.code === 'auth/email-already-in-use' || err.message.includes('EMAIL_EXISTS')) {
+                    alert("⚠️ Tài khoản email này đã có người sử dụng!");
+                } else if (err.code === 'auth/weak-password' || err.message.includes('WEAK_PASSWORD')) {
+                    alert("⚠️ Mật khẩu quá yếu! Cổng thành bắt buộc phải từ 6 ký tự trở lên.");
+                } else if (err.code === 'auth/invalid-email' || err.message.includes('INVALID_EMAIL')) {
+                    alert("⚠️ Cú pháp email sai! Xin hãy có chữ '@' và dấu chấm (VD: hs@vocab.com).");
+                } else {
+                    alert("Lỗi đăng ký: " + err.message);
                 }
             });
         }
         
-     if(auth) {
+        if(auth) {
             auth.onAuthStateChanged(user => {
                 if (user) {
                     currentUser = user; const todayStr = new Date().toLocaleDateString('en-GB'); 
