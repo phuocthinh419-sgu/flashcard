@@ -483,7 +483,7 @@
             });
         }
 
-       if(auth) {
+     if(auth) {
             auth.onAuthStateChanged(user => {
                 if (user) {
                     currentUser = user; const todayStr = new Date().toLocaleDateString('en-GB'); 
@@ -504,27 +504,25 @@
                                     if (userData.hasShield) { 
                                         userData.hasShield = false; userData.lastLogin = todayStr; 
                                         db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr, hasShield: false }); 
-                                        alert("🛡️ Bùa Bảo Hộ đã cứu chuỗi ngày học và gia sản của bạn khỏi sự trừng phạt!"); 
+                                        alert("🛡️ Bùa Bảo Hộ đã cứu chuỗi ngày học và gia sản của bạn!"); 
                                     } 
                                     else { 
-                                        // ĐẠO LUẬT THIẾT QUÂN LUẬT: PHẠT 20% TÀI SẢN KHI ĐỨT CHUỖI
                                         let currentXp = userData.xp || 0;
                                         let currentGold = userData.gold || 0;
-                                        let lostXp = Math.floor(currentXp * 0.2); // Trừ 20% XP (làm tròn xuống)
-                                        let lostGold = Math.floor(currentGold * 0.2); // Trừ 20% Vàng (làm tròn xuống)
+                                        let lostXp = Math.floor(currentXp * 0.2);
+                                        let lostGold = Math.floor(currentGold * 0.2);
                                         
+                                        // CẬP NHẬT BIẾN TẠI CHỖ ĐỂ UI THAY ĐỔI NGAY
                                         userData.xp = currentXp - lostXp;
                                         userData.gold = currentGold - lostGold;
                                         userData.streak = 1; 
                                         userData.lastLogin = todayStr; 
                                         
                                         db.collection('vocab_users').doc(user.uid).update({ 
-                                            streak: 1, 
-                                            lastLogin: todayStr,
-                                            xp: userData.xp,
-                                            gold: userData.gold
+                                            streak: 1, lastLogin: todayStr, xp: userData.xp, gold: userData.gold
                                         }).then(() => {
-                                            alert(`⚡ THIẾT QUÂN LUẬT!\n\nDo lười biếng bỏ học, Chuỗi của bạn đã đứt! Hệ thống giáng hình phạt thu hồi 20% tài sản.\n\n❌ Bị trừ: ${lostXp} XP\n❌ Bị trừ: ${lostGold} Vàng\n\nHãy chăm chỉ điểm danh mỗi ngày để không lặp lại bi kịch này!`);
+                                            updateUI(); // 🔔 LỆNH NÀY SẼ ÉP CON SỐ TRÊN MÀN HÌNH NHẢY NGAY
+                                            alert(`⚡ THIẾT QUÂN LUẬT!\n\nDo lười biếng bỏ học, Chuỗi của bạn đã đứt! Hệ thống giáng hình phạt thu hồi 20% tài sản.\n\n❌ Bị trừ: ${lostXp} XP\n❌ Bị trừ: ${lostGold} Vàng`);
                                         });
                                     }
                                 } else if (diffDays === 0 && userData.lastLogin !== todayStr) { 
