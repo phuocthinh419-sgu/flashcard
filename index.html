@@ -161,7 +161,7 @@
         .reward-anim { position: fixed; bottom: 20px; right: 20px; background: #00c853; color: white; padding: 15px 25px; border-radius: 30px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 15px rgba(0,200,83,0.4); transform: translateY(100px); opacity: 0; transition: 0.5s; z-index: 9999;}
         .reward-anim.show { transform: translateY(0); opacity: 1; }
 
-       /* VÒNG QUAY CSS */
+        /* VÒNG QUAY CSS */
         .wheel-container { position: relative; width: 280px; height: 280px; margin: 20px auto; }
         .wheel { 
             width: 100%; height: 100%; border-radius: 50%; 
@@ -188,6 +188,27 @@
         .wt-5 { transform: rotate(157.5deg); }
         .wt-6 { transform: rotate(202.5deg); }
         .wt-7 { transform: rotate(247.5deg); }
+
+        /* ĐẠI SẢNH DANH VỌNG CSS */
+        .btn-hof {
+            background: linear-gradient(45deg, #ffd700, #ff6d00, #ffd700);
+            background-size: 200% 200%;
+            color: #fff; font-weight: 900; font-size: 16px; padding: 12px 20px;
+            border-radius: 30px; border: 2px solid #fff;
+            box-shadow: 0 0 15px #ff9800; cursor: pointer;
+            animation: fireGlow 1.5s infinite, gradientMove 3s infinite linear;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            margin: 0 auto 20px auto; text-transform: uppercase; width: fit-content;
+        }
+        @keyframes fireGlow {
+            0% { box-shadow: 0 0 10px #ff9800, 0 0 20px #ff9800; transform: scale(1); }
+            50% { box-shadow: 0 0 20px #ffeb3b, 0 0 40px #ffeb3b; transform: scale(1.05); }
+            100% { box-shadow: 0 0 10px #ff9800, 0 0 20px #ff9800; transform: scale(1); }
+        }
+        @keyframes gradientMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        
+        .hof-modal-content { background: linear-gradient(135deg, #212121 0%, #000000 100%); color: #ffd700; border: 4px solid #ffd700; text-align: center; }
+        .hof-row { background: rgba(255,215,0,0.1); border-left: 4px solid #ffd700; margin-bottom: 10px; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; }
 
         /* DARK MODE */
         body.dark-mode { --bg-color: #121212; --text-main: #e0e0e0; }
@@ -264,6 +285,7 @@
                         <div class="arena-title">2. Lò Bát Quái (Điều hành Nhánh)</div>
                         <button class="btn-danger" style="width: 100%; padding: 15px; font-size: 18px; font-weight: 900;" onclick="executeBlindDraw()">🎲 BỐC THĂM MES CHAMPIONS LEAGUE</button>
                         <button class="btn-run" style="width: 100%; padding: 15px; font-size: 18px; font-weight: 900; margin-top: 10px;" onclick="advanceTournament()">⏭️ TỔNG KẾT & VÀO VÒNG TRONG</button>
+                        <button class="btn-save" style="width: 100%; padding: 15px; font-size: 18px; font-weight: 900; margin-top: 10px; background: #ff9800;" onclick="archiveSeason()">🏆 LƯU DANH SỬ SÁCH & KẾT THÚC MÙA GIẢI</button>
                     </div>
                 </div>
             </div>
@@ -325,6 +347,11 @@
 
             <div id="view-leaderboard" class="view-section">
                 <div class="header" style="text-align: center;"><h1>🏆 Bảng Xếp Hạng</h1></div>
+                
+                <button class="btn-hof" onclick="openHOFModal()">
+                    🌟 ĐẠI SẢNH DANH VỌNG 🌟
+                </button>
+
                 <div class="bracket-board" id="bracketBoard">
                     <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 MES CHAMPIONS LEAGUE 🏆</h2>
                     <p id="bracketStatus" style="margin-bottom: 20px; color: #ccc;">Đang diễn ra</p>
@@ -377,6 +404,16 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <div class="modal" id="hofModal">
+        <div class="modal-content hof-modal-content" style="max-width: 500px; padding: 30px;">
+            <h2 style="font-size: 28px; margin-bottom: 10px; text-shadow: 0 2px 5px rgba(255,215,0,0.5);">🏛️ ĐẠI SẢNH DANH VỌNG</h2>
+            <p style="color: #ccc; margin-bottom: 25px; font-style: italic;">Nơi khắc tên những vị vua thống trị MES Champions League qua các thời kỳ.</p>
+            <div id="hofList" style="max-height: 400px; overflow-y: auto; text-align: left; padding: 10px;">
+                </div>
+            <button class="btn-close" style="width: 100%; padding: 12px; margin-top: 25px; background: rgba(255,255,255,0.2); color: white; border: 1px solid #ffd700;" onclick="document.getElementById('hofModal').classList.remove('active')">Đóng Lại</button>
+        </div>
     </div>
 
     <div class="modal" id="wheelModal">
@@ -510,6 +547,7 @@
 
     <script>
         let currentFullBracketData = null; 
+        let defendingChampion = ""; // LƯU TÊN ĐƯƠNG KIM VÔ ĐỊCH
 
         const firebaseConfig = {
             apiKey: "AIzaSyAmDqBfe4JRBKDGVwqVS0yI9_P2O2WIzxI",
@@ -913,7 +951,7 @@
 
         setInterval(renderBracket, 10000); // Tự làm mới giao diện đếm lùi 10s/lần
 
-        /* --- CẬP NHẬT BẢNG XẾP HẠNG (LUẬT STREAK < 3) --- */
+        /* --- CẬP NHẬT BẢNG XẾP HẠNG (LUẬT STREAK < 3 & NHÀ VUA C1) --- */
         async function fetchLeaderboard() {
             if(!db) return;
             const lbContainer = document.getElementById('leaderboardData'); 
@@ -929,19 +967,25 @@
                     if (data.role !== 'teacher') {
                         let dName = data.displayName || 'Ẩn danh'; 
                         let dXp = data.xp;
-                        let dStreak = data.streak || 1; // Mặc định là 1 nếu chưa có
+                        let dStreak = data.streak || 1; 
                         
-                        // Đủ tư cách góp mặt trên bảng phong thần (Streak >= 3)
-                        if (dStreak >= 3) {
+                        // ĐẶC CÁCH NHÀ VUA C1
+                        let isChampion = (dName === defendingChampion && defendingChampion !== "");
+                        
+                        // Đủ tư cách góp mặt trên bảng phong thần (Streak >= 3 HOẶC là ĐKVĐ)
+                        if (dStreak >= 3 || isChampion) {
                             let isMaskActive = data.maskExpiry && data.maskExpiry > Date.now();
+                            let displayDName = dName;
                             if (isMaskActive) { 
-                                if (userData.role === 'teacher') dName = dName + " 🎭(Ẩn)"; 
-                                else { dName = "???"; dXp = "???"; } 
+                                if (userData.role === 'teacher') displayDName = displayDName + " 🎭(Ẩn)"; 
+                                else { displayDName = "???"; dXp = "???"; } 
                             }
                             
+                            let champBadge = isChampion ? ' <span style="color:#ffd700; font-size: 12px; margin-left:5px; padding: 2px 6px; background: rgba(255,215,0,0.2); border-radius: 8px;">👑 ĐKVĐ</span>' : '';
                             let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '.';
                             let rankClass = rank <= 3 ? `lb-rank-${rank}` : '';
-                            qualifiedHtml += `<div class="lb-row ${rankClass}"><span>${medal} ${dName}</span><span style="color:var(--secondary)">⭐ ${dXp} XP</span></div>`;
+                            
+                            qualifiedHtml += `<div class="lb-row ${rankClass}"><span>${medal} ${displayDName}${champBadge}</span><span style="color:var(--secondary)">⭐ ${dXp} XP</span></div>`;
                             rank++;
                         } else {
                             // Không đủ tư cách (Streak < 3) -> Quẳng xuống đáy, khóa lại
@@ -986,7 +1030,7 @@
             const checks = document.querySelectorAll('input[name="syllabusCheck"]:checked'); let selected = []; checks.forEach(c => selected.push(c.value)); rtdb.ref('tournament_status/syllabus').set(selected); alert("Đã khóa đề thi!");
         }
 
-        /* --- CẬP NHẬT RÚT THĂM (BỎ QUA KẺ STREAK < 3) --- */
+        /* --- CẬP NHẬT RÚT THĂM (ĐẶC CÁCH ĐKVĐ) --- */
         async function executeBlindDraw() {
             if(!confirm("Xác nhận bốc thăm giải đấu mới (MES Champions League)? Nhánh đấu cũ sẽ bị xóa.")) return;
             const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get(); 
@@ -994,15 +1038,18 @@
             
             snapshot.forEach(doc => { 
                 let d = doc.data();
-                // CHỈ CHỌN KẺ CÓ STREAK TỪ 3 TRỞ LÊN
-                if(d.role !== 'teacher' && (d.streak || 1) >= 3) {
-                    candidates.push(d.displayName || "Ẩn danh"); 
+                let dName = d.displayName || "Ẩn danh";
+                let isChampion = (dName === defendingChampion && defendingChampion !== "");
+                
+                // CHỈ CHỌN KẺ CÓ STREAK TỪ 3 TRỞ LÊN - HOẶC LÀ NHÀ VÔ ĐỊCH C1
+                if(d.role !== 'teacher' && ((d.streak || 1) >= 3 || isChampion)) {
+                    candidates.push(dName); 
                 }
             });
             
             let topCount = 4;
             if (candidates.length >= 24) topCount = 16; else if (candidates.length >= 16) topCount = 8; else if (candidates.length >= 4) topCount = 4; 
-            else return alert("Bẩm bệ hạ, hiện chỉ có " + candidates.length + " sĩ tử đủ điều kiện (Chuỗi ≥ 3). Phải có ít nhất 4 sĩ tử mới đủ mở giải đấu!");
+            else return alert("Bẩm bệ hạ, hiện chỉ có " + candidates.length + " sĩ tử đủ điều kiện (Chuỗi ≥ 3 hoặc ĐKVĐ). Phải có ít nhất 4 sĩ tử mới đủ mở giải đấu!");
             
             let qualified = candidates.slice(0, topCount).sort(() => Math.random() - 0.5);
             let fullBracket = { final: { p1: "---", p2: "---", winner: "" }, third_place: { p1: "---", p2: "---", winner: "" } };
@@ -1063,6 +1110,22 @@
                 rtdb.ref('tournament_status/result').set({ rank1: fb.final.winner, rank2: (fb.final.winner === fb.final.p1) ? fb.final.p2 : fb.final.p1, rank3: fb.third_place.winner, rank4: (fb.third_place.winner === fb.third_place.p1) ? fb.third_place.p2 : fb.third_place.p1, timestamp: Date.now() });
             }
         }
+
+        /* --- LƯU DANH SỬ SÁCH --- */
+        function archiveSeason() {
+            if(!defendingChampion) return alert("Chưa có nhà vô địch nào trong Bảng Phong Thần để lưu danh!");
+            if(confirm(`Bệ hạ có chắc chắn muốn khắc tên [${defendingChampion}] vào Đại Sảnh Danh Vọng và kết thúc Mùa giải này?`)) {
+                rtdb.ref('tournament_status/hall_of_fame').once('value').then(snap => {
+                    let hof = snap.val() || [];
+                    let nextSeason = hof.length + 1;
+                    hof.push({ season: nextSeason, name: defendingChampion, date: new Date().toLocaleDateString('en-GB') });
+                    rtdb.ref('tournament_status/hall_of_fame').set(hof).then(() => {
+                        alert(`🎉 Keng!!! Tên của [${defendingChampion}] đã được tạc vào sử sách với tư cách Quán Quân Mùa ${nextSeason}!`);
+                    });
+                });
+            }
+        }
+        function openHOFModal() { document.getElementById('hofModal').classList.add('active'); }
 
         async function adminStartPvP(stageKey, matchIndex, p1Name, p2Name) {
             const syllabusSnap = await rtdb.ref('tournament_status/syllabus').once('value'); const selectedLessons = syllabusSnap.val();
@@ -1149,10 +1212,41 @@
                 
                 renderBracket(); 
             });
+            // THEO DÕI VÀ LƯU NHÀ VÔ ĐỊCH
             rtdb.ref('tournament_status/result').on('value', (snap) => {
                 const res = snap.val();
-                if(res) { document.getElementById('rank1Name').innerText = res.rank1; document.getElementById('rank2Name').innerText = res.rank2; document.getElementById('rank3Name').innerText = res.rank3; document.getElementById('rank4Name').innerText = res.rank4; document.getElementById('podiumModal').classList.add('active'); } else { document.getElementById('podiumModal').classList.remove('active'); }
+                if(res) { 
+                    defendingChampion = res.rank1; // Nạp kim bài miễn tử
+                    document.getElementById('rank1Name').innerText = res.rank1; 
+                    document.getElementById('rank2Name').innerText = res.rank2; 
+                    document.getElementById('rank3Name').innerText = res.rank3; 
+                    document.getElementById('rank4Name').innerText = res.rank4; 
+                    document.getElementById('podiumModal').classList.add('active'); 
+                } else { 
+                    defendingChampion = ""; // Thu hồi kim bài nếu giải bị xóa
+                    document.getElementById('podiumModal').classList.remove('active'); 
+                }
+                if (typeof fetchLeaderboard === 'function') fetchLeaderboard(); // Tải lại bảng xếp hạng lập tức
             });
+
+            // THEO DÕI ĐẠI SẢNH DANH VỌNG
+            rtdb.ref('tournament_status/hall_of_fame').on('value', (snap) => {
+                let hof = snap.val() || [];
+                let container = document.getElementById('hofList');
+                if (hof.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; padding: 20px;">Trống rỗng... Mùa 1 đang gọi tên kẻ mạnh nhất!</div>';
+                } else {
+                    let html = '';
+                    hof.forEach(item => {
+                        html += `<div class="hof-row">
+                                    <span style="color: #ccc; font-size: 14px; margin-top:3px;">MÙA ${item.season}</span>
+                                    <span style="color: #ffd700; font-size: 20px;">👑 ${item.name}</span>
+                                 </div>`;
+                    });
+                    container.innerHTML = html;
+                }
+            });
+
             rtdb.ref('active_pvp_match').on('value', (snap) => {
                 let m = snap.val(); if(!m) return;
                 let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
