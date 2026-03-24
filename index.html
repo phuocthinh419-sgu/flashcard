@@ -702,10 +702,15 @@
                 let isMyReady = (this.mySlot === 'p1' && m.p1_ready) || (this.mySlot === 'p2' && m.p2_ready);
                 document.getElementById('btnConfirmJoin').style.display = isMyReady || isAdmin ? 'none' : 'block';
 
+                // BÍ KÍP ĐÃ ĐƯỢC SỬA Ở ĐÂY: Mở khóa nút cho Admin vô điều kiện!
                 let btnForce = document.getElementById('btnAdminForceStart');
-                if(btnForce) btnForce.style.display = (isAdmin && m.p1_ready && m.p2_ready) ? 'block' : 'none';
+                if(btnForce) {
+                    btnForce.style.display = isAdmin ? 'block' : 'none';
+                    // Đổi chữ cảnh báo nếu đang thiếu người
+                    btnForce.innerText = (m.p1_ready && m.p2_ready) ? "⚔️ ADMIN: BẮT ĐẦU TRẬN" : "⚠️ ADMIN: ÉP KHAI CHIẾN (THIẾU NGƯỜI)";
+                }
             },
-
+            
             renderCountdown: function(m, isAdmin) {
                 document.getElementById('pvpWaitingRoom').style.display = 'none';
                 document.getElementById('pvpCountdown').style.display = 'flex';
