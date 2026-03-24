@@ -339,7 +339,6 @@
 
     <div class="modal" id="pvpModal">
         <div class="battle-arena set-1" id="battleArenaUI">
-            
             <div id="pvpWaitingRoom" style="position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 50; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px;">
                 <h2 style="color: #ffd700; font-size: 32px; margin-bottom: 20px;">🚪 PHÒNG CHỜ TỶ VÕ</h2>
                 <div style="display: flex; gap: 40px; margin-bottom: 30px; font-size: 24px; font-weight: bold;">
@@ -416,8 +415,12 @@
         };
 
         let db, auth, rtdb;
-        try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); auth = firebase.auth(); rtdb = firebase.database(); } 
-        catch (e) { console.error("Lỗi Firebase!"); }
+        try { 
+            firebase.initializeApp(firebaseConfig); 
+            db = firebase.firestore(); 
+            auth = firebase.auth(); 
+            rtdb = firebase.database(); 
+        } catch (e) { console.error("Lỗi Firebase!"); }
 
         if(rtdb) { rtdb.ref(".info/serverTimeOffset").on("value", function(snap) { serverTimeOffset = snap.val() || 0; }); }
         function getServerTime() { return Date.now() + serverTimeOffset; }
@@ -497,6 +500,16 @@
             });
         }
 
+        function attemptTeacherLogin() {
+            if (!currentUser) return alert("Vui lòng đăng nhập!");
+            let pin = document.getElementById('teacherPinCheck').value;
+            if(pin === '6868') { 
+                 db.collection('vocab_users').doc(currentUser.uid).update({ role: 'teacher' }).then(()=> { 
+                     userData.role = 'teacher'; updateUI(); alert("Cấp quyền Giáo Viên thành công!"); 
+                 });
+            } else { alert("Sai mã PIN!"); }
+        }
+
         function saveDisplayName() {
             const name = document.getElementById('displayNameInput').value.trim();
             if (!name) return alert("Vui lòng không để trống tên!");
@@ -532,17 +545,105 @@
             if (typeof renderBracket === 'function') renderBracket();
         }
 
-        let windowStageToSchedule = ""; let windowIndexToSchedule = 0;
-        function openScheduleModal(stageKey, matchIndex) { windowStageToSchedule = stageKey; windowIndexToSchedule = matchIndex; document.getElementById('scheduleModal').classList.add('active'); }
-        function saveSchedule() {
-            let val = document.getElementById('scheduleInput').value; if(!val) return alert("Vui lòng chọn ngày giờ!");
-            let ts = new Date(val).getTime(); let key = `tournament_status/full_bracket/${windowStageToSchedule}`;
-            if(windowStageToSchedule !== 'sfl' && windowStageToSchedule !== 'sfr' && windowStageToSchedule !== 'final' && windowStageToSchedule !== 'third_place') { key += `/${windowIndexToSchedule}`; }
-            rtdb.ref(key).update({ schedule: ts }).then(() => { alert("Đã khóa lịch thi đấu! Phòng thi sẽ tự mở đúng giờ."); document.getElementById('scheduleModal').classList.remove('active'); });
+        /* =========================================================
+           HỆ THỐNG VÒNG QUAY NHÂN PHẨM & CỬA HÀNG (ĐÃ SỬA LỖI VOUCHER)
+           ========================================================= */
+        let isSpinning = false;
+        function openWheelModal() {
+            if (!currentUser) return alert("Vui lòng đăng nhập!");
+            let todayStr = new Date().toLocaleDateString('en-GB');
+            if (userData.lastBlindBoxDate !== todayStr) { userData.blindBoxCount = 0; userData.lastBlindBoxDate = todayStr; }
+            document.getElementById('ui-wheel-left').innerText = 3 - (userData.blindBoxCount || 0);
+            document.getElementById('wheelModal').classList.add('active');
+        }
+
+        function spinWheel() {
+            if (isSpinning) return; 
+            if (!currentUser) return alert("Vui lòng đăng nhập!");
+            let todayStr = new Date().toLocaleDateString('en-GB');
+            if (userData.lastBlindBoxDate !== todayStr) { userData.blindBoxCount = 0; userData.lastBlindBoxDate = todayStr; }
+            if ((userData.blindBoxCount || 0) >= 3) return alert("Hôm nay đã quay hết 3 lượt! Mai quay lại nhé.");
+            
+            let bestVoucher = 0; let vIndex = -1; 
+            if(userData.vouchers && userData.vouchers.length > 0) { bestVoucher = userData.vouchers[0]; vIndex = 0; }
+            let finalPrice = 150; 
+            if (bestVoucher > 0) { finalPrice = Math.floor(150 * (100 - bestVoucher) / 100); }
+            
+            if (userData.gold < finalPrice) return alert(`Không đủ Vàng! Cần ${finalPrice} 🪙.`);
+            
+            let confirmMsg = bestVoucher > 0 
+                ? `🎟️ Có 1 Voucher Giảm ${bestVoucher}%!\nGiá quay giảm còn ${finalPrice} Vàng. Trừ tiền và Quay ngay?` 
+                : `Dùng 150 Vàng mở Vòng Quay để thử vận may?`;
+
+            if(confirm(confirmMsg)) {
+                isSpinning = true; 
+                if (vIndex > -1) { userData.vouchers.splice(vIndex, 1); }
+                userData.gold -= finalPrice; 
+                userData.blindBoxCount = (userData.blindBoxCount || 0) + 1;
+                document.getElementById('ui-wheel-left').innerText = 3 - userData.blindBoxCount; 
+                updateUI();
+                
+                let r = Math.random(); let sliceIndex = 0; let msg = ""; if(!userData.vouchers) userData.vouchers = [];
+                if (r < 0.10) { sliceIndex = 0; msg = "🥺 Đen thôi đỏ quên đi! Ngươi đã mất trắng tiền cược."; }
+                else if (r < 0.30) { sliceIndex = 1; userData.gold += 50; msg = "🪙 An ủi: Vớt vát được 50 Vàng!"; }
+                else if (r < 0.50) { sliceIndex = 2; userData.xp += 150; msg = "⭐ Bất ngờ: Nhận được 150 XP!"; }
+                else if (r < 0.70) { sliceIndex = 3; userData.vouchers.push(30); msg = "🎟️ Trúng mánh: 1 Voucher Giảm Giá 30%!"; }
+                else if (r < 0.80) { sliceIndex = 4; userData.vouchers.push(50); msg = "🎟️ Cực phẩm: 1 Voucher Giảm Giá 50%!"; }
+                else if (r < 0.85) { sliceIndex = 5; userData.hasShield = true; msg = "🛡️ Thần binh: 1 Bùa Bảo Hộ!"; }
+                else if (r < 0.90) { sliceIndex = 6; userData.magnifyingGlass = (userData.magnifyingGlass||0) + 1; msg = "🔍 Hiếm có: 1 Kính Lúp Thám Tử!"; }
+                else { sliceIndex = 7; msg = "🥺 Kim trượt qua Kính lúp... Xui quá, mất trắng rồi!"; }
+                
+                let randomOffset = Math.floor(Math.random() * 40) - 20; let targetDegree = 3600 - (sliceIndex * 45 + 22.5) + randomOffset; 
+
+                let wheelEl = document.getElementById('spinningWheel');
+                wheelEl.style.transition = 'none'; wheelEl.style.transform = `rotate(0deg)`; void wheelEl.offsetWidth; 
+                wheelEl.style.transition = 'transform 4.2s cubic-bezier(0.17, 0.67, 0.1, 1)'; wheelEl.style.transform = `rotate(${targetDegree}deg)`;
+                
+                setTimeout(() => {
+                    isSpinning = false; userData.vouchers.sort((a,b) => b - a); 
+                    db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, xp: userData.xp, vouchers: userData.vouchers, hasShield: userData.hasShield, magnifyingGlass: userData.magnifyingGlass, blindBoxCount: userData.blindBoxCount, lastBlindBoxDate: userData.lastBlindBoxDate }).then(() => { updateUI(); alert(msg); });
+                }, 4400); 
+            }
+        }
+
+        function buyItem(itemType, basePrice) { 
+            if (!currentUser) return alert("Vui lòng đăng nhập để mua hàng!"); 
+            let bestVoucher = 0; let vIndex = -1; 
+            if(userData.vouchers && userData.vouchers.length > 0) { bestVoucher = userData.vouchers[0]; vIndex = 0; }
+            
+            let finalPrice = basePrice; 
+            if (bestVoucher > 0) { finalPrice = Math.floor(basePrice * (100 - bestVoucher) / 100); }
+            if (userData.gold < finalPrice) return alert(`Bạn không đủ Vàng! Cần ${finalPrice} 🪙.`);
+            
+            let confirmMsg = bestVoucher > 0 
+                ? `🎟️ Hệ thống áp dụng 1 Voucher Giảm ${bestVoucher}%!\nGiá giảm từ ${basePrice} xuống còn ${finalPrice} Vàng. Mua ngay?` 
+                : `Dùng ${finalPrice} Vàng đổi vật phẩm?`;
+            
+            if(confirm(confirmMsg)) {
+                let updates = {};
+                if (vIndex > -1) { 
+                    userData.vouchers.splice(vIndex, 1); 
+                    updates.vouchers = userData.vouchers; 
+                }
+                updates.gold = userData.gold - finalPrice;
+                
+                if (itemType === 'rename') { let newName = prompt("Nhập danh xưng mới:"); if (!newName || newName.trim() === "") return alert("Đã hủy giao dịch!"); updates.displayName = newName.trim(); }
+                if (itemType === 'shield') updates.hasShield = true; 
+                if (itemType === 'potion') updates.potionExpiry = Date.now() + 86400000; 
+                if (itemType === 'mask') updates.maskExpiry = Date.now() + 86400000; 
+                if (itemType === 'glass') updates.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
+                
+                db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
+                    userData.gold = updates.gold;
+                    if(updates.hasShield) userData.hasShield = true; if(updates.potionExpiry) userData.potionExpiry = updates.potionExpiry; if(updates.maskExpiry) userData.maskExpiry = updates.maskExpiry; if(updates.magnifyingGlass) userData.magnifyingGlass = updates.magnifyingGlass; if(updates.displayName) userData.displayName = updates.displayName;
+                    updateUI(); if (itemType === 'rename') fetchLeaderboard(); 
+                    let anim = document.getElementById('rewardAnim'); anim.innerText = `🛒 Mua thành công! Còn ${userData.gold} 🪙`; anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 3000);
+                });
+            }
         }
 
         /* =========================================================
-           HỆ THỐNG ESPORTS PVP REAL-TIME (ĐÃ TÁI KHỞI TẠO BỞI THẦN)
+           HỆ THỐNG ĐỘNG CƠ ESPORTS PVP REAL-TIME
            ========================================================= */
         const PvPEngine = {
             mySlot: "",
@@ -815,6 +916,9 @@
             }
         };
 
+        // Kích hoạt Engine
+        setTimeout(() => { if(rtdb) PvPEngine.init(); }, 1000);
+
         async function adminStartPvP(stageKey, matchIndex, p1Name, p2Name) {
             const syllabusSnap = await rtdb.ref('tournament_status/syllabus').once('value'); const selectedLessons = syllabusSnap.val();
             if(!selectedLessons || selectedLessons.length === 0) return alert("Chưa có giáo trình nào được chọn!");
@@ -839,13 +943,7 @@
             alert("Phòng chờ tỷ võ đã mở! Kêu gọi học trò vào xác nhận.");
         }
 
-        // Kích hoạt Engine ngay khi chạy script (Đợi rtdb init bên trên)
-        setTimeout(() => { if(rtdb) PvPEngine.init(); }, 1500);
-
-        function adminForceStart() { 
-            rtdb.ref('active_pvp_match').update({ status: 'starting', match_start_at: getServerTime() + 4000 }); 
-        }
-
+        function adminForceStart() { rtdb.ref('active_pvp_match').update({ status: 'starting', match_start_at: getServerTime() + 4000 }); }
         function submitPvPAnswer(idx) { PvPEngine.submitAnswer(idx); }
 
         function confirmWaitingRoom() {
@@ -857,18 +955,35 @@
             });
         }
 
+        // BẬT ANTI-CHEAT LÊN MỨC CAO NHẤT
         window.addEventListener('blur', cheatDetected);
         document.addEventListener('visibilitychange', () => { if(document.hidden) cheatDetected(); });
+        
         function cheatDetected() {
             if(isUnderSurveillance) {
-                isUnderSurveillance = false; alert("❌ HỆ THỐNG AI PHÁT HIỆN GIAN LẬN!\nBạn đã rời khỏi màn hình thi đấu. XỬ THUA NGAY LẬP TỨC!");
-                rtdb.ref('active_pvp_match').once('value').then(snap => { let m = snap.val(); if(m && m.status !== 'finished') { let oppName = (PvPEngine.mySlot === 'p1') ? m.p2 : m.p1; rtdb.ref('active_pvp_match').update({ status: 'finished', winner: oppName }); } });
+                isUnderSurveillance = false; 
+                alert("❌ HỆ THỐNG AI PHÁT HIỆN GIAN LẬN!\nBạn đã rời khỏi màn hình thi đấu hoặc đổi Tab. XỬ THUA NGAY LẬP TỨC!");
+                rtdb.ref('active_pvp_match').once('value').then(snap => { 
+                    let m = snap.val(); 
+                    if(m && m.status !== 'finished') { 
+                        let oppName = (PvPEngine.mySlot === 'p1') ? m.p2 : m.p1; 
+                        rtdb.ref('active_pvp_match').update({ status: 'finished', winner: oppName }); 
+                    } 
+                });
                 document.getElementById('pvpModal').classList.remove('active');
             }
         }
         function closePvPModal() { document.getElementById('pvpModal').classList.remove('active'); }
 
-        /* --- SƠ ĐỒ VÀ BẢNG XẾP HẠNG --- */
+        let windowStageToSchedule = ""; let windowIndexToSchedule = 0;
+        function openScheduleModal(stageKey, matchIndex) { windowStageToSchedule = stageKey; windowIndexToSchedule = matchIndex; document.getElementById('scheduleModal').classList.add('active'); }
+        function saveSchedule() {
+            let val = document.getElementById('scheduleInput').value; if(!val) return alert("Vui lòng chọn ngày giờ!");
+            let ts = new Date(val).getTime(); let key = `tournament_status/full_bracket/${windowStageToSchedule}`;
+            if(windowStageToSchedule !== 'sfl' && windowStageToSchedule !== 'sfr' && windowStageToSchedule !== 'final' && windowStageToSchedule !== 'third_place') { key += `/${windowIndexToSchedule}`; }
+            rtdb.ref(key).update({ schedule: ts }).then(() => { alert("Đã khóa lịch thi đấu! Phòng thi sẽ tự mở đúng giờ."); document.getElementById('scheduleModal').classList.remove('active'); });
+        }
+
         function showAntiCheatModal(stageKey, matchIndex, playerSlot) {
             let m = currentFullBracketData[stageKey]; if (Array.isArray(m)) m = m[matchIndex];
             surveillanceData = { stageKey: stageKey, matchIndex: matchIndex, playerSlot: playerSlot, myName: playerSlot === 'p1' ? m.p1 : m.p2, oppName: playerSlot === 'p1' ? m.p2 : m.p1 };
@@ -961,8 +1076,6 @@
             matchEl.innerHTML = `<div class="player-name ${p1Class}"><span>${p1Name}${p1Star}</span> ${p1Badge}</div><div class="vs-text">VS</div><div class="player-name ${p2Class}"><span>${p2Name}${p2Star}</span> ${p2Badge}</div>${timeInfo}${btnAction}`;
             return matchEl;
         }
-
-        setInterval(renderBracket, 10000); 
 
         async function fetchLeaderboard() {
             if(!db) return; const lbContainer = document.getElementById('leaderboardData'); lbContainer.innerHTML = '<p style="text-align:center">Đang tải...</p>';
@@ -1072,18 +1185,6 @@
             if (fb.final && fb.final.winner && fb.final.winner !== "" && fb.third_place && fb.third_place.winner && fb.third_place.winner !== "") { rtdb.ref('tournament_status/result').set({ rank1: fb.final.winner, rank2: (fb.final.winner === fb.final.p1) ? fb.final.p2 : fb.final.p1, rank3: fb.third_place.winner, rank4: (fb.third_place.winner === fb.third_place.p1) ? fb.third_place.p2 : fb.third_place.p1, timestamp: Date.now() }); }
         }
 
-        function archiveSeason() {
-            if(!defendingChampion) return alert("Chưa có nhà vô địch nào trong Bảng Phong Thần để lưu danh!");
-            if(confirm(`Bệ hạ có chắc chắn muốn khắc tên [${defendingChampion}] vào Đại Sảnh Danh Vọng và kết thúc Mùa giải này?`)) {
-                rtdb.ref('tournament_status/hall_of_fame').once('value').then(snap => {
-                    let hof = snap.val() || []; let nextSeason = hof.length + 1;
-                    hof.push({ season: nextSeason, name: defendingChampion, date: new Date().toLocaleDateString('en-GB') });
-                    rtdb.ref('tournament_status/hall_of_fame').set(hof).then(() => { alert(`🎉 Keng!!! Tên của [${defendingChampion}] đã được tạc vào sử sách với tư cách Quán Quân Mùa ${nextSeason}!`); });
-                });
-            }
-        }
-        function openHOFModal() { document.getElementById('hofModal').classList.add('active'); }
-
         if(rtdb) {
             rtdb.ref('tournament_status/full_bracket').on('value', (snapshot) => { 
                 currentFullBracketData = snapshot.val(); 
@@ -1111,74 +1212,6 @@
             });
         }
 
-        function switchTab(tabId) { document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); document.getElementById('view-' + tabId).classList.add('active'); const navBtn = document.getElementById('nav-' + tabId); if(navBtn) navBtn.classList.add('active'); if (window.innerWidth <= 768) toggleSidebar(); if (tabId === 'library') fetchFromSheets(); if (tabId === 'leaderboard') fetchLeaderboard(); }
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); document.getElementById('sidebarOverlay').style.display = document.getElementById('sidebar').classList.contains('show') ? 'block' : 'none'; }
-        
-        // VÒNG QUAY, CỬA HÀNG, ĐÚC CODE
-        let isSpinning = false;
-        function openWheelModal() {
-            if (!currentUser) return alert("Vui lòng đăng nhập!");
-            let todayStr = new Date().toLocaleDateString('en-GB');
-            if (userData.lastBlindBoxDate !== todayStr) { userData.blindBoxCount = 0; userData.lastBlindBoxDate = todayStr; }
-            document.getElementById('ui-wheel-left').innerText = 3 - (userData.blindBoxCount || 0);
-            document.getElementById('wheelModal').classList.add('active');
-        }
-
-        function spinWheel() {
-            if (isSpinning) return; if (!currentUser) return alert("Vui lòng đăng nhập!");
-            let todayStr = new Date().toLocaleDateString('en-GB');
-            if (userData.lastBlindBoxDate !== todayStr) { userData.blindBoxCount = 0; userData.lastBlindBoxDate = todayStr; }
-            if ((userData.blindBoxCount || 0) >= 3) return alert("Hôm nay đã quay hết 3 lượt! Mai quay lại nhé.");
-            if (userData.gold < 150) return alert("Không đủ 150 Vàng để quay!");
-            
-            if(confirm("Dùng 150 Vàng mở Vòng Quay để thử vận may?")) {
-                isSpinning = true; userData.gold -= 150; userData.blindBoxCount = (userData.blindBoxCount || 0) + 1;
-                document.getElementById('ui-wheel-left').innerText = 3 - userData.blindBoxCount; updateUI();
-                
-                let r = Math.random(); let sliceIndex = 0; let msg = ""; if(!userData.vouchers) userData.vouchers = [];
-                if (r < 0.10) { sliceIndex = 0; msg = "🥺 Đen thôi đỏ quên đi! Ngươi đã mất trắng 150 Vàng."; }
-                else if (r < 0.30) { sliceIndex = 1; userData.gold += 50; msg = "🪙 An ủi: Vớt vát được 50 Vàng!"; }
-                else if (r < 0.50) { sliceIndex = 2; userData.xp += 150; msg = "⭐ Bất ngờ: Nhận được 150 XP!"; }
-                else if (r < 0.70) { sliceIndex = 3; userData.vouchers.push(30); msg = "🎟️ Trúng mánh: 1 Voucher Giảm Giá 30%!"; }
-                else if (r < 0.80) { sliceIndex = 4; userData.vouchers.push(50); msg = "🎟️ Cực phẩm: 1 Voucher Giảm Giá 50%!"; }
-                else if (r < 0.85) { sliceIndex = 5; userData.hasShield = true; msg = "🛡️ Thần binh: 1 Bùa Bảo Hộ!"; }
-                else if (r < 0.90) { sliceIndex = 6; userData.magnifyingGlass = (userData.magnifyingGlass||0) + 1; msg = "🔍 Hiếm có: 1 Kính Lúp Thám Tử!"; }
-                else { sliceIndex = 7; msg = "🥺 Kim trượt qua Kính lúp... Xui quá, mất trắng rồi!"; }
-                
-                let randomOffset = Math.floor(Math.random() * 40) - 20; let targetDegree = 3600 - (sliceIndex * 45 + 22.5) + randomOffset; 
-
-                let wheelEl = document.getElementById('spinningWheel');
-                wheelEl.style.transition = 'none'; wheelEl.style.transform = `rotate(0deg)`; void wheelEl.offsetWidth; 
-                wheelEl.style.transition = 'transform 4.2s cubic-bezier(0.17, 0.67, 0.1, 1)'; wheelEl.style.transform = `rotate(${targetDegree}deg)`;
-                
-                setTimeout(() => {
-                    isSpinning = false; userData.vouchers.sort((a,b) => b - a); 
-                    db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, xp: userData.xp, vouchers: userData.vouchers, hasShield: userData.hasShield, magnifyingGlass: userData.magnifyingGlass, blindBoxCount: userData.blindBoxCount, lastBlindBoxDate: userData.lastBlindBoxDate }).then(() => { updateUI(); alert(msg); });
-                }, 4400); 
-            }
-        }
-
-        function buyItem(itemType, basePrice) { 
-            if (!currentUser) return alert("Vui lòng đăng nhập để mua hàng!"); 
-            let bestVoucher = 0; let vIndex = -1; if(userData.vouchers && userData.vouchers.length > 0) { bestVoucher = userData.vouchers[0]; vIndex = 0; }
-            let finalPrice = basePrice; if (bestVoucher > 0) { finalPrice = Math.floor(basePrice * (100 - bestVoucher) / 100); }
-            if (userData.gold < finalPrice) return alert(`Bạn không đủ Vàng! Cần ${finalPrice} 🪙.`);
-            let confirmMsg = `Dùng ${finalPrice} Vàng đổi vật phẩm?`; if (bestVoucher > 0) confirmMsg = `🎟️ Hệ thống áp dụng 1 Voucher Giảm ${bestVoucher}%!\nGiá giảm từ ${basePrice} xuống còn ${finalPrice} Vàng. Mua ngay?`;
-            
-            if(confirm(confirmMsg)) {
-                let updates = { gold: userData.gold - finalPrice };
-                if (vIndex > -1) { userData.vouchers.splice(vIndex, 1); updates.vouchers = userData.vouchers; }
-                if (itemType === 'rename') { let newName = prompt("Nhập danh xưng mới:"); if (!newName || newName.trim() === "") return alert("Đã hủy giao dịch!"); updates.displayName = newName.trim(); }
-                if (itemType === 'shield') updates.hasShield = true; if (itemType === 'potion') updates.potionExpiry = Date.now() + 86400000; if (itemType === 'mask') updates.maskExpiry = Date.now() + 86400000; if (itemType === 'glass') updates.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
-                
-                db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
-                    userData.gold -= finalPrice; if(updates.hasShield) userData.hasShield = true; if(updates.potionExpiry) userData.potionExpiry = updates.potionExpiry; if(updates.maskExpiry) userData.maskExpiry = updates.maskExpiry; if(updates.magnifyingGlass) userData.magnifyingGlass = updates.magnifyingGlass; if(updates.displayName) userData.displayName = updates.displayName;
-                    updateUI(); if (itemType === 'rename') fetchLeaderboard(); 
-                    let anim = document.getElementById('rewardAnim'); anim.innerText = `🛒 Mua thành công! Còn ${userData.gold} 🪙`; anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 3000);
-                });
-            }
-        }
-
         window.addEventListener('message', function(e) {
             if (e.data === 'CORRECT') { if (currentUser && userData) { let isPotionActive = userData.potionExpiry && userData.potionExpiry > Date.now(); let xpGained = isPotionActive ? 30 : 15; let goldGained = isPotionActive ? 20 : 10; userData.xp = (userData.xp || 0) + xpGained; userData.gold = (userData.gold || 0) + goldGained; syncStatsToCloud(); let anim = document.getElementById('rewardAnim'); anim.innerText = isPotionActive ? `🧪 ĐANG X2! +${goldGained} 🪙 | +${xpGained} ⭐` : `🎉 +${goldGained} 🪙 | +${xpGained} ⭐`; anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 2000); } }
             else if (e.data === 'REQ_GLASS') { if (userData.magnifyingGlass > 0) { userData.magnifyingGlass--; syncStatsToCloud(); document.getElementById('modalFrame').contentWindow.postMessage('APPROVE_GLASS', '*'); } else { alert("Hết Kính Lúp! Hãy vào Cửa Hàng."); } }
@@ -1193,7 +1226,6 @@
         function copyCode() { document.getElementById('generatedCode').select(); document.execCommand("copy"); alert("Đã copy mã!"); }
         function toggleDarkMode() { document.body.classList.toggle('dark-mode'); const isDark = document.body.classList.contains('dark-mode'); localStorage.setItem('darkMode', isDark ? 'true' : 'false'); document.getElementById('themeToggleBtn').innerText = isDark ? '☀️' : '🌙'; }
         if (localStorage.getItem('darkMode') === 'true') { document.body.classList.add('dark-mode'); document.getElementById('themeToggleBtn').innerText = '☀️'; }
-        updateUI(); fetchLeaderboard(); fetchFromSheets(); 
     </script>
 </body>
 </html>
