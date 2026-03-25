@@ -1187,22 +1187,41 @@
                 let m = snap.val(); if(!m || m.q_idx !== currentQIdx || m.status !== 'showing_result') return; 
                 let nextIdx = m.q_idx + 1; let s1 = m.p1_score; let s2 = m.p2_score; let set1 = m.p1_set; let set2 = m.p2_set; let status = 'playing'; let winner = "";
 
+                // CHỐT KẾT QUẢ KHI HẾT SET 1 VÀ SET 2
                 if(m.q_idx === 10 || m.q_idx === 20) {
-                    if(s1 > s2) set1++; else if(s2 > s1) set2++; s1 = 0; s2 = 0; 
-                    if(set1 === 2 || set1 > set2) { status = 'finished'; winner = m.p1; } else if(set2 === 2 || set2 > set1) { status = 'finished'; winner = m.p2; } 
-                } else if (m.q_idx >= 21) {
-                    if(s1 >= 3) { status = 'finished'; winner = m.p1; } else if (s2 >= 3) { status = 'finished'; winner = m.p2; }
+                    if(s1 > s2) set1++; else if(s2 > s1) set2++; 
+                    s1 = 0; s2 = 0; // Đặt lại điểm số (score) cho Set mới
+                    
+                    // CHỈ phán quyết thắng TRẬN khi có người đạt 2 Set. 
+                    // Không dùng điều kiện `set1 > set2` nữa để tránh xử thắng ngay sau Set 1.
+                    if(set1 === 2) { status = 'finished'; winner = m.p1; } 
+                    else if(set2 === 2) { status = 'finished'; winner = m.p2; } 
+                } 
+                // XỬ LÝ SET 3 (GOLDEN SET - NO MERCY)
+                else if (m.q_idx >= 21) {
+                    if(s1 >= 3) { status = 'finished'; winner = m.p1; set1++; } // Chạm 3 điểm trước là thắng Set 3 và thắng luôn trận
+                    else if (s2 >= 3) { status = 'finished'; winner = m.p2; set2++;}
                     else if (nextIdx > m.question_bank.length) { winner = "HÒA NHAU! (HẾT CÂU)"; status = 'finished'; } 
                 }
 
                 let updates = { p1_score: s1, p2_score: s2, p1_set: set1, p2_set: set2, p1_ans: "", p2_ans: "", p1_time: 0, p2_time: 0, evaluating: false, p1_won_this_round: null, p2_won_this_round: null };
                 
-                if(status === 'finished') { updates.status = 'finished'; updates.winner = winner; } 
+                if(status === 'finished') { 
+                    updates.status = 'finished'; updates.winner = winner; 
+                } 
                 else { 
                     updates.status = 'playing'; updates.q_idx = nextIdx; updates.current_q = m.question_bank[nextIdx - 1]; 
-                    if (nextIdx <= 10) { updates.mode = 'normal'; updates.time_limit = 15; updates.unlock_time = 0; } 
-                    else if (nextIdx <= 20) { updates.mode = 'delay'; updates.time_limit = 15; updates.unlock_time = Date.now() + 6500; } 
-                    else { updates.mode = 'golden'; updates.time_limit = 7; updates.unlock_time = Date.now() + 6500; }
+                    
+                    // THIẾT LẬP CHẾ ĐỘ (MODE) CHO CÂU HỎI TIẾP THEO
+                    if (nextIdx <= 10) { 
+                        updates.mode = 'normal'; updates.time_limit = 15; updates.unlock_time = 0; 
+                    } 
+                    else if (nextIdx <= 20) { 
+                        updates.mode = 'delay'; updates.time_limit = 15; updates.unlock_time = Date.now() + 6500; 
+                    } 
+                    else { 
+                        updates.mode = 'golden'; updates.time_limit = 7; updates.unlock_time = Date.now() + 6500; 
+                    }
                 }
 
                 rtdb.ref('active_pvp_match').update(updates).then(() => {
