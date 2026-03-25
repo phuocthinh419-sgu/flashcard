@@ -267,35 +267,44 @@
         body.theme-aurora .btn-buy, body.theme-aurora .btn-run, body.theme-aurora .btn-save { background: rgba(103, 58, 183, 0.6); color: #fff; border: 1px solid #ce93d8; }
         body.theme-aurora .btn-buy:hover, body.theme-aurora .btn-run:hover, body.theme-aurora .btn-save:hover { background: rgba(103, 58, 183, 0.9); }
         
-        /* THEME: SNOW */
+        /* THEME: SNOW (Tuyết Dạ Tinh Tế) */
         body.theme-snow {
-            background-color: #0b0c10;
+            background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); /* Bầu trời đêm sâu thẳm */
             color: #c5c6c7;
         }
-        body.theme-snow::before {
+        body.theme-snow::before, body.theme-snow::after {
             content: '';
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            position: fixed; top: -150%; left: 0; width: 100vw; height: 250vh;
             background-image: 
-                url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3e%3ctext x='10' y='40' font-size='20' opacity='0.3'%3e❄️%3c/text%3e%3c/svg%3e"),
-                url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3e%3ctext x='25' y='25' font-size='12' opacity='0.2'%3e❄️%3c/text%3e%3c/svg%3e"),
-                url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3e%3ctext x='0' y='15' font-size='16' opacity='0.4'%3e❄️%3c/text%3e%3c/svg%3e"),
-                url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3e%3ctext x='35' y='45' font-size='25' opacity='0.5'%3e❄️%3c/text%3e%3c/svg%3e");
-            background-size: 400px 400px, 250px 250px, 350px 350px, 500px 500px; 
-            background-position: 0 0, 40px 60px, 130px 270px, 70px 100px;
-            animation: snow 20s linear infinite;
-            pointer-events: none; z-index: 0;
+                radial-gradient(circle, #fff 1.5px, transparent 2.5px),
+                radial-gradient(circle, rgba(255,255,255,0.8) 2px, transparent 4px),
+                radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 2px),
+                radial-gradient(circle, rgba(255,255,255,0.6) 1.5px, transparent 3px);
+            background-size: 120px 120px, 250px 250px, 350px 350px, 500px 500px; 
+            background-position: 0 0, 50px 50px, 130px 270px, 70px 100px;
+            animation: snowFall 15s linear infinite;
+            z-index: -2; pointer-events: none;
         }
-        @keyframes snow { 0% { background-position: 0 0, 40px 60px, 130px 270px, 70px 100px; } 100% { background-position: 400px 1000px, 290px 810px, 480px 1320px, 570px 1100px; } }
+        body.theme-snow::after {
+            background-size: 180px 180px, 300px 300px, 450px 450px, 600px 600px;
+            animation-duration: 25s;
+            filter: blur(2px); /* Làm mờ để tạo chiều sâu 3D cho các bông tuyết ở xa */
+            opacity: 0.6;
+        }
+        @keyframes snowFall { 
+            0% { transform: translateY(0); } 
+            100% { transform: translateY(1000px); } 
+        }
         
-        body.theme-snow .sidebar, body.theme-snow .top-stats-bar, body.theme-snow .lb-row, body.theme-snow .lib-card, body.theme-snow .shop-item, body.theme-snow .panel, body.theme-snow .settings-card, body.theme-snow .arena-panel, body.theme-snow .modal-content { background: #1f2833; border-color: #45a29e; color: #c5c6c7; box-shadow: 0 4px 10px rgba(0,0,0,0.8);}
-        body.theme-snow .stat-box, body.theme-snow .nav-item:hover, body.theme-snow .nav-item.active { background: #0b0c10; color: #66fcf1; border: 1px solid #45a29e;}
+        body.theme-snow .sidebar, body.theme-snow .top-stats-bar, body.theme-snow .lb-row, body.theme-snow .lib-card, body.theme-snow .shop-item, body.theme-snow .panel, body.theme-snow .settings-card, body.theme-snow .arena-panel, body.theme-snow .modal-content { background: rgba(31, 40, 51, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(102, 252, 241, 0.2); color: #c5c6c7; box-shadow: 0 4px 15px rgba(0,0,0,0.5);}
+        body.theme-snow .stat-box, body.theme-snow .nav-item:hover, body.theme-snow .nav-item.active { background: rgba(11, 12, 16, 0.8); color: #66fcf1; border: 1px solid rgba(69, 162, 158, 0.4);}
         body.theme-snow .nav-item { color: #c5c6c7; }
-        body.theme-snow .panel-header, body.theme-snow .modal-header, body.theme-snow .syllabus-list, body.theme-snow textarea, body.theme-snow input { background: #0b0c10; border-color: #45a29e; color: #66fcf1; }
-        body.theme-snow .header h1, body.theme-snow .item-title, body.theme-snow .arena-title, body.theme-snow .brand, body.theme-snow .user-name { color: #66fcf1; }
+        body.theme-snow .panel-header, body.theme-snow .modal-header, body.theme-snow .syllabus-list, body.theme-snow textarea, body.theme-snow input { background: rgba(11, 12, 16, 0.8); border-color: rgba(69, 162, 158, 0.4); color: #66fcf1; }
+        body.theme-snow .header h1, body.theme-snow .item-title, body.theme-snow .arena-title, body.theme-snow .brand, body.theme-snow .user-name { color: #66fcf1; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         body.theme-snow .item-desc, body.theme-snow .header p { color: #c5c6c7; }
-        body.theme-snow .lb-rank-1, body.theme-snow .lb-rank-2, body.theme-snow .lb-rank-3 { background: #1f2833; border-left-color: #66fcf1;}
-        body.theme-snow .btn-buy, body.theme-snow .btn-run, body.theme-snow .btn-save { background: #45a29e; color: #0b0c10; border: 1px solid #66fcf1; }
-        body.theme-snow .btn-buy:hover, body.theme-snow .btn-run:hover, body.theme-snow .btn-save:hover { background: #66fcf1; }
+        body.theme-snow .lb-rank-1, body.theme-snow .lb-rank-2, body.theme-snow .lb-rank-3 { background: rgba(31, 40, 51, 0.9); border-left-color: #66fcf1;}
+        body.theme-snow .btn-buy, body.theme-snow .btn-run, body.theme-snow .btn-save { background: rgba(69, 162, 158, 0.8); color: #0b0c10; border: 1px solid #66fcf1; font-weight: bold; }
+        body.theme-snow .btn-buy:hover, body.theme-snow .btn-run:hover, body.theme-snow .btn-save:hover { background: rgba(102, 252, 241, 0.9); box-shadow: 0 0 10px rgba(102, 252, 241, 0.5);}
 
         /* THEME: ROYAL */
         body.theme-royal {
