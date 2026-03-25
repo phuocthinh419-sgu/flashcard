@@ -40,7 +40,7 @@
         .stat-streak { color: #ff5722; } .stat-xp { color: var(--secondary); } .stat-gold { color: #fbc02d; }
         .menu-btn { display: none; font-size: 24px; cursor: pointer; background: transparent; border: none; color: var(--primary); }
 
-        .main-content { flex: 1; padding: 20px 30px 120px 30px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .main-content { flex: 1; padding: 20px 30px 120px 30px; overflow-y: auto; -webkit-overflow-scrolling: touch; position: relative; z-index: 1;}
         .header { margin-bottom: 25px; } .header h1 { font-size: 28px; color: var(--primary); } .header p { color: #666; margin-top: 5px; }
         .view-section { display: none; flex-direction: column; height: auto; min-height: 100%; } .view-section.active { display: flex; }
         
@@ -223,6 +223,57 @@
         body.dark-mode .user-name { color: #9fa8da; }
         body.dark-mode .btn-close { background: #444; color: #fff; }
 
+        /* THEME: AURORA */
+        body.theme-aurora {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: #fff;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        body.theme-aurora .sidebar, body.theme-aurora .top-stats-bar, body.theme-aurora .lb-row, body.theme-aurora .lib-card, body.theme-aurora .shop-item, body.theme-aurora .panel, body.theme-aurora .settings-card, body.theme-aurora .arena-panel, body.theme-aurora .modal-content { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-color: rgba(255,255,255,0.2); color: #fff; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);}
+        body.theme-aurora .stat-box, body.theme-aurora .nav-item:hover, body.theme-aurora .nav-item.active { background: rgba(255,255,255,0.2); color: #fff; }
+        body.theme-aurora .nav-item { color: #e0e0e0; }
+        body.theme-aurora .panel-header, body.theme-aurora .modal-header, body.theme-aurora .syllabus-list, body.theme-aurora textarea, body.theme-aurora input { background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.1); color: #fff; }
+        body.theme-aurora .header h1, body.theme-aurora .item-title, body.theme-aurora .arena-title, body.theme-aurora .brand, body.theme-aurora .user-name { color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.3);}
+        body.theme-aurora .item-desc, body.theme-aurora .header p { color: #eee; }
+        body.theme-aurora .lb-rank-1, body.theme-aurora .lb-rank-2, body.theme-aurora .lb-rank-3 { background: rgba(255,255,255,0.15); border-left-color: #fff;}
+        body.theme-aurora .user-badge { background: rgba(0,0,0,0.3); color: #fff; }
+        
+        /* THEME: SNOW */
+        body.theme-snow {
+            background-color: #0b0c10;
+            color: #c5c6c7;
+        }
+        body.theme-snow::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px),
+                radial-gradient(rgba(255,255,255,.4), rgba(255,255,255,.1) 2px, transparent 30px);
+            background-size: 550px 550px, 350px 350px, 250px 250px, 150px 150px; 
+            background-position: 0 0, 40px 60px, 130px 270px, 70px 100px;
+            animation: snow 20s linear infinite;
+            pointer-events: none; z-index: 0;
+        }
+        @keyframes snow { 0% { background-position: 0 0, 40px 60px, 130px 270px, 70px 100px; } 100% { background-position: 500px 1000px, 400px 400px, 300px 300px, 200px 200px; } }
+        
+        body.theme-snow .sidebar, body.theme-snow .top-stats-bar, body.theme-snow .lb-row, body.theme-snow .lib-card, body.theme-snow .shop-item, body.theme-snow .panel, body.theme-snow .settings-card, body.theme-snow .arena-panel, body.theme-snow .modal-content { background: #1f2833; border-color: #45a29e; color: #c5c6c7; box-shadow: 0 4px 10px rgba(0,0,0,0.8);}
+        body.theme-snow .stat-box, body.theme-snow .nav-item:hover, body.theme-snow .nav-item.active { background: #0b0c10; color: #66fcf1; border: 1px solid #45a29e;}
+        body.theme-snow .nav-item { color: #c5c6c7; }
+        body.theme-snow .panel-header, body.theme-snow .modal-header, body.theme-snow .syllabus-list, body.theme-snow textarea, body.theme-snow input { background: #0b0c10; border-color: #45a29e; color: #66fcf1; }
+        body.theme-snow .header h1, body.theme-snow .item-title, body.theme-snow .arena-title, body.theme-snow .brand, body.theme-snow .user-name { color: #66fcf1; }
+        body.theme-snow .item-desc, body.theme-snow .header p { color: #c5c6c7; }
+        body.theme-snow .lb-rank-1, body.theme-snow .lb-rank-2, body.theme-snow .lb-rank-3 { background: #1f2833; border-left-color: #66fcf1;}
+        body.theme-snow .btn-buy, body.theme-snow .btn-run, body.theme-snow .btn-save { background: #45a29e; color: #0b0c10; border: 1px solid #66fcf1; }
+        body.theme-snow .btn-buy:hover, body.theme-snow .btn-run:hover, body.theme-snow .btn-save:hover { background: #66fcf1; }
+
         @media (max-width: 768px) {
             .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
             .sidebar.show { transform: translateX(0); }
@@ -342,6 +393,7 @@
                         <div class="item-price">🪙 200</div>
                         <button class="btn-buy" onclick="buyItem('shield', 200)">Đổi Ngay</button>
                     </div>
+                    
                     <div class="shop-item">
                         <div class="item-icon">❄️</div>
                         <div class="item-title">Đá Hoa Tuyết</div>
@@ -384,6 +436,29 @@
                         <div class="item-price">Miễn phí</div>
                         <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('streak_fire', 0)">Dùng Ngay</button>
                     </div>
+
+                    <div class="shop-item">
+                        <div class="item-icon">💻</div>
+                        <div class="item-title">Giao diện: Cực Quang</div>
+                        <div class="item-desc">Đổi phông nền web thành dải Cực quang uốn lượn huyền ảo.</div>
+                        <div class="item-price">🪙 15000</div>
+                        <button class="btn-buy" onclick="buyItem('theme_aurora', 15000)">Đổi Ngay</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="item-icon">💻</div>
+                        <div class="item-title">Giao diện: Tuyết Dạ</div>
+                        <div class="item-desc">Đắm chìm trong màn đêm tĩnh lặng với những hạt tuyết rơi lơi lả.</div>
+                        <div class="item-price">🪙 15000</div>
+                        <button class="btn-buy" onclick="buyItem('theme_snow', 15000)">Đổi Ngay</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="item-icon">💻</div>
+                        <div class="item-title">Giao diện: Nguyên Thủy</div>
+                        <div class="item-desc">Trở về giao diện Mặc định (Sáng/Tối).</div>
+                        <div class="item-price">Miễn phí</div>
+                        <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('theme_default', 0)">Dùng Ngay</button>
+                    </div>
+
                 </div>
             </div>
 
@@ -605,7 +680,7 @@
         catch (e) { console.error("Lỗi Firebase!"); }
 
         let currentUser = null;
-        let userData = { role: 'student', gold: 0, xp: 0, streak: 1, displayName: '', lastLogin: '', hasShield: false, potionExpiry: null, maskExpiry: null, magnifyingGlass: 0, vouchers: [], blindBoxCount: 0, lastBlindBoxDate: '', streakIcon: '🔥' };
+        let userData = { role: 'student', gold: 0, xp: 0, streak: 1, displayName: '', lastLogin: '', hasShield: false, potionExpiry: null, maskExpiry: null, magnifyingGlass: 0, vouchers: [], blindBoxCount: 0, lastBlindBoxDate: '', streakIcon: '🔥', theme: 'theme_default' };
 
         function loginWithGoogle() {
             if (!auth) return;
@@ -662,6 +737,9 @@
                             if(!userData.streak) userData.streak = 1; if(!userData.lastLogin) userData.lastLogin = todayStr;
                             if(!userData.vouchers) userData.vouchers = [];
                             if(!userData.streakIcon) userData.streakIcon = '🔥';
+                            if(!userData.theme) userData.theme = 'theme_default';
+                            
+                            applyTheme(userData.theme);
                             
                             let lastParts = userData.lastLogin.split('/');
                             if (lastParts.length === 3) {
@@ -719,7 +797,7 @@
                             updateUI();
                         } else { userData.lastLogin = todayStr; document.getElementById('nameModal').classList.add('active'); }
                     });
-                } else { currentUser = null; userData = { role: 'student', gold: 0, xp: 0, streak: 0, displayName: 'Khách', vouchers: [], streakIcon: '🔥' }; updateUI(); }
+                } else { currentUser = null; userData = { role: 'student', gold: 0, xp: 0, streak: 0, displayName: 'Khách', vouchers: [], streakIcon: '🔥', theme: 'theme_default' }; applyTheme('theme_default'); updateUI(); }
             });
         }
 
@@ -731,7 +809,19 @@
         }
 
         function syncStatsToCloud() {
-            if (currentUser && db) { db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, xp: userData.xp, streak: userData.streak, displayName: userData.displayName, magnifyingGlass: userData.magnifyingGlass || 0, vouchers: userData.vouchers || [], streakIcon: userData.streakIcon || '🔥' }); updateUI(); }
+            if (currentUser && db) { db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, xp: userData.xp, streak: userData.streak, displayName: userData.displayName, magnifyingGlass: userData.magnifyingGlass || 0, vouchers: userData.vouchers || [], streakIcon: userData.streakIcon || '🔥', theme: userData.theme || 'theme_default' }); updateUI(); }
+        }
+        
+        function applyTheme(themeName) {
+            document.body.classList.remove('theme-aurora', 'theme-snow');
+            if (themeName && themeName !== 'theme_default') {
+                document.body.classList.add(themeName);
+                if(themeName === 'theme-snow' || themeName === 'theme-aurora') {
+                    document.body.classList.remove('dark-mode'); 
+                    document.getElementById('themeToggleBtn').innerText = '🌙';
+                    localStorage.setItem('darkMode', 'false');
+                }
+            }
         }
 
         function updateUI() {
@@ -1521,6 +1611,9 @@
                 if (itemType === 'streak_basket') updates.streakIcon = '🏀';
                 if (itemType === 'streak_cap') updates.streakIcon = '🎓';
                 if (itemType === 'streak_fire') updates.streakIcon = '🔥';
+                if (itemType === 'theme_aurora') updates.theme = 'theme-aurora';
+                if (itemType === 'theme_snow') updates.theme = 'theme-snow';
+                if (itemType === 'theme_default') updates.theme = 'theme_default';
                 
                 db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
                     userData.gold -= finalPrice; 
@@ -1530,6 +1623,7 @@
                     if(updates.magnifyingGlass) userData.magnifyingGlass = updates.magnifyingGlass; 
                     if(updates.displayName) userData.displayName = updates.displayName;
                     if(updates.streakIcon) userData.streakIcon = updates.streakIcon;
+                    if(updates.theme) { userData.theme = updates.theme; applyTheme(userData.theme); }
                     
                     updateUI(); 
                     if (itemType === 'rename') fetchLeaderboard(); 
