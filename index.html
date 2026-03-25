@@ -276,16 +276,16 @@
             content: '';
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-image: 
-                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
-                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
-                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px),
-                radial-gradient(rgba(255,255,255,.4), rgba(255,255,255,.1) 2px, transparent 30px);
-            background-size: 550px 550px, 350px 350px, 250px 250px, 150px 150px; 
+                url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3e%3ctext x='10' y='40' font-size='20' opacity='0.3'%3e❄️%3c/text%3e%3c/svg%3e"),
+                url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3e%3ctext x='25' y='25' font-size='12' opacity='0.2'%3e❄️%3c/text%3e%3c/svg%3e"),
+                url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3e%3ctext x='0' y='15' font-size='16' opacity='0.4'%3e❄️%3c/text%3e%3c/svg%3e"),
+                url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3e%3ctext x='35' y='45' font-size='25' opacity='0.5'%3e❄️%3c/text%3e%3c/svg%3e");
+            background-size: 400px 400px, 250px 250px, 350px 350px, 500px 500px; 
             background-position: 0 0, 40px 60px, 130px 270px, 70px 100px;
             animation: snow 20s linear infinite;
             pointer-events: none; z-index: 0;
         }
-        @keyframes snow { 0% { background-position: 0 0, 40px 60px, 130px 270px, 70px 100px; } 100% { background-position: 500px 1000px, 400px 400px, 300px 300px, 200px 200px; } }
+        @keyframes snow { 0% { background-position: 0 0, 40px 60px, 130px 270px, 70px 100px; } 100% { background-position: 400px 1000px, 290px 810px, 480px 1320px, 570px 1100px; } }
         
         body.theme-snow .sidebar, body.theme-snow .top-stats-bar, body.theme-snow .lb-row, body.theme-snow .lib-card, body.theme-snow .shop-item, body.theme-snow .panel, body.theme-snow .settings-card, body.theme-snow .arena-panel, body.theme-snow .modal-content { background: #1f2833; border-color: #45a29e; color: #c5c6c7; box-shadow: 0 4px 10px rgba(0,0,0,0.8);}
         body.theme-snow .stat-box, body.theme-snow .nav-item:hover, body.theme-snow .nav-item.active { background: #0b0c10; color: #66fcf1; border: 1px solid #45a29e;}
@@ -296,6 +296,22 @@
         body.theme-snow .lb-rank-1, body.theme-snow .lb-rank-2, body.theme-snow .lb-rank-3 { background: #1f2833; border-left-color: #66fcf1;}
         body.theme-snow .btn-buy, body.theme-snow .btn-run, body.theme-snow .btn-save { background: #45a29e; color: #0b0c10; border: 1px solid #66fcf1; }
         body.theme-snow .btn-buy:hover, body.theme-snow .btn-run:hover, body.theme-snow .btn-save:hover { background: #66fcf1; }
+
+        /* THEME: ROYAL */
+        body.theme-royal {
+            background: radial-gradient(ellipse at top, #3a0a13 0%, #000000 100%);
+            color: #fff;
+        }
+        body.theme-royal .sidebar, body.theme-royal .top-stats-bar, body.theme-royal .lb-row, body.theme-royal .lib-card, body.theme-royal .shop-item, body.theme-royal .panel, body.theme-royal .settings-card, body.theme-royal .arena-panel, body.theme-royal .modal-content { background: rgba(20, 5, 5, 0.7); backdrop-filter: blur(10px); border: 1px solid #d4af37; color: #fff; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);}
+        body.theme-royal .stat-box, body.theme-royal .nav-item:hover, body.theme-royal .nav-item.active { background: rgba(212, 175, 55, 0.2); color: #ffd700; border: 1px solid #d4af37;}
+        body.theme-royal .nav-item { color: #e0e0e0; }
+        body.theme-royal .panel-header, body.theme-royal .modal-header, body.theme-royal .syllabus-list, body.theme-royal textarea, body.theme-royal input { background: rgba(0,0,0,0.5); border-color: #d4af37; color: #fff; }
+        body.theme-royal .header h1, body.theme-royal .item-title, body.theme-royal .arena-title, body.theme-royal .brand, body.theme-royal .user-name { color: #ffd700; text-shadow: 0 2px 4px rgba(0,0,0,0.8);}
+        body.theme-royal .item-desc, body.theme-royal .header p { color: #d4af37; }
+        body.theme-royal .lb-rank-1, body.theme-royal .lb-rank-2, body.theme-royal .lb-rank-3 { background: rgba(212, 175, 55, 0.15); border-left-color: #ffd700;}
+        body.theme-royal .user-badge { background: rgba(0,0,0,0.5); color: #ffd700; border: 1px solid #ffd700; }
+        body.theme-royal .btn-buy, body.theme-royal .btn-run, body.theme-royal .btn-save { background: linear-gradient(45deg, #b8860b, #d4af37); color: #000; border: none; font-weight: bold; }
+        body.theme-royal .btn-buy:hover, body.theme-royal .btn-run:hover, body.theme-royal .btn-save:hover { background: linear-gradient(45deg, #d4af37, #ffd700); box-shadow: 0 0 10px #ffd700; }
 
         @media (max-width: 768px) {
             .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
@@ -473,6 +489,13 @@
                         <div class="item-desc">Đắm chìm trong màn đêm tĩnh lặng với những hạt tuyết rơi lơi lả.</div>
                         <div class="item-price" id="price-theme_snow">🪙 15000</div>
                         <button class="btn-buy" id="btn-theme_snow" onclick="buyItem('theme_snow', 15000)">Đổi Ngay</button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="item-icon">👑</div>
+                        <div class="item-title">Giao diện: Đế Vương</div>
+                        <div class="item-desc">Khoác lên sắc đỏ sẫm và ánh vàng hoàng kim quyền lực của bậc Cửu Ngũ Chí Tôn.</div>
+                        <div class="item-price" id="price-theme_royal">🪙 20000</div>
+                        <button class="btn-buy" id="btn-theme_royal" onclick="buyItem('theme_royal', 20000)">Đổi Ngay</button>
                     </div>
                     <div class="shop-item">
                         <div class="item-icon">💻</div>
@@ -837,10 +860,10 @@
         }
         
         function applyTheme(themeName) {
-            document.body.classList.remove('theme-aurora', 'theme-snow');
+            document.body.classList.remove('theme-aurora', 'theme-snow', 'theme-royal');
             if (themeName && themeName !== 'theme_default') {
                 document.body.classList.add(themeName);
-                if(themeName === 'theme-snow' || themeName === 'theme-aurora') {
+                if(themeName === 'theme-snow' || themeName === 'theme-aurora' || themeName === 'theme-royal') {
                     document.body.classList.remove('dark-mode'); 
                     document.getElementById('themeToggleBtn').innerText = '🌙';
                     localStorage.setItem('darkMode', 'false');
@@ -877,7 +900,7 @@
             }
             
             // UPDATE CỬA HÀNG (SỞ HỮU VĨNH VIỄN)
-            let itemsToCheck = ['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow'];
+            let itemsToCheck = ['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow', 'theme_royal'];
             if(userData.purchasedItems && Array.isArray(userData.purchasedItems)) {
                 itemsToCheck.forEach(item => {
                     let btn = document.getElementById('btn-' + item);
@@ -890,7 +913,9 @@
                         } else {
                             btn.innerText = "Đổi Ngay";
                             btn.style.background = ""; // Reset về màu gốc
-                            let price = 5000; if(item.startsWith('theme')) price = 15000;
+                            let price = 5000; 
+                            if(item === 'theme_aurora' || item === 'theme_snow') price = 15000;
+                            else if(item === 'theme_royal') price = 20000;
                             priceTag.innerText = "🪙 " + price;
                         }
                     }
@@ -1625,7 +1650,7 @@
             if (!currentUser) return alert("Vui lòng đăng nhập để mua hàng!"); 
             
             // Kiểm tra xem đã mua chưa (Đối với các món mua 1 lần)
-            if (['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow'].includes(itemType)) {
+            if (['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow', 'theme_royal'].includes(itemType)) {
                 if (userData.purchasedItems && userData.purchasedItems.includes(itemType)) {
                     // Đã mua -> Chỉ mặc vào người, không tốn tiền
                     let updates = {};
@@ -1683,7 +1708,7 @@
                 if (itemType === 'glass') updates.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
                 
                 // Thêm vào kho đồ nếu là món mua 1 lần
-                if (['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow'].includes(itemType)) {
+                if (['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow', 'theme_royal'].includes(itemType)) {
                     if (!userData.purchasedItems) userData.purchasedItems = [];
                     userData.purchasedItems.push(itemType);
                     updates.purchasedItems = userData.purchasedItems;
@@ -1737,3 +1762,4 @@
     </script>
 </body>
 </html>
+Lưu lại code này. Ta đi ngủ một lát. Mai ta sẽ quay lại.
