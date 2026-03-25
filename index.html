@@ -519,7 +519,6 @@
 
             <div style="text-align:center; color:#ccc; margin-top:10px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 5px;">
                 CÂU HỎI SỐ: <span id="pvpQIndex" style="color:#ffd700;">1</span> / 30 
-                <span style="margin-left: 15px; color: #00e676;">[TRẮC NGHIỆM]</span>
                 <div id="pvpTimerBanner" style="font-size: 24px; color: #ff1744; margin-top: 5px;">⏳ 15s</div>
             </div>
 
@@ -547,7 +546,7 @@
 
     <script>
         let currentFullBracketData = null; 
-        let defendingChampion = ""; // LƯU TÊN ĐƯƠNG KIM VÔ ĐỊCH
+        let defendingChampion = ""; 
 
         const firebaseConfig = {
             apiKey: "AIzaSyAmDqBfe4JRBKDGVwqVS0yI9_P2O2WIzxI",
@@ -1139,7 +1138,14 @@
                 let opts = [v.vi, ...wrong.map(w => w.vi)].sort(() => Math.random() - 0.5); return { en: v.en, vi: v.vi, opts: opts };
             });
 
-            rtdb.ref('active_pvp_match').set({ stage: stageKey, match_idx: matchIndex, p1: p1Name, p2: p2Name, p1_set: 0, p2_set: 0, p1_score: 0, p2_score: 0, status: 'playing', q_idx: 1, current_q: pvpQuestionBank[0], p1_ans: "", p1_time: 0, p2_ans: "", p2_time: 0, evaluating: false, question_bank: pvpQuestionBank });
+            rtdb.ref('active_pvp_match').set({ 
+                stage: stageKey, match_idx: matchIndex, p1: p1Name, p2: p2Name, 
+                p1_set: 0, p2_set: 0, p1_score: 0, p2_score: 0, status: 'playing', 
+                q_idx: 1, current_q: pvpQuestionBank[0], 
+                mode: 'normal', time_limit: 15, unlock_time: 0, 
+                p1_ans: "", p1_time: 0, p2_ans: "", p2_time: 0, 
+                evaluating: false, question_bank: pvpQuestionBank 
+            });
         }
 
         function submitPvPAnswer(idx) {
@@ -1147,10 +1153,16 @@
                 let m = snap.val(); if(!m || m.status !== 'playing' || m.evaluating) return;
                 let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
                 if((isP1 && m.p1_ans !== "") || (isP2 && m.p2_ans !== "")) return;
+                
                 const selectedText = m.current_q.opts[idx]; const isCorrect = selectedText === m.current_q.vi;
                 let btn = document.getElementById('pvpOpt' + idx); btn.style.backgroundColor = isCorrect ? '#00c853' : '#d50000'; btn.style.borderColor = isCorrect ? '#00e676' : '#ff1744';
                 for(let i=0; i<4; i++) { document.getElementById('pvpOpt'+i).style.pointerEvents = 'none'; } document.getElementById('lockOverlay').classList.add('active');
-                let updates = {}; if(isP1) { updates.p1_ans = selectedText; updates.p1_time = Date.now(); } if(isP2) { updates.p2_ans = selectedText; updates.p2_time = Date.now(); }
+                
+                let time_taken = Date.now() - (window.localUnlockTime || Date.now());
+                
+                let updates = {}; 
+                if(isP1) { updates.p1_ans = selectedText; updates.p1_time = time_taken; } 
+                if(isP2) { updates.p2_ans = selectedText; updates.p2_time = time_taken; }
                 rtdb.ref('active_pvp_match').update(updates);
             });
         }
@@ -1160,7 +1172,11 @@
                 if (m && m.status === 'playing' && m.evaluating === false) {
                     m.evaluating = true; m.status = 'showing_result';
                     let p1_c = m.p1_ans === m.current_q.vi; let p2_c = m.p2_ans === m.current_q.vi; let p1_w = false; let p2_w = false;
-                    if (p1_c && p2_c) { if (m.p1_time <= m.p2_time) p1_w = true; else p2_w = true; } else if (p1_c) { p1_w = true; } else if (p2_c) { p2_w = true; }
+                    
+                    if (p1_c && p2_c) { 
+                        if (m.p1_time <= m.p2_time) p1_w = true; else p2_w = true; 
+                    } else if (p1_c) { p1_w = true; } else if (p2_c) { p2_w = true; }
+                    
                     m.p1_score += p1_w ? 1 : 0; m.p2_score += p2_w ? 1 : 0; m.p1_won_this_round = p1_w; m.p2_won_this_round = p2_w; return m;
                 } return; 
             }, (err, comm, snap) => { if(comm && snap.val()) setTimeout(() => processNextRound(snap.val().q_idx), 3500); });
@@ -1173,14 +1189,21 @@
 
                 if(m.q_idx === 10 || m.q_idx === 20) {
                     if(s1 > s2) set1++; else if(s2 > s1) set2++; s1 = 0; s2 = 0; 
-                    if(m.q_idx === 20) { if(set1 === 2 || set1 > set2) { status = 'finished'; winner = m.p1; } else if(set2 === 2 || set2 > set1) { status = 'finished'; winner = m.p2; } }
+                    if(set1 === 2 || set1 > set2) { status = 'finished'; winner = m.p1; } else if(set2 === 2 || set2 > set1) { status = 'finished'; winner = m.p2; } 
                 } else if (m.q_idx >= 21) {
-                    if(s1 > s2) { set1++; winner = m.p1; status = 'finished'; } else if (s2 > s1) { set2++; winner = m.p2; status = 'finished'; }
-                    else { if (nextIdx > m.question_bank.length) { winner = "HÒA NHAU! (HẾT CÂU)"; status = 'finished'; } else { status = 'playing'; } }
+                    if(s1 >= 3) { status = 'finished'; winner = m.p1; } else if (s2 >= 3) { status = 'finished'; winner = m.p2; }
+                    else if (nextIdx > m.question_bank.length) { winner = "HÒA NHAU! (HẾT CÂU)"; status = 'finished'; } 
                 }
 
                 let updates = { p1_score: s1, p2_score: s2, p1_set: set1, p2_set: set2, p1_ans: "", p2_ans: "", p1_time: 0, p2_time: 0, evaluating: false, p1_won_this_round: null, p2_won_this_round: null };
-                if(status === 'finished') { updates.status = 'finished'; updates.winner = winner; } else { updates.status = 'playing'; updates.q_idx = nextIdx; updates.current_q = m.question_bank[nextIdx - 1]; }
+                
+                if(status === 'finished') { updates.status = 'finished'; updates.winner = winner; } 
+                else { 
+                    updates.status = 'playing'; updates.q_idx = nextIdx; updates.current_q = m.question_bank[nextIdx - 1]; 
+                    if (nextIdx <= 10) { updates.mode = 'normal'; updates.time_limit = 15; updates.unlock_time = 0; } 
+                    else if (nextIdx <= 20) { updates.mode = 'delay'; updates.time_limit = 15; updates.unlock_time = Date.now() + 6500; } 
+                    else { updates.mode = 'golden'; updates.time_limit = 7; updates.unlock_time = Date.now() + 6500; }
+                }
 
                 rtdb.ref('active_pvp_match').update(updates).then(() => {
                     if (status === 'finished' && winner !== "HÒA NHAU!") {
@@ -1247,6 +1270,28 @@
                 }
             });
 
+            // CÁC HÀM BỔ TRỢ UI PVP
+            function revealOptions(m, myAns, indices) {
+                if(myAns !== "") return;
+                document.getElementById('lockOverlay').classList.remove('active');
+                indices.forEach(i => {
+                    let btn = document.getElementById('pvpOpt'+i); 
+                    btn.innerText = m.current_q.opts[i]; 
+                    btn.style.backgroundColor = 'rgba(255,255,255,0.1)'; 
+                    btn.style.borderColor = 'rgba(255,255,255,0.3)'; 
+                    btn.style.pointerEvents = 'auto'; btn.style.opacity = '1';
+                });
+            }
+
+            function startCountdown(m) {
+                clearInterval(window.pvpTimer); 
+                window.pvpTimer = setInterval(() => { 
+                    window.localPvPTime--; let t = window.localPvPTime; if (t < 0) t = 0; 
+                    document.getElementById('pvpTimerBanner').innerText = `⏳ ${t}s`; 
+                    if (t <= 0 && !m.evaluating) { clearInterval(window.pvpTimer); triggerEval(); } 
+                }, 1000);
+            }
+
             rtdb.ref('active_pvp_match').on('value', (snap) => {
                 let m = snap.val(); if(!m) return;
                 let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
@@ -1255,17 +1300,49 @@
                     document.getElementById('pvpP1Name').innerText = m.p1; document.getElementById('pvpP1Correct').innerText = m.p1_score; document.getElementById('pvpP1Set').innerText = m.p1_set;
                     document.getElementById('pvpP2Name').innerText = m.p2; document.getElementById('pvpP2Correct').innerText = m.p2_score; document.getElementById('pvpP2Set').innerText = m.p2_set;
                     document.getElementById('pvpQIndex').innerText = m.q_idx;
+                    
                     if(m.status === 'playing') {
-                        document.getElementById('pvpWaitMsg').style.display = 'none'; document.getElementById('pvpQuestion').style.display = 'block'; document.getElementById('pvpOptions').style.display = 'grid'; document.getElementById('pvpQuestion').innerText = m.current_q.en;
+                        document.getElementById('pvpWaitMsg').style.display = 'none'; document.getElementById('pvpQuestion').style.display = 'block'; document.getElementById('pvpOptions').style.display = 'grid'; 
+                        
+                        let modeText = m.mode === 'delay' ? "⏱️ [DELAY MODE]" : m.mode === 'golden' ? "🔥 [GOLDEN SET - NO MERCY]" : "🟢 [NORMAL MODE]";
+                        document.getElementById('pvpQuestion').innerHTML = `<div style="font-size:16px; color:#ffeb3b; margin-bottom:10px;">${modeText}</div>` + m.current_q.en;
+                        
                         let myAns = isP1 ? m.p1_ans : (isP2 ? m.p2_ans : "");
-                        if(myAns === "") {
-                            document.getElementById('lockOverlay').classList.remove('active');
-                            for(let i=0; i<4; i++) { let btn = document.getElementById('pvpOpt'+i); btn.innerText = m.current_q.opts[i]; btn.style.backgroundColor = 'rgba(255,255,255,0.1)'; btn.style.borderColor = 'rgba(255,255,255,0.3)'; btn.style.pointerEvents = 'auto'; btn.style.opacity = '1'; }
+                        
+                        if (window.currentPlayingQIdx !== m.q_idx) { 
+                            window.currentPlayingQIdx = m.q_idx; 
+                            window.localPvPTime = m.time_limit; 
+                            clearInterval(window.pvpTimer);
+                            
+                            if (m.mode === 'normal') {
+                                window.localUnlockTime = Date.now();
+                                revealOptions(m, myAns, [0, 1, 2, 3]);
+                                startCountdown(m);
+                            } else {
+                                document.getElementById('pvpTimerBanner').innerText = `🔒 Đang suy nghĩ...`;
+                                for(let i=0; i<4; i++) { 
+                                    let btn = document.getElementById('pvpOpt'+i); 
+                                    btn.innerText = "???"; btn.style.pointerEvents = 'none'; btn.style.backgroundColor = 'rgba(0,0,0,0.5)'; btn.style.borderColor = '#555';
+                                }
+                                
+                                setTimeout(() => { if(m.status==='playing') document.getElementById('pvpOpt0').innerText = m.current_q.opts[0]; }, 1500);
+                                setTimeout(() => { if(m.status==='playing') document.getElementById('pvpOpt1').innerText = m.current_q.opts[1]; }, 3000);
+                                setTimeout(() => { if(m.status==='playing') document.getElementById('pvpOpt2').innerText = m.current_q.opts[2]; }, 4500);
+                                setTimeout(() => { if(m.status==='playing') document.getElementById('pvpOpt3').innerText = m.current_q.opts[3]; }, 6000);
+                                
+                                setTimeout(() => {
+                                    if(m.status==='playing' && myAns === "") {
+                                        window.localUnlockTime = Date.now();
+                                        revealOptions(m, myAns, [0, 1, 2, 3]);
+                                        startCountdown(m);
+                                    }
+                                }, 6500);
+                            }
                         }
+                        
                         let oppAns = isP1 ? m.p2_ans : m.p1_ans; let botStatus = document.getElementById('botStatusMsg');
                         if(oppAns !== "") { botStatus.innerText = "Đối thủ đã chốt!"; botStatus.style.color = "#ff1744"; } else { botStatus.innerText = "Đối thủ đang suy nghĩ..."; botStatus.style.color = "#00e676"; }
-                        if (window.currentPlayingQIdx !== m.q_idx) { window.currentPlayingQIdx = m.q_idx; window.localPvPTime = 15; }
-                        clearInterval(window.pvpTimer); window.pvpTimer = setInterval(() => { window.localPvPTime--; let t = window.localPvPTime; if (t < 0) t = 0; document.getElementById('pvpTimerBanner').innerText = `⏳ ${t}s`; if (t <= 0 && !m.evaluating) { clearInterval(window.pvpTimer); triggerEval(); } }, 1000);
+                        
                         if (m.p1_ans !== "" && m.p2_ans !== "" && !m.evaluating) { clearInterval(window.pvpTimer); triggerEval(); }
                     } else if (m.status === 'showing_result') {
                         clearInterval(window.pvpTimer); document.getElementById('pvpTimerBanner').innerText = `⏳ 0s`;
