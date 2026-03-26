@@ -1225,54 +1225,119 @@
 
         setInterval(renderBracket, 10000); // Tự làm mới giao diện đếm lùi 10s/lần
 
-        /* --- CẬP NHẬT BẢNG XẾP HẠNG (LUẬT STREAK < 3 & NHÀ VUA C1) --- */
-        async function fetchLeaderboard() {
-            if(!db) return;
-            const lbContainer = document.getElementById('leaderboardData'); 
-            lbContainer.innerHTML = '<p style="text-align:center">Đang tải...</p>';
+        /* --- CẬP NHẬT BẢNG XẾP HẠNG (TỰ ĐỘNG DÁN NHÃN C1/C2) --- */
+async function fetchLeaderboard() {
+    if(!db) return;
+    const lbContainer = document.getElementById('leaderboardData'); 
+    lbContainer.innerHTML = '<p style="text-align:center">Đang tải...</p>';
+    
+    db.collection('vocab_users').orderBy('xp', 'desc').limit(50).onSnapshot((snapshot) => {
+        let allPlayers = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.role !== 'teacher') {
+                allPlayers.push(data);
+            }
+        });
+
+        let qualified = [];
+        let unqualified = [];
+
+        // Lọc người đủ điều kiện (Streak >= 3 hoặc ĐKVĐ)
+        allPlayers.forEach(data => {
+            let dName = data.displayName || 'Ẩn danh'; 
+            let dStreak = data.streak || 1; 
+            let isChampion = (dName === defendingChampion && defendingChampion !== "");
             
-            db.collection('vocab_users').orderBy('xp', 'desc').limit(50).onSnapshot((snapshot) => {
-                let qualifiedHtml = '';
-                let unqualifiedHtml = '';
-                let rank = 1;
-                
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (data.role !== 'teacher') {
-                        let dName = data.displayName || 'Ẩn danh'; 
-                        let dXp = data.xp;
-                        let dStreak = data.streak || 1; 
-                        
-                        // ĐẶC CÁCH NHÀ VUA C1
-                        let isChampion = (dName === defendingChampion && defendingChampion !== "");
-                        
-                        // Đủ tư cách góp mặt trên bảng phong thần (Streak >= 3 HOẶC là ĐKVĐ)
-                        if (dStreak >= 3 || isChampion) {
-                            let isMaskActive = data.maskExpiry && data.maskExpiry > Date.now();
-                            let displayDName = dName;
-                            if (isMaskActive) { 
-                                if (userData.role === 'teacher') displayDName = displayDName + " 🎭(Ẩn)"; 
-                                else { displayDName = "???"; dXp = "???"; } 
-                            }
-                            
-                            let champBadge = isChampion ? ' <span style="color:#ffd700; font-size: 12px; margin-left:5px; padding: 2px 6px; background: rgba(255,215,0,0.2); border-radius: 8px;">👑 ĐKVĐ</span>' : '';
-                            let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '.';
-                            let rankClass = rank <= 3 ? `lb-rank-${rank}` : '';
-                            
-                            qualifiedHtml += `<div class="lb-row ${rankClass}"><span>${medal} ${displayDName}${champBadge}</span><span style="color:var(--secondary)">⭐ ${dXp} XP</span></div>`;
-                            rank++;
-                        } else {
-                            // Không đủ tư cách (Streak < 3) -> Quẳng xuống đáy, khóa lại
-                            unqualifiedHtml += `<div class="lb-row" style="background:#f0f0f0; color:#888; border: 1px dashed #ccc; padding: 10px 25px;"><span>🔒 ${dName}</span><span style="font-size:12px; font-style:italic;">Chưa đủ 3-day streak để thi đấu</span></div>`;
-                        }
-                    }
-                });
-                
-                lbContainer.innerHTML = qualifiedHtml + unqualifiedHtml || '<p style="text-align:center">Chưa có người dùng nào ghi danh.</p>';
-            }, (err) => {
-                lbContainer.innerHTML = '<p style="color:red; text-align:center">Lỗi bảng xếp hạng.</p>';
-            });
+            if (dStreak >= 3 || isChampion) {
+                qualified.push(data);
+            } else {
+                unqualified.push(data);
+            }
+        });
+
+        // THUẬT TOÁN ĐỊNH ĐOẠT SỐ LƯỢNG VÉ C1 VÀ C2 THEO REAL-TIME
+        let N = qualified.length;
+        let c1Size = 0, c2Size = 0;
+
+        if (N >= 4 && N < 8) {
+            c1Size = 4; c2Size = 0;
+        } else if (N >= 8) {
+            let p = Math.floor(Math.log2(N));
+            let max_pow = Math.pow(2, p);
+            
+            if (N - max_pow < 4 && max_pow > 4) {
+                c1Size = max_pow / 2;
+            } else {
+                c1Size = max_pow;
+            }
+            
+            let c2PoolSize = N - c1Size;
+            if(c2PoolSize >= 4) {
+                let c2_p = Math.floor(Math.log2(c2PoolSize));
+                c2Size = Math.pow(2, c2_p);
+            } else {
+                c2Size = 0;
+            }
         }
+
+        let qualifiedHtml = '';
+        let unqualifiedHtml = '';
+        let rank = 1;
+        
+        // Dựng HTML cho nhóm Đủ điều kiện và gắn nhãn
+        qualified.forEach((data, index) => {
+            let dName = data.displayName || 'Ẩn danh'; 
+            let dXp = data.xp;
+            let isChampion = (dName === defendingChampion && defendingChampion !== "");
+            let isMaskActive = data.maskExpiry && data.maskExpiry > Date.now();
+            let displayDName = dName;
+            
+            if (isMaskActive) { 
+                if (userData.role === 'teacher') displayDName = displayDName + " 🎭(Ẩn)"; 
+                else { displayDName = "???"; dXp = "???"; } 
+            }
+            
+            let champBadge = isChampion ? ' <span style="color:#ffd700; font-size: 12px; margin-left:5px; padding: 2px 6px; background: rgba(255,215,0,0.2); border-radius: 8px;">👑 ĐKVĐ</span>' : '';
+            
+            // DÁN NHÃN VÉ GIẢI ĐẤU
+            let leagueBadge = '';
+            if (N >= 4) {
+                if (index < c1Size) {
+                    leagueBadge = '<span style="color:#000; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #ffd700; border-radius: 4px; font-weight: 900; display: inline-block; vertical-align: middle;">🏆 C1</span>';
+                } else if (index < c1Size + c2Size) {
+                    leagueBadge = '<span style="color:#fff; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #9e9e9e; border-radius: 4px; font-weight: bold; display: inline-block; vertical-align: middle;">🥈 C2</span>';
+                } else {
+                    leagueBadge = '<span style="color:#fff; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #d32f2f; border-radius: 4px; font-weight: bold; display: inline-block; vertical-align: middle;">⚠️ NGUY HIỂM</span>';
+                }
+            } else {
+                leagueBadge = '<span style="color:#888; font-size: 10px; margin-left:8px; font-style:italic; display: inline-block; vertical-align: middle;">(Chưa đủ người mở giải)</span>';
+            }
+
+            let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '.';
+            let rankClass = rank <= 3 ? `lb-rank-${rank}` : '';
+            
+            qualifiedHtml += `<div class="lb-row ${rankClass}">
+                <div style="display: flex; align-items: center;">${medal} ${displayDName}${champBadge}${leagueBadge}</div>
+                <span style="color:var(--secondary)">⭐ ${dXp} XP</span>
+            </div>`;
+            rank++;
+        });
+
+        // Dựng HTML cho nhóm Bị khóa (Streak < 3)
+        unqualified.forEach(data => {
+            let dName = data.displayName || 'Ẩn danh';
+            unqualifiedHtml += `<div class="lb-row" style="background:#f0f0f0; color:#888; border: 1px dashed #ccc; padding: 10px 25px;">
+                <span>🔒 ${dName}</span>
+                <span style="font-size:12px; font-style:italic;">Chưa đủ 3-day streak để thi đấu</span>
+            </div>`;
+        });
+        
+        lbContainer.innerHTML = qualifiedHtml + unqualifiedHtml || '<p style="text-align:center">Chưa có người dùng nào ghi danh.</p>';
+    }, (err) => {
+        lbContainer.innerHTML = '<p style="color:red; text-align:center">Lỗi bảng xếp hạng.</p>';
+    });
+}
 
         const SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1dZA9LTtjrKEYZb6kUm4E7p2XLt5NBYqvnKmYarIpxCg/edit?usp=sharing';
         let allLessonsData = [];
