@@ -1528,19 +1528,32 @@ async function fetchLeaderboard() {
         }
 
         /* --- LƯU DANH SỬ SÁCH --- */
-        function archiveSeason() {
-            if(!defendingChampion) return alert("Chưa có nhà vô địch nào trong Bảng Phong Thần để lưu danh!");
-            if(confirm(`Bệ hạ có chắc chắn muốn khắc tên [${defendingChampion}] vào Đại Sảnh Danh Vọng và kết thúc Mùa giải này?`)) {
-                rtdb.ref('tournament_status/hall_of_fame').once('value').then(snap => {
-                    let hof = snap.val() || [];
-                    let nextSeason = hof.length + 1;
-                    hof.push({ season: nextSeason, name: defendingChampion, date: new Date().toLocaleDateString('en-GB') });
-                    rtdb.ref('tournament_status/hall_of_fame').set(hof).then(() => {
-                        alert(`🎉 Keng!!! Tên của [${defendingChampion}] đã được tạc vào sử sách với tư cách Quán Quân Mùa ${nextSeason}!`);
-                    });
-                });
-            }
-        }
+function archiveSeason() {
+    let c1Champ = (currentC1Data && currentC1Data.final && currentC1Data.final.winner) ? currentC1Data.final.winner : "---";
+    let c2Champ = (currentC2Data && currentC2Data.final && currentC2Data.final.winner) ? currentC2Data.final.winner : "---";
+    let scChamp = (currentC1Data && currentC1Data.super_cup && currentC1Data.super_cup.winner) ? currentC1Data.super_cup.winner : "---";
+
+    if(c1Champ === "---") return alert("Chưa có nhà vô địch C1 nào để lưu danh!");
+
+    if(confirm(`Bệ hạ có chắc chắn muốn kết thúc Mùa giải và khắc tên các nhà vô địch vào Đại Sảnh Danh Vọng?`)) {
+        rtdb.ref('tournament_status/hall_of_fame').once('value').then(snap => {
+            let hof = snap.val() || [];
+            let nextSeason = hof.length + 1;
+            
+            hof.push({ 
+                season: nextSeason, 
+                c1: c1Champ,
+                c2: c2Champ,
+                sc: scChamp,
+                date: new Date().toLocaleDateString('en-GB') 
+            });
+            
+            rtdb.ref('tournament_status/hall_of_fame').set(hof).then(() => {
+                alert(`🎉 Keng!!! Các nhà vô địch Mùa ${nextSeason} đã được tạc vào sử sách!`);
+            });
+        });
+    }
+}
         function openHOFModal() { document.getElementById('hofModal').classList.add('active'); }
 
         async function adminStartPvP(league, stageKey, matchIndex, p1Name, p2Name) {
@@ -1691,22 +1704,40 @@ async function fetchLeaderboard() {
             });
 
             // THEO DÕI ĐẠI SẢNH DANH VỌNG
-            rtdb.ref('tournament_status/hall_of_fame').on('value', (snap) => {
-                let hof = snap.val() || [];
-                let container = document.getElementById('hofList');
-                if (hof.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; padding: 20px;">Trống rỗng... Mùa 1 đang gọi tên kẻ mạnh nhất!</div>';
-                } else {
-                    let html = '';
-                    hof.forEach(item => {
-                        html += `<div class="hof-row">
-                                    <span style="color: #ccc; font-size: 14px; margin-top:3px;">MÙA ${item.season}</span>
-                                    <span style="color: #ffd700; font-size: 20px;">👑 ${item.name}</span>
-                                 </div>`;
-                    });
-                    container.innerHTML = html;
-                }
-            });
+rtdb.ref('tournament_status/hall_of_fame').on('value', (snap) => {
+    let hof = snap.val() || [];
+    let container = document.getElementById('hofList');
+    if (hof.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; padding: 20px;">Trống rỗng... Mùa 1 đang gọi tên kẻ mạnh nhất!</div>';
+    } else {
+        let html = '';
+        hof.forEach(item => {
+            // Tương thích với dữ liệu mùa cũ (nếu có)
+            let c1 = item.c1 || item.name || "---";
+            let c2 = item.c2 || "---";
+            let sc = item.sc || (item.name ? item.name : "---");
+
+            html += `<div style="background: rgba(255,255,255,0.05); margin-bottom: 15px; border-radius: 8px; padding: 15px; border-left: 4px solid #ffd700; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                        <div style="color: #ccc; font-size: 14px; margin-bottom: 12px; font-weight: bold; text-align: center; border-bottom: 1px dashed rgba(255,215,0,0.3); padding-bottom: 8px;">MÙA ${item.season} - ${item.date || ""}</div>
+                        <div style="display: flex; justify-content: space-between; text-align: center; gap: 10px;">
+                            <div style="flex: 1;">
+                                <div style="color: #ffd700; font-size: 12px; font-weight: 900; margin-bottom: 5px;">🏆 C1 ELITE</div>
+                                <div style="color: #fff; font-size: 15px; font-weight: bold;">${c1}</div>
+                            </div>
+                            <div style="flex: 1; border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1);">
+                                <div style="color: #c0c0c0; font-size: 12px; font-weight: 900; margin-bottom: 5px;">🥈 C2 TWO</div>
+                                <div style="color: #fff; font-size: 15px; font-weight: bold;">${c2}</div>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="color: #ff5252; font-size: 12px; font-weight: 900; margin-bottom: 5px;">🔥 SIÊU CÚP</div>
+                                <div style="color: #fff; font-size: 15px; font-weight: bold;">${sc}</div>
+                            </div>
+                        </div>
+                     </div>`;
+        });
+        container.innerHTML = html;
+    }
+});
 
             // CÁC HÀM BỔ TRỢ UI PVP
             function revealOptions(m, myAns, indices) {
