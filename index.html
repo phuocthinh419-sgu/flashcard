@@ -1101,7 +1101,7 @@
             if(!val) return alert("Vui lòng thiết lập thời gian cho trận đấu!");
             let ts = new Date(val).getTime();
             let key = `tournament_status/${windowLeagueToSchedule}_bracket/${windowStageToSchedule}`;
-            if(windowStageToSchedule !== 'sfl' && windowStageToSchedule !== 'sfr' && windowStageToSchedule !== 'final' && windowStageToSchedule !== 'third_place' && windowStageToSchedule !== 'super_cup') {
+            if(windowStageToSchedule !== 'sfl' && windowStageToSchedule !== 'sfr' && windowStageToSchedule !== 'final' && windowStageToSchedule !== 'third_place' && windowStageToSchedule !== 'super_cup' && windowStageToSchedule !== 'promotion_playoff') {
                 key += `/${windowIndexToSchedule}`;
             }
             rtdb.ref(key).update({ schedule: ts }).then(() => {
@@ -1132,7 +1132,7 @@
             if (!surveillanceData) return;
             
             let key = `tournament_status/${surveillanceData.league}_bracket/${surveillanceData.stageKey}`;
-            if (surveillanceData.stageKey !== 'sfl' && surveillanceData.stageKey !== 'sfr' && surveillanceData.stageKey !== 'final' && surveillanceData.stageKey !== 'third_place' && surveillanceData.stageKey !== 'super_cup') { 
+            if (surveillanceData.stageKey !== 'sfl' && surveillanceData.stageKey !== 'sfr' && surveillanceData.stageKey !== 'final' && surveillanceData.stageKey !== 'third_place' && surveillanceData.stageKey !== 'super_cup' && surveillanceData.stageKey !== 'promotion_playoff') { 
                 key += `/${surveillanceData.matchIndex}`; 
             }
             let updateData = {}; updateData[surveillanceData.playerSlot + "_ready"] = true;
@@ -1147,7 +1147,7 @@
                 alert("❌ HỆ THỐNG GHI NHẬN HÀNH VI ĐÁNG NGỜ!\nPhát hiện thao tác rời khỏi màn hình. Kết quả sẽ tự động bị xử thua dựa theo quy định.");
                 
                 let key = `tournament_status/${surveillanceData.league}_bracket/${surveillanceData.stageKey}`;
-                if (surveillanceData.stageKey !== 'sfl' && surveillanceData.stageKey !== 'sfr' && surveillanceData.stageKey !== 'final' && surveillanceData.stageKey !== 'third_place' && surveillanceData.stageKey !== 'super_cup') { 
+                if (surveillanceData.stageKey !== 'sfl' && surveillanceData.stageKey !== 'sfr' && surveillanceData.stageKey !== 'final' && surveillanceData.stageKey !== 'third_place' && surveillanceData.stageKey !== 'super_cup' && surveillanceData.stageKey !== 'promotion_playoff') { 
                     key += `/${surveillanceData.matchIndex}`; 
                 }
                 rtdb.ref(key).update({ winner: surveillanceData.oppName });
@@ -1179,7 +1179,7 @@
                         else if(!m.p1_ready && !m.p2_ready) winner = Math.random() > 0.5 ? m.p1 : m.p2;
                         
                         if(winner !== "") {
-                            let k = (stage === 'sfl' || stage === 'sfr' || stage === 'final' || stage === 'third_place' || stage === 'super_cup') 
+                            let k = (stage === 'sfl' || stage === 'sfr' || stage === 'final' || stage === 'third_place' || stage === 'super_cup' || stage === 'promotion_playoff') 
                                 ? `tournament_status/${league}_bracket/${stage}/winner` 
                                 : `tournament_status/${league}_bracket/${stage}/${idx}/winner`;
                             updates[k] = winner; needsUpdate = true;
@@ -1197,6 +1197,7 @@
                 checkWalkover(fb.sfl, 'sfl', 0, league); checkWalkover(fb.sfr, 'sfr', 0, league);
                 checkWalkover(fb.final, 'final', 0, league); checkWalkover(fb.third_place, 'third_place', 0, league);
                 if(fb.super_cup) checkWalkover(fb.super_cup, 'super_cup', 0, league);
+                if(fb.promotion_playoff) checkWalkover(fb.promotion_playoff, 'promotion_playoff', 0, league);
             }
 
             scanLeague(currentC1Data, 'c1');
@@ -1221,7 +1222,10 @@
             if (currentFullBracketData.r16l) columns.push({ title: 'Vòng 1/8', key: 'r16l' });
             if (currentFullBracketData.qfl) columns.push({ title: 'Tứ Kết', key: 'qfl' });
             if (currentFullBracketData.sfl) columns.push({ title: 'Bán Kết', key: 'sfl' });
-            columns.push({ title: 'CHUNG KẾT & HẠNG 3', key: 'center_col' });
+            
+            // CỘT TRUNG TÂM - NƠI ĐỊNH ĐOẠT MỌI THỨ
+            columns.push({ title: 'TRẬN CHIẾN TỐI THƯỢNG', key: 'center_col' });
+            
             if (currentFullBracketData.sfr) columns.push({ title: 'Bán Kết', key: 'sfr' });
             if (currentFullBracketData.qfr) columns.push({ title: 'Tứ Kết', key: 'qfr' });
             if (currentFullBracketData.r16r) columns.push({ title: 'Vòng 1/8', key: 'r16r' });
@@ -1230,21 +1234,33 @@
 
             columns.forEach(col => {
                 const colEl = document.createElement('div'); colEl.className = 'bracket-column';
-                const colTitle = document.createElement('div'); colTitle.style.cssText = 'font-size: 12px; font-weight: bold; color: #ffd700; text-align: center; margin-bottom: 10px;'; colTitle.innerText = col.title; colEl.appendChild(colTitle);
+                const colTitle = document.createElement('div'); colTitle.style.cssText = 'font-size: 12px; font-weight: bold; color: #ffd700; text-align: center; margin-bottom: 15px; border-bottom: 1px dashed #ffd700; padding-bottom: 5px;'; colTitle.innerText = col.title; colEl.appendChild(colTitle);
 
                 if (col.key === 'center_col') {
+                    // 1. SIÊU CÚP (Chỉ hiện ở tab C1)
                     if (currentLeagueView === 'c1' && currentFullBracketData.super_cup) {
-                        let scLabel = document.createElement('div'); scLabel.innerHTML = '<div style="font-size:13px; color:#ff1744; margin-top:5px; margin-bottom:5px; font-weight:900; animation: pulse 1.5s infinite;">🔥 TRẬN SIÊU CÚP</div>'; colEl.appendChild(scLabel);
+                        let scLabel = document.createElement('div'); scLabel.innerHTML = '<div style="font-size:12px; color:#ff1744; margin-top:5px; margin-bottom:5px; font-weight:900; animation: pulse 1.5s infinite;">🔥 SIÊU CÚP MÙA GIẢI</div>'; colEl.appendChild(scLabel);
                         colEl.appendChild(createMatchBox(currentFullBracketData.super_cup, 'super_cup', 0, currentLeagueView));
                     }
+                    
+                    // 2. CHUNG KẾT (C1 hoặc C2 tùy tab)
                     if (currentFullBracketData.final) {
-                        let fLabel = document.createElement('div'); fLabel.innerHTML = '<div style="font-size:11px; color:#ffd700; margin-top:20px; margin-bottom:5px; font-weight:bold;">🥇 CHUNG KẾT</div>'; colEl.appendChild(fLabel);
+                        let fLabel = document.createElement('div'); fLabel.innerHTML = '<div style="font-size:12px; color:#ffd700; margin-top:15px; margin-bottom:5px; font-weight:bold;">🥇 CHUNG KẾT</div>'; colEl.appendChild(fLabel);
                         colEl.appendChild(createMatchBox(currentFullBracketData.final, 'final', 0, currentLeagueView));
                     }
+                    
+                    // 3. TRANH HẠNG 3 (C1 hoặc C2 tùy tab)
                     if (currentFullBracketData.third_place && (currentFullBracketData.sfl || currentFullBracketData.sfr)) { 
-                        let tLabel = document.createElement('div'); tLabel.innerHTML = '<div style="font-size:11px; color:#cd7f32; margin-top:20px; margin-bottom:5px; font-weight:bold;">🥉 TRANH HẠNG 3</div>'; colEl.appendChild(tLabel);
+                        let tLabel = document.createElement('div'); tLabel.innerHTML = '<div style="font-size:12px; color:#cd7f32; margin-top:15px; margin-bottom:5px; font-weight:bold;">🥉 TRANH HẠNG 3</div>'; colEl.appendChild(tLabel);
                         colEl.appendChild(createMatchBox(currentFullBracketData.third_place, 'third_place', 0, currentLeagueView));
                     }
+
+                    // 4. PLAY-OFF THĂNG HẠNG (Chỉ hiện ở tab C1)
+                    if (currentLeagueView === 'c1' && currentFullBracketData.promotion_playoff) {
+                        let poLabel = document.createElement('div'); poLabel.innerHTML = '<div style="font-size:12px; color:#00e676; margin-top:15px; margin-bottom:5px; font-weight:900;">⚔️ PLAY-OFF THĂNG HẠNG</div>'; colEl.appendChild(poLabel);
+                        colEl.appendChild(createMatchBox(currentFullBracketData.promotion_playoff, 'promotion_playoff', 0, currentLeagueView));
+                    }
+
                 } else {
                     const data = currentFullBracketData[col.key];
                     if (Array.isArray(data)) { data.forEach((m, index) => { colEl.appendChild(createMatchBox(m, col.key, index, currentLeagueView)); }); } 
@@ -1729,6 +1745,7 @@
                 });
             }
         }
+
         function openHOFModal() { document.getElementById('hofModal').classList.add('active'); }
 
         async function adminStartPvP(league, stageKey, matchIndex, p1Name, p2Name) {
@@ -1830,7 +1847,7 @@
                             let matchInfo = matchSnap.val();
                             if(matchInfo.stage && matchInfo.match_idx !== undefined && matchInfo.league) {
                                 let key = `tournament_status/${matchInfo.league}_bracket/${matchInfo.stage}`;
-                                if(matchInfo.stage === 'sfl' || matchInfo.stage === 'sfr' || matchInfo.stage === 'final' || matchInfo.stage === 'third_place' || matchInfo.stage === 'super_cup') { key += `/winner`; } else { key += `/${matchInfo.match_idx}/winner`; }
+                                if(matchInfo.stage === 'sfl' || matchInfo.stage === 'sfr' || matchInfo.stage === 'final' || matchInfo.stage === 'third_place' || matchInfo.stage === 'super_cup' || matchInfo.stage === 'promotion_playoff') { key += `/winner`; } else { key += `/${matchInfo.match_idx}/winner`; }
                                 rtdb.ref(key).set(winner);
                             }
                         });
@@ -1956,7 +1973,7 @@
                                 revealOptions(m, myAns, [0, 1, 2, 3]);
                                 startCountdown(m);
                             } else {
-                                document.getElementById('pvpTimerBanner').innerText = `🔒 Thiết lập thông tin...`;
+                                document.getElementById('pvpTimerBanner').innerText = `🔒 Thiết lập thông...`;
                                 for(let i=0; i<4; i++) { 
                                     let btn = document.getElementById('pvpOpt'+i); 
                                     btn.innerText = "???"; btn.style.pointerEvents = 'none'; btn.style.backgroundColor = 'rgba(0,0,0,0.5)'; btn.style.borderColor = '#555';
