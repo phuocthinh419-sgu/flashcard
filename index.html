@@ -1462,68 +1462,122 @@
             const checks = document.querySelectorAll('input[name="syllabusCheck"]:checked'); let selected = []; checks.forEach(c => selected.push(c.value)); rtdb.ref('tournament_status/syllabus').set(selected); alert("Cấu hình tài liệu thi đấu đã được xác nhận!");
         }
 
+        // TẠO CẤU TRÚC BRACKET (HỆ THỐNG HẠT GIỐNG - SEEDING)
         function createBracketObject(players) {
-            let shuffled = players.sort(() => Math.random() - 0.5);
-            let bracket = { final: { p1: "---", p2: "---", winner: "" }, third_place: { p1: "---", p2: "---", winner: "" } };
+            // Danh sách truyền vào mặc định đã được xếp từ XP cao xuống thấp
+            let N = players.length;
+            let targetSize = 4;
+            if (N > 4 && N <= 8) targetSize = 8;
+            if (N > 8 && N <= 16) targetSize = 16;
 
-            if (shuffled.length === 16) {
-                bracket.r16l = [ { p1: shuffled[0], p2: shuffled[1], winner: "" }, { p1: shuffled[2], p2: shuffled[3], winner: "" }, { p1: shuffled[4], p2: shuffled[5], winner: "" }, { p1: shuffled[6], p2: shuffled[7], winner: "" } ];
-                bracket.r16r = [ { p1: shuffled[8], p2: shuffled[9], winner: "" }, { p1: shuffled[10], p2: shuffled[11], winner: "" }, { p1: shuffled[12], p2: shuffled[13], winner: "" }, { p1: shuffled[14], p2: shuffled[15], winner: "" } ];
-                bracket.qfl = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; bracket.qfr = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }];
-                bracket.sfl = { p1: "---", p2: "---", winner: "" }; bracket.sfr = { p1: "---", p2: "---", winner: "" };
-            } else if (shuffled.length === 8) {
-                bracket.qfl = [ { p1: shuffled[0], p2: shuffled[1], winner: "" }, { p1: shuffled[2], p2: shuffled[3], winner: "" } ];
-                bracket.qfr = [ { p1: shuffled[4], p2: shuffled[5], winner: "" }, { p1: shuffled[6], p2: shuffled[7], winner: "" } ];
-                bracket.sfl = { p1: "---", p2: "---", winner: "" }; bracket.sfr = { p1: "---", p2: "---", winner: "" };
-            } else if (shuffled.length === 4) {
-                bracket.sfl = { p1: shuffled[0], p2: shuffled[1], winner: "" }; bracket.sfr = { p1: shuffled[2], p2: shuffled[3], winner: "" };
+            let bracket = { 
+                final: { p1: "---", p2: "---", winner: "" }, 
+                third_place: { p1: "---", p2: "---", winner: "" },
+                super_cup: { p1: "---", p2: "---", winner: "" },
+                promotion_playoff: { p1: "---", p2: "---", winner: "" }
+            };
+
+            // Sơ đồ Hạt giống chuẩn quốc tế (Seed 1 luôn gặp Seed yếu nhất)
+            let seeds16 = [1, 16, 8, 9, 5, 12, 4, 13, 2, 15, 7, 10, 6, 11, 3, 14];
+            let seeds8 = [1, 8, 4, 5, 2, 7, 3, 6];
+            let seeds4 = [1, 4, 2, 3];
+
+            let layout = [];
+            if (targetSize === 16) layout = seeds16;
+            else if (targetSize === 8) layout = seeds8;
+            else if (targetSize === 4) layout = seeds4;
+
+            // Xếp người vào nhánh đấu
+            let matches = [];
+            for (let i = 0; i < targetSize; i += 2) {
+                let seedA = layout[i];
+                let seedB = layout[i+1];
+                // Nếu số thứ tự Hạt giống vượt quá số người thật, biến thành BYE
+                let pA = seedA <= N ? players[seedA - 1] : "BYE (Đặc cách)";
+                let pB = seedB <= N ? players[seedB - 1] : "BYE (Đặc cách)";
+                matches.push({ p1: pA, p2: pB, winner: "" });
             }
+
+            if (targetSize === 16) {
+                bracket.r16l = [ matches[0], matches[1], matches[2], matches[3] ];
+                bracket.r16r = [ matches[4], matches[5], matches[6], matches[7] ];
+                bracket.qfl = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; 
+                bracket.qfr = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }];
+                bracket.sfl = { p1: "---", p2: "---", winner: "" }; bracket.sfr = { p1: "---", p2: "---", winner: "" };
+            } else if (targetSize === 8) {
+                bracket.qfl = [ matches[0], matches[1] ];
+                bracket.qfr = [ matches[2], matches[3] ];
+                bracket.sfl = { p1: "---", p2: "---", winner: "" }; bracket.sfr = { p1: "---", p2: "---", winner: "" };
+            } else if (targetSize === 4) {
+                bracket.sfl = matches[0]; bracket.sfr = matches[1];
+            }
+            
             return bracket;
         }
 
+        /* --- CẬP NHẬT RÚT THĂM (ÉP LUẬT THĂNG GIÁNG HẠNG) --- */
         async function executeBlindDraw() {
             if(!confirm("Xác nhận thiết lập hệ thống giải đấu? Dữ liệu bảng đấu trước đó sẽ bị khởi tạo lại.")) return;
+            
+            // Lấy dữ liệu Lịch sử mùa trước (Vé vớt, Giáng cấp)
+            const histSnap = await rtdb.ref('tournament_status/history').once('value');
+            const history = histSnap.val() || {};
+            
             const snapshot = await db.collection('vocab_users').orderBy('xp', 'desc').get(); 
-            let candidates = [];
+            let qualifiedPlayers = [];
             
             snapshot.forEach(doc => { 
                 let d = doc.data();
                 let dName = d.displayName || "Ẩn danh";
                 let isChampion = (dName === defendingChampion && defendingChampion !== "");
-                if(d.role !== 'teacher' && ((d.streak || 1) >= 3 || isChampion)) {
-                    candidates.push(dName); 
+                let isPromoted = (dName === history.promoted_player);
+                
+                // Ai giữ được Streak >= 3 hoặc có quyền ưu tiên thì được tham gia
+                if(d.role !== 'teacher' && ((d.streak || 1) >= 3 || isChampion || isPromoted)) {
+                    qualifiedPlayers.push(dName); 
                 }
             });
             
-            let N = candidates.length;
+            let N = qualifiedPlayers.length;
             if (N < 4) return alert("Thống kê: Chỉ có " + N + " tài khoản thỏa điều kiện. Yêu cầu số lượng tối thiểu là 4 người tham gia.");
 
             let c1Size = 0, c2Size = 0;
             let c1Players = [], c2Players = [];
 
             if (N < 8) {
-                c1Size = 4;
-                c1Players = candidates.slice(0, 4);
+                // Nhóm N = 4, 5, 6, 7 -> Toàn bộ vào C1, lấy Power of 2 cao nhất (8) để dư ra các slot BYE
+                c1Size = N;
+                c1Players = qualifiedPlayers; // Giao cho hàm createBracketObject độn BYE
             } else {
                 let p = Math.floor(Math.log2(N));
                 let max_pow = Math.pow(2, p);
-                
-                if (N - max_pow < 4 && max_pow > 4) {
-                    c1Size = max_pow / 2;
-                } else {
-                    c1Size = max_pow;
-                }
+                c1Size = (N - max_pow < 4 && max_pow > 4) ? max_pow / 2 : max_pow;
 
                 let c2PoolSize = N - c1Size;
-                if(c2PoolSize >= 4) {
-                    let c2_p = Math.floor(Math.log2(c2PoolSize));
-                    c2Size = Math.pow(2, c2_p);
-                } else {
-                    c2Size = 0;
+                c2Size = (c2PoolSize >= 4) ? Math.pow(2, Math.floor(Math.log2(c2PoolSize))) : 0;
+
+                // Tách lọc theo đặc quyền
+                let autoC1 = [];
+                let forcedC2 = [];
+                let normalPool = [];
+
+                qualifiedPlayers.forEach(name => {
+                    if (name === defendingChampion || name === history.promoted_player) autoC1.push(name);
+                    else if (name === history.relegated_player) forcedC2.push(name);
+                    else normalPool.push(name);
+                });
+
+                // Lấp đầy C1
+                c1Players = [...autoC1];
+                while (c1Players.length < c1Size && normalPool.length > 0) {
+                    c1Players.push(normalPool.shift());
                 }
 
-                c1Players = candidates.slice(0, c1Size);
-                c2Players = candidates.slice(c1Size, c1Size + c2Size);
+                // Lấp đầy C2
+                c2Players = [...forcedC2];
+                while (c2Players.length < c2Size && normalPool.length > 0) {
+                    c2Players.push(normalPool.shift());
+                }
             }
 
             let c1Bracket = createBracketObject(c1Players);
@@ -1536,7 +1590,7 @@
 
             rtdb.ref('tournament_status/result').remove(); 
             rtdb.ref().update(updates).then(() => {
-                alert(`Quá trình bốc thăm hoàn thiện.\n🏆 Giải Elite: ${c1Size} thành viên.\n🥈 Giải Two: ${c2Size} thành viên.`);
+                alert(`Quá trình bốc thăm hoàn thiện.\n🏆 Giải Elite: ${c1Players.length} thành viên.\n🥈 Giải Two: ${c2Players.length} thành viên.`);
             });
         }
 
@@ -1548,6 +1602,23 @@
 
             let updateNeeded = false;
             let updates = {};
+
+            // Xử lý auto-win cho các slot "BYE (Đặc cách)"
+            function processByes(fb, leaguePrefix) {
+                if(!fb) return;
+                function checkBye(match, stagePath) {
+                    if (match && match.winner === "" && match.p1 !== "---" && match.p2 !== "---") {
+                        if (match.p2 === "BYE (Đặc cách)") { match.winner = match.p1; updates[`tournament_status/${leaguePrefix}_bracket/${stagePath}/winner`] = match.p1; updateNeeded = true; }
+                        else if (match.p1 === "BYE (Đặc cách)") { match.winner = match.p2; updates[`tournament_status/${leaguePrefix}_bracket/${stagePath}/winner`] = match.p2; updateNeeded = true; }
+                    }
+                }
+                if(fb.r16l) fb.r16l.forEach((m,i) => checkBye(m, `r16l/${i}`));
+                if(fb.r16r) fb.r16r.forEach((m,i) => checkBye(m, `r16r/${i}`));
+                if(fb.qfl) fb.qfl.forEach((m,i) => checkBye(m, `qfl/${i}`));
+                if(fb.qfr) fb.qfr.forEach((m,i) => checkBye(m, `qfr/${i}`));
+                checkBye(fb.sfl, 'sfl'); checkBye(fb.sfr, 'sfr');
+            }
+            processByes(data.c1_bracket, 'c1'); processByes(data.c2_bracket, 'c2');
 
             function advanceLeague(fb, leaguePrefix) {
                 if(!fb) return;
@@ -1585,45 +1656,56 @@
             advanceLeague(data.c1_bracket, 'c1');
             advanceLeague(data.c2_bracket, 'c2');
 
-            let c1Done = data.c1_bracket && data.c1_bracket.final && data.c1_bracket.final.winner;
-            let c2Done = data.c2_bracket && data.c2_bracket.final && data.c2_bracket.final.winner;
+            // KÍCH HOẠT HẬU MÙA GIẢI (SIÊU CÚP & PLAY-OFF)
+            let c1Done = data.c1_bracket && data.c1_bracket.final && data.c1_bracket.final.winner !== "";
+            let c1ThirdDone = data.c1_bracket && data.c1_bracket.third_place && data.c1_bracket.third_place.winner !== "";
+            let c2Done = data.c2_bracket && data.c2_bracket.final && data.c2_bracket.final.winner !== "";
             
-            if (c1Done && c2Done && !data.c1_bracket.super_cup) {
-                updates['tournament_status/c1_bracket/super_cup'] = { p1: data.c1_bracket.final.winner, p2: data.c2_bracket.final.winner, winner: "" };
-                updateNeeded = true;
-                alert("🔥 ĐÃ KÍCH HOẠT TRẬN SIÊU CÚP (Super Cup)\nCuộc đọ sức giữa: " + data.c1_bracket.final.winner + " và " + data.c2_bracket.final.winner + "!");
+            if (c1Done && c1ThirdDone && c2Done) {
+                let c1Champ = data.c1_bracket.final.winner;
+                let c2Champ = data.c2_bracket.final.winner;
+                let c1Fourth = data.c1_bracket.third_place.winner === data.c1_bracket.third_place.p1 ? data.c1_bracket.third_place.p2 : data.c1_bracket.third_place.p1;
+
+                if (data.c1_bracket.super_cup && data.c1_bracket.super_cup.p1 === "---") {
+                    updates['tournament_status/c1_bracket/super_cup/p1'] = c1Champ;
+                    updates['tournament_status/c1_bracket/super_cup/p2'] = c2Champ;
+                    updateNeeded = true;
+                    alert("🔥 Hệ thống đã xác nhận cặp đấu SIÊU CÚP (Super Cup)!");
+                }
+                if (data.c1_bracket.promotion_playoff && data.c1_bracket.promotion_playoff.p1 === "---") {
+                    updates['tournament_status/c1_bracket/promotion_playoff/p1'] = c2Champ;
+                    updates['tournament_status/c1_bracket/promotion_playoff/p2'] = c1Fourth;
+                    updateNeeded = true;
+                    alert("⚔️ Hệ thống đã xác nhận cặp đấu PLAY-OFF Tranh vé vớt!");
+                }
             }
 
-            if (updateNeeded) { await rtdb.ref().update(updates); alert("Hoàn tất cập nhật lịch trình!"); } 
+            if (updateNeeded) { await rtdb.ref().update(updates); alert("Hoàn tất cập nhật lịch trình tiến cấp!"); } 
             else { alert("Trạng thái ổn định. Chưa có thay đổi mới nào từ hệ thống."); }
-            
-            if (data.c1_bracket && data.c1_bracket.super_cup && data.c1_bracket.super_cup.winner) {
-                rtdb.ref('tournament_status/result').set({ 
-                    rank1: data.c1_bracket.super_cup.winner, 
-                    rank2: (data.c1_bracket.super_cup.winner === data.c1_bracket.super_cup.p1) ? data.c1_bracket.super_cup.p2 : data.c1_bracket.super_cup.p1, 
-                    rank3: data.c1_bracket.third_place.winner || "---", 
-                    rank4: data.c2_bracket.third_place.winner || "---", 
-                    timestamp: Date.now() 
-                });
-            } else if (c1Done && !data.c2_bracket) {
-                rtdb.ref('tournament_status/result').set({ 
-                    rank1: data.c1_bracket.final.winner, 
-                    rank2: (data.c1_bracket.final.winner === data.c1_bracket.final.p1) ? data.c1_bracket.final.p2 : data.c1_bracket.final.p1, 
-                    rank3: data.c1_bracket.third_place.winner || "---", 
-                    rank4: "---", 
-                    timestamp: Date.now() 
-                });
-            }
         }
 
         function archiveSeason() {
             let c1Champ = (currentC1Data && currentC1Data.final && currentC1Data.final.winner) ? currentC1Data.final.winner : "---";
             let c2Champ = (currentC2Data && currentC2Data.final && currentC2Data.final.winner) ? currentC2Data.final.winner : "---";
             let scChamp = (currentC1Data && currentC1Data.super_cup && currentC1Data.super_cup.winner) ? currentC1Data.super_cup.winner : "---";
+            let playoffWinner = (currentC1Data && currentC1Data.promotion_playoff && currentC1Data.promotion_playoff.winner) ? currentC1Data.promotion_playoff.winner : "---";
 
             if(c1Champ === "---") return alert("Yêu cầu hệ thống cần xác định được kết quả nhánh Elite (C1) trước khi ghi nhận kỷ lục.");
+            if(c2Champ !== "---" && (scChamp === "---" || playoffWinner === "---")) return alert("Vui lòng hoàn tất trận Siêu Cúp và Trận Play-off trước khi đóng mùa giải!");
 
             if(confirm(`Xác nhận tổng kết Mùa giải và đưa dữ liệu các thành viên chiến thắng vào cơ sở lưu trữ (Đại Sảnh Danh Vọng)?`)) {
+                
+                // Tính toán ai lên hạng, ai xuống hạng
+                let c1Fourth = (currentC1Data.third_place.winner === currentC1Data.third_place.p1) ? currentC1Data.third_place.p2 : currentC1Data.third_place.p1;
+                let promoted = (playoffWinner === c2Champ) ? c2Champ : "---";
+                let relegated = (playoffWinner === c2Champ) ? c1Fourth : c1Fourth; // Thua playoff bắt buộc xuống C2
+
+                let historyData = {
+                    c1_champ: c1Champ,
+                    promoted_player: promoted,
+                    relegated_player: relegated
+                };
+
                 rtdb.ref('tournament_status/hall_of_fame').once('value').then(snap => {
                     let hof = snap.val() || [];
                     let nextSeason = hof.length + 1;
@@ -1636,7 +1718,12 @@
                         date: new Date().toLocaleDateString('en-GB') 
                     });
                     
-                    rtdb.ref('tournament_status/hall_of_fame').set(hof).then(() => {
+                    let finalUpdates = {
+                        'tournament_status/hall_of_fame': hof,
+                        'tournament_status/history': historyData
+                    };
+
+                    rtdb.ref().update(finalUpdates).then(() => {
                         alert(`🎉 Ghi nhận thành công thông tin Mùa giải ${nextSeason} vào hệ thống lưu trữ.`);
                     });
                 });
