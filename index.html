@@ -438,6 +438,15 @@
                         <div class="item-price">🪙 150</div>
                         <button class="btn-buy" onclick="buyItem('potion', 150)">Đổi Ngay</button>
                     </div>
+                    
+                    <div class="shop-item">
+                        <div class="item-icon">🏺</div>
+                        <div class="item-title">Bình Tiên XP x3</div>
+                        <div class="item-desc">Nhân ba điểm kinh nghiệm và Vàng nhận được. Tác dụng giới hạn trong 3 giờ.</div>
+                        <div class="item-price">🪙 1500</div>
+                        <button class="btn-buy" onclick="buyItem('potion_x3', 1500)">Đổi Ngay</button>
+                    </div>
+
                     <div class="shop-item">
                         <div class="item-icon">🎭</div>
                         <div class="item-title">Mặt Nạ Hắc Ám</div>
@@ -773,7 +782,7 @@
         catch (e) { console.error("Lỗi Firebase!"); }
 
         let currentUser = null;
-        let userData = { role: 'student', gold: 0, xp: 0, streak: 1, displayName: '', lastLogin: '', hasShield: false, potionExpiry: null, maskExpiry: null, magnifyingGlass: 0, vouchers: [], blindBoxCount: 0, lastBlindBoxDate: '', streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: '', highestWeeklyXp: 0, hasBrokenRecordThisWeek: false };
+        let userData = { role: 'student', gold: 0, xp: 0, streak: 1, displayName: '', lastLogin: '', hasShield: false, potionExpiry: null, potionX3Expiry: null, maskExpiry: null, magnifyingGlass: 0, vouchers: [], blindBoxCount: 0, lastBlindBoxDate: '', streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: '', highestWeeklyXp: 0, hasBrokenRecordThisWeek: false };
 
         function getCurrentWeekStr() {
             let d = new Date();
@@ -863,6 +872,7 @@
                             if(!userData.weeklyXp) userData.weeklyXp = 0;
                             if(!userData.lastWeekXp) userData.lastWeekXp = 0;
                             if(!userData.highestWeeklyXp) userData.highestWeeklyXp = 0;
+                            if(!userData.potionX3Expiry) userData.potionX3Expiry = null;
                             
                             let currentWeek = getCurrentWeekStr();
                             if(userData.currentWeekStr !== currentWeek) {
@@ -947,7 +957,7 @@
                     });
                 } else { 
                     currentUser = null; 
-                    userData = { role: 'student', gold: 0, xp: 0, streak: 0, displayName: 'Khách', vouchers: [], streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: '', highestWeeklyXp: 0, hasBrokenRecordThisWeek: false }; 
+                    userData = { role: 'student', gold: 0, xp: 0, streak: 0, displayName: 'Khách', vouchers: [], streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: '', highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, potionX3Expiry: null }; 
                     applyTheme('theme_default'); 
                     updateUI(); 
                 }
@@ -969,7 +979,8 @@
                     streakIcon: userData.streakIcon || '🔥', theme: userData.theme || 'theme_default', purchasedItems: userData.purchasedItems || [],
                     weeklyXp: userData.weeklyXp || 0, lastWeekXp: userData.lastWeekXp || 0, 
                     currentWeekStr: userData.currentWeekStr || getCurrentWeekStr(),
-                    highestWeeklyXp: userData.highestWeeklyXp || 0, hasBrokenRecordThisWeek: userData.hasBrokenRecordThisWeek || false
+                    highestWeeklyXp: userData.highestWeeklyXp || 0, hasBrokenRecordThisWeek: userData.hasBrokenRecordThisWeek || false,
+                    potionX3Expiry: userData.potionX3Expiry || null
                 }); 
                 updateUI(); 
             }
@@ -2012,6 +2023,7 @@
                 if (itemType === 'rename') { let newName = prompt("Nhập tên hiển thị bạn mong muốn:"); if (!newName || newName.trim() === "") return alert("Quy trình hủy do thông tin tên không hợp lệ!"); updates.displayName = newName.trim(); }
                 if (itemType === 'shield') updates.hasShield = true; 
                 if (itemType === 'potion') updates.potionExpiry = Date.now() + 86400000; 
+                if (itemType === 'potion_x3') updates.potionX3Expiry = Date.now() + 10800000; 
                 if (itemType === 'mask') updates.maskExpiry = Date.now() + 86400000; 
                 if (itemType === 'glass') updates.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
                 
@@ -2035,6 +2047,7 @@
                     userData.gold -= finalPrice; 
                     if(updates.hasShield) userData.hasShield = true; 
                     if(updates.potionExpiry) userData.potionExpiry = updates.potionExpiry; 
+                    if(updates.potionX3Expiry) userData.potionX3Expiry = updates.potionX3Expiry; 
                     if(updates.maskExpiry) userData.maskExpiry = updates.maskExpiry; 
                     if(updates.magnifyingGlass) userData.magnifyingGlass = updates.magnifyingGlass; 
                     if(updates.displayName) userData.displayName = updates.displayName;
@@ -2054,9 +2067,12 @@
         window.addEventListener('message', function(e) {
             if (e.data === 'CORRECT') { 
                 if (currentUser && userData) { 
-                    let isPotionActive = userData.potionExpiry && userData.potionExpiry > Date.now(); 
-                    let xpGained = isPotionActive ? 30 : 15; 
-                    let goldGained = isPotionActive ? 20 : 10; 
+                    let isPotionX3Active = userData.potionX3Expiry && userData.potionX3Expiry > Date.now();
+                    let isPotionX2Active = userData.potionExpiry && userData.potionExpiry > Date.now(); 
+                    let multiplier = isPotionX3Active ? 3 : (isPotionX2Active ? 2 : 1);
+                    
+                    let xpGained = 15 * multiplier; 
+                    let goldGained = 10 * multiplier; 
                     
                     userData.xp = (userData.xp || 0) + xpGained; 
                     userData.gold = (userData.gold || 0) + goldGained; 
@@ -2084,7 +2100,8 @@
                         triggerConfetti();
                     } else {
                         let anim = document.getElementById('rewardAnim'); 
-                        anim.innerText = isPotionActive ? `🧪 ĐANG X2! +${goldGained} 🪙 | +${xpGained} ⭐` : `🎉 +${goldGained} 🪙 | +${xpGained} ⭐`; 
+                        let prefix = isPotionX3Active ? `🏺 ĐANG X3!` : (isPotionX2Active ? `🧪 ĐANG X2!` : `🎉`);
+                        anim.innerText = `${prefix} +${goldGained} 🪙 | +${xpGained} ⭐`; 
                         anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 2000); 
                     }
                 } 
