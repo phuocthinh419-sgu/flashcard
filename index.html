@@ -931,6 +931,7 @@
                                                 status: 'available',
                                                 attemptsToday: 0,
                                                 lastAttemptDate: todayStr,
+                                                daysRecovered: 0,
                                                 currentBank: []
                                             };
                                         } else {
@@ -1095,7 +1096,8 @@
             } else if (userData.timeMachine && userData.timeMachine.status === 'in_progress') {
                 tmEl.style.display = 'block';
                 document.getElementById('price-time-machine').innerText = `Đang kích hoạt`;
-                document.getElementById('btn-time-machine').innerText = `Tiếp tục Thử thách`;
+                let currentDay = (userData.timeMachine.daysRecovered || 0) + 1;
+                document.getElementById('btn-time-machine').innerText = `Bù ngày ${currentDay}/${userData.timeMachine.missedDays} ▶`;
                 document.getElementById('btn-time-machine').style.background = "linear-gradient(45deg, #d32f2f, #f44336)";
             } else {
                 tmEl.style.display = 'none';
@@ -1121,19 +1123,19 @@
             let cost = userData.timeMachine.missedDays * 10000;
             if (userData.gold < cost) return alert(`Hệ thống yêu cầu ${cost} Vàng để lấp đầy toàn bộ khoảng trống. Bạn không đủ điều kiện!`);
             
-            if (!confirm(`XÁC NHẬN GIAO DỊCH SINH TỬ:\nBạn sẽ tiêu tốn ${cost} Vàng để thực hiện thử thách khôi phục chuỗi.\nNếu thi trượt (<80%), vàng không được hoàn lại và bạn phải mua lại gói khác. Bạn có chắc chắn?`)) return;
+            if (!confirm(`XÁC NHẬN GIAO DỊCH SINH TỬ:\nBạn sẽ tiêu tốn ${cost} Vàng để thực hiện thử thách khôi phục chuỗi.\nCó tất cả ${userData.timeMachine.missedDays} Giai đoạn. Nếu thi trượt (<80%) ở BẤT KỲ giai đoạn nào, vàng không hoàn lại và bạn phải mua lại gói mới. Chấp nhận?`)) return;
             
             let allVocab = [];
             allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab));
-            if (allVocab.length < 30) return alert("Kho dữ liệu hệ thống chưa đủ tối thiểu 30 từ để vận hành cỗ máy.");
+            if (allVocab.length < 30) return alert("Kho dữ liệu hệ thống chưa đủ để thiết lập đề thi. Cần tối thiểu 30 từ.");
             
-            allVocab.sort(() => Math.random() - 0.5);
-            let targetCount = Math.max(30, userData.timeMachine.missedDays * 10);
-            let bank = allVocab.slice(0, targetCount);
+            let targetCount = Math.min(30, allVocab.length);
+            let bank = allVocab.sort(() => Math.random() - 0.5).slice(0, targetCount);
             
             userData.gold -= cost;
             userData.timeMachine.attemptsToday++;
             userData.timeMachine.status = 'in_progress';
+            userData.timeMachine.daysRecovered = 0;
             userData.timeMachine.currentBank = bank;
             
             db.collection('vocab_users').doc(currentUser.uid).update({
@@ -1149,9 +1151,12 @@
             let bank = userData.timeMachine.currentBank;
             let vocabArray = bank.map(v => `{ en: "${v.en.replace(/"/g, '\\"')}", vi: "${v.vi.replace(/"/g, '\\"')}", pro: "${(v.pro||'').replace(/"/g, '\\"')}", type: "${(v.type||'').replace(/"/g, '\\"')}" }`);
             
+            let currentDay = (userData.timeMachine.daysRecovered || 0) + 1;
+            let totalDays = userData.timeMachine.missedDays;
+            
             let tmTemplate = `<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://cdn.tailwindcss.com"><\/script><style>body { background-color: #f3e5f5; margin: 0; padding: 10px; font-family: 'Segoe UI', sans-serif; } .perspective { perspective: 1000px; } .transform-style-3d { transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); } .backface-hidden { backface-visibility: hidden; } .rotate-y-180 { transform: rotateY(180deg); } .flipped .transform-style-3d { transform: rotateY(180deg); } .quiz-btn { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 2px solid #e0e7ff; background: white; font-weight: bold; color: #3730a3; transition: 0.2s; text-align: left; font-size: 16px; cursor: pointer;} .quiz-btn:hover { border-color: #4f46e5; background: #e0e7ff; } .quiz-btn.correct { background: #10b981; color: white; border-color: #059669; } .quiz-btn.wrong { background: #ef4444; color: white; border-color: #b91c1c; } .disabled { pointer-events: none; }</style></head><body>
             <div id="flashcard-section" class="flex flex-col items-center w-full max-w-md mx-auto">
-                <div class="text-center mb-4 text-purple-800 font-bold text-xl">⏳ MÁY DU HÀNH ⏳</div>
+                <div class="text-center mb-4 text-purple-800 font-bold text-xl">⏳ KHỔ HÌNH: NGÀY ${currentDay}/${totalDays} ⏳</div>
                 <div class="text-center mb-4 text-purple-600 font-bold" id="card-counter">Thẻ 1 / ${vocabArray.length}</div>
                 <div id="flashcard" class="perspective w-full h-80 cursor-pointer mb-6" onclick="flipCard()">
                     <div class="transform-style-3d relative w-full h-full rounded-2xl shadow-lg">
@@ -1172,7 +1177,7 @@
             </div>
             <div id="quiz-section" class="hidden w-full max-w-md mx-auto relative">
                 <div class="text-center mb-4">
-                    <span class="inline-block px-4 py-1 bg-yellow-100 text-yellow-800 font-bold rounded-full text-sm mb-2">Thử Thách Sinh Tử ⏳</span>
+                    <span class="inline-block px-4 py-1 bg-yellow-100 text-yellow-800 font-bold rounded-full text-sm mb-2">Thử Thách Sinh Tử: ${currentDay}/${totalDays} ⏳</span>
                     <div id="timer-display" style="position: relative; width: 70px; height: 70px; margin: 0 auto 10px auto;">
                         <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg);" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"></circle><circle id="timer-circle" cx="50" cy="50" r="45" fill="none" stroke="#9c27b0" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"></circle></svg>
                         <div id="timer-text" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; color: #9c27b0;">10</div>
@@ -1198,10 +1203,18 @@
                 
                 function finishQuiz() { 
                     clearInterval(timerId);
-                    document.getElementById('quiz-options').innerHTML = '<div class="text-center p-6 bg-purple-100 text-purple-900 rounded-xl font-bold text-xl">Hệ thống đang xử lý kết quả phán xét...</div>'; 
                     document.getElementById('timer-display').style.display = 'none'; 
-                    if(window.parent) {
-                        window.parent.postMessage({type: 'TM_RESULT', correct: correctAnswersCount, total: vocabList.length}, '*');
+                    let ratio = correctAnswersCount / vocabList.length;
+                    let optionsContainer = document.getElementById('quiz-options');
+                    
+                    if (ratio >= 0.8) {
+                        if (${currentDay} < ${totalDays}) {
+                            optionsContainer.innerHTML = '<div class="text-center p-6 bg-green-100 text-green-900 rounded-xl font-bold text-xl mb-4">✅ Đã vượt qua Nhịp ' + ${currentDay} + ' (' + correctAnswersCount + '/' + vocabList.length + ')</div><button onclick="window.parent.postMessage(\\'TM_NEXT_DAY\\', \\'*\\')" class="quiz-btn" style="background: linear-gradient(45deg, #10b981, #059669); color: white; border: none; text-align: center;">Chuyển sang ngày tiếp theo ➡</button>';
+                        } else {
+                            optionsContainer.innerHTML = '<div class="text-center p-6 bg-yellow-100 text-yellow-900 rounded-xl font-bold text-xl mb-4">🎉 XUYÊN KHÔNG THÀNH CÔNG! (' + correctAnswersCount + '/' + vocabList.length + ')</div><button onclick="window.parent.postMessage(\\'TM_RESULT_PASS\\', \\'*\\')" class="quiz-btn" style="background: linear-gradient(45deg, #f59e0b, #d97706); color: white; border: none; text-align: center;">Nhận Lại Chuỗi Của Bạn</button>';
+                        }
+                    } else {
+                        optionsContainer.innerHTML = '<div class="text-center p-6 bg-red-100 text-red-900 rounded-xl font-bold text-xl mb-4">❌ THẤT BẠI! Bạn chỉ đạt ' + correctAnswersCount + '/' + vocabList.length + ' (' + Math.round(ratio*100) + '%). Yêu cầu >= 80%.</div><button onclick="window.parent.postMessage(\\'TM_RESULT_FAIL\\', \\'*\\')" class="quiz-btn" style="background: linear-gradient(45deg, #ef4444, #b91c1c); color: white; border: none; text-align: center;">Chấp nhận hình phạt</button>';
                     }
                 } 
                 
@@ -2346,32 +2359,41 @@
                 } 
             }
             // KÍCH HOẠT QUÁ TRÌNH PHÁN XÉT CỦA MÁY DU HÀNH
-            else if (e.data && e.data.type === 'TM_RESULT') {
-                closeModal();
-                let correct = e.data.correct;
-                let total = e.data.total;
-                let ratio = correct / total;
+            else if (e.data === 'TM_NEXT_DAY') {
+                userData.timeMachine.daysRecovered++;
                 
-                if (ratio >= 0.8) {
-                    userData.streak = userData.timeMachine.lostStreak + userData.timeMachine.missedDays;
-                    userData.timeMachine = null;
-                    db.collection('vocab_users').doc(currentUser.uid).update({ 
-                        streak: userData.streak, 
-                        timeMachine: null // Xóa trạng thái máy du hành sau khi phục hồi thành công
-                    }).then(() => {
-                        updateUI();
-                        alert(`🎉 KỲ TÍCH! Bạn đã trả lời đúng ${correct}/${total} câu (${Math.round(ratio*100)}%).\nChuỗi học tập đã được phục hồi toàn vẹn lên mốc ${userData.streak}!`);
-                        triggerConfetti();
-                    });
-                } else {
-                    userData.timeMachine.status = 'available';
-                    db.collection('vocab_users').doc(currentUser.uid).update({ 
-                        timeMachine: userData.timeMachine 
-                    }).then(() => {
-                        updateUI();
-                        alert(`❌ THẤT BẠI! Bạn chỉ đạt ${correct}/${total} câu (${Math.round(ratio*100)}%). Yêu cầu tối thiểu là 80%.\nTiến độ chưa được khôi phục. Hãy thử lại nếu bạn còn lượt trong ngày.`);
-                    });
-                }
+                let allVocab = [];
+                allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab));
+                let targetCount = Math.min(30, allVocab.length);
+                userData.timeMachine.currentBank = allVocab.sort(() => Math.random() - 0.5).slice(0, targetCount);
+                
+                db.collection('vocab_users').doc(currentUser.uid).update({ timeMachine: userData.timeMachine }).then(() => {
+                    openTimeMachineModal(); 
+                });
+            }
+            else if (e.data === 'TM_RESULT_PASS') {
+                closeModal();
+                userData.streak = userData.timeMachine.lostStreak + userData.timeMachine.missedDays;
+                userData.timeMachine = null;
+                db.collection('vocab_users').doc(currentUser.uid).update({ 
+                    streak: userData.streak, 
+                    timeMachine: null 
+                }).then(() => {
+                    updateUI();
+                    alert(`🎉 KỲ TÍCH! Cỗ máy thời gian đã hoạt động hoàn hảo.\nChuỗi học tập đã được phục hồi toàn vẹn lên mốc ${userData.streak}!`);
+                    triggerConfetti();
+                });
+            }
+            else if (e.data === 'TM_RESULT_FAIL') {
+                closeModal();
+                userData.timeMachine.status = 'available';
+                userData.timeMachine.currentBank = []; 
+                db.collection('vocab_users').doc(currentUser.uid).update({ 
+                    timeMachine: userData.timeMachine 
+                }).then(() => {
+                    updateUI();
+                    alert(`❌ THỬ THÁCH THẤT BẠI! Cỗ máy thời gian đã nổ tung do không đủ năng lượng (Dưới 80%).\nTiến độ chưa được khôi phục, Vàng đã bốc hơi. Hãy mua một gói mới nếu bạn vẫn còn lượt trong ngày.`);
+                });
             }
         });
 
