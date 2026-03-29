@@ -416,6 +416,15 @@
                     </div>
                 </div>
                 <div class="shop-grid" id="shopGrid">
+                    
+                    <div class="shop-item" id="shop-time-machine" style="display: none; border: 2px solid #9c27b0; background: #f3e5f5;">
+                        <div class="item-icon">⏳</div>
+                        <div class="item-title" style="color: #6a1b9a;">Máy Du Hành</div>
+                        <div class="item-desc">Khôi phục chuỗi đã mất. Phải vượt qua thử thách khốc liệt!</div>
+                        <div class="item-price" id="price-time-machine" style="color: #6a1b9a; background: #e1bee7;">🪙 ---</div>
+                        <button class="btn-buy" id="btn-time-machine" style="background: linear-gradient(45deg, #9c27b0, #ab47bc);" onclick="buyTimeMachine()">Kích Hoạt</button>
+                    </div>
+                    
                     <div class="shop-item" style="border: 2px solid #ff9800; background: #fff8e1;">
                         <div class="item-icon">🎡</div>
                         <div class="item-title" style="color: #f57f17;">Vòng Quay Nhân Phẩm</div>
@@ -465,8 +474,8 @@
                         <div class="item-icon">🛡️</div>
                         <div class="item-title">Bùa Bảo Hộ</div>
                         <div class="item-desc">Bảo vệ chuỗi ngày học nếu bạn lỡ quên đăng nhập 1 ngày.</div>
-                        <div class="item-price">🪙 200</div>
-                        <button class="btn-buy" onclick="buyItem('shield', 200)">Đổi Ngay</button>
+                        <div class="item-price">🪙 8000</div>
+                        <button class="btn-buy" onclick="buyItem('shield', 8000)">Đổi Ngay</button>
                     </div>
                     
                     <div class="shop-item">
@@ -675,7 +684,7 @@
     <div class="modal" id="previewModal">
         <div class="modal-content" style="background:white; width:100%; max-width:900px; height:85vh; border-radius:12px; overflow:hidden; display:flex; flex-direction:column;">
             <div style="padding:15px; background:#fafafa; display:flex; justify-content:space-between; border-bottom:1px solid #eee;">
-                <h3>Luyện Tập</h3><button onclick="closeModal()" style="color:#333; background:#ccc; padding:5px 15px; font-weight:bold; border-radius:4px;">Đóng X</button>
+                <h3>Hệ Thống Huấn Luyện</h3><button onclick="closeModal()" style="color:#333; background:#ccc; padding:5px 15px; font-weight:bold; border-radius:4px;">Đóng X</button>
             </div>
             <iframe id="modalFrame" style="flex:1; border:none;"></iframe>
         </div>
@@ -760,7 +769,7 @@
         catch (e) { console.error("Lỗi Firebase!"); }
 
         let currentUser = null;
-        let userData = { role: 'student', gold: 0, xp: 0, streak: 1, displayName: '', lastLogin: '', hasShield: false, potionExpiry: null, potionX3Expiry: null, maskExpiry: null, magnifyingGlass: 0, vouchers: [], blindBoxCount: 0, lastBlindBoxDate: '', streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: '', highestWeeklyXp: 0, hasBrokenRecordThisWeek: false };
+        let userData = { role: 'student', gold: 0, xp: 0, streak: 1, displayName: '', lastLogin: '', hasShield: false, potionExpiry: null, potionX3Expiry: null, maskExpiry: null, magnifyingGlass: 0, vouchers: [], blindBoxCount: 0, lastBlindBoxDate: '', streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: '', highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, timeMachine: null };
 
         function getCurrentWeekStr() {
             let d = new Date();
@@ -912,14 +921,30 @@
                                         
                                         userData.xp = currentXp - lostXp;
                                         userData.gold = currentGold - lostGold;
+                                        
+                                        // THUẬT TOÁN KÍCH HOẠT MÁY DU HÀNH
+                                        if (diffDays > 1 && diffDays <= 4) {
+                                            userData.timeMachine = {
+                                                lostStreak: userData.streak,
+                                                missedDays: diffDays - 1,
+                                                lostTimestamp: Date.now(),
+                                                status: 'available',
+                                                attemptsToday: 0,
+                                                lastAttemptDate: todayStr,
+                                                currentBank: []
+                                            };
+                                        } else {
+                                            userData.timeMachine = null; // Quá 3 ngày không thể cứu
+                                        }
+
                                         userData.streak = 1; 
                                         userData.lastLogin = todayStr; 
                                         
                                         db.collection('vocab_users').doc(user.uid).update({ 
-                                            streak: 1, lastLogin: todayStr, xp: userData.xp, gold: userData.gold
+                                            streak: 1, lastLogin: todayStr, xp: userData.xp, gold: userData.gold, timeMachine: userData.timeMachine || null
                                         }).then(() => {
                                             updateUI(); 
-                                            alert(`⚡ Chuỗi học tập đã bị gián đoạn!\n\nTiến trình bị giảm sút do thiếu sót bài học. Thống kê cập nhật:\n\n❌ Trừ: ${lostXp} XP\n❌ Trừ: ${lostGold} Vàng`);
+                                            alert(`⚡ Chuỗi học tập đã bị gián đoạn!\n\nTiến trình bị giảm sút do thiếu sót bài học.\n\n❌ Trừ: ${lostXp} XP\n❌ Trừ: ${lostGold} Vàng\n\nBạn có thể kiểm tra Cửa Hàng để sử dụng Máy Du Hành khôi phục chuỗi trong vòng 48h tới.`);
                                         });
                                     }
                                 } else if (diffDays === 0 && userData.lastLogin !== todayStr) { 
@@ -935,7 +960,7 @@
                     });
                 } else { 
                     currentUser = null; 
-                    userData = { role: 'student', gold: 0, xp: 0, streak: 0, displayName: 'Khách', vouchers: [], streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: '', highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, potionX3Expiry: null }; 
+                    userData = { role: 'student', gold: 0, xp: 0, streak: 0, displayName: 'Khách', vouchers: [], streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: '', highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, potionX3Expiry: null, timeMachine: null }; 
                     applyTheme('theme_default'); 
                     updateUI(); 
                 }
@@ -958,7 +983,8 @@
                     weeklyXp: userData.weeklyXp || 0, lastWeekXp: userData.lastWeekXp || 0, 
                     currentWeekStr: userData.currentWeekStr || getCurrentWeekStr(),
                     highestWeeklyXp: userData.highestWeeklyXp || 0, hasBrokenRecordThisWeek: userData.hasBrokenRecordThisWeek || false,
-                    potionX3Expiry: userData.potionX3Expiry || null
+                    potionX3Expiry: userData.potionX3Expiry || null,
+                    timeMachine: userData.timeMachine || null
                 }); 
                 updateUI(); 
             }
@@ -1045,7 +1071,146 @@
                 document.getElementById('ui-weekly-progress').style.color = progressColor;
             }
 
+            // Giao diện Máy Du Hành
+            let tmEl = document.getElementById('shop-time-machine');
+            if (userData.timeMachine && userData.timeMachine.status === 'available') {
+                let now = Date.now();
+                if (now - userData.timeMachine.lostTimestamp <= 48 * 3600 * 1000) {
+                    tmEl.style.display = 'block';
+                    let cost = userData.timeMachine.missedDays * 10000;
+                    document.getElementById('price-time-machine').innerText = `🪙 ${cost}`;
+                    
+                    let attempts = userData.timeMachine.lastAttemptDate === todayStr ? userData.timeMachine.attemptsToday : 0;
+                    document.getElementById('btn-time-machine').innerText = `Bù ${userData.timeMachine.missedDays} ngày (${3 - attempts} lượt)`;
+                    
+                    if (attempts >= 3) {
+                        document.getElementById('btn-time-machine').innerText = `Hết lượt hôm nay`;
+                        document.getElementById('btn-time-machine').style.background = "#9e9e9e";
+                    } else {
+                        document.getElementById('btn-time-machine').style.background = "linear-gradient(45deg, #9c27b0, #ab47bc)";
+                    }
+                } else {
+                    tmEl.style.display = 'none'; // Đã hết hạn 48h
+                }
+            } else if (userData.timeMachine && userData.timeMachine.status === 'in_progress') {
+                tmEl.style.display = 'block';
+                document.getElementById('price-time-machine').innerText = `Đang kích hoạt`;
+                document.getElementById('btn-time-machine').innerText = `Tiếp tục Thử thách`;
+                document.getElementById('btn-time-machine').style.background = "linear-gradient(45deg, #d32f2f, #f44336)";
+            } else {
+                tmEl.style.display = 'none';
+            }
+
             if (typeof renderBracket === 'function') renderBracket();
+        }
+        
+        /* --- MÁY DU HÀNH FUNCTION --- */
+        function buyTimeMachine() {
+            let todayStr = new Date().toLocaleDateString('en-GB');
+            if (userData.timeMachine.status === 'in_progress') {
+                openTimeMachineModal();
+                return;
+            }
+            
+            if (userData.timeMachine.lastAttemptDate !== todayStr) {
+                userData.timeMachine.attemptsToday = 0;
+                userData.timeMachine.lastAttemptDate = todayStr;
+            }
+            if (userData.timeMachine.attemptsToday >= 3) return alert("Bạn đã hết 3 lượt kích hoạt trong ngày hôm nay. Hãy quay lại vào ngày mai (Nếu chưa quá hạn 48h)!");
+            
+            let cost = userData.timeMachine.missedDays * 10000;
+            if (userData.gold < cost) return alert(`Hệ thống yêu cầu ${cost} Vàng để lấp đầy toàn bộ khoảng trống. Bạn không đủ điều kiện!`);
+            
+            if (!confirm(`XÁC NHẬN GIAO DỊCH SINH TỬ:\nBạn sẽ tiêu tốn ${cost} Vàng để thực hiện thử thách khôi phục chuỗi.\nNếu thi trượt (<80%), vàng không được hoàn lại và bạn phải mua lại gói khác. Bạn có chắc chắn?`)) return;
+            
+            let allVocab = [];
+            allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab));
+            if (allVocab.length < 30) return alert("Kho dữ liệu hệ thống chưa đủ tối thiểu 30 từ để vận hành cỗ máy.");
+            
+            allVocab.sort(() => Math.random() - 0.5);
+            let targetCount = Math.max(30, userData.timeMachine.missedDays * 10);
+            let bank = allVocab.slice(0, targetCount);
+            
+            userData.gold -= cost;
+            userData.timeMachine.attemptsToday++;
+            userData.timeMachine.status = 'in_progress';
+            userData.timeMachine.currentBank = bank;
+            
+            db.collection('vocab_users').doc(currentUser.uid).update({
+                gold: userData.gold,
+                timeMachine: userData.timeMachine
+            }).then(() => {
+                updateUI();
+                openTimeMachineModal();
+            });
+        }
+        
+        function openTimeMachineModal() {
+            let bank = userData.timeMachine.currentBank;
+            let vocabArray = bank.map(v => `{ en: "${v.en.replace(/"/g, '\\"')}", vi: "${v.vi.replace(/"/g, '\\"')}", pro: "${(v.pro||'').replace(/"/g, '\\"')}", type: "${(v.type||'').replace(/"/g, '\\"')}" }`);
+            
+            let tmTemplate = `<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://cdn.tailwindcss.com"><\/script><style>body { background-color: #f3e5f5; margin: 0; padding: 10px; font-family: 'Segoe UI', sans-serif; } .perspective { perspective: 1000px; } .transform-style-3d { transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); } .backface-hidden { backface-visibility: hidden; } .rotate-y-180 { transform: rotateY(180deg); } .flipped .transform-style-3d { transform: rotateY(180deg); } .quiz-btn { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 2px solid #e0e7ff; background: white; font-weight: bold; color: #3730a3; transition: 0.2s; text-align: left; font-size: 16px; cursor: pointer;} .quiz-btn:hover { border-color: #4f46e5; background: #e0e7ff; } .quiz-btn.correct { background: #10b981; color: white; border-color: #059669; } .quiz-btn.wrong { background: #ef4444; color: white; border-color: #b91c1c; } .disabled { pointer-events: none; }</style></head><body>
+            <div id="flashcard-section" class="flex flex-col items-center w-full max-w-md mx-auto">
+                <div class="text-center mb-4 text-purple-800 font-bold text-xl">⏳ MÁY DU HÀNH ⏳</div>
+                <div class="text-center mb-4 text-purple-600 font-bold" id="card-counter">Thẻ 1 / ${vocabArray.length}</div>
+                <div id="flashcard" class="perspective w-full h-80 cursor-pointer mb-6" onclick="flipCard()">
+                    <div class="transform-style-3d relative w-full h-full rounded-2xl shadow-lg">
+                        <div id="card-front" class="backface-hidden absolute w-full h-full bg-white rounded-2xl flex flex-col items-center justify-center p-6 border-4 border-purple-300">
+                            <div id="word-en" class="text-5xl font-extrabold text-purple-900 mb-2">Word</div>
+                            <div id="word-pro" class="text-lg text-gray-500 mb-4 font-mono">/pronunciation/</div>
+                            <span id="word-type" class="px-4 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-bold uppercase">Type</span>
+                        </div>
+                        <div id="card-back" class="backface-hidden rotate-y-180 absolute w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex flex-col items-center justify-center p-6 text-white text-center">
+                            <div id="word-vi" class="text-3xl font-bold text-yellow-300">Nghĩa</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-4 w-full">
+                    <button onclick="prevCard()" class="flex-1 py-3 rounded-xl bg-gray-300 text-gray-700 font-bold hover:bg-gray-400">⬅ Trước</button>
+                    <button onclick="nextCard()" id="next-btn" class="flex-1 py-3 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700">Tiếp ➡</button>
+                </div>
+            </div>
+            <div id="quiz-section" class="hidden w-full max-w-md mx-auto relative">
+                <div class="text-center mb-4">
+                    <span class="inline-block px-4 py-1 bg-yellow-100 text-yellow-800 font-bold rounded-full text-sm mb-2">Thử Thách Sinh Tử ⏳</span>
+                    <div id="timer-display" style="position: relative; width: 70px; height: 70px; margin: 0 auto 10px auto;">
+                        <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg);" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"></circle><circle id="timer-circle" cx="50" cy="50" r="45" fill="none" stroke="#9c27b0" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"></circle></svg>
+                        <div id="timer-text" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; color: #9c27b0;">10</div>
+                    </div>
+                    <h2 id="quiz-question" class="text-4xl font-extrabold text-purple-900 mt-2">Word</h2>
+                </div>
+                <div id="quiz-options" class="w-full"></div>
+            </div>
+            <script>
+                const vocabList = [${vocabArray.join(',\n')}]; 
+                let currentIndex = 0; const flashcardEl = document.getElementById('flashcard'); 
+                function loadCard(index) { flashcardEl.classList.remove('flipped'); setTimeout(() => { document.getElementById('word-en').innerText = vocabList[index].en; document.getElementById('word-pro').innerText = vocabList[index].pro; document.getElementById('word-type').innerText = vocabList[index].type; document.getElementById('word-vi').innerText = vocabList[index].vi; document.getElementById('card-counter').innerText = 'Thẻ ' + (index + 1) + ' / ' + vocabList.length; const nextBtn = document.getElementById('next-btn'); if (index === vocabList.length - 1) { nextBtn.innerText = "BẮT ĐẦU THI"; nextBtn.className = "flex-1 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700"; } else { nextBtn.innerText = "Tiếp ➡"; nextBtn.className = "flex-1 py-3 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700"; } }, 150); } 
+                function flipCard() { flashcardEl.classList.toggle('flipped'); } 
+                function prevCard() { if (currentIndex > 0) { currentIndex--; loadCard(currentIndex); } } 
+                function nextCard() { if (currentIndex < vocabList.length - 1) { currentIndex++; loadCard(currentIndex); } else { startQuiz(); } } 
+                let currentQuizIndex = 0; let quizOrder = []; let timerId; let timeLeft = 10; 
+                let correctAnswersCount = 0; 
+                
+                function startTimer() { timeLeft = 10; document.getElementById('timer-circle').style.strokeDashoffset = '0'; document.getElementById('timer-text').innerText = timeLeft; clearInterval(timerId); timerId = setInterval(() => { timeLeft--; const offset = 283 - (timeLeft / 10) * 283; document.getElementById('timer-circle').style.strokeDashoffset = offset; document.getElementById('timer-text').innerText = timeLeft; if(timeLeft <= 0) { clearInterval(timerId); timeOut(); } }, 1000); } 
+                function timeOut() { const optionsContainer = document.getElementById('quiz-options'); optionsContainer.classList.add('disabled'); const correctWord = vocabList[quizOrder[currentQuizIndex]]; Array.from(optionsContainer.children).forEach(child => { child.style.visibility = 'visible'; if (child.innerText === correctWord.vi) child.classList.add('correct'); else child.classList.add('wrong'); }); setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadQuizQuestion(); else finishQuiz(); }, 1500); } 
+                function startQuiz() { document.getElementById('flashcard-section').classList.add('hidden'); document.getElementById('quiz-section').classList.remove('hidden'); quizOrder = [...Array(vocabList.length).keys()].sort(() => Math.random() - 0.5); currentQuizIndex = 0; loadQuizQuestion(); } 
+                function loadQuizQuestion() { const optionsContainer = document.getElementById('quiz-options'); optionsContainer.innerHTML = ''; optionsContainer.classList.remove('disabled'); const correctWord = vocabList[quizOrder[currentQuizIndex]]; document.getElementById('quiz-question').innerText = correctWord.en; let options = [correctWord.vi]; let wrongOptions = vocabList.filter(w => w.en !== correctWord.en).map(w => w.vi); wrongOptions = wrongOptions.sort(() => Math.random() - 0.5).slice(0, 3); options = options.concat(wrongOptions); options.sort(() => Math.random() - 0.5); options.forEach(opt => { const btn = document.createElement('button'); btn.className = 'quiz-btn'; btn.innerText = opt; btn.onclick = () => checkAnswer(btn, opt, correctWord.vi); optionsContainer.appendChild(btn); }); startTimer(); } 
+                
+                function finishQuiz() { 
+                    clearInterval(timerId);
+                    document.getElementById('quiz-options').innerHTML = '<div class="text-center p-6 bg-purple-100 text-purple-900 rounded-xl font-bold text-xl">Hệ thống đang xử lý kết quả phán xét...</div>'; 
+                    document.getElementById('timer-display').style.display = 'none'; 
+                    if(window.parent) {
+                        window.parent.postMessage({type: 'TM_RESULT', correct: correctAnswersCount, total: vocabList.length}, '*');
+                    }
+                } 
+                
+                function checkAnswer(btn, selectedVi, correctVi) { clearInterval(timerId); const optionsContainer = document.getElementById('quiz-options'); optionsContainer.classList.add('disabled'); if (selectedVi === correctVi) { btn.classList.add('correct'); correctAnswersCount++; setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadQuizQuestion(); else finishQuiz(); }, 800); } else { btn.classList.add('wrong'); Array.from(optionsContainer.children).forEach(child => { child.style.visibility = 'visible'; if (child.innerText === correctVi) child.classList.add('correct'); }); setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadQuizQuestion(); else finishQuiz(); }, 1500); } } 
+                loadCard(0); 
+            <\/script></body></html>`;
+            
+            document.getElementById('modalFrame').srcdoc = tmTemplate;
+            document.getElementById('previewModal').classList.add('active');
         }
 
         /* --- QUẢN LÝ GIAO DIỆN TAB C1 / C2 --- */
@@ -2173,7 +2338,41 @@
                     }
                 } 
             }
-            else if (e.data === 'REQ_GLASS') { if (userData.magnifyingGlass > 0) { userData.magnifyingGlass--; syncStatsToCloud(); document.getElementById('modalFrame').contentWindow.postMessage('APPROVE_GLASS', '*'); } else { alert("Số lượng Kính Lúp hiện tại là 0! Bạn có thể trao đổi trong mục Cửa Hàng."); } }
+            else if (e.data === 'REQ_GLASS') { 
+                if (userData.magnifyingGlass > 0) { 
+                    userData.magnifyingGlass--; syncStatsToCloud(); document.getElementById('modalFrame').contentWindow.postMessage('APPROVE_GLASS', '*'); 
+                } else { 
+                    alert("Số lượng Kính Lúp hiện tại là 0! Bạn có thể trao đổi trong mục Cửa Hàng."); 
+                } 
+            }
+            // KÍCH HOẠT QUÁ TRÌNH PHÁN XÉT CỦA MÁY DU HÀNH
+            else if (e.data && e.data.type === 'TM_RESULT') {
+                closeModal();
+                let correct = e.data.correct;
+                let total = e.data.total;
+                let ratio = correct / total;
+                
+                if (ratio >= 0.8) {
+                    userData.streak = userData.timeMachine.lostStreak + userData.timeMachine.missedDays;
+                    userData.timeMachine = null;
+                    db.collection('vocab_users').doc(currentUser.uid).update({ 
+                        streak: userData.streak, 
+                        timeMachine: null // Xóa trạng thái máy du hành sau khi phục hồi thành công
+                    }).then(() => {
+                        updateUI();
+                        alert(`🎉 KỲ TÍCH! Bạn đã trả lời đúng ${correct}/${total} câu (${Math.round(ratio*100)}%).\nChuỗi học tập đã được phục hồi toàn vẹn lên mốc ${userData.streak}!`);
+                        triggerConfetti();
+                    });
+                } else {
+                    userData.timeMachine.status = 'available';
+                    db.collection('vocab_users').doc(currentUser.uid).update({ 
+                        timeMachine: userData.timeMachine 
+                    }).then(() => {
+                        updateUI();
+                        alert(`❌ THẤT BẠI! Bạn chỉ đạt ${correct}/${total} câu (${Math.round(ratio*100)}%). Yêu cầu tối thiểu là 80%.\nTiến độ chưa được khôi phục. Hãy thử lại nếu bạn còn lượt trong ngày.`);
+                    });
+                }
+            }
         });
 
         function generateCode() {
