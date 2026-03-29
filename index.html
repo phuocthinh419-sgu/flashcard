@@ -449,7 +449,7 @@
                     </div>
                     
                     <div class="shop-item">
-                        <div class="item-icon">🏺</div>
+                        <div class="item-icon">🧪</div>
                         <div class="item-title">Bình Tiên XP x3</div>
                         <div class="item-desc">Nhân ba điểm kinh nghiệm và Vàng nhận được. Tác dụng giới hạn trong 3 giờ.</div>
                         <div class="item-price">🪙 1500</div>
@@ -1206,6 +1206,9 @@
                     document.getElementById('timer-display').style.display = 'none'; 
                     let ratio = correctAnswersCount / vocabList.length;
                     let optionsContainer = document.getElementById('quiz-options');
+                    
+                    // ĐÃ GIẢI HUYỆT CHO NÚT BẤM
+                    optionsContainer.classList.remove('disabled');
                     
                     if (ratio >= 0.8) {
                         if (${currentDay} < ${totalDays}) {
