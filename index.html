@@ -435,9 +435,13 @@
     <div class="modal" id="recordModal"><div class="modal-content name-modal-content" style="background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%); color: white; border: 4px solid #fff; text-align: center;"><div style="font-size: 50px; margin-bottom: 10px;">🎉</div><h2 style="font-size: 28px; font-weight: 900; margin-bottom: 10px; text-transform: uppercase;">Kỷ Lục Mới!</h2><p style="font-size: 16px; margin-bottom: 20px; opacity: 0.9;">Bạn đã vượt qua giới hạn của chính mình!</p><div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 20px;"><div style="font-size: 14px; opacity: 0.8; margin-bottom: 5px;">Tuần này</div><div style="font-size: 32px; font-weight: 900; color: #ffd700;" id="recordCurrentXp">0 XP</div><div style="font-size: 12px; margin-top: 5px; opacity: 0.7;">Kỷ lục cũ: <span id="recordOldXp">0</span> XP</div></div><button class="btn-save" style="width: 100%; padding: 12px; font-size: 16px; background: white; color: #ff5722;" onclick="document.getElementById('recordModal').classList.remove('active')">Tuyệt Vời!</button></div></div>
    
     <div class="modal" id="pvpModal">
+        <button id="adminForceEndBtn" onclick="forceEndMatch()" style="display: none; position: fixed; top: 20px; left: 20px; background: #d50000; color: white; border: 2px solid #ff1744; padding: 10px 15px; border-radius: 8px; font-weight: 900; z-index: 99999; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">🛑 HỦY TRẬN (ADMIN)</button>
+        <button onclick="surrenderMatch()" style="position: fixed; top: 20px; right: 20px; background: #555; color: white; border: 2px solid #888; padding: 10px 15px; border-radius: 8px; font-weight: bold; z-index: 99999; cursor: pointer;">🚩 THOÁT / BỎ CUỘC</button>
+        
         <div class="battle-arena" style="position: relative;">
-            <button id="adminForceEndBtn" onclick="forceEndMatch()" style="display: none; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); background: #d50000; color: white; border: 2px solid #ff1744; padding: 8px 20px; border-radius: 8px; font-weight: 900; z-index: 1000; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">🛑 HỦY TRẬN BỊ KẸT</button>
-            <div class="battle-header"><div class="fighter"><div id="pvpP1Name" style="font-weight:bold;">P1</div><span id="pvpP1Correct" style="font-size: 50px; font-weight: 900; color: #fff;">0</span><div style="font-size: 14px; color: #ffd700;">Set: <b id="pvpP1Set">0</b></div></div><div class="vs-badge">VS</div><div class="fighter"><div id="pvpP2Name" style="font-weight:bold;">P2</div><span id="pvpP2Correct" style="font-size: 50px; font-weight: 900; color: #fff;">0</span><div style="font-size: 14px; color: #ffd700;">Set: <b id="pvpP2Set">0</b></div></div></div><div style="text-align:center; color:#ccc; margin-top:10px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 5px;">CÂU HỎI: <span id="pvpQIndex" style="color:#ffd700;">1</span> / 30 <div id="pvpTimerBanner" style="font-size: 24px; color: #ff1744; margin-top: 5px;">⏳ 15s</div></div><div class="battle-body"><div class="lock-overlay" id="lockOverlay"><div class="lock-text" id="lockMsg">ĐÃ CHỐT ĐÁP ÁN!</div><div class="bot-thinking" id="botStatusMsg">Đang đợi đối thủ...</div></div><div id="pvpWaitMsg" style="font-size:24px; font-weight:bold; color:#ffd700; text-align:center; display:none; margin-bottom:15px;">Đang thiết lập...</div><div class="battle-question" id="pvpQuestion" style="display:none; margin-top: 10px;">READY?</div><div class="battle-options" id="pvpOptions" style="display:none;"><button class="btn-ans" onclick="submitPvPAnswer(0)" id="pvpOpt0">-</button><button class="btn-ans" onclick="submitPvPAnswer(1)" id="pvpOpt1">-</button><button class="btn-ans" onclick="submitPvPAnswer(2)" id="pvpOpt2">-</button><button class="btn-ans" onclick="submitPvPAnswer(3)" id="pvpOpt3">-</button></div></div></div></div>
+            <div class="battle-header"><div class="fighter"><div id="pvpP1Name" style="font-weight:bold;">P1</div><span id="pvpP1Correct" style="font-size: 50px; font-weight: 900; color: #fff;">0</span><div style="font-size: 14px; color: #ffd700;">Set: <b id="pvpP1Set">0</b></div></div><div class="vs-badge">VS</div><div class="fighter"><div id="pvpP2Name" style="font-weight:bold;">P2</div><span id="pvpP2Correct" style="font-size: 50px; font-weight: 900; color: #fff;">0</span><div style="font-size: 14px; color: #ffd700;">Set: <b id="pvpP2Set">0</b></div></div></div><div style="text-align:center; color:#ccc; margin-top:10px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 5px;">CÂU HỎI: <span id="pvpQIndex" style="color:#ffd700;">1</span> / 30 <div id="pvpTimerBanner" style="font-size: 24px; color: #ff1744; margin-top: 5px;">⏳ 15s</div></div><div class="battle-body"><div class="lock-overlay" id="lockOverlay"><div class="lock-text" id="lockMsg">ĐÃ CHỐT ĐÁP ÁN!</div><div class="bot-thinking" id="botStatusMsg">Đang đợi đối thủ...</div></div><div id="pvpWaitMsg" style="font-size:24px; font-weight:bold; color:#ffd700; text-align:center; display:none; margin-bottom:15px;">Đang thiết lập...</div><div class="battle-question" id="pvpQuestion" style="display:none; margin-top: 10px;">READY?</div><div class="battle-options" id="pvpOptions" style="display:none;"><button class="btn-ans" onclick="submitPvPAnswer(0)" id="pvpOpt0">-</button><button class="btn-ans" onclick="submitPvPAnswer(1)" id="pvpOpt1">-</button><button class="btn-ans" onclick="submitPvPAnswer(2)" id="pvpOpt2">-</button><button class="btn-ans" onclick="submitPvPAnswer(3)" id="pvpOpt3">-</button></div></div>
+        </div>
+    </div>
 
     <div id="rewardAnim" class="reward-anim">🎉 +10 🪙 | +15 ⭐</div>
 
@@ -640,7 +644,7 @@
 
         function updateUI() {
             document.getElementById('ui-gold').innerText = userData.gold; document.getElementById('ui-xp').innerText = userData.xp; document.getElementById('ui-lifetime-xp').innerText = userData.lifetime_xp || 0; document.getElementById('sidebarRealm').innerText = `🌍 Phủ: ${userData.realm || "---"}`; document.getElementById('ui-streak').innerText = userData.streak; document.getElementById('sidebarName').innerText = userData.displayName || "Khách"; document.getElementById('ui-glass-count').innerText = userData.magnifyingGlass || 0; if (document.getElementById('ui-streak-icon')) document.getElementById('ui-streak-icon').innerText = userData.streakIcon || '🔥';
-            let vText = "Trống"; if(userData.vouchers && userData.vouchers.length > 0) vText = userData.vouchers.map(v => `-${v}%`).join(', '); if(document.getElementById('ui-vouchers')) document.getElementById('ui-vouchers').innerText = vText;
+            let vText = "Trống"; if(userData.vouchers && userData.vouchers.length > 0) vText = userData.vouchers.map(v => `-${v}%`).join(', '); if(document.getElementById('ui-vouchers')) document.getElementById('ui-vouchersinnerText = vText;
             let todayStr = new Date().toLocaleDateString('en-GB'); let bbLeft = 3; if (userData.lastBlindBoxDate === todayStr) bbLeft = 3 - (userData.blindBoxCount || 0); if(document.getElementById('ui-wheel-left')) document.getElementById('ui-wheel-left').innerText = bbLeft;
             
             const badge = document.getElementById('sidebarRole'); 
@@ -887,6 +891,7 @@
             let updateData = {}; updateData[surveillanceData.playerSlot + "_ready"] = true;
             rtdb.ref(key).update(updateData).then(() => {
                 isUnderSurveillance = true; 
+                rtdb.ref(`active_pvp_match/${currentRealm}`).onDisconnect().update({ status: 'finished', winner: surveillanceData.oppName });
             });
         }
 
@@ -934,6 +939,20 @@
                 document.getElementById('pvpModal').classList.remove('active');
                 alert("Đã giải tán võ đài thành công!");
             });
+        }
+        
+        function surrenderMatch() {
+            if(confirm("Bệ hạ/Khanh muốn rút lui khỏi trận này? Hệ thống sẽ xử thua!")) {
+                let myName = userData.displayName;
+                rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
+                    let m = snap.val();
+                    if(m && m.status !== 'finished') {
+                        let oppName = (m.p1 === myName) ? m.p2 : m.p1;
+                        rtdb.ref(`active_pvp_match/${currentRealm}`).update({ status: 'finished', winner: oppName });
+                    }
+                    document.getElementById('pvpModal').classList.remove('active');
+                });
+            }
         }
                 
         setInterval(() => {
@@ -1134,7 +1153,7 @@
                 rtdb.ref(`active_pvp_match/${currentRealm}`).on('value', (snap) => { 
                     let m = snap.val(); if(!m) return; 
                     let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2; 
-                    if(isP1 || isP2) { 
+                    if(isP1 || isP2 || userData.role === 'teacher') { 
                         document.getElementById('pvpModal').classList.add('active'); 
                         document.getElementById('pvpP1Name').innerText = m.p1; document.getElementById('pvpP1Correct').innerText = m.p1_score; document.getElementById('pvpP1Set').innerText = m.p1_set; 
                         document.getElementById('pvpP2Name').innerText = m.p2; document.getElementById('pvpP2Correct').innerText = m.p2_score; document.getElementById('pvpP2Set').innerText = m.p2_set; 
@@ -1181,7 +1200,6 @@
             }
         }
 
-        // Bổ sung logic hiển thị Options
         function revealOptions(m, myAns, indices) {
             if(myAns !== "") return;
             document.getElementById('lockOverlay').classList.remove('active');
@@ -1445,9 +1463,6 @@
             });
         }
 
-        // ==========================================
-        // CÁC HÀM CÒN LẠI VÀ CHỨC NĂNG DỊCH CHUYỂN
-        // ==========================================
         function buyTimeMachine() { let todayStr = new Date().toLocaleDateString('en-GB'); if (userData.timeMachine && userData.timeMachine.status === 'in_progress') { openTimeMachineModal(); return; } if (userData.timeMachine && userData.timeMachine.lastAttemptDate !== todayStr) { userData.timeMachine.attemptsToday = 0; userData.timeMachine.lastAttemptDate = todayStr; } if (userData.timeMachine && userData.timeMachine.attemptsToday >= 3) return alert("Hết lượt hôm nay!"); let cost = userData.timeMachine.missedDays * 10000; if (userData.gold < cost) return alert("Không đủ Vàng!"); if (!confirm(`XÁC NHẬN GIAO DỊCH:\nTiêu tốn ${cost} Vàng để thực hiện thử thách.\nCần vượt qua ${userData.timeMachine.missedDays} Giai đoạn. Chấp nhận?`)) return; let allVocab = []; allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab)); if (allVocab.length < 30) return alert("Kho dữ liệu chưa đủ 30 từ."); let bank = allVocab.sort(() => Math.random() - 0.5).slice(0, Math.min(30, allVocab.length)); userData.gold -= cost; userData.timeMachine.attemptsToday++; userData.timeMachine.status = 'in_progress'; userData.timeMachine.daysRecovered = 0; userData.timeMachine.currentBank = bank; db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, timeMachine: userData.timeMachine }).then(() => { updateUI(); openTimeMachineModal(); }); }
         
         window.addEventListener('message', function(e) {
