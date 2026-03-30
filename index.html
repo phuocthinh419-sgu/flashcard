@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VocabForge | Gamification</title>
+    <title>VocabForge | Gamification - Multiverse</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -24,9 +24,8 @@
             width: var(--sidebar-w); background: #fff; border-right: 1px solid #e0e0e0; 
             padding: 20px; display: flex; flex-direction: column; z-index: 1001; 
             transition: transform 0.3s ease, background-color 0.3s; 
-            overflow-y: auto; /* Mở khóa phong ấn thanh cuộn */
+            overflow-y: auto;
         }
-        /* Vuốt lại dung nhan thanh cuộn cho thanh thoát */
         .sidebar::-webkit-scrollbar { width: 5px; }
         .sidebar::-webkit-scrollbar-thumb { background: #b0bec5; border-radius: 5px; }
         .brand { font-size: 24px; font-weight: bold; color: var(--primary); margin-bottom: 20px; text-align: center;}
@@ -433,8 +432,12 @@
     <div class="modal" id="nameModal"><div class="modal-content name-modal-content"><h3 style="color: var(--primary); margin-bottom: 15px; font-size: 22px;">Thông Tin Cá Nhân</h3><p style="color: #555; margin-bottom: 20px;">Vui lòng thiết lập tên hiển thị của bạn:</p><input type="text" id="displayNameInput" placeholder="Ví dụ: Nguyễn Văn A..." style="width: 100%; padding: 12px; border: 2px solid var(--secondary); border-radius: 8px; margin-bottom: 15px; font-size: 16px;"><button class="btn-save" style="width: 100%; padding: 12px;" onclick="saveDisplayName()">Lưu Tên</button></div></div>
     <div class="modal" id="previewModal"><div class="modal-content" style="background:white; width:100%; max-width:900px; height:85vh; border-radius:12px; overflow:hidden; display:flex; flex-direction:column;"><div style="padding:15px; background:#fafafa; display:flex; justify-content:space-between; border-bottom:1px solid #eee;"><h3>Hệ Thống Huấn Luyện</h3><button onclick="closeModal()" style="color:#333; background:#ccc; padding:5px 15px; font-weight:bold; border-radius:4px;">Đóng X</button></div><iframe id="modalFrame" style="flex:1; border:none;"></iframe></div></div>
     <div class="modal" id="recordModal"><div class="modal-content name-modal-content" style="background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%); color: white; border: 4px solid #fff; text-align: center;"><div style="font-size: 50px; margin-bottom: 10px;">🎉</div><h2 style="font-size: 28px; font-weight: 900; margin-bottom: 10px; text-transform: uppercase;">Kỷ Lục Mới!</h2><p style="font-size: 16px; margin-bottom: 20px; opacity: 0.9;">Bạn đã vượt qua giới hạn của chính mình!</p><div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 20px;"><div style="font-size: 14px; opacity: 0.8; margin-bottom: 5px;">Tuần này</div><div style="font-size: 32px; font-weight: 900; color: #ffd700;" id="recordCurrentXp">0 XP</div><div style="font-size: 12px; margin-top: 5px; opacity: 0.7;">Kỷ lục cũ: <span id="recordOldXp">0</span> XP</div></div><button class="btn-save" style="width: 100%; padding: 12px; font-size: 16px; background: white; color: #ff5722;" onclick="document.getElementById('recordModal').classList.remove('active')">Tuyệt Vời!</button></div></div>
-    <div class="modal" id="pvpModal"><div class="battle-arena"><div class="battle-header"><div class="fighter"><div id="pvpP1Name" style="font-weight:bold;">P1</div><span id="pvpP1Correct" style="font-size: 50px; font-weight: 900; color: #fff;">0</span><div style="font-size: 14px; color: #ffd700;">Set: <b id="pvpP1Set">0</b></div></div><div class="vs-badge">VS</div><div class="fighter"><div id="pvpP2Name" style="font-weight:bold;">P2</div><span id="pvpP2Correct" style="font-size: 50px; font-weight: 900; color: #fff;">0</span><div style="font-size: 14px; color: #ffd700;">Set: <b id="pvpP2Set">0</b></div></div></div><div style="text-align:center; color:#ccc; margin-top:10px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 5px;">CÂU HỎI: <span id="pvpQIndex" style="color:#ffd700;">1</span> / 30 <div id="pvpTimerBanner" style="font-size: 24px; color: #ff1744; margin-top: 5px;">⏳ 15s</div></div><div class="battle-body"><div class="lock-overlay" id="lockOverlay"><div class="lock-text" id="lockMsg">ĐÃ CHỐT ĐÁP ÁN!</div><div class="bot-thinking" id="botStatusMsg">Đang đợi đối thủ...</div></div><div id="pvpWaitMsg" style="font-size:24px; font-weight:bold; color:#ffd700; text-align:center; display:none; margin-bottom:15px;">Đang thiết lập...</div><div class="battle-question" id="pvpQuestion" style="display:none; margin-top: 10px;">READY?</div><div class="battle-options" id="pvpOptions" style="display:none;"><button class="btn-ans" onclick="submitPvPAnswer(0)" id="pvpOpt0">-</button><button class="btn-ans" onclick="submitPvPAnswer(1)" id="pvpOpt1">-</button><button class="btn-ans" onclick="submitPvPAnswer(2)" id="pvpOpt2">-</button><button class="btn-ans" onclick="submitPvPAnswer(3)" id="pvpOpt3">-</button></div></div></div></div>
-
+   <div class="modal" id="pvpModal">
+        <div class="battle-arena" style="position: relative;">
+            <button id="adminForceEndBtn" onclick="forceEndMatch()" style="display: none; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); background: #d50000; color: white; border: 2px solid #ff1744; padding: 8px 20px; border-radius: 8px; font-weight: 900; z-index: 1000; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">🛑 HỦY TRẬN BỊ KẸT</button>
+            
+            <div class="battle-header">
+                
     <div id="rewardAnim" class="reward-anim">🎉 +10 🪙 | +15 ⭐</div>
 
     <script>
@@ -641,7 +644,22 @@
             document.getElementById('ui-gold').innerText = userData.gold; document.getElementById('ui-xp').innerText = userData.xp; document.getElementById('ui-lifetime-xp').innerText = userData.lifetime_xp || 0; document.getElementById('sidebarRealm').innerText = `🌍 Phủ: ${userData.realm || "---"}`; document.getElementById('ui-streak').innerText = userData.streak; document.getElementById('sidebarName').innerText = userData.displayName || "Khách"; document.getElementById('ui-glass-count').innerText = userData.magnifyingGlass || 0; if (document.getElementById('ui-streak-icon')) document.getElementById('ui-streak-icon').innerText = userData.streakIcon || '🔥';
             let vText = "Trống"; if(userData.vouchers && userData.vouchers.length > 0) vText = userData.vouchers.map(v => `-${v}%`).join(', '); if(document.getElementById('ui-vouchers')) document.getElementById('ui-vouchers').innerText = vText;
             let todayStr = new Date().toLocaleDateString('en-GB'); let bbLeft = 3; if (userData.lastBlindBoxDate === todayStr) bbLeft = 3 - (userData.blindBoxCount || 0); if(document.getElementById('ui-wheel-left')) document.getElementById('ui-wheel-left').innerText = bbLeft;
-            const badge = document.getElementById('sidebarRole'); if(userData.role === 'teacher') { badge.className = 'user-badge badge-teacher'; badge.innerText = '👨‍🏫 Quản trị viên'; document.getElementById('nav-creator').style.display = 'flex'; document.getElementById('nav-arena').style.display = 'flex'; } else { badge.className = 'user-badge badge-student'; badge.innerText = '👨‍🎓 Học Sinh'; document.getElementById('nav-creator').style.display = 'none'; document.getElementById('nav-arena').style.display = 'none'; }
+            const badge = document.getElementById('sidebarRole'); 
+            let forceBtn = document.getElementById('adminForceEndBtn'); // Lấy ID của nút
+
+            if(userData.role === 'teacher') { 
+                badge.className = 'user-badge badge-teacher'; 
+                badge.innerText = '👨‍🏫 Quản trị viên'; 
+                document.getElementById('nav-creator').style.display = 'flex'; 
+                document.getElementById('nav-arena').style.display = 'flex'; 
+                if(forceBtn) forceBtn.style.display = 'block'; // Hiện bùa cứu mạng cho Admin
+            } else { 
+                badge.className = 'user-badge badge-student'; 
+                badge.innerText = '👨‍🎓 Học Sinh'; 
+                document.getElementById('nav-creator').style.display = 'none'; 
+                document.getElementById('nav-arena').style.display = 'none'; 
+                if(forceBtn) forceBtn.style.display = 'none'; // Giấu nút đi đối với học sinh
+            }            
             let itemsToCheck = ['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow', 'theme_royal']; if(userData.purchasedItems) { itemsToCheck.forEach(item => { let btn = document.getElementById('btn-' + item); let priceTag = document.getElementById('price-' + item); if(btn && priceTag) { if(userData.purchasedItems.includes(item)) { btn.innerText = "Dùng Ngay"; btn.style.background = "#9e9e9e"; priceTag.innerText = "Đã sở hữu"; } else { btn.innerText = "Đổi Ngay"; btn.style.background = ""; let price = 5000; if(item === 'theme_aurora' || item === 'theme_snow') price = 15000; else if(item === 'theme_royal') price = 20000; priceTag.innerText = "🪙 " + price; } } }); }
             if (document.getElementById('ui-weekly-xp')) document.getElementById('ui-weekly-xp').innerText = userData.weeklyXp || 0; if (document.getElementById('ui-highest-xp')) document.getElementById('ui-highest-xp').innerText = userData.highestWeeklyXp || 0;
             let progressText = "Đang tích lũy"; let progressColor = "#888"; let lastW = userData.lastWeekXp || 0; let currW = userData.weeklyXp || 0; if (lastW > 0) { let ratio = ((currW - lastW) / lastW) * 100; if (ratio > 20) { progressText = "🔥 Bứt phá (>" + Math.round(ratio) + "%)"; progressColor = "#ff5722"; } else if (ratio >= -5 && ratio <= 20) { progressText = "📈 Ổn định (" + (ratio > 0 ? "+" : "") + Math.round(ratio) + "%)"; progressColor = "#00c853"; } else if (ratio >= -20 && ratio < -5) { progressText = "⚠️ Chững lại (" + Math.round(ratio) + "%)"; progressColor = "#fbc02d"; } else { progressText = "❄️ Sa sút (" + Math.round(ratio) + "%)"; progressColor = "#2962ff"; } } if (document.getElementById('ui-weekly-progress')) { document.getElementById('ui-weekly-progress').innerText = progressText; document.getElementById('ui-weekly-progress').style.color = progressColor; }
@@ -922,6 +940,20 @@
         window.addEventListener("blur", () => {
             executeAntiCheatPunishment();
         });
+
+        function forceEndMatch() {
+            if(userData.role !== 'teacher') return;
+            if(!confirm("Bệ hạ có chắc chắn muốn kết thúc ép buộc trận đấu này? Thao tác này sẽ giải tán võ đài và giải phóng cả 2 tuyển thủ khỏi tình trạng bị kẹt.")) return;
+            
+            // Xóa sổ trận đấu trên đám mây Firebase
+            rtdb.ref(`active_pvp_match/${currentRealm}`).update({ 
+                status: 'finished', 
+                winner: 'HỦY BỞI QUẢN TRỊ' 
+            }).then(() => {
+                document.getElementById('pvpModal').classList.remove('active');
+                alert("Đã giải tán võ đài thành công!");
+            });
+        }
                 
         // Auto walkover Check
         setInterval(() => {
@@ -1090,7 +1122,7 @@
         }
 
         // ==========================================
-        // CÁC HÀM CÒN LẠI ĐƯỢC GIỮ VỮNG (THÊM REALM)
+        // CÁC HÀM CÒN LẠI VÀ CHỨC NĂNG DỊCH CHUYỂN
         // ==========================================
         function openMigrationModal() { if(userData.gold < 100000) return alert("Bệ hạ không đủ 100.000 Vàng để mua Giấy Thông Hành!"); document.getElementById('currentRealmDisplay').innerText = currentRealm; let select = document.getElementById('realmSelect'); select.innerHTML = ''; availableRealms.forEach(phu => { if(phu !== currentRealm) select.innerHTML += `<option value="${phu}">${phu}</option>`; }); document.getElementById('migrationModal').classList.add('active'); }
         function confirmMigration() { let newRealm = document.getElementById('realmSelect').value; if(!newRealm) return; if(userData.gold < 100000) return alert("Không đủ vàng!"); userData.gold -= 100000; userData.lifetime_xp = (userData.lifetime_xp || 0) + userData.xp; userData.xp = 0; userData.weeklyXp = 0; userData.lastWeekXp = 0; userData.highestWeeklyXp = 0; userData.realm = newRealm; db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, lifetime_xp: userData.lifetime_xp, xp: 0, weeklyXp: 0, lastWeekXp: 0, highestWeeklyXp: 0, realm: newRealm }).then(() => { alert(`✈️ Đã di cư sang ${newRealm}!`); window.location.reload(); }); }
