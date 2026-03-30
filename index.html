@@ -17,7 +17,15 @@
         body { display: flex; height: 100vh; background-color: var(--bg-color); color: var(--text-main); overflow: hidden; transition: background-color 0.3s, color 0.3s; position: relative;}
         
         .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; opacity: 0; transition: opacity 0.3s; }
-        .sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid #e0e0e0; padding: 20px; display: flex; flex-direction: column; z-index: 1001; transition: transform 0.3s ease, background-color 0.3s; }
+        .sidebar { 
+            width: var(--sidebar-w); background: #fff; border-right: 1px solid #e0e0e0; 
+            padding: 20px; display: flex; flex-direction: column; z-index: 1001; 
+            transition: transform 0.3s ease, background-color 0.3s; 
+            overflow-y: auto; /* Mở khóa phong ấn thanh cuộn */
+        }
+        /* Vuốt lại dung nhan thanh cuộn cho thanh thoát */
+        .sidebar::-webkit-scrollbar { width: 5px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #b0bec5; border-radius: 5px; }
         .brand { font-size: 24px; font-weight: bold; color: var(--primary); margin-bottom: 20px; text-align: center;}
         
         .user-profile { text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #ccc; }
@@ -869,28 +877,49 @@
             });
         }
 
-        document.addEventListener("visibilitychange", () => {
-            if (document.hidden && isUnderSurveillance) {
-                isUnderSurveillance = false; 
-                alert("❌ HỆ THỐNG GHI NHẬN HÀNH VI ĐÁNG NGỜ!\nPhát hiện thao tác rời khỏi màn hình. Kết quả sẽ tự động bị xử thua dựa theo quy định.");
-                
-                let key = `tournament_status/${currentRealm}/${surveillanceData.league}_bracket/${surveillanceData.stageKey}`;
-                if (surveillanceData.stageKey !== 'sfl' && surveillanceData.stageKey !== 'sfr' && surveillanceData.stageKey !== 'final' && surveillanceData.stageKey !== 'third_place' && surveillanceData.stageKey !== 'super_cup' && surveillanceData.stageKey !== 'promotion_playoff') { 
-                    key += `/${surveillanceData.matchIndex}`; 
+        // Đao phủ: Hàm thực thi án phạt ngay lập tức
+        function executeAntiCheatPunishment() {
+            if (!isUnderSurveillance || !surveillanceData) return;
+            isUnderSurveillance = false; // Khóa lại để không chém 2 lần
+            
+            // 1. Thực thi án phạt lên Firebase ngay lập tức
+            let key = `tournament_status/${currentRealm}/${surveillanceData.league}_bracket/${surveillanceData.stageKey}`;
+            if (surveillanceData.stageKey !== 'sfl' && surveillanceData.stageKey !== 'sfr' && surveillanceData.stageKey !== 'final' && surveillanceData.stageKey !== 'third_place' && surveillanceData.stageKey !== 'super_cup' && surveillanceData.stageKey !== 'promotion_playoff') { 
+                key += `/${surveillanceData.matchIndex}`; 
+            }
+            
+            // Ép đối thủ thắng trận
+            rtdb.ref(key).update({ winner: surveillanceData.oppName });
+            
+            // Kết thúc trận chiến hiện tại trên võ đài
+            rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
+                let m = snap.val();
+                if(m && m.status !== 'finished' && (m.p1 === surveillanceData.myName || m.p2 === surveillanceData.myName)) {
+                    rtdb.ref(`active_pvp_match/${currentRealm}`).update({ status: 'finished', winner: surveillanceData.oppName });
                 }
-                rtdb.ref(key).update({ winner: surveillanceData.oppName });
-                
-                rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
-                    let m = snap.val();
-                    if(m && m.status !== 'finished' && (m.p1 === surveillanceData.myName || m.p2 === surveillanceData.myName)) {
-                        rtdb.ref(`active_pvp_match/${currentRealm}`).update({ status: 'finished', winner: surveillanceData.oppName });
-                    }
-                });
-                
-                document.getElementById('pvpModal').classList.remove('active');
+            });
+            
+            // 2. Giáng rèm, đuổi khỏi võ đài
+            document.getElementById('pvpModal').classList.remove('active');
+            
+            // 3. Thông báo tội trạng (Dùng setTimeout để lách cơ chế chặn của trình duyệt)
+            setTimeout(() => {
+                alert("❌ ÁN PHẠT GIAN LẬN THỰC THI!\nHệ thống phát hiện bệ hạ (hoặc đối thủ) đã rời khỏi màn hình/chuyển tab trong lúc thi đấu. Trận chiến đã bị xử thua tự động!");
+            }, 500);
+        }
+
+        // Lưới 1: Chuyển tab hoặc ẩn trình duyệt
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === 'hidden') {
+                executeAntiCheatPunishment();
             }
         });
 
+        // Lưới 2: Bấm sang cửa sổ phần mềm khác (Zalo, Word, v.v...)
+        window.addEventListener("blur", () => {
+            executeAntiCheatPunishment();
+        });
+                
         // Auto walkover Check
         setInterval(() => {
             if(userData.role !== 'teacher' || !currentRealm) return;
