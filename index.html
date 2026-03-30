@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VocabForge | Gamification - Multiverse</title>
+    <title>VocabForge | Gamification</title>
     <meta name="theme-color" content="#1a237e">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -397,7 +397,7 @@
                     <div style="text-align: center; margin-bottom: 15px; color: #888; font-weight: bold;">HOẶC</div>
                     <div id="authSection"><button class="btn-google" onclick="loginWithGoogle()">🌐 Đăng nhập bằng Google</button></div>
                 </div>
-               <div class="settings-card">
+                <div class="settings-card">
                     <h3>👑 Quyền Quản Trị Hệ Thống</h3>
                     <div style="text-align: left; font-size: 14px; line-height: 1.6; color: #555; margin-bottom: 10px;">Tài khoản được đăng ký trong hệ thống sẽ tự động cấp quyền Quản trị.</div>
                 </div>
@@ -482,7 +482,7 @@
 
                         db.collection('vocab_users').doc(user.uid).get().then(doc => {
                             if (doc.exists) {
-                                userData = doc.data();
+                                userData = Object.assign(userData, doc.data()); // Giữ nguyên code gốc không phá vỡ
                                 if(!userData.realm || !availableRealms.includes(userData.realm)) userData.realm = availableRealms[0];
                                 currentRealm = userData.realm;
                                 
@@ -546,7 +546,9 @@
 
         function fallbackInit() { availableRealms = ['Khởi Nguyên']; currentRealm = 'Khởi Nguyên'; updateUI(); checkAuth(); }
 
-        // NGỰ THƯ PHÒNG (ADMIN FIREBASE)
+        // =====================================
+        // NGỰ THƯ PHÒNG (ADMIN FIREBASE & SYNC)
+        // =====================================
         function createNewRealm() {
             let name = document.getElementById('newRealmInput').value.trim();
             if(!name) return alert("Vui lòng nhập tên Vũ trụ / Phủ mới!");
@@ -813,6 +815,125 @@
             renderBracket();
         }
 
+        /* Lịch Thi cho các nhánh */
+        let windowLeagueToSchedule = "";
+        let windowStageToSchedule = "";
+        let windowIndexToSchedule = 0;
+
+        function openScheduleModal(league, stageKey, matchIndex) {
+            windowLeagueToSchedule = league; windowStageToSchedule = stageKey; windowIndexToSchedule = matchIndex;
+            document.getElementById('scheduleModal').classList.add('active');
+        }
+
+        function saveSchedule() {
+            let val = document.getElementById('scheduleInput').value;
+            if(!val) return alert("Vui lòng thiết lập thời gian cho trận đấu!");
+            let ts = new Date(val).getTime();
+            let key = `tournament_status/${currentRealm}/${windowLeagueToSchedule}_bracket/${windowStageToSchedule}`;
+            if(windowStageToSchedule !== 'sfl' && windowStageToSchedule !== 'sfr' && windowStageToSchedule !== 'final' && windowStageToSchedule !== 'third_place' && windowStageToSchedule !== 'super_cup' && windowStageToSchedule !== 'promotion_playoff') {
+                key += `/${windowIndexToSchedule}`;
+            }
+            rtdb.ref(key).update({ schedule: ts }).then(() => {
+                alert("Đã cập nhật lịch thành công. Hệ thống sẽ tự động mở phòng vào đúng giờ.");
+                document.getElementById('scheduleModal').classList.remove('active');
+            });
+        }
+
+        let isUnderSurveillance = false;
+        let surveillanceData = null;
+
+        function showAntiCheatModal(league, stageKey, matchIndex, playerSlot) {
+            let fb = league === 'c1' ? currentC1Data : currentC2Data;
+            let m = fb[stageKey];
+            if (Array.isArray(m)) m = m[matchIndex];
+            
+            surveillanceData = {
+                league: league, stageKey: stageKey, matchIndex: matchIndex, playerSlot: playerSlot,
+                myName: playerSlot === 'p1' ? m.p1 : m.p2,
+                oppName: playerSlot === 'p1' ? m.p2 : m.p1
+            };
+            document.getElementById('antiCheatModal').classList.add('active');
+        }
+
+        function confirmJoinMatch() {
+            document.getElementById('antiCheatModal').classList.remove('active');
+            if (!surveillanceData) return;
+            
+            let key = `tournament_status/${currentRealm}/${surveillanceData.league}_bracket/${surveillanceData.stageKey}`;
+            if (surveillanceData.stageKey !== 'sfl' && surveillanceData.stageKey !== 'sfr' && surveillanceData.stageKey !== 'final' && surveillanceData.stageKey !== 'third_place' && surveillanceData.stageKey !== 'super_cup' && surveillanceData.stageKey !== 'promotion_playoff') { 
+                key += `/${surveillanceData.matchIndex}`; 
+            }
+            let updateData = {}; updateData[surveillanceData.playerSlot + "_ready"] = true;
+            rtdb.ref(key).update(updateData).then(() => {
+                isUnderSurveillance = true; 
+            });
+        }
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden && isUnderSurveillance) {
+                isUnderSurveillance = false; 
+                alert("❌ HỆ THỐNG GHI NHẬN HÀNH VI ĐÁNG NGỜ!\nPhát hiện thao tác rời khỏi màn hình. Kết quả sẽ tự động bị xử thua dựa theo quy định.");
+                
+                let key = `tournament_status/${currentRealm}/${surveillanceData.league}_bracket/${surveillanceData.stageKey}`;
+                if (surveillanceData.stageKey !== 'sfl' && surveillanceData.stageKey !== 'sfr' && surveillanceData.stageKey !== 'final' && surveillanceData.stageKey !== 'third_place' && surveillanceData.stageKey !== 'super_cup' && surveillanceData.stageKey !== 'promotion_playoff') { 
+                    key += `/${surveillanceData.matchIndex}`; 
+                }
+                rtdb.ref(key).update({ winner: surveillanceData.oppName });
+                
+                rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
+                    let m = snap.val();
+                    if(m && m.status !== 'finished' && (m.p1 === surveillanceData.myName || m.p2 === surveillanceData.myName)) {
+                        rtdb.ref(`active_pvp_match/${currentRealm}`).update({ status: 'finished', winner: surveillanceData.oppName });
+                    }
+                });
+                
+                document.getElementById('pvpModal').classList.remove('active');
+            }
+        });
+
+        // Auto walkover Check
+        setInterval(() => {
+            if(userData.role !== 'teacher' || !currentRealm) return;
+            let now = Date.now();
+            let updates = {}; let needsUpdate = false;
+
+            function checkWalkover(m, stage, idx, league) {
+                if(m && m.p1 && m.p2 && m.p1 !== "---" && m.p2 !== "---" && !m.winner && m.schedule) {
+                    let diff = m.schedule - now;
+                    if(diff <= -600000) { 
+                        let winner = "";
+                        if(m.p1_ready && !m.p2_ready) winner = m.p1;
+                        else if(!m.p1_ready && m.p2_ready) winner = m.p2;
+                        else if(!m.p1_ready && !m.p2_ready) winner = Math.random() > 0.5 ? m.p1 : m.p2;
+                        
+                        if(winner !== "") {
+                            let k = (stage === 'sfl' || stage === 'sfr' || stage === 'final' || stage === 'third_place' || stage === 'super_cup' || stage === 'promotion_playoff') 
+                                ? `tournament_status/${currentRealm}/${league}_bracket/${stage}/winner` 
+                                : `tournament_status/${currentRealm}/${league}_bracket/${stage}/${idx}/winner`;
+                            updates[k] = winner; needsUpdate = true;
+                        }
+                    }
+                }
+            }
+
+            function scanLeague(fb, league) {
+                if(!fb) return;
+                if(fb.r16l) fb.r16l.forEach((m, i) => checkWalkover(m, 'r16l', i, league));
+                if(fb.r16r) fb.r16r.forEach((m, i) => checkWalkover(m, 'r16r', i, league));
+                if(fb.qfl) fb.qfl.forEach((m, i) => checkWalkover(m, 'qfl', i, league));
+                if(fb.qfr) fb.qfr.forEach((m, i) => checkWalkover(m, 'qfr', i, league));
+                checkWalkover(fb.sfl, 'sfl', 0, league); checkWalkover(fb.sfr, 'sfr', 0, league);
+                checkWalkover(fb.final, 'final', 0, league); checkWalkover(fb.third_place, 'third_place', 0, league);
+                if(fb.super_cup) checkWalkover(fb.super_cup, 'super_cup', 0, league);
+                if(fb.promotion_playoff) checkWalkover(fb.promotion_playoff, 'promotion_playoff', 0, league);
+            }
+
+            scanLeague(currentC1Data, 'c1');
+            scanLeague(currentC2Data, 'c2');
+
+            if(needsUpdate) { rtdb.ref().update(updates); }
+        }, 5000);
+
         function renderBracket() {
             currentFullBracketData = currentLeagueView === 'c1' ? currentC1Data : currentC2Data;
             
@@ -937,7 +1058,7 @@
         }
 
         // ==========================================
-        // CÁC HÀM CÒN LẠI (GIỮ NGUYÊN)
+        // CÁC HÀM CÒN LẠI ĐƯỢC GIỮ VỮNG (THÊM REALM)
         // ==========================================
         function openMigrationModal() { if(userData.gold < 100000) return alert("Bệ hạ không đủ 100.000 Vàng để mua Giấy Thông Hành!"); document.getElementById('currentRealmDisplay').innerText = currentRealm; let select = document.getElementById('realmSelect'); select.innerHTML = ''; availableRealms.forEach(phu => { if(phu !== currentRealm) select.innerHTML += `<option value="${phu}">${phu}</option>`; }); document.getElementById('migrationModal').classList.add('active'); }
         function confirmMigration() { let newRealm = document.getElementById('realmSelect').value; if(!newRealm) return; if(userData.gold < 100000) return alert("Không đủ vàng!"); userData.gold -= 100000; userData.lifetime_xp = (userData.lifetime_xp || 0) + userData.xp; userData.xp = 0; userData.weeklyXp = 0; userData.lastWeekXp = 0; userData.highestWeeklyXp = 0; userData.realm = newRealm; db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, lifetime_xp: userData.lifetime_xp, xp: 0, weeklyXp: 0, lastWeekXp: 0, highestWeeklyXp: 0, realm: newRealm }).then(() => { alert(`✈️ Đã di cư sang ${newRealm}!`); window.location.reload(); }); }
@@ -945,31 +1066,351 @@
         function setupRealmListeners() {
             if(rtdb && currentRealm) {
                 rtdb.ref('tournament_status').off(); 
-                rtdb.ref(`tournament_status/${currentRealm}`).on('value', (snapshot) => { let data = snapshot.val() || {}; currentC1Data = data.c1_bracket || null; currentC2Data = data.c2_bracket || null; if (isUnderSurveillance && surveillanceData) { let targetBracket = surveillanceData.league === 'c1' ? currentC1Data : currentC2Data; if (targetBracket) { let sm = targetBracket[surveillanceData.stageKey]; if (Array.isArray(sm)) sm = sm[surveillanceData.matchIndex]; if (sm && sm.winner && sm.winner !== "") isUnderSurveillance = false; } } renderBracket(); });
-                rtdb.ref(`tournament_status/${currentRealm}/hall_of_fame`).on('value', (snap) => { let hof = snap.val() || []; let container = document.getElementById('hofList'); if (hof.length === 0) { container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; padding: 20px;">Dữ liệu chưa được cập nhật.</div>'; } else { let html = ''; hof.forEach(item => { let c1 = item.c1 || item.name || "---"; let c2 = item.c2 || "---"; let sc = item.sc || (item.name ? item.name : "---"); html += `<div style="background: rgba(255,255,255,0.05); margin-bottom: 15px; border-radius: 8px; padding: 15px; border-left: 4px solid #ffd700; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><div style="color: #ccc; font-size: 14px; margin-bottom: 12px; font-weight: bold; text-align: center; border-bottom: 1px dashed rgba(255,215,0,0.3); padding-bottom: 8px;">MÙA ${item.season} - Cập nhật: ${item.date || ""}</div><div style="display: flex; justify-content: space-between; text-align: center; gap: 10px;"><div style="flex: 1;"><div style="color: #ffd700; font-size: 12px; font-weight: 900; margin-bottom: 5px;">🏆 C1 ELITE</div><div style="color: #fff; font-size: 15px; font-weight: bold;">${c1}</div></div><div style="flex: 1; border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1);"><div style="color: #c0c0c0; font-size: 12px; font-weight: 900; margin-bottom: 5px;">🥈 C2 TWO</div><div style="color: #fff; font-size: 15px; font-weight: bold;">${c2}</div></div><div style="flex: 1;"><div style="color: #ff5252; font-size: 12px; font-weight: 900; margin-bottom: 5px;">🔥 SIÊU CÚP</div><div style="color: #fff; font-size: 15px; font-weight: bold;">${sc}</div></div></div></div>`; }); container.innerHTML = html; } });
-                rtdb.ref(`active_pvp_match/${currentRealm}`).on('value', (snap) => { let m = snap.val(); if(!m) return; let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2; if(isP1 || isP2) { document.getElementById('pvpModal').classList.add('active'); document.getElementById('pvpP1Name').innerText = m.p1; document.getElementById('pvpP1Correct').innerText = m.p1_score; document.getElementById('pvpP1Set').innerText = m.p1_set; document.getElementById('pvpP2Name').innerText = m.p2; document.getElementById('pvpP2Correct').innerText = m.p2_score; document.getElementById('pvpP2Set').innerText = m.p2_set; document.getElementById('pvpQIndex').innerText = m.q_idx; if(m.status === 'playing') { document.getElementById('pvpWaitMsg').style.display = 'none'; document.getElementById('pvpQuestion').style.display = 'block'; document.getElementById('pvpOptions').style.display = 'grid'; let modeText = m.mode === 'delay' ? "⏱️ [SET 2]" : m.mode === 'golden' ? "🔥 [BÀN THẮNG VÀNG]" : "🟢 [SET 1]"; document.getElementById('pvpQuestion').innerHTML = `<div style="font-size:16px; color:#ffeb3b; margin-bottom:10px;">${modeText}</div>` + m.current_q.en; let myAns = isP1 ? m.p1_ans : (isP2 ? m.p2_ans : ""); if (window.currentPlayingQIdx !== m.q_idx) { window.currentPlayingQIdx = m.q_idx; window.localPvPTime = m.time_limit; clearInterval(window.pvpTimer); if (m.mode === 'normal') { window.localUnlockTime = Date.now(); revealOptions(m, myAns, [0, 1, 2, 3]); startCountdown(m); } else { document.getElementById('pvpTimerBanner').innerText = `🔒 Thiết lập thông...`; for(let i=0; i<4; i++) { let btn = document.getElementById('pvpOpt'+i); btn.innerText = "???"; btn.style.pointerEvents = 'none'; btn.style.backgroundColor = 'rgba(0,0,0,0.5)'; btn.style.borderColor = '#555'; } setTimeout(() => { if(m.status==='playing') document.getElementById('pvpOpt0').innerText = m.current_q.opts[0]; }, 1500); setTimeout(() => { if(m.status==='playing') document.getElementById('pvpOpt1').innerText = m.current_q.opts[1]; }, 3000); setTimeout(() => { if(m.status==='playing') document.getElementById('pvpOpt2').innerText = m.current_q.opts[2]; }, 4500); setTimeout(() => { if(m.status==='playing') document.getElementById('pvpOpt3').innerText = m.current_q.opts[3]; }, 6000); setTimeout(() => { if(m.status==='playing' && myAns === "") { window.localUnlockTime = Date.now(); revealOptions(m, myAns, [0, 1, 2, 3]); startCountdown(m); } }, 6500); } } let oppAns = isP1 ? m.p2_ans : m.p1_ans; let botStatus = document.getElementById('botStatusMsg'); if(oppAns !== "") { botStatus.innerText = "Đối thủ đã chốt!"; botStatus.style.color = "#ff1744"; } else { botStatus.innerText = "Đang kết nối..."; botStatus.style.color = "#00e676"; } if (m.p1_ans !== "" && m.p2_ans !== "" && !m.evaluating) { clearInterval(window.pvpTimer); triggerEval(); } } else if (m.status === 'showing_result') { clearInterval(window.pvpTimer); document.getElementById('pvpTimerBanner').innerText = `⏳ 0s`; let myWin = (isP1 && m.p1_won_this_round) || (isP2 && m.p2_won_this_round); let waitMsg = document.getElementById('pvpWaitMsg'); waitMsg.style.display = 'block'; if (myWin) { waitMsg.innerText = "🎉 CHÍNH XÁC & NHANH NHẤT! (+1)"; waitMsg.style.color = "#00e676"; } else { let wasWrong = false; let myAns = isP1 ? m.p1_ans : m.p2_ans; if(myAns !== "" && myAns !== m.current_q.vi) wasWrong = true; if(!wasWrong && myAns !== "") waitMsg.innerText = "❌ CHÍNH XÁC NHƯNG CHẬM HƠN!"; else if(wasWrong) waitMsg.innerText = "❌ SAI RỒI!"; else waitMsg.innerText = "❌ HẾT GIỜ!"; waitMsg.style.color = "#ff1744"; } document.getElementById('lockOverlay').classList.remove('active'); for(let i=0; i<4; i++) { let btn = document.getElementById('pvpOpt'+i); btn.style.pointerEvents = 'none'; if (btn.innerText === m.current_q.vi) { btn.style.backgroundColor = '#00c853'; btn.style.borderColor = '#00e676'; btn.style.opacity = '1'; } else { btn.style.opacity = '0.3'; } } } else if (m.status === 'finished') { isUnderSurveillance = false; clearInterval(window.pvpTimer); document.getElementById('pvpWaitMsg').style.display = 'block'; document.getElementById('pvpWaitMsg').style.color = '#ffd700'; document.getElementById('pvpWaitMsg').innerText = "🏆 NGƯỜI CHIẾN THẮNG: " + m.winner; document.getElementById('pvpQuestion').style.display = 'none'; document.getElementById('pvpOptions').style.display = 'none'; document.getElementById('lockOverlay').classList.remove('active'); setTimeout(() => document.getElementById('pvpModal').classList.remove('active'), 5000); } } });
+                rtdb.ref(`tournament_status/${currentRealm}`).on('value', (snapshot) => { 
+                    let data = snapshot.val() || {}; currentC1Data = data.c1_bracket || null; currentC2Data = data.c2_bracket || null; 
+                    if (isUnderSurveillance && surveillanceData) { 
+                        let targetBracket = surveillanceData.league === 'c1' ? currentC1Data : currentC2Data; 
+                        if (targetBracket) { 
+                            let sm = targetBracket[surveillanceData.stageKey]; 
+                            if (Array.isArray(sm)) sm = sm[surveillanceData.matchIndex]; 
+                            if (sm && sm.winner && sm.winner !== "") isUnderSurveillance = false; 
+                        } 
+                    } 
+                    renderBracket(); 
+                });
+                
+                rtdb.ref(`tournament_status/${currentRealm}/hall_of_fame`).on('value', (snap) => { 
+                    let hof = snap.val() || []; let container = document.getElementById('hofList'); 
+                    if (hof.length === 0) { 
+                        container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; padding: 20px;">Dữ liệu chưa được cập nhật.</div>'; 
+                    } else { 
+                        let html = ''; 
+                        hof.forEach(item => { 
+                            let c1 = item.c1 || item.name || "---"; let c2 = item.c2 || "---"; let sc = item.sc || (item.name ? item.name : "---"); 
+                            html += `<div style="background: rgba(255,255,255,0.05); margin-bottom: 15px; border-radius: 8px; padding: 15px; border-left: 4px solid #ffd700; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><div style="color: #ccc; font-size: 14px; margin-bottom: 12px; font-weight: bold; text-align: center; border-bottom: 1px dashed rgba(255,215,0,0.3); padding-bottom: 8px;">MÙA ${item.season} - Cập nhật: ${item.date || ""}</div><div style="display: flex; justify-content: space-between; text-align: center; gap: 10px;"><div style="flex: 1;"><div style="color: #ffd700; font-size: 12px; font-weight: 900; margin-bottom: 5px;">🏆 C1 ELITE</div><div style="color: #fff; font-size: 15px; font-weight: bold;">${c1}</div></div><div style="flex: 1; border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1);"><div style="color: #c0c0c0; font-size: 12px; font-weight: 900; margin-bottom: 5px;">🥈 C2 TWO</div><div style="color: #fff; font-size: 15px; font-weight: bold;">${c2}</div></div><div style="flex: 1;"><div style="color: #ff5252; font-size: 12px; font-weight: 900; margin-bottom: 5px;">🔥 SIÊU CÚP</div><div style="color: #fff; font-size: 15px; font-weight: bold;">${sc}</div></div></div></div>`; 
+                        }); 
+                        container.innerHTML = html; 
+                    } 
+                });
+
+                rtdb.ref(`active_pvp_match/${currentRealm}`).on('value', (snap) => { 
+                    let m = snap.val(); if(!m) return; 
+                    let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2; 
+                    if(isP1 || isP2) { 
+                        document.getElementById('pvpModal').classList.add('active'); 
+                        document.getElementById('pvpP1Name').innerText = m.p1; document.getElementById('pvpP1Correct').innerText = m.p1_score; document.getElementById('pvpP1Set').innerText = m.p1_set; 
+                        document.getElementById('pvpP2Name').innerText = m.p2; document.getElementById('pvpP2Correct').innerText = m.p2_score; document.getElementById('pvpP2Set').innerText = m.p2_set; 
+                        document.getElementById('pvpQIndex').innerText = m.q_idx; 
+                        
+                        if(m.status === 'playing') { 
+                            document.getElementById('pvpWaitMsg').style.display = 'none'; document.getElementById('pvpQuestion').style.display = 'block'; document.getElementById('pvpOptions').style.display = 'grid'; 
+                            let modeText = m.mode === 'delay' ? "⏱️ [SET 2]" : m.mode === 'golden' ? "🔥 [BÀN THẮNG VÀNG]" : "🟢 [SET 1]"; 
+                            document.getElementById('pvpQuestion').innerHTML = `<div style="font-size:16px; color:#ffeb3b; margin-bottom:10px;">${modeText}</div>` + m.current_q.en; 
+                            let myAns = isP1 ? m.p1_ans : (isP2 ? m.p2_ans : ""); 
+                            
+                            if (window.currentPlayingQIdx !== m.q_idx) { 
+                                window.currentPlayingQIdx = m.q_idx; window.localPvPTime = m.time_limit; clearInterval(window.pvpTimer); 
+                                if (m.mode === 'normal') { 
+                                    window.localUnlockTime = Date.now(); revealOptions(m, myAns, [0, 1, 2, 3]); startCountdown(m); 
+                                } else { 
+                                    document.getElementById('pvpTimerBanner').innerText = `🔒 Thiết lập thông...`; 
+                                    for(let i=0; i<4; i++) { let btn = document.getElementById('pvpOpt'+i); btn.innerText = "???"; btn.style.pointerEvents = 'none'; btn.style.backgroundColor = 'rgba(0,0,0,0.5)'; btn.style.borderColor = '#555'; } 
+                                    setTimeout(() => { if(m.status==='playing') document.getElementById('pvpOpt0').innerText = m.current_q.opts[0]; }, 1500); 
+                                    setTimeout(() => { if(m.status==='playing') document.getElementById('pvpOpt1').innerText = m.current_q.opts[1]; }, 3000); 
+                                    setTimeout(() => { if(m.status==='playing') document.getElementById('pvpOpt2').innerText = m.current_q.opts[2]; }, 4500); 
+                                    setTimeout(() => { if(m.status==='playing') document.getElementById('pvpOpt3').innerText = m.current_q.opts[3]; }, 6000); 
+                                    setTimeout(() => { if(m.status==='playing' && myAns === "") { window.localUnlockTime = Date.now(); revealOptions(m, myAns, [0, 1, 2, 3]); startCountdown(m); } }, 6500); 
+                                } 
+                            } 
+                            
+                            let oppAns = isP1 ? m.p2_ans : m.p1_ans; let botStatus = document.getElementById('botStatusMsg'); 
+                            if(oppAns !== "") { botStatus.innerText = "Đối thủ đã chốt!"; botStatus.style.color = "#ff1744"; } else { botStatus.innerText = "Đang kết nối..."; botStatus.style.color = "#00e676"; } 
+                            if (m.p1_ans !== "" && m.p2_ans !== "" && !m.evaluating) { clearInterval(window.pvpTimer); triggerEval(); } 
+                        } else if (m.status === 'showing_result') { 
+                            clearInterval(window.pvpTimer); document.getElementById('pvpTimerBanner').innerText = `⏳ 0s`; 
+                            let myWin = (isP1 && m.p1_won_this_round) || (isP2 && m.p2_won_this_round); let waitMsg = document.getElementById('pvpWaitMsg'); waitMsg.style.display = 'block'; 
+                            if (myWin) { waitMsg.innerText = "🎉 CHÍNH XÁC & NHANH NHẤT! (+1)"; waitMsg.style.color = "#00e676"; } else { let wasWrong = false; let myAns = isP1 ? m.p1_ans : m.p2_ans; if(myAns !== "" && myAns !== m.current_q.vi) wasWrong = true; if(!wasWrong && myAns !== "") waitMsg.innerText = "❌ CHÍNH XÁC NHƯNG CHẬM HƠN!"; else if(wasWrong) waitMsg.innerText = "❌ SAI RỒI!"; else waitMsg.innerText = "❌ HẾT GIỜ!"; waitMsg.style.color = "#ff1744"; } 
+                            document.getElementById('lockOverlay').classList.remove('active'); 
+                            for(let i=0; i<4; i++) { let btn = document.getElementById('pvpOpt'+i); btn.style.pointerEvents = 'none'; if (btn.innerText === m.current_q.vi) { btn.style.backgroundColor = '#00c853'; btn.style.borderColor = '#00e676'; btn.style.opacity = '1'; } else { btn.style.opacity = '0.3'; } } 
+                        } else if (m.status === 'finished') { 
+                            isUnderSurveillance = false; clearInterval(window.pvpTimer); document.getElementById('pvpWaitMsg').style.display = 'block'; document.getElementById('pvpWaitMsg').style.color = '#ffd700'; document.getElementById('pvpWaitMsg').innerText = "🏆 NGƯỜI CHIẾN THẮNG: " + m.winner; 
+                            document.getElementById('pvpQuestion').style.display = 'none'; document.getElementById('pvpOptions').style.display = 'none'; document.getElementById('lockOverlay').classList.remove('active'); 
+                            setTimeout(() => document.getElementById('pvpModal').classList.remove('active'), 5000); 
+                        } 
+                    } 
+                });
                 fetchLeaderboard();
             }
+        }
+
+        // Bổ sung logic hiển thị Options
+        function revealOptions(m, myAns, indices) {
+            if(myAns !== "") return;
+            document.getElementById('lockOverlay').classList.remove('active');
+            indices.forEach(i => {
+                let btn = document.getElementById('pvpOpt'+i); 
+                btn.innerText = m.current_q.opts[i]; 
+                btn.style.backgroundColor = 'rgba(255,255,255,0.1)'; 
+                btn.style.borderColor = 'rgba(255,255,255,0.3)'; 
+                btn.style.pointerEvents = 'auto'; btn.style.opacity = '1';
+            });
+        }
+
+        function startCountdown(m) {
+            clearInterval(window.pvpTimer); 
+            window.pvpTimer = setInterval(() => { 
+                window.localPvPTime--; let t = window.localPvPTime; if (t < 0) t = 0; 
+                document.getElementById('pvpTimerBanner').innerText = `⏳ ${t}s`; 
+                if (t <= 0 && !m.evaluating) { clearInterval(window.pvpTimer); triggerEval(); } 
+            }, 1000);
         }
 
         function fetchLeaderboard() {
             if(!db || !currentRealm) return;
             const lbContainer = document.getElementById('leaderboardData'); lbContainer.innerHTML = '<p style="text-align:center">Đang đồng bộ...</p>';
             db.collection('vocab_users').where('realm', '==', currentRealm).onSnapshot((snapshot) => {
-                let allPlayers = []; snapshot.forEach(doc => { if (doc.data().role !== 'teacher') allPlayers.push(doc.data()); }); allPlayers.sort((a, b) => (b.xp || 0) - (a.xp || 0)); allPlayers = allPlayers.slice(0, 50); let qualified = []; let unqualified = []; allPlayers.forEach(data => { let dName = data.displayName || 'Ẩn danh'; let dStreak = data.streak || 1; let isChampion = (dName === defendingChampion && defendingChampion !== ""); if (dStreak >= 3 || isChampion) qualified.push(data); else unqualified.push(data); }); let N = qualified.length; let c1Size = 0, c2Size = 0; if (N >= 4 && N < 8) { c1Size = 4; c2Size = 0; } else if (N >= 8) { let max_pow = Math.pow(2, Math.floor(Math.log2(N))); c1Size = (N - max_pow < 4 && max_pow > 4) ? max_pow / 2 : max_pow; let c2PoolSize = N - c1Size; c2Size = (c2PoolSize >= 4) ? Math.pow(2, Math.floor(Math.log2(c2PoolSize))) : 0; } let qualifiedHtml = ''; let unqualifiedHtml = ''; let rank = 1; qualified.forEach((data, index) => { let dName = data.displayName || 'Ẩn danh'; let dXp = data.xp; let isChampion = (dName === defendingChampion && defendingChampion !== ""); let isMaskActive = data.maskExpiry && data.maskExpiry > Date.now(); let displayDName = dName; if (isMaskActive) { if (userData.role === 'teacher') displayDName = displayDName + " 🎭(Ẩn)"; else { displayDName = "???"; dXp = "???"; } } let champBadge = isChampion ? ' <span style="color:#ffd700; font-size: 12px; margin-left:5px; padding: 2px 6px; background: rgba(255,215,0,0.2); border-radius: 8px;">👑 ĐKVĐ</span>' : ''; let leagueBadge = ''; if (N >= 4) { if (index < c1Size) leagueBadge = '<span style="color:#000; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #ffd700; border-radius: 4px; font-weight: 900; display: inline-block; vertical-align: middle;">🏆 C1</span>'; else if (index < c1Size + c2Size) leagueBadge = '<span style="color:#fff; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #9e9e9e; border-radius: 4px; font-weight: bold; display: inline-block; vertical-align: middle;">🥈 C2</span>'; else leagueBadge = '<span style="color:#fff; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #d32f2f; border-radius: 4px; font-weight: bold; display: inline-block; vertical-align: middle;">⚠️ NGUY HIỂM</span>'; } else leagueBadge = '<span style="color:#888; font-size: 10px; margin-left:8px; font-style:italic; display: inline-block; vertical-align: middle;">(Đang thu thập)</span>'; let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '.'; let rankClass = rank <= 3 ? `lb-rank-${rank}` : ''; qualifiedHtml += `<div class="lb-row ${rankClass}"><div style="display: flex; align-items: center;">${medal} ${displayDName}${champBadge}${leagueBadge}</div><span style="color:var(--secondary)">⭐ ${dXp} XP</span></div>`; rank++; }); unqualified.forEach(data => { unqualifiedHtml += `<div class="lb-row" style="background:#f0f0f0; color:#888; border: 1px dashed #ccc; padding: 10px 25px;"><span>🔒 ${data.displayName || 'Ẩn danh'}</span><span style="font-size:12px; font-style:italic;">Yêu cầu duy trì chuỗi 3 ngày</span></div>`; }); lbContainer.innerHTML = qualifiedHtml + unqualifiedHtml || '<p style="text-align:center">Chưa đủ thông tin.</p>';
+                let allPlayers = []; snapshot.forEach(doc => { if (doc.data().role !== 'teacher') allPlayers.push(doc.data()); }); 
+                allPlayers.sort((a, b) => (b.xp || 0) - (a.xp || 0)); 
+                allPlayers = allPlayers.slice(0, 50); 
+                let qualified = []; let unqualified = []; 
+                allPlayers.forEach(data => { 
+                    let dName = data.displayName || 'Ẩn danh'; let dStreak = data.streak || 1; let isChampion = (dName === defendingChampion && defendingChampion !== ""); 
+                    if (dStreak >= 3 || isChampion) qualified.push(data); else unqualified.push(data); 
+                }); 
+                let N = qualified.length; let c1Size = 0, c2Size = 0; 
+                if (N >= 4 && N < 8) { c1Size = 4; c2Size = 0; } else if (N >= 8) { let max_pow = Math.pow(2, Math.floor(Math.log2(N))); c1Size = (N - max_pow < 4 && max_pow > 4) ? max_pow / 2 : max_pow; let c2PoolSize = N - c1Size; c2Size = (c2PoolSize >= 4) ? Math.pow(2, Math.floor(Math.log2(c2PoolSize))) : 0; } 
+                let qualifiedHtml = ''; let unqualifiedHtml = ''; let rank = 1; 
+                qualified.forEach((data, index) => { 
+                    let dName = data.displayName || 'Ẩn danh'; let dXp = data.xp; let isChampion = (dName === defendingChampion && defendingChampion !== ""); let isMaskActive = data.maskExpiry && data.maskExpiry > Date.now(); let displayDName = dName; 
+                    if (isMaskActive) { if (userData.role === 'teacher') displayDName = displayDName + " 🎭(Ẩn)"; else { displayDName = "???"; dXp = "???"; } } 
+                    let champBadge = isChampion ? ' <span style="color:#ffd700; font-size: 12px; margin-left:5px; padding: 2px 6px; background: rgba(255,215,0,0.2); border-radius: 8px;">👑 ĐKVĐ</span>' : ''; let leagueBadge = ''; 
+                    if (N >= 4) { if (index < c1Size) leagueBadge = '<span style="color:#000; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #ffd700; border-radius: 4px; font-weight: 900; display: inline-block; vertical-align: middle;">🏆 C1</span>'; else if (index < c1Size + c2Size) leagueBadge = '<span style="color:#fff; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #9e9e9e; border-radius: 4px; font-weight: bold; display: inline-block; vertical-align: middle;">🥈 C2</span>'; else leagueBadge = '<span style="color:#fff; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #d32f2f; border-radius: 4px; font-weight: bold; display: inline-block; vertical-align: middle;">⚠️ NGUY HIỂM</span>'; } else leagueBadge = '<span style="color:#888; font-size: 10px; margin-left:8px; font-style:italic; display: inline-block; vertical-align: middle;">(Đang thu thập)</span>'; 
+                    let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '.'; let rankClass = rank <= 3 ? `lb-rank-${rank}` : ''; 
+                    qualifiedHtml += `<div class="lb-row ${rankClass}"><div style="display: flex; align-items: center;">${medal} ${displayDName}${champBadge}${leagueBadge}</div><span style="color:var(--secondary)">⭐ ${dXp} XP</span></div>`; rank++; 
+                }); 
+                unqualified.forEach(data => { unqualifiedHtml += `<div class="lb-row" style="background:#f0f0f0; color:#888; border: 1px dashed #ccc; padding: 10px 25px;"><span>🔒 ${data.displayName || 'Ẩn danh'}</span><span style="font-size:12px; font-style:italic;">Yêu cầu duy trì chuỗi 3 ngày</span></div>`; }); 
+                lbContainer.innerHTML = qualifiedHtml + unqualifiedHtml || '<p style="text-align:center">Chưa đủ thông tin.</p>';
             }, err => { lbContainer.innerHTML = `<p style="color:red; text-align:center">Lỗi Firebase: ${err.message}</p>`; });
         }
 
         function viewCard(base64) { document.getElementById('modalFrame').srcdoc = decodeURIComponent(escape(atob(base64))); document.getElementById('previewModal').classList.add('active'); }
         function closeModal() { document.getElementById('previewModal').classList.remove('active'); document.getElementById('modalFrame').srcdoc = ''; }
+        
         function saveSyllabusSelection() { const checks = document.querySelectorAll('input[name="syllabusCheck"]:checked'); let selected = []; checks.forEach(c => selected.push(c.value)); rtdb.ref(`tournament_status/${currentRealm}/syllabus`).set(selected); alert("Cấu hình tài liệu thi đấu đã được xác nhận!"); }
+        
         function createBracketObject(players) { let N = players.length; let targetSize = 4; if (N > 4 && N <= 8) targetSize = 8; if (N > 8 && N <= 16) targetSize = 16; let bracket = { final: { p1: "---", p2: "---", winner: "" }, third_place: { p1: "---", p2: "---", winner: "" }, super_cup: { p1: "---", p2: "---", winner: "" }, promotion_playoff: { p1: "---", p2: "---", winner: "" } }; let layout = targetSize === 16 ? [1, 16, 8, 9, 5, 12, 4, 13, 2, 15, 7, 10, 6, 11, 3, 14] : targetSize === 8 ? [1, 8, 4, 5, 2, 7, 3, 6] : [1, 4, 2, 3]; let matches = []; for (let i = 0; i < targetSize; i += 2) { let pA = layout[i] <= N ? players[layout[i] - 1] : "BYE (Đặc cách)"; let pB = layout[i+1] <= N ? players[layout[i+1] - 1] : "BYE (Đặc cách)"; matches.push({ p1: pA, p2: pB, winner: "" }); } if (targetSize === 16) { bracket.r16l = [ matches[0], matches[1], matches[2], matches[3] ]; bracket.r16r = [ matches[4], matches[5], matches[6], matches[7] ]; bracket.qfl = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; bracket.qfr = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; bracket.sfl = { p1: "---", p2: "---", winner: "" }; bracket.sfr = { p1: "---", p2: "---", winner: "" }; } else if (targetSize === 8) { bracket.qfl = [ matches[0], matches[1] ]; bracket.qfr = [ matches[2], matches[3] ]; bracket.sfl = { p1: "---", p2: "---", winner: "" }; bracket.sfr = { p1: "---", p2: "---", winner: "" }; } else if (targetSize === 4) { bracket.sfl = matches[0]; bracket.sfr = matches[1]; } return bracket; }
-        async function executeBlindDraw() { if(!confirm(`Xác nhận bốc thăm phân nhánh lại cho giải đấu tại ${currentRealm}?`)) return; const histSnap = await rtdb.ref(`tournament_status/${currentRealm}/history`).once('value'); const history = histSnap.val() || {}; const snapshot = await db.collection('vocab_users').where('realm', '==', currentRealm).get(); let allPlayers = []; snapshot.forEach(doc => allPlayers.push(doc.data())); allPlayers.sort((a,b) => (b.xp || 0) - (a.xp || 0)); let qualifiedPlayers = []; allPlayers.forEach(d => { let dName = d.displayName || "Ẩn danh"; let isChampion = (dName === defendingChampion && defendingChampion !== ""); let isPromoted = (dName === history.promoted_player); if(d.role !== 'teacher' && ((d.streak || 1) >= 3 || isChampion || isPromoted)) { qualifiedPlayers.push(dName); } }); let N = qualifiedPlayers.length; if (N < 4) return alert("Chỉ có " + N + " tài khoản thỏa điều kiện. Yêu cầu tối thiểu là 4."); let c1Size = 0, c2Size = 0; let c1Players = [], c2Players = []; if (N < 8) { c1Size = N; c1Players = qualifiedPlayers; } else { let max_pow = Math.pow(2, Math.floor(Math.log2(N))); c1Size = (N - max_pow < 4 && max_pow > 4) ? max_pow / 2 : max_pow; let c2PoolSize = N - c1Size; c2Size = (c2PoolSize >= 4) ? Math.pow(2, Math.floor(Math.log2(c2PoolSize))) : 0; let autoC1 = []; let forcedC2 = []; let normalPool = []; qualifiedPlayers.forEach(name => { if (name === defendingChampion || name === history.promoted_player) autoC1.push(name); else if (name === history.relegated_player) forcedC2.push(name); else normalPool.push(name); }); c1Players = [...autoC1]; while (c1Players.length < c1Size && normalPool.length > 0) c1Players.push(normalPool.shift()); c2Players = [...forcedC2]; while (c2Players.length < c2Size && normalPool.length > 0) c2Players.push(normalPool.shift()); } let c1Bracket = createBracketObject(c1Players); let c2Bracket = c2Size >= 4 ? createBracketObject(c2Players) : null; let updates = {}; updates[`tournament_status/${currentRealm}/c1_bracket`] = c1Bracket; updates[`tournament_status/${currentRealm}/c2_bracket`] = c2Bracket; rtdb.ref(`tournament_status/${currentRealm}/result`).remove(); rtdb.ref().update(updates).then(() => alert(`Bốc thăm hoàn thiện.\n🏆 Giải Elite: ${c1Players.length} thành viên.\n🥈 Giải Two: ${c2Players.length} thành viên.`)); }
-        async function advanceTournament() { if(!confirm("Tiến hành cập nhật cục diện hiện tại và sắp xếp vòng trong?")) return; const snap = await rtdb.ref(`tournament_status/${currentRealm}`).once('value'); let data = snap.val(); if(!data || !data.c1_bracket) return alert("Chưa có thông tin bảng phân nhánh hợp lệ!"); let updateNeeded = false; let updates = {}; function processByes(fb, leaguePrefix) { if(!fb) return; function checkBye(match, stagePath) { if (match && match.winner === "" && match.p1 !== "---" && match.p2 !== "---") { if (match.p2 === "BYE (Đặc cách)") { match.winner = match.p1; updates[`tournament_status/${currentRealm}/${leaguePrefix}_bracket/${stagePath}/winner`] = match.p1; updateNeeded = true; } else if (match.p1 === "BYE (Đặc cách)") { match.winner = match.p2; updates[`tournament_status/${currentRealm}/${leaguePrefix}_bracket/${stagePath}/winner`] = match.p2; updateNeeded = true; } } } if(fb.r16l) fb.r16l.forEach((m,i) => checkBye(m, `r16l/${i}`)); if(fb.r16r) fb.r16r.forEach((m,i) => checkBye(m, `r16r/${i}`)); if(fb.qfl) fb.qfl.forEach((m,i) => checkBye(m, `qfl/${i}`)); if(fb.qfr) fb.qfr.forEach((m,i) => checkBye(m, `qfr/${i}`)); checkBye(fb.sfl, 'sfl'); checkBye(fb.sfr, 'sfr'); } processByes(data.c1_bracket, 'c1'); processByes(data.c2_bracket, 'c2'); function advanceLeague(fb, leaguePrefix) { if(!fb) return; if (!fb.final) fb.final = { p1: "---", p2: "---", winner: "" }; if (!fb.third_place) fb.third_place = { p1: "---", p2: "---", winner: "" }; if (fb.r16l && !fb.qfl) fb.qfl = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; if (fb.r16r && !fb.qfr) fb.qfr = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; if (fb.qfl && !fb.sfl) fb.sfl = { p1: "---", p2: "---", winner: "" }; if (fb.qfr && !fb.sfr) fb.sfr = { p1: "---", p2: "---", winner: "" }; function moveWinner(sourceMatch, targetStage, targetIdx, targetPlayerSlot) { if (sourceMatch && sourceMatch.winner && sourceMatch.winner !== "" && fb[targetStage]) { if (Array.isArray(fb[targetStage])) { if (fb[targetStage][targetIdx][targetPlayerSlot] !== sourceMatch.winner) { fb[targetStage][targetIdx][targetPlayerSlot] = sourceMatch.winner; updateNeeded = true; } } else { if (fb[targetStage][targetPlayerSlot] !== sourceMatch.winner) { fb[targetStage][targetPlayerSlot] = sourceMatch.winner; updateNeeded = true; } } } } if(fb.r16l) { moveWinner(fb.r16l[0], 'qfl', 0, 'p1'); moveWinner(fb.r16l[1], 'qfl', 0, 'p2'); moveWinner(fb.r16l[2], 'qfl', 1, 'p1'); moveWinner(fb.r16l[3], 'qfl', 1, 'p2'); } if(fb.r16r) { moveWinner(fb.r16r[0], 'qfr', 0, 'p1'); moveWinner(fb.r16r[1], 'qfr', 0, 'p2'); moveWinner(fb.r16r[2], 'qfr', 1, 'p1'); moveWinner(fb.r16r[3], 'qfr', 1, 'p2'); } if(fb.qfl) { moveWinner(fb.qfl[0], 'sfl', 0, 'p1'); moveWinner(fb.qfl[1], 'sfl', 0, 'p2'); } if(fb.qfr) { moveWinner(fb.qfr[0], 'sfr', 0, 'p1'); moveWinner(fb.qfr[1], 'sfr', 0, 'p2'); } if(fb.sfl && fb.sfl.winner && fb.sfl.winner !== "") { moveWinner(fb.sfl, 'final', 0, 'p1'); let loser1 = fb.sfl.winner === fb.sfl.p1 ? fb.sfl.p2 : fb.sfl.p1; if (fb.third_place.p1 !== loser1) { fb.third_place.p1 = loser1; updateNeeded = true; } } if(fb.sfr && fb.sfr.winner && fb.sfr.winner !== "") { moveWinner(fb.sfr, 'final', 0, 'p2'); let loser2 = fb.sfr.winner === fb.sfr.p1 ? fb.sfr.p2 : fb.sfr.p1; if (fb.third_place.p2 !== loser2) { fb.third_place.p2 = loser2; updateNeeded = true; } } updates[`tournament_status/${currentRealm}/${leaguePrefix}_bracket`] = fb; } advanceLeague(data.c1_bracket, 'c1'); advanceLeague(data.c2_bracket, 'c2'); let c1Done = data.c1_bracket && data.c1_bracket.final && data.c1_bracket.final.winner !== ""; let c1ThirdDone = data.c1_bracket && data.c1_bracket.third_place && data.c1_bracket.third_place.winner !== ""; let c2Done = data.c2_bracket && data.c2_bracket.final && data.c2_bracket.final.winner !== ""; if (c1Done && c1ThirdDone && c2Done) { let c1Champ = data.c1_bracket.final.winner; let c2Champ = data.c2_bracket.final.winner; let c1Fourth = data.c1_bracket.third_place.winner === data.c1_bracket.third_place.p1 ? data.c1_bracket.third_place.p2 : data.c1_bracket.third_place.p1; if (data.c1_bracket.super_cup && data.c1_bracket.super_cup.p1 === "---") { updates[`tournament_status/${currentRealm}/c1_bracket/super_cup/p1`] = c1Champ; updates[`tournament_status/${currentRealm}/c1_bracket/super_cup/p2`] = c2Champ; updateNeeded = true; alert("🔥 Hệ thống đã xác nhận cặp đấu SIÊU CÚP (Super Cup)!"); } if (data.c1_bracket.promotion_playoff && data.c1_bracket.promotion_playoff.p1 === "---") { updates[`tournament_status/${currentRealm}/c1_bracket/promotion_playoff/p1`] = c2Champ; updates[`tournament_status/${currentRealm}/c1_bracket/promotion_playoff/p2`] = c1Fourth; updateNeeded = true; alert("⚔️ Hệ thống đã xác nhận cặp đấu PLAY-OFF Tranh vé vớt!"); } } if (updateNeeded) { await rtdb.ref().update(updates); alert("Hoàn tất cập nhật lịch trình tiến cấp!"); } else { alert("Trạng thái ổn định."); } }
-        function archiveSeason() { let c1Champ = (currentC1Data && currentC1Data.final && currentC1Data.final.winner) ? currentC1Data.final.winner : "---"; let c2Champ = (currentC2Data && currentC2Data.final && currentC2Data.final.winner) ? currentC2Data.final.winner : "---"; let scChamp = (currentC1Data && currentC1Data.super_cup && currentC1Data.super_cup.winner) ? currentC1Data.super_cup.winner : "---"; let playoffWinner = (currentC1Data && currentC1Data.promotion_playoff && currentC1Data.promotion_playoff.winner) ? currentC1Data.promotion_playoff.winner : "---"; if(c1Champ === "---") return alert("Cần xác định kết quả nhánh Elite (C1) trước khi ghi nhận."); if(c2Champ !== "---" && (scChamp === "---" || playoffWinner === "---")) return alert("Vui lòng hoàn tất trận Siêu Cúp và Play-off!"); if(confirm(`Xác nhận tổng kết Mùa giải tại ${currentRealm}?`)) { let c1Fourth = (currentC1Data.third_place.winner === currentC1Data.third_place.p1) ? currentC1Data.third_place.p2 : currentC1Data.third_place.p1; let promoted = (playoffWinner === c2Champ) ? c2Champ : "---"; let relegated = (playoffWinner === c2Champ) ? c1Fourth : c1Fourth; let historyData = { c1_champ: c1Champ, promoted_player: promoted, relegated_player: relegated }; rtdb.ref(`tournament_status/${currentRealm}/hall_of_fame`).once('value').then(snap => { let hof = snap.val() || []; let nextSeason = hof.length + 1; hof.push({ season: nextSeason, c1: c1Champ, c2: c2Champ, sc: scChamp, date: new Date().toLocaleDateString('en-GB') }); let finalUpdates = {}; finalUpdates[`tournament_status/${currentRealm}/hall_of_fame`] = hof; finalUpdates[`tournament_status/${currentRealm}/history`] = historyData; rtdb.ref().update(finalUpdates).then(() => alert(`🎉 Ghi nhận thành công!`)); }); } }
-        async function adminStartPvP(league, stageKey, matchIndex, p1Name, p2Name) { const syllabusSnap = await rtdb.ref(`tournament_status/${currentRealm}/syllabus`).once('value'); const selectedLessons = syllabusSnap.val(); if(!selectedLessons || selectedLessons.length === 0) return alert("Thao tác bị từ chối: Giáo án tỷ võ chưa thiết lập."); let allVocab = []; selectedLessons.forEach(ln => { let lesson = allLessonsData.find(l => l.name === ln); if(lesson) allVocab = allVocab.concat(lesson.vocab); }); if(allVocab.length < 30) return alert(`Không đủ ngân hàng dữ liệu (tối thiểu 30 câu).`); allVocab.sort(() => Math.random() - 0.5); let pvpQuestionBank = allVocab.slice(0, 30).map(v => { let wrong = allVocab.filter(x => x.vi !== v.vi).sort(() => Math.random() - 0.5).slice(0, 3); let opts = [v.vi, ...wrong.map(w => w.vi)].sort(() => Math.random() - 0.5); return { en: v.en, vi: v.vi, opts: opts }; }); rtdb.ref(`active_pvp_match/${currentRealm}`).set({ league: league, stage: stageKey, match_idx: matchIndex, p1: p1Name, p2: p2Name, p1_set: 0, p2_set: 0, p1_score: 0, p2_score: 0, status: 'playing', q_idx: 1, current_q: pvpQuestionBank[0], mode: 'normal', time_limit: 15, unlock_time: 0, p1_ans: "", p1_time: 0, p2_ans: "", p2_time: 0, evaluating: false, question_bank: pvpQuestionBank }); }
+        
+        async function executeBlindDraw() { 
+            if(!confirm(`Xác nhận bốc thăm phân nhánh lại cho giải đấu tại ${currentRealm}?`)) return; 
+            const histSnap = await rtdb.ref(`tournament_status/${currentRealm}/history`).once('value'); 
+            const history = histSnap.val() || {}; 
+            const snapshot = await db.collection('vocab_users').where('realm', '==', currentRealm).get(); 
+            let allPlayers = []; snapshot.forEach(doc => allPlayers.push(doc.data())); allPlayers.sort((a,b) => (b.xp || 0) - (a.xp || 0)); 
+            let qualifiedPlayers = []; 
+            allPlayers.forEach(d => { 
+                let dName = d.displayName || "Ẩn danh"; let isChampion = (dName === defendingChampion && defendingChampion !== ""); let isPromoted = (dName === history.promoted_player); 
+                if(d.role !== 'teacher' && ((d.streak || 1) >= 3 || isChampion || isPromoted)) { qualifiedPlayers.push(dName); } 
+            }); 
+            let N = qualifiedPlayers.length; if (N < 4) return alert("Chỉ có " + N + " tài khoản thỏa điều kiện. Yêu cầu tối thiểu là 4."); 
+            let c1Size = 0, c2Size = 0; let c1Players = [], c2Players = []; 
+            if (N < 8) { c1Size = N; c1Players = qualifiedPlayers; } else { let max_pow = Math.pow(2, Math.floor(Math.log2(N))); c1Size = (N - max_pow < 4 && max_pow > 4) ? max_pow / 2 : max_pow; let c2PoolSize = N - c1Size; c2Size = (c2PoolSize >= 4) ? Math.pow(2, Math.floor(Math.log2(c2PoolSize))) : 0; let autoC1 = []; let forcedC2 = []; let normalPool = []; qualifiedPlayers.forEach(name => { if (name === defendingChampion || name === history.promoted_player) autoC1.push(name); else if (name === history.relegated_player) forcedC2.push(name); else normalPool.push(name); }); c1Players = [...autoC1]; while (c1Players.length < c1Size && normalPool.length > 0) c1Players.push(normalPool.shift()); c2Players = [...forcedC2]; while (c2Players.length < c2Size && normalPool.length > 0) c2Players.push(normalPool.shift()); } 
+            let c1Bracket = createBracketObject(c1Players); let c2Bracket = c2Size >= 4 ? createBracketObject(c2Players) : null; 
+            let updates = {}; updates[`tournament_status/${currentRealm}/c1_bracket`] = c1Bracket; updates[`tournament_status/${currentRealm}/c2_bracket`] = c2Bracket; 
+            rtdb.ref(`tournament_status/${currentRealm}/result`).remove(); rtdb.ref().update(updates).then(() => alert(`Bốc thăm hoàn thiện.\n🏆 Giải Elite: ${c1Players.length} thành viên.\n🥈 Giải Two: ${c2Players.length} thành viên.`)); 
+        }
+        
+        async function advanceTournament() { 
+            if(!confirm("Tiến hành cập nhật cục diện hiện tại và sắp xếp vòng trong?")) return; 
+            const snap = await rtdb.ref(`tournament_status/${currentRealm}`).once('value'); 
+            let data = snap.val(); if(!data || !data.c1_bracket) return alert("Chưa có thông tin bảng phân nhánh hợp lệ!"); 
+            let updateNeeded = false; let updates = {}; 
+            
+            function processByes(fb, leaguePrefix) { 
+                if(!fb) return; 
+                function checkBye(match, stagePath) { 
+                    if (match && match.winner === "" && match.p1 !== "---" && match.p2 !== "---") { 
+                        if (match.p2 === "BYE (Đặc cách)") { match.winner = match.p1; updates[`tournament_status/${currentRealm}/${leaguePrefix}_bracket/${stagePath}/winner`] = match.p1; updateNeeded = true; } 
+                        else if (match.p1 === "BYE (Đặc cách)") { match.winner = match.p2; updates[`tournament_status/${currentRealm}/${leaguePrefix}_bracket/${stagePath}/winner`] = match.p2; updateNeeded = true; } 
+                    } 
+                } 
+                if(fb.r16l) fb.r16l.forEach((m,i) => checkBye(m, `r16l/${i}`)); if(fb.r16r) fb.r16r.forEach((m,i) => checkBye(m, `r16r/${i}`)); if(fb.qfl) fb.qfl.forEach((m,i) => checkBye(m, `qfl/${i}`)); if(fb.qfr) fb.qfr.forEach((m,i) => checkBye(m, `qfr/${i}`)); checkBye(fb.sfl, 'sfl'); checkBye(fb.sfr, 'sfr'); 
+            } 
+            processByes(data.c1_bracket, 'c1'); processByes(data.c2_bracket, 'c2'); 
+            
+            function advanceLeague(fb, leaguePrefix) { 
+                if(!fb) return; 
+                if (!fb.final) fb.final = { p1: "---", p2: "---", winner: "" }; if (!fb.third_place) fb.third_place = { p1: "---", p2: "---", winner: "" }; 
+                if (fb.r16l && !fb.qfl) fb.qfl = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; 
+                if (fb.r16r && !fb.qfr) fb.qfr = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; 
+                if (fb.qfl && !fb.sfl) fb.sfl = { p1: "---", p2: "---", winner: "" }; if (fb.qfr && !fb.sfr) fb.sfr = { p1: "---", p2: "---", winner: "" }; 
+                
+                function moveWinner(sourceMatch, targetStage, targetIdx, targetPlayerSlot) { 
+                    if (sourceMatch && sourceMatch.winner && sourceMatch.winner !== "" && fb[targetStage]) { 
+                        if (Array.isArray(fb[targetStage])) { 
+                            if (fb[targetStage][targetIdx][targetPlayerSlot] !== sourceMatch.winner) { fb[targetStage][targetIdx][targetPlayerSlot] = sourceMatch.winner; updateNeeded = true; } 
+                        } else { 
+                            if (fb[targetStage][targetPlayerSlot] !== sourceMatch.winner) { fb[targetStage][targetPlayerSlot] = sourceMatch.winner; updateNeeded = true; } 
+                        } 
+                    } 
+                } 
+                if(fb.r16l) { moveWinner(fb.r16l[0], 'qfl', 0, 'p1'); moveWinner(fb.r16l[1], 'qfl', 0, 'p2'); moveWinner(fb.r16l[2], 'qfl', 1, 'p1'); moveWinner(fb.r16l[3], 'qfl', 1, 'p2'); } 
+                if(fb.r16r) { moveWinner(fb.r16r[0], 'qfr', 0, 'p1'); moveWinner(fb.r16r[1], 'qfr', 0, 'p2'); moveWinner(fb.r16r[2], 'qfr', 1, 'p1'); moveWinner(fb.r16r[3], 'qfr', 1, 'p2'); } 
+                if(fb.qfl) { moveWinner(fb.qfl[0], 'sfl', 0, 'p1'); moveWinner(fb.qfl[1], 'sfl', 0, 'p2'); } 
+                if(fb.qfr) { moveWinner(fb.qfr[0], 'sfr', 0, 'p1'); moveWinner(fb.qfr[1], 'sfr', 0, 'p2'); } 
+                if(fb.sfl && fb.sfl.winner && fb.sfl.winner !== "") { moveWinner(fb.sfl, 'final', 0, 'p1'); let loser1 = fb.sfl.winner === fb.sfl.p1 ? fb.sfl.p2 : fb.sfl.p1; if (fb.third_place.p1 !== loser1) { fb.third_place.p1 = loser1; updateNeeded = true; } } 
+                if(fb.sfr && fb.sfr.winner && fb.sfr.winner !== "") { moveWinner(fb.sfr, 'final', 0, 'p2'); let loser2 = fb.sfr.winner === fb.sfr.p1 ? fb.sfr.p2 : fb.sfr.p1; if (fb.third_place.p2 !== loser2) { fb.third_place.p2 = loser2; updateNeeded = true; } } 
+                updates[`tournament_status/${currentRealm}/${leaguePrefix}_bracket`] = fb; 
+            } 
+            advanceLeague(data.c1_bracket, 'c1'); advanceLeague(data.c2_bracket, 'c2'); 
+            
+            let c1Done = data.c1_bracket && data.c1_bracket.final && data.c1_bracket.final.winner !== ""; 
+            let c1ThirdDone = data.c1_bracket && data.c1_bracket.third_place && data.c1_bracket.third_place.winner !== ""; 
+            let c2Done = data.c2_bracket && data.c2_bracket.final && data.c2_bracket.final.winner !== ""; 
+            if (c1Done && c1ThirdDone && c2Done) { 
+                let c1Champ = data.c1_bracket.final.winner; let c2Champ = data.c2_bracket.final.winner; let c1Fourth = data.c1_bracket.third_place.winner === data.c1_bracket.third_place.p1 ? data.c1_bracket.third_place.p2 : data.c1_bracket.third_place.p1; 
+                if (data.c1_bracket.super_cup && data.c1_bracket.super_cup.p1 === "---") { updates[`tournament_status/${currentRealm}/c1_bracket/super_cup/p1`] = c1Champ; updates[`tournament_status/${currentRealm}/c1_bracket/super_cup/p2`] = c2Champ; updateNeeded = true; alert("🔥 Hệ thống đã xác nhận cặp đấu SIÊU CÚP (Super Cup)!"); } 
+                if (data.c1_bracket.promotion_playoff && data.c1_bracket.promotion_playoff.p1 === "---") { updates[`tournament_status/${currentRealm}/c1_bracket/promotion_playoff/p1`] = c2Champ; updates[`tournament_status/${currentRealm}/c1_bracket/promotion_playoff/p2`] = c1Fourth; updateNeeded = true; alert("⚔️ Hệ thống đã xác nhận cặp đấu PLAY-OFF Tranh vé vớt!"); } 
+            } 
+            if (updateNeeded) { await rtdb.ref().update(updates); alert("Hoàn tất cập nhật lịch trình tiến cấp!"); } else { alert("Trạng thái ổn định."); } 
+        }
+        
+        function archiveSeason() { 
+            let c1Champ = (currentC1Data && currentC1Data.final && currentC1Data.final.winner) ? currentC1Data.final.winner : "---"; 
+            let c2Champ = (currentC2Data && currentC2Data.final && currentC2Data.final.winner) ? currentC2Data.final.winner : "---"; 
+            let scChamp = (currentC1Data && currentC1Data.super_cup && currentC1Data.super_cup.winner) ? currentC1Data.super_cup.winner : "---"; 
+            let playoffWinner = (currentC1Data && currentC1Data.promotion_playoff && currentC1Data.promotion_playoff.winner) ? currentC1Data.promotion_playoff.winner : "---"; 
+            if(c1Champ === "---") return alert("Cần xác định kết quả nhánh Elite (C1) trước khi ghi nhận."); 
+            if(c2Champ !== "---" && (scChamp === "---" || playoffWinner === "---")) return alert("Vui lòng hoàn tất trận Siêu Cúp và Play-off!"); 
+            
+            if(confirm(`Xác nhận tổng kết Mùa giải tại ${currentRealm}?`)) { 
+                let c1Fourth = (currentC1Data.third_place.winner === currentC1Data.third_place.p1) ? currentC1Data.third_place.p2 : currentC1Data.third_place.p1; 
+                let promoted = (playoffWinner === c2Champ) ? c2Champ : "---"; 
+                let relegated = (playoffWinner === c2Champ) ? c1Fourth : c1Fourth; 
+                let historyData = { c1_champ: c1Champ, promoted_player: promoted, relegated_player: relegated }; 
+                
+                rtdb.ref(`tournament_status/${currentRealm}/hall_of_fame`).once('value').then(snap => { 
+                    let hof = snap.val() || []; let nextSeason = hof.length + 1; 
+                    hof.push({ season: nextSeason, c1: c1Champ, c2: c2Champ, sc: scChamp, date: new Date().toLocaleDateString('en-GB') }); 
+                    let finalUpdates = {}; 
+                    finalUpdates[`tournament_status/${currentRealm}/hall_of_fame`] = hof; 
+                    finalUpdates[`tournament_status/${currentRealm}/history`] = historyData; 
+                    rtdb.ref().update(finalUpdates).then(() => alert(`🎉 Ghi nhận thành công!`)); 
+                }); 
+            } 
+        }
 
-        function buyTimeMachine() { let todayStr = new Date().toLocaleDateString('en-GB'); if (userData.timeMachine.status === 'in_progress') { openTimeMachineModal(); return; } if (userData.timeMachine.lastAttemptDate !== todayStr) { userData.timeMachine.attemptsToday = 0; userData.timeMachine.lastAttemptDate = todayStr; } if (userData.timeMachine.attemptsToday >= 3) return alert("Hết lượt hôm nay!"); let cost = userData.timeMachine.missedDays * 10000; if (userData.gold < cost) return alert("Không đủ Vàng!"); if (!confirm(`XÁC NHẬN GIAO DỊCH:\nTiêu tốn ${cost} Vàng để thực hiện thử thách.\nCần vượt qua ${userData.timeMachine.missedDays} Giai đoạn. Chấp nhận?`)) return; let allVocab = []; allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab)); if (allVocab.length < 30) return alert("Kho dữ liệu chưa đủ 30 từ."); let bank = allVocab.sort(() => Math.random() - 0.5).slice(0, Math.min(30, allVocab.length)); userData.gold -= cost; userData.timeMachine.attemptsToday++; userData.timeMachine.status = 'in_progress'; userData.timeMachine.daysRecovered = 0; userData.timeMachine.currentBank = bank; db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, timeMachine: userData.timeMachine }).then(() => { updateUI(); openTimeMachineModal(); }); }
+        // CHỨC NĂNG PVP HOÀN THIỆN ĐÃ GÁN CURRENT REALM
+        async function adminStartPvP(league, stageKey, matchIndex, p1Name, p2Name) { 
+            const syllabusSnap = await rtdb.ref(`tournament_status/${currentRealm}/syllabus`).once('value'); 
+            const selectedLessons = syllabusSnap.val(); 
+            if(!selectedLessons || selectedLessons.length === 0) return alert("Thao tác bị từ chối: Giáo án tỷ võ chưa thiết lập."); 
+            
+            let allVocab = []; 
+            selectedLessons.forEach(ln => { 
+                let lesson = allLessonsData.find(l => l.name === ln); 
+                if(lesson) allVocab = allVocab.concat(lesson.vocab); 
+            }); 
+            if(allVocab.length < 30) return alert(`Không đủ ngân hàng dữ liệu (tối thiểu 30 câu).`); 
+            
+            allVocab.sort(() => Math.random() - 0.5); 
+            let pvpQuestionBank = allVocab.slice(0, 30).map(v => { 
+                let wrong = allVocab.filter(x => x.vi !== v.vi).sort(() => Math.random() - 0.5).slice(0, 3); 
+                let opts = [v.vi, ...wrong.map(w => w.vi)].sort(() => Math.random() - 0.5); 
+                return { en: v.en, vi: v.vi, opts: opts }; 
+            }); 
+            
+            rtdb.ref(`active_pvp_match/${currentRealm}`).set({ 
+                league: league, stage: stageKey, match_idx: matchIndex, p1: p1Name, p2: p2Name, 
+                p1_set: 0, p2_set: 0, p1_score: 0, p2_score: 0, status: 'playing', 
+                q_idx: 1, current_q: pvpQuestionBank[0], mode: 'normal', time_limit: 15, unlock_time: 0, 
+                p1_ans: "", p1_time: 0, p2_ans: "", p2_time: 0, evaluating: false, question_bank: pvpQuestionBank 
+            }); 
+        }
+
+        function submitPvPAnswer(idx) {
+            rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
+                let m = snap.val(); if(!m || m.status !== 'playing' || m.evaluating) return;
+                let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
+                if((isP1 && m.p1_ans !== "") || (isP2 && m.p2_ans !== "")) return;
+                
+                const selectedText = m.current_q.opts[idx]; const isCorrect = selectedText === m.current_q.vi;
+                let btn = document.getElementById('pvpOpt' + idx); btn.style.backgroundColor = isCorrect ? '#00c853' : '#d50000'; btn.style.borderColor = isCorrect ? '#00e676' : '#ff1744';
+                for(let i=0; i<4; i++) { document.getElementById('pvpOpt'+i).style.pointerEvents = 'none'; } document.getElementById('lockOverlay').classList.add('active');
+                
+                let time_taken = Date.now() - (window.localUnlockTime || Date.now());
+                
+                let updates = {}; 
+                if(isP1) { updates.p1_ans = selectedText; updates.p1_time = time_taken; } 
+                if(isP2) { updates.p2_ans = selectedText; updates.p2_time = time_taken; }
+                rtdb.ref(`active_pvp_match/${currentRealm}`).update(updates);
+            });
+        }
+
+        function triggerEval() {
+            rtdb.ref(`active_pvp_match/${currentRealm}`).transaction(m => {
+                if (m && m.status === 'playing' && m.evaluating === false) {
+                    m.evaluating = true; m.status = 'showing_result';
+                    let p1_c = m.p1_ans === m.current_q.vi; let p2_c = m.p2_ans === m.current_q.vi; let p1_w = false; let p2_w = false;
+                    
+                    if (p1_c && p2_c) { 
+                        if (m.p1_time <= m.p2_time) p1_w = true; else p2_w = true; 
+                    } else if (p1_c) { p1_w = true; } else if (p2_c) { p2_w = true; }
+                    
+                    m.p1_score += p1_w ? 1 : 0; m.p2_score += p2_w ? 1 : 0; m.p1_won_this_round = p1_w; m.p2_won_this_round = p2_w; return m;
+                } return; 
+            }, (err, comm, snap) => { if(comm && snap.val()) setTimeout(() => processNextRound(snap.val().q_idx), 3500); });
+        }
+
+        function processNextRound(currentQIdx) {
+            rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
+                let m = snap.val(); if(!m || m.q_idx !== currentQIdx || m.status !== 'showing_result') return; 
+                let nextIdx = m.q_idx + 1; let s1 = m.p1_score; let s2 = m.p2_score; let set1 = m.p1_set; let set2 = m.p2_set; let status = 'playing'; let winner = "";
+
+                if(m.q_idx === 10 || m.q_idx === 20) {
+                    if(s1 > s2) set1++; else if(s2 > s1) set2++; 
+                    s1 = 0; s2 = 0; 
+                    
+                    if(set1 === 2) { status = 'finished'; winner = m.p1; } 
+                    else if(set2 === 2) { status = 'finished'; winner = m.p2; } 
+                } 
+                else if (m.q_idx >= 21) {
+                    if(s1 >= 3) { status = 'finished'; winner = m.p1; set1++; } 
+                    else if (s2 >= 3) { status = 'finished'; winner = m.p2; set2++;}
+                    else if (nextIdx > m.question_bank.length) { winner = "HÒA NHAU (GIAO THỨC TRẢ HÒA)"; status = 'finished'; } 
+                }
+
+                let updates = { p1_score: s1, p2_score: s2, p1_set: set1, p2_set: set2, p1_ans: "", p2_ans: "", p1_time: 0, p2_time: 0, evaluating: false, p1_won_this_round: null, p2_won_this_round: null };
+                
+                if(status === 'finished') { 
+                    updates.status = 'finished'; updates.winner = winner; 
+                } 
+                else { 
+                    updates.status = 'playing'; updates.q_idx = nextIdx; updates.current_q = m.question_bank[nextIdx - 1]; 
+                    
+                    if (nextIdx <= 10) { updates.mode = 'normal'; updates.time_limit = 15; updates.unlock_time = 0; } 
+                    else if (nextIdx <= 20) { updates.mode = 'delay'; updates.time_limit = 15; updates.unlock_time = Date.now() + 6500; } 
+                    else { updates.mode = 'golden'; updates.time_limit = 7; updates.unlock_time = Date.now() + 6500; }
+                }
+
+                rtdb.ref(`active_pvp_match/${currentRealm}`).update(updates).then(() => {
+                    if (status === 'finished' && winner !== "HÒA NHAU (GIAO THỨC TRẢ HÒA)") {
+                        rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(matchSnap => {
+                            let matchInfo = matchSnap.val();
+                            if(matchInfo.stage && matchInfo.match_idx !== undefined && matchInfo.league) {
+                                let key = `tournament_status/${currentRealm}/${matchInfo.league}_bracket/${matchInfo.stage}`;
+                                if(matchInfo.stage === 'sfl' || matchInfo.stage === 'sfr' || matchInfo.stage === 'final' || matchInfo.stage === 'third_place' || matchInfo.stage === 'super_cup' || matchInfo.stage === 'promotion_playoff') { key += `/winner`; } else { key += `/${matchInfo.match_idx}/winner`; }
+                                rtdb.ref(key).set(winner);
+                            }
+                        });
+                    }
+                });
+            });
+        }
+
+        // ==========================================
+        // CÁC HÀM CÒN LẠI VÀ CHỨC NĂNG DỊCH CHUYỂN
+        // ==========================================
+        function buyTimeMachine() { let todayStr = new Date().toLocaleDateString('en-GB'); if (userData.timeMachine && userData.timeMachine.status === 'in_progress') { openTimeMachineModal(); return; } if (userData.timeMachine && userData.timeMachine.lastAttemptDate !== todayStr) { userData.timeMachine.attemptsToday = 0; userData.timeMachine.lastAttemptDate = todayStr; } if (userData.timeMachine && userData.timeMachine.attemptsToday >= 3) return alert("Hết lượt hôm nay!"); let cost = userData.timeMachine.missedDays * 10000; if (userData.gold < cost) return alert("Không đủ Vàng!"); if (!confirm(`XÁC NHẬN GIAO DỊCH:\nTiêu tốn ${cost} Vàng để thực hiện thử thách.\nCần vượt qua ${userData.timeMachine.missedDays} Giai đoạn. Chấp nhận?`)) return; let allVocab = []; allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab)); if (allVocab.length < 30) return alert("Kho dữ liệu chưa đủ 30 từ."); let bank = allVocab.sort(() => Math.random() - 0.5).slice(0, Math.min(30, allVocab.length)); userData.gold -= cost; userData.timeMachine.attemptsToday++; userData.timeMachine.status = 'in_progress'; userData.timeMachine.daysRecovered = 0; userData.timeMachine.currentBank = bank; db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, timeMachine: userData.timeMachine }).then(() => { updateUI(); openTimeMachineModal(); }); }
         
         window.addEventListener('message', function(e) {
             if (e.data === 'CORRECT') { 
@@ -1030,22 +1471,14 @@
                 
                 if (tabId === 'library') fetchLessonsFromFirebase(); 
                 if (tabId === 'leaderboard') fetchLeaderboard(); 
-            } catch (error) {
-                console.error("Lỗi khi chuyển tab:", error);
-            }
+            } catch (error) { console.error("Lỗi khi chuyển tab:", error); }
         }
 
         function toggleSidebar() { 
-            let sidebar = document.getElementById('sidebar');
-            let overlay = document.getElementById('sidebarOverlay');
+            let sidebar = document.getElementById('sidebar'); let overlay = document.getElementById('sidebarOverlay');
             sidebar.classList.toggle('show'); 
-            if(sidebar.classList.contains('show')) {
-                overlay.style.display = 'block';
-                setTimeout(() => overlay.style.opacity = '1', 10);
-            } else {
-                overlay.style.opacity = '0';
-                setTimeout(() => overlay.style.display = 'none', 300);
-            }
+            if(sidebar.classList.contains('show')) { overlay.style.display = 'block'; setTimeout(() => overlay.style.opacity = '1', 10); } 
+            else { overlay.style.opacity = '0'; setTimeout(() => overlay.style.display = 'none', 300); }
         }
         
         async function fixOldUsersRealm() {
