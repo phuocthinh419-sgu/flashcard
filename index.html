@@ -891,6 +891,8 @@
             let updateData = {}; updateData[surveillanceData.playerSlot + "_ready"] = true;
             rtdb.ref(key).update(updateData).then(() => {
                 isUnderSurveillance = true; 
+                
+                // THẦN CHÚ TỰ ĐỘNG NULL KHI MẤT KẾT NỐI (TẮT TRÌNH DUYỆT)
                 rtdb.ref(`active_pvp_match/${currentRealm}`).onDisconnect().update({ status: 'finished', winner: surveillanceData.oppName });
             });
         }
@@ -1463,6 +1465,9 @@
             });
         }
 
+        // ==========================================
+        // CÁC HÀM CÒN LẠI VÀ CHỨC NĂNG DỊCH CHUYỂN
+        // ==========================================
         function buyTimeMachine() { let todayStr = new Date().toLocaleDateString('en-GB'); if (userData.timeMachine && userData.timeMachine.status === 'in_progress') { openTimeMachineModal(); return; } if (userData.timeMachine && userData.timeMachine.lastAttemptDate !== todayStr) { userData.timeMachine.attemptsToday = 0; userData.timeMachine.lastAttemptDate = todayStr; } if (userData.timeMachine && userData.timeMachine.attemptsToday >= 3) return alert("Hết lượt hôm nay!"); let cost = userData.timeMachine.missedDays * 10000; if (userData.gold < cost) return alert("Không đủ Vàng!"); if (!confirm(`XÁC NHẬN GIAO DỊCH:\nTiêu tốn ${cost} Vàng để thực hiện thử thách.\nCần vượt qua ${userData.timeMachine.missedDays} Giai đoạn. Chấp nhận?`)) return; let allVocab = []; allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab)); if (allVocab.length < 30) return alert("Kho dữ liệu chưa đủ 30 từ."); let bank = allVocab.sort(() => Math.random() - 0.5).slice(0, Math.min(30, allVocab.length)); userData.gold -= cost; userData.timeMachine.attemptsToday++; userData.timeMachine.status = 'in_progress'; userData.timeMachine.daysRecovered = 0; userData.timeMachine.currentBank = bank; db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, timeMachine: userData.timeMachine }).then(() => { updateUI(); openTimeMachineModal(); }); }
         
         window.addEventListener('message', function(e) {
