@@ -453,7 +453,6 @@
         let currentGeneratedVocab = []; 
         let allLessonsData = [];
 
-        // KHỞI CHẠY HỆ THỐNG AN TOÀN
         function initSystem() {
             if(!db) { fallbackInit(); return; }
             db.collection('realms').onSnapshot(snap => {
@@ -547,7 +546,6 @@
 
         function fallbackInit() { availableRealms = ['Khởi Nguyên']; currentRealm = 'Khởi Nguyên'; updateUI(); checkAuth(); }
 
-        // NGỰ THƯ PHÒNG (ADMIN FIREBASE)
         function createNewRealm() {
             let name = document.getElementById('newRealmInput').value.trim();
             if(!name) return alert("Vui lòng nhập tên Vũ trụ / Phủ mới!");
@@ -637,6 +635,309 @@
             if (typeof renderBracket === 'function') renderBracket();
         }
 
+        // ==========================================
+        // CÁC HÀM CỬA HÀNG (SHOP) VÀ VÒNG QUAY 
+        // ==========================================
+        let isSpinning = false;
+        function openWheelModal() {
+            if (!currentUser) return alert("Vui lòng thực hiện đăng nhập để dùng chức năng này.");
+            let todayStr = new Date().toLocaleDateString('en-GB');
+            if (userData.lastBlindBoxDate !== todayStr) { userData.blindBoxCount = 0; userData.lastBlindBoxDate = todayStr; }
+            document.getElementById('ui-wheel-left').innerText = 3 - (userData.blindBoxCount || 0);
+            document.getElementById('wheelModal').classList.add('active');
+        }
+
+        function spinWheel() {
+            if (isSpinning) return;
+            if (!currentUser) return alert("Vui lòng thực hiện đăng nhập để dùng chức năng này.");
+            let todayStr = new Date().toLocaleDateString('en-GB');
+            if (userData.lastBlindBoxDate !== todayStr) { userData.blindBoxCount = 0; userData.lastBlindBoxDate = todayStr; }
+            if ((userData.blindBoxCount || 0) >= 3) return alert("Bạn đã dùng hết giới hạn 3 lượt quay của hôm nay. Vui lòng trở lại vào ngày mai.");
+            if (userData.gold < 150) return alert("Số dư Vàng hiện tại không đủ thao tác.");
+            
+            if(confirm("Thanh toán 150 Vàng để kích hoạt Vòng Quay?")) {
+                isSpinning = true;
+                userData.gold -= 150; userData.blindBoxCount = (userData.blindBoxCount || 0) + 1;
+                document.getElementById('ui-wheel-left').innerText = 3 - userData.blindBoxCount;
+                updateUI();
+                
+                let r = Math.random(); 
+                let sliceIndex = 0; let msg = ""; if(!userData.vouchers) userData.vouchers = [];
+                
+                if (r < 0.10) { sliceIndex = 0; msg = "🥺 Tiếc quá! Bạn không trúng giải thưởng nào đợt này."; }
+                else if (r < 0.30) { sliceIndex = 1; userData.gold += 50; msg = "🪙 Bạn nhận được 50 Vàng từ hệ thống!"; }
+                else if (r < 0.50) { sliceIndex = 2; userData.xp += 150; msg = "⭐ Chúc mừng bạn đã tích lũy thêm 150 XP!"; }
+                else if (r < 0.70) { sliceIndex = 3; userData.vouchers.push(30); msg = "🎟️ Bạn đã nhận được 1 Mã Giảm Giá 30%!"; }
+                else if (r < 0.80) { sliceIndex = 4; userData.vouchers.push(50); msg = "🎟️ Rất may mắn! Bạn có 1 Mã Giảm Giá 50%!"; }
+                else if (r < 0.85) { sliceIndex = 5; userData.hasShield = true; msg = "🛡️ Chúc mừng! Bạn nhận được 1 Bùa Bảo Hộ!"; }
+                else if (r < 0.90) { sliceIndex = 6; userData.magnifyingGlass = (userData.magnifyingGlass||0) + 1; msg = "🔍 Vật phẩm hiếm: 1 Kính Lúp Thám Tử đã thuộc về bạn!"; }
+                else { sliceIndex = 7; msg = "🥺 Tiếc quá! Vòng quay dừng lại ở ô không may mắn."; }
+                
+                let randomOffset = Math.floor(Math.random() * 40) - 20; 
+                let targetDegree = 3600 - (sliceIndex * 45 + 22.5) + randomOffset; 
+
+                let wheelEl = document.getElementById('spinningWheel');
+                wheelEl.style.transition = 'none';
+                wheelEl.style.transform = `rotate(0deg)`;
+                void wheelEl.offsetWidth; 
+
+                wheelEl.style.transition = 'transform 4.2s cubic-bezier(0.17, 0.67, 0.1, 1)';
+                wheelEl.style.transform = `rotate(${targetDegree}deg)`;
+                
+                setTimeout(() => {
+                    isSpinning = false;
+                    userData.vouchers.sort((a,b) => b - a); 
+                    
+                    db.collection('vocab_users').doc(currentUser.uid).update({
+                        gold: userData.gold, xp: userData.xp, vouchers: userData.vouchers,
+                        hasShield: userData.hasShield, magnifyingGlass: userData.magnifyingGlass,
+                        blindBoxCount: userData.blindBoxCount, lastBlindBoxDate: userData.lastBlindBoxDate
+                    }).then(() => { updateUI(); alert(msg); });
+                }, 4400); 
+            }
+        }
+
+        function buyItem(itemType, basePrice) { 
+            if (!currentUser) return alert("Hệ thống yêu cầu phải đăng nhập mới sử dụng tính năng giao dịch!"); 
+            
+            if (['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow', 'theme_royal'].includes(itemType)) {
+                if (userData.purchasedItems && userData.purchasedItems.includes(itemType)) {
+                    let updates = {};
+                    if (itemType.startsWith('streak_')) {
+                        if (itemType === 'streak_snow') updates.streakIcon = '❄️';
+                        if (itemType === 'streak_peach') updates.streakIcon = '🌸';
+                        if (itemType === 'streak_soccer') updates.streakIcon = '⚽';
+                        if (itemType === 'streak_basket') updates.streakIcon = '🏀';
+                        if (itemType === 'streak_cap') updates.streakIcon = '🎓';
+                        userData.streakIcon = updates.streakIcon;
+                    } else if (itemType.startsWith('theme_')) {
+                        updates.theme = itemType.replace('_', '-');
+                        userData.theme = updates.theme;
+                        applyTheme(userData.theme);
+                    }
+                    db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => { updateUI(); alert("Áp dụng thành công vật phẩm đã sở hữu!"); });
+                    return;
+                }
+            } else if (itemType === 'theme_default' || itemType === 'streak_fire') {
+                 let updates = {};
+                 if (itemType === 'theme_default') { updates.theme = 'theme_default'; userData.theme = updates.theme; applyTheme(userData.theme); }
+                 if (itemType === 'streak_fire') { updates.streakIcon = '🔥'; userData.streakIcon = updates.streakIcon; }
+                 db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => { updateUI(); alert("Giao diện đã quay về trạng thái gốc!"); });
+                 return;
+            }
+            
+            let bestVoucher = 0; let vIndex = -1;
+            if(userData.vouchers && userData.vouchers.length > 0) {
+                bestVoucher = userData.vouchers[0]; vIndex = 0;
+            }
+            
+            let finalPrice = basePrice;
+            if (bestVoucher > 0) { finalPrice = Math.floor(basePrice * (100 - bestVoucher) / 100); }
+            
+            if (userData.gold < finalPrice) return alert(`Giao dịch thất bại! Bạn cần thanh toán ${finalPrice} 🪙.`);
+            
+            let confirmMsg = `Xác nhận thanh toán ${finalPrice} Vàng cho vật phẩm này?`;
+            if (bestVoucher > 0) confirmMsg = `🎟️ Hệ thống đang tự áp dụng ưu đãi Giảm ${bestVoucher}% từ kho!\nSố dư yêu cầu giảm từ ${basePrice} xuống còn ${finalPrice} Vàng. Mua ngay?`;
+            
+            if(confirm(confirmMsg)) {
+                let updates = { gold: userData.gold - finalPrice };
+                if (vIndex > -1) { 
+                    userData.vouchers.splice(vIndex, 1); 
+                    updates.vouchers = userData.vouchers; 
+                }
+                
+                if (itemType === 'rename') { let newName = prompt("Nhập tên hiển thị bạn mong muốn:"); if (!newName || newName.trim() === "") return alert("Quy trình hủy do thông tin tên không hợp lệ!"); updates.displayName = newName.trim(); }
+                if (itemType === 'shield') updates.hasShield = true; 
+                if (itemType === 'potion') updates.potionExpiry = Date.now() + 86400000; 
+                if (itemType === 'potion_x3') updates.potionX3Expiry = Date.now() + 10800000; 
+                if (itemType === 'mask') updates.maskExpiry = Date.now() + 86400000; 
+                if (itemType === 'glass') updates.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
+                
+                if (['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow', 'theme_royal'].includes(itemType)) {
+                    if (!userData.purchasedItems) userData.purchasedItems = [];
+                    userData.purchasedItems.push(itemType);
+                    updates.purchasedItems = userData.purchasedItems;
+                    
+                    if (itemType.startsWith('streak_')) {
+                        if (itemType === 'streak_snow') updates.streakIcon = '❄️';
+                        if (itemType === 'streak_peach') updates.streakIcon = '🌸';
+                        if (itemType === 'streak_soccer') updates.streakIcon = '⚽';
+                        if (itemType === 'streak_basket') updates.streakIcon = '🏀';
+                        if (itemType === 'streak_cap') updates.streakIcon = '🎓';
+                    } else if (itemType.startsWith('theme_')) {
+                        updates.theme = itemType.replace('_', '-');
+                    }
+                }
+                
+                db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
+                    userData.gold -= finalPrice; 
+                    if(updates.hasShield) userData.hasShield = true; 
+                    if(updates.potionExpiry) userData.potionExpiry = updates.potionExpiry; 
+                    if(updates.potionX3Expiry) userData.potionX3Expiry = updates.potionX3Expiry; 
+                    if(updates.maskExpiry) userData.maskExpiry = updates.maskExpiry; 
+                    if(updates.magnifyingGlass) userData.magnifyingGlass = updates.magnifyingGlass; 
+                    if(updates.displayName) userData.displayName = updates.displayName;
+                    if(updates.streakIcon) userData.streakIcon = updates.streakIcon;
+                    if(updates.theme) { userData.theme = updates.theme; applyTheme(userData.theme); }
+                    if(updates.purchasedItems) userData.purchasedItems = updates.purchasedItems;
+                    
+                    updateUI(); 
+                    if (itemType === 'rename') fetchLeaderboard(); 
+                    let anim = document.getElementById('rewardAnim'); 
+                    anim.innerText = `🛒 Giao dịch thành công! (Còn dư: ${userData.gold} 🪙)`; 
+                    anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 3000);
+                });
+            }
+        }
+
+        // ==========================================
+        // CÁC HÀM BẢNG XẾP HẠNG & NHÁNH ĐẤU
+        // ==========================================
+        function openHOFModal() { 
+            document.getElementById('hofModal').classList.add('active'); 
+        }
+
+        function switchLeagueTab(league) {
+            currentLeagueView = league;
+            document.getElementById('btn-tab-c1').style.background = league === 'c1' ? '#ffd700' : '#555';
+            document.getElementById('btn-tab-c1').style.color = league === 'c1' ? '#000' : '#ccc';
+            document.getElementById('btn-tab-c1').style.boxShadow = league === 'c1' ? '0 0 10px #ffd700' : 'none';
+            
+            document.getElementById('btn-tab-c2').style.background = league === 'c2' ? '#c0c0c0' : '#555';
+            document.getElementById('btn-tab-c2').style.color = league === 'c2' ? '#000' : '#ccc';
+            document.getElementById('btn-tab-c2').style.boxShadow = league === 'c2' ? '0 0 10px #c0c0c0' : 'none';
+            
+            document.getElementById('leagueTitle').innerText = league === 'c1' ? "🏆 MES CHAMPIONS LEAGUE ELITE 🏆" : "🥈 MES CHAMPIONS LEAGUE TWO 🥈";
+            document.getElementById('leagueTitle').style.color = league === 'c1' ? '#ffd700' : '#c0c0c0';
+            renderBracket();
+        }
+
+        function renderBracket() {
+            currentFullBracketData = currentLeagueView === 'c1' ? currentC1Data : currentC2Data;
+            
+            if (!currentFullBracketData) {
+                document.getElementById('bracketMatches').innerHTML = '<div style="color:#888; text-align:center; width:100%;">Giai đoạn này hiện tại chưa có dữ liệu.</div>';
+                return;
+            }
+            
+            document.getElementById('bracketBoard').style.display = 'block';
+            document.getElementById('bracketStatus').innerText = `GIAI ĐOẠN: Sơ đồ loại trực tiếp | Trạng thái: Đang tiến hành`;
+            const container = document.getElementById('bracketMatches'); container.innerHTML = ''; 
+
+            const columns = [];
+            if (currentFullBracketData.r16l) columns.push({ title: 'Vòng 1/8', key: 'r16l' });
+            if (currentFullBracketData.qfl) columns.push({ title: 'Tứ Kết', key: 'qfl' });
+            if (currentFullBracketData.sfl) columns.push({ title: 'Bán Kết', key: 'sfl' });
+            
+            columns.push({ title: 'TRẬN CHIẾN TỐI THƯỢNG', key: 'center_col' });
+            
+            if (currentFullBracketData.sfr) columns.push({ title: 'Bán Kết', key: 'sfr' });
+            if (currentFullBracketData.qfr) columns.push({ title: 'Tứ Kết', key: 'qfr' });
+            if (currentFullBracketData.r16r) columns.push({ title: 'Vòng 1/8', key: 'r16r' });
+
+            container.style.gridTemplateColumns = `repeat(${columns.length}, minmax(130px, 1fr))`;
+
+            columns.forEach(col => {
+                const colEl = document.createElement('div'); colEl.className = 'bracket-column';
+                const colTitle = document.createElement('div'); colTitle.style.cssText = 'font-size: 12px; font-weight: bold; color: #ffd700; text-align: center; margin-bottom: 15px; border-bottom: 1px dashed #ffd700; padding-bottom: 5px;'; colTitle.innerText = col.title; colEl.appendChild(colTitle);
+
+                if (col.key === 'center_col') {
+                    if (currentLeagueView === 'c1' && currentFullBracketData.super_cup) {
+                        let scLabel = document.createElement('div'); scLabel.innerHTML = '<div style="font-size:12px; color:#ff1744; margin-top:5px; margin-bottom:5px; font-weight:900; animation: pulse 1.5s infinite;">🔥 SIÊU CÚP MÙA GIẢI</div>'; colEl.appendChild(scLabel);
+                        colEl.appendChild(createMatchBox(currentFullBracketData.super_cup, 'super_cup', 0, currentLeagueView));
+                    }
+                    if (currentFullBracketData.final) {
+                        let fLabel = document.createElement('div'); fLabel.innerHTML = '<div style="font-size:12px; color:#ffd700; margin-top:15px; margin-bottom:5px; font-weight:bold;">🥇 CHUNG KẾT</div>'; colEl.appendChild(fLabel);
+                        colEl.appendChild(createMatchBox(currentFullBracketData.final, 'final', 0, currentLeagueView));
+                    }
+                    if (currentFullBracketData.third_place && (currentFullBracketData.sfl || currentFullBracketData.sfr)) { 
+                        let tLabel = document.createElement('div'); tLabel.innerHTML = '<div style="font-size:12px; color:#cd7f32; margin-top:15px; margin-bottom:5px; font-weight:bold;">🥉 TRANH HẠNG 3</div>'; colEl.appendChild(tLabel);
+                        colEl.appendChild(createMatchBox(currentFullBracketData.third_place, 'third_place', 0, currentLeagueView));
+                    }
+                    if (currentLeagueView === 'c1' && currentFullBracketData.promotion_playoff) {
+                        let poLabel = document.createElement('div'); poLabel.innerHTML = '<div style="font-size:12px; color:#00e676; margin-top:15px; margin-bottom:5px; font-weight:900;">⚔️ PLAY-OFF THĂNG HẠNG</div>'; colEl.appendChild(poLabel);
+                        colEl.appendChild(createMatchBox(currentFullBracketData.promotion_playoff, 'promotion_playoff', 0, currentLeagueView));
+                    }
+                } else {
+                    const data = currentFullBracketData[col.key];
+                    if (Array.isArray(data)) { data.forEach((m, index) => { colEl.appendChild(createMatchBox(m, col.key, index, currentLeagueView)); }); } 
+                    else if (data) { colEl.appendChild(createMatchBox(data, col.key, 0, currentLeagueView)); }
+                }
+                container.appendChild(colEl);
+            });
+        }
+
+        function createMatchBox(m, stageKey, matchIndex, league) {
+            const isFinished = !!m.winner;
+            let p1Name = m.p1 || '---'; let p2Name = m.p2 || '---';
+            let p1Class = ''; let p2Class = ''; let p1Star = ''; let p2Star = '';
+            
+            if (isFinished) {
+                if (m.winner === m.p1) { p1Class = 'won'; p2Class = 'lost'; p1Star = ' ⭐'; } 
+                else if (m.winner === m.p2) { p2Class = 'won'; p1Class = 'lost'; p2Star = ' ⭐'; }
+            }
+
+            let timeInfo = ''; let btnAction = '';
+            let validMatch = m.p1 && m.p2 && m.p1 !== "---" && m.p2 !== "---" && !isFinished;
+            
+            if(validMatch) {
+                let now = Date.now();
+                if(m.schedule) {
+                    let diff = m.schedule - now;
+                    if(diff > 0) {
+                        let d = new Date(m.schedule);
+                        timeInfo = `<div class="match-time">🕒 Lịch: ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')} ${d.getDate()}/${d.getMonth()+1}</div>`;
+                    } else if (diff <= 0 && diff > -600000) { 
+                        let minsLeft = Math.floor((600000 + diff)/60000) + 1;
+                        timeInfo = `<div class="match-time" style="color:#00e676; animation: pulse 1s infinite;">🟢 ĐANG MỞ (Còn ${minsLeft}p)</div>`;
+                        
+                        let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
+                        
+                        if(isP1 && !m.p1_ready) btnAction = `<button class="btn-join" style="display:block;" onclick="showAntiCheatModal('${league}', '${stageKey}', ${matchIndex}, 'p1')">🚪 VÀO PHÒNG (P1)</button>`;
+                        if(isP2 && !m.p2_ready) btnAction = `<button class="btn-join" style="display:block;" onclick="showAntiCheatModal('${league}', '${stageKey}', ${matchIndex}, 'p2')">🚪 VÀO PHÒNG (P2)</button>`;
+                        
+                        if(m.p1_ready && m.p2_ready) {
+                            timeInfo = `<div class="match-time" style="color:#ff5252;">⚔️ ĐANG THI ĐẤU...</div>`;
+                            if(userData.role === 'teacher' || isP2) {
+                                rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(s => {
+                                    let ac = s.val();
+                                    if(!ac || ac.stage !== stageKey || ac.league !== league || ac.status === 'finished') {
+                                        adminStartPvP(league, stageKey, matchIndex, m.p1, m.p2);
+                                    }
+                                });
+                            }
+                        }
+                    } else { 
+                        timeInfo = `<div class="match-time" style="color:#ff5252;">⏳ Hệ thống đang cập nhật kết quả...</div>`;
+                    }
+                }
+                
+                if (userData.role === 'teacher') {
+                    let safeP1 = (m.p1 || '').replace(/'/g, "\\'");
+                    let safeP2 = (m.p2 || '').replace(/'/g, "\\'");
+                    
+                    btnAction += `<button class="btn-schedule" style="display:block;" onclick="openScheduleModal('${league}', '${stageKey}', ${matchIndex})">⏰ LÊN LỊCH</button>`;
+                    btnAction += `<button class="btn-fight" style="display:block;" onclick="adminStartPvP('${league}', '${stageKey}', ${matchIndex}, '${safeP1}', '${safeP2}')">⚔️ BẮT ĐẦU NGAY</button>`;
+                }
+            }
+
+            let p1Badge = m.p1_ready && !isFinished ? `<span class="ready-badge">✅</span>` : '';
+            let p2Badge = m.p2_ready && !isFinished ? `<span class="ready-badge">✅</span>` : '';
+
+            const matchEl = document.createElement('div'); matchEl.className = 'bracket-match';
+            matchEl.innerHTML = `
+                <div class="player-name ${p1Class}"><span>${p1Name}${p1Star}</span> ${p1Badge}</div>
+                <div class="vs-text">VS</div>
+                <div class="player-name ${p2Class}"><span>${p2Name}${p2Star}</span> ${p2Badge}</div>
+                ${timeInfo}
+                ${btnAction}
+            `;
+            return matchEl;
+        }
+
+        // ==========================================
+        // CÁC HÀM CÒN LẠI (GIỮ NGUYÊN)
+        // ==========================================
         function openMigrationModal() { if(userData.gold < 100000) return alert("Bệ hạ không đủ 100.000 Vàng để mua Giấy Thông Hành!"); document.getElementById('currentRealmDisplay').innerText = currentRealm; let select = document.getElementById('realmSelect'); select.innerHTML = ''; availableRealms.forEach(phu => { if(phu !== currentRealm) select.innerHTML += `<option value="${phu}">${phu}</option>`; }); document.getElementById('migrationModal').classList.add('active'); }
         function confirmMigration() { let newRealm = document.getElementById('realmSelect').value; if(!newRealm) return; if(userData.gold < 100000) return alert("Không đủ vàng!"); userData.gold -= 100000; userData.lifetime_xp = (userData.lifetime_xp || 0) + userData.xp; userData.xp = 0; userData.weeklyXp = 0; userData.lastWeekXp = 0; userData.highestWeeklyXp = 0; userData.realm = newRealm; db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, lifetime_xp: userData.lifetime_xp, xp: 0, weeklyXp: 0, lastWeekXp: 0, highestWeeklyXp: 0, realm: newRealm }).then(() => { alert(`✈️ Đã di cư sang ${newRealm}!`); window.location.reload(); }); }
 
@@ -727,7 +1028,6 @@
                 
                 if (window.innerWidth <= 768) toggleSidebar(); 
                 
-                // Lỗi cũ nằm ở đây (gọi fetchFromSheets không tồn tại). Nay đã thay thành fetchLessonsFromFirebase
                 if (tabId === 'library') fetchLessonsFromFirebase(); 
                 if (tabId === 'leaderboard') fetchLeaderboard(); 
             } catch (error) {
@@ -748,6 +1048,25 @@
             }
         }
         
+        async function fixOldUsersRealm() {
+            let targetRealm = document.getElementById('syncRealmSelect').value;
+            if(!targetRealm) return alert("Bệ hạ vui lòng chọn một Phủ ở ô bên trên để cấp hộ khẩu!");
+            if(!confirm(`Bệ hạ có muốn thu nhận toàn bộ thần dân cũ (chưa có phân vùng) vào Phủ [${targetRealm}] không?`)) return;
+            try {
+                const snapshot = await db.collection('vocab_users').get();
+                let count = 0; let batch = db.batch(); 
+                snapshot.forEach(doc => {
+                    let data = doc.data();
+                    if (!data.realm || data.realm === "") {
+                        let ref = db.collection('vocab_users').doc(doc.id);
+                        batch.update(ref, { realm: targetRealm }); count++;
+                    }
+                });
+                if (count > 0) { await batch.commit(); alert(`Tấu tiệp! Đã cấp hộ khẩu [${targetRealm}] thành công cho ${count} thần dân cũ. Bệ hạ hãy sang Bảng Xếp Hạng kiểm tra lại!`); fetchLeaderboard(); } 
+                else { alert("Báo cáo: Toàn bộ thần dân trong hệ thống đều đã có hộ khẩu rõ ràng, không ai bị lưu lạc."); }
+            } catch(error) { alert("Có lỗi xảy ra trong quá trình thu nhận: " + error.message); }
+        }
+
         // KÍCH HOẠT HỆ THỐNG KHI TẢI XONG
         window.addEventListener('DOMContentLoaded', () => {
             initSystem();
@@ -755,38 +1074,6 @@
             switchTab('library');
         });
 
-        async function fixOldUsersRealm() {
-            let targetRealm = document.getElementById('syncRealmSelect').value;
-            if(!targetRealm) return alert("Bệ hạ vui lòng chọn một Phủ ở ô bên trên để cấp hộ khẩu!");
-            if(!confirm(`Bệ hạ có muốn thu nhận toàn bộ thần dân cũ (chưa có phân vùng) vào Phủ [${targetRealm}] không?`)) return;
-
-            try {
-                const snapshot = await db.collection('vocab_users').get();
-                let count = 0;
-                let batch = db.batch(); // Dùng batch để cập nhật hàng loạt không gây kẹt mạng
-
-                snapshot.forEach(doc => {
-                    let data = doc.data();
-                    // Nếu thần dân chưa có biến realm (Tài khoản cũ)
-                    if (!data.realm || data.realm === "") {
-                        let ref = db.collection('vocab_users').doc(doc.id);
-                        batch.update(ref, { realm: targetRealm });
-                        count++;
-                    }
-                });
-
-                if (count > 0) {
-                    await batch.commit();
-                    alert(`Tấu tiệp! Đã cấp hộ khẩu [${targetRealm}] thành công cho ${count} thần dân cũ. Bệ hạ hãy sang Bảng Xếp Hạng kiểm tra lại!`);
-                    fetchLeaderboard(); // Làm mới BXH ngay lập tức
-                } else {
-                    alert("Báo cáo: Toàn bộ thần dân trong hệ thống đều đã có hộ khẩu rõ ràng, không ai bị lưu lạc.");
-                }
-            } catch(error) {
-                alert("Có lỗi xảy ra trong quá trình thu nhận: " + error.message);
-            }
-        }
-        
     </script>
 </body>
 </html>
