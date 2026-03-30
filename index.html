@@ -35,11 +35,11 @@
         .nav-arena:hover, .nav-arena.active { background: #ffcdd2; color: #b71c1c; }
         
         .main-wrapper { flex: 1; display: flex; flex-direction: column; width: 100%; overflow: hidden; z-index: 1;}
-        .top-stats-bar { background: #fff; padding: 15px 30px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: flex-end; align-items: center; gap: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: background-color 0.3s; }
+        .top-stats-bar { background: #fff; padding: 15px 30px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: flex-end; align-items: center; gap: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: background-color 0.3s; position: relative; z-index: 50; }
         .stats-wrapper { display: flex; gap: 15px; }
         .stat-box { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 16px; padding: 6px 12px; border-radius: 20px; background: #f8f9fa; transition: background-color 0.3s; }
         .stat-streak { color: #ff5722; } .stat-xp { color: var(--secondary); } .stat-gold { color: #fbc02d; }
-        .menu-btn { display: none; font-size: 24px; cursor: pointer; background: transparent; border: none; color: var(--primary); }
+        .menu-btn { display: none; font-size: 26px; cursor: pointer; background: transparent; border: none; color: var(--primary); padding: 5px 15px 5px 0; position: relative; z-index: 51; }
 
         .main-content { flex: 1; padding: 20px 30px 120px 30px; overflow-y: auto; -webkit-overflow-scrolling: touch; position: relative; z-index: 1;}
         .header { margin-bottom: 25px; } .header h1 { font-size: 28px; color: var(--primary); } .header p { color: #666; margin-top: 5px; }
@@ -379,6 +379,7 @@
                                 <div style="display: flex; gap: 10px; flex-direction: column;">
                                     <select id="syncRealmSelect" style="padding: 10px; border: 1px solid #ccc; border-radius: 6px;"></select>
                                     <button class="btn-danger" onclick="syncFromSheetsToFirebase()">Hút Dữ Liệu Sheets 📥</button>
+                                    <button class="btn-save" style="margin-top: 10px; background: #00897b;" onclick="fixOldUsersRealm()">Nhập Hộ Khẩu Thần Dân Cũ 👨‍👩‍👧‍👦</button>
                                 </div>
                             </div>
                         </div>
@@ -734,6 +735,19 @@
             }
         }
 
+        function toggleSidebar() { 
+            let sidebar = document.getElementById('sidebar');
+            let overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('show'); 
+            if(sidebar.classList.contains('show')) {
+                overlay.style.display = 'block';
+                setTimeout(() => overlay.style.opacity = '1', 10);
+            } else {
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.style.display = 'none', 300);
+            }
+        }
+        
         // KÍCH HOẠT HỆ THỐNG KHI TẢI XONG
         window.addEventListener('DOMContentLoaded', () => {
             initSystem();
@@ -741,6 +755,38 @@
             switchTab('library');
         });
 
+        async function fixOldUsersRealm() {
+            let targetRealm = document.getElementById('syncRealmSelect').value;
+            if(!targetRealm) return alert("Bệ hạ vui lòng chọn một Phủ ở ô bên trên để cấp hộ khẩu!");
+            if(!confirm(`Bệ hạ có muốn thu nhận toàn bộ thần dân cũ (chưa có phân vùng) vào Phủ [${targetRealm}] không?`)) return;
+
+            try {
+                const snapshot = await db.collection('vocab_users').get();
+                let count = 0;
+                let batch = db.batch(); // Dùng batch để cập nhật hàng loạt không gây kẹt mạng
+
+                snapshot.forEach(doc => {
+                    let data = doc.data();
+                    // Nếu thần dân chưa có biến realm (Tài khoản cũ)
+                    if (!data.realm || data.realm === "") {
+                        let ref = db.collection('vocab_users').doc(doc.id);
+                        batch.update(ref, { realm: targetRealm });
+                        count++;
+                    }
+                });
+
+                if (count > 0) {
+                    await batch.commit();
+                    alert(`Tấu tiệp! Đã cấp hộ khẩu [${targetRealm}] thành công cho ${count} thần dân cũ. Bệ hạ hãy sang Bảng Xếp Hạng kiểm tra lại!`);
+                    fetchLeaderboard(); // Làm mới BXH ngay lập tức
+                } else {
+                    alert("Báo cáo: Toàn bộ thần dân trong hệ thống đều đã có hộ khẩu rõ ràng, không ai bị lưu lạc.");
+                }
+            } catch(error) {
+                alert("Có lỗi xảy ra trong quá trình thu nhận: " + error.message);
+            }
+        }
+        
     </script>
 </body>
 </html>
