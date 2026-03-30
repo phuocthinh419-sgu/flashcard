@@ -546,6 +546,7 @@
 
         function fallbackInit() { availableRealms = ['Khởi Nguyên']; currentRealm = 'Khởi Nguyên'; updateUI(); checkAuth(); }
 
+        // NGỰ THƯ PHÒNG (ADMIN FIREBASE)
         function createNewRealm() {
             let name = document.getElementById('newRealmInput').value.trim();
             if(!name) return alert("Vui lòng nhập tên Vũ trụ / Phủ mới!");
@@ -1014,7 +1015,6 @@
         function copyCode() { document.getElementById('generatedCode').select(); document.execCommand("copy"); alert("Thông tin mã được sao chép thành công."); }
         function toggleDarkMode() { document.body.classList.toggle('dark-mode'); const isDark = document.body.classList.contains('dark-mode'); localStorage.setItem('darkMode', isDark ? 'true' : 'false'); document.getElementById('themeToggleBtn').innerText = isDark ? '☀️' : '🌙'; }
         
-        // HÀM CHUYỂN TAB ĐÃ ĐƯỢC VÁ LỖI TRÍ MẠNG
         function switchTab(tabId) { 
             try {
                 document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active')); 
@@ -1067,7 +1067,6 @@
             } catch(error) { alert("Có lỗi xảy ra trong quá trình thu nhận: " + error.message); }
         }
 
-        // KÍCH HOẠT HỆ THỐNG KHI TẢI XONG
         window.addEventListener('DOMContentLoaded', () => {
             initSystem();
             if (localStorage.getItem('darkMode') === 'true') { document.body.classList.add('dark-mode'); document.getElementById('themeToggleBtn').innerText = '☀️'; }
