@@ -1653,7 +1653,7 @@
         }
 
         function openMigrationModal() { 
-            if(availableRealms.length <= 1) return alert("Hệ thống hiện tại chỉ mới có 1 Phủ. Bệ hạ cần vào Ngự Thư Phòng tạo thêm Phủ mới trước khi di cư!");
+            if(availableRealms.length <= 1) return alert("Hệ thống hiện tại chỉ mới có 1 Lãnh Thổ duy nhất.");
             if(userData.role !== 'teacher' && userData.gold < 100000) return alert("Bệ hạ/Khanh không đủ 100.000 Vàng để mua Giấy Thông Hành!"); 
             document.getElementById('currentRealmDisplay').innerText = currentRealm; 
             let select = document.getElementById('realmSelect'); 
