@@ -612,6 +612,22 @@
             } catch (e) { alert("Lỗi khi hủy diệt: " + e.message); }
         }
 
+        function deleteLesson(lessonId, event) {
+    // Ngăn chặn sự kiện click lan ra thẻ div bên ngoài (tránh việc vô tình mở bài học lên khi bấm nút xóa)
+    if (event) event.stopPropagation();
+    
+    // Hỏi lại cho chắc chắn
+    if (!confirm("Bệ hạ có chắc chắn muốn xóa vĩnh viễn bài học này khỏi kho không?")) return;
+
+    // Tiến hành xóa khỏi Firebase
+    db.collection('realms').doc(currentRealm).collection('lessons').doc(lessonId).delete().then(() => {
+        alert("Đã xóa bài học thành công!");
+        // Bệ hạ không cần gọi lại lệnh tải danh sách, vì onSnapshot trong fetchLessonsFromFirebase() sẽ tự động cập nhật lại giao diện!
+    }).catch(err => {
+        alert("Lỗi khi xóa bài học: " + err.message);
+    });
+}
+        
         function saveLessonToFirebase() {
             let title = document.getElementById('adminLessonName').value.trim(); let realm = document.getElementById('adminRealmSelect').value; let code = document.getElementById('generatedCode').value;
             if(!title || !realm || !code) return alert("Yêu cầu nhập đầy đủ Tên bài, Phủ và Đúc Mã trước khi lưu!");
