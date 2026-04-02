@@ -24,7 +24,7 @@
             width: var(--sidebar-w); background: #fff; border-right: 1px solid #e0e0e0; 
             padding: 20px; display: flex; flex-direction: column; z-index: 1001; 
             transition: transform 0.3s ease, background-color 0.3s; 
-            overflow-y: auto;
+            overflow-y: auto; 
         }
         .sidebar::-webkit-scrollbar { width: 5px; }
         .sidebar::-webkit-scrollbar-thumb { background: #b0bec5; border-radius: 5px; }
@@ -951,7 +951,7 @@
             if (!surveillanceData) return;
             
             let key = `tournament_status/${currentRealm}/${surveillanceData.league}_bracket/${surveillanceData.stageKey}`;
-            if (surveillanceData.stageKey !== 'sfl' && surveillanceData.stageKey !== 'sfr' && surveillanceData.stageKey !== 'final' && surveillanceData.stageKey !== 'third_place' && surveillanceData.stageKey !== 'super_cup' && surveillanceData.stageKey !== 'promotion_playoff') { 
+            if (!['sfl', 'sfr', 'final', 'third_place', 'super_cup', 'promotion_playoff'].includes(surveillanceData.stageKey)) { 
                 key += `/${surveillanceData.matchIndex}`; 
             }
             let updateData = {}; updateData[surveillanceData.playerSlot + "_ready"] = true;
@@ -966,11 +966,12 @@
             isUnderSurveillance = false; 
             
             let key = `tournament_status/${currentRealm}/${surveillanceData.league}_bracket/${surveillanceData.stageKey}`;
-            if (surveillanceData.stageKey !== 'sfl' && surveillanceData.stageKey !== 'sfr' && surveillanceData.stageKey !== 'final' && surveillanceData.stageKey !== 'third_place' && surveillanceData.stageKey !== 'super_cup' && surveillanceData.stageKey !== 'promotion_playoff') { 
+            if (!['sfl', 'sfr', 'final', 'third_place', 'super_cup', 'promotion_playoff'].includes(surveillanceData.stageKey)) { 
                 key += `/${surveillanceData.matchIndex}`; 
             }
             
-            rtdb.ref(key).update({ winner: surveillanceData.oppName });
+            // Dùng .set() an toàn, không đè mất p1/p2
+            rtdb.ref(key + '/winner').set(surveillanceData.oppName);
             
             rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
                 let m = snap.val();
@@ -981,20 +982,32 @@
         }
 
         document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === 'hidden') { executeAntiCheatPunishment(); }
+            if (document.visibilityState === 'hidden' && isUnderSurveillance) { 
+                executeAntiCheatPunishment(); 
+            }
         });
 
         window.addEventListener("blur", () => {
-            executeAntiCheatPunishment();
+            if (isUnderSurveillance) {
+                executeAntiCheatPunishment();
+            }
         });
 
         function forceEndMatch() {
             if(userData.role !== 'teacher') return;
-            if(!confirm("Bệ hạ có chắc chắn muốn kết thúc ép buộc trận đấu này? Thao tác này sẽ giải tán võ đài và giải phóng cả 2 tuyển thủ khỏi tình trạng bị kẹt.")) return;
+            
+            let tempSurveillance = isUnderSurveillance;
+            isUnderSurveillance = false; // Tạm tắt giám sát để tránh lỗi popup confirm
+            
+            if(!confirm("Bạn có chắc chắn muốn kết thúc ép buộc trận đấu này? Thao tác này sẽ giải tán võ đài và giải phóng cả 2 tuyển thủ khỏi tình trạng bị kẹt.")) {
+                isUnderSurveillance = tempSurveillance; // Bật lại nếu bấm Hủy
+                return;
+            }
             
             rtdb.ref(`active_pvp_match/${currentRealm}`).update({ 
                 status: 'finished', 
-                winner: 'HỦY BỞI QUẢN TRỊ' 
+                winner: 'HỦY BỞI QUẢN TRỊ',
+                reason: 'force_end'
             }).then(() => {
                 document.getElementById('pvpModal').classList.remove('active');
                 alert("Đã giải tán võ đài thành công!");
@@ -1003,6 +1016,9 @@
         }
         
         function surrenderMatch() {
+            let tempSurveillance = isUnderSurveillance;
+            isUnderSurveillance = false; // Tạm tắt giám sát để không bị Anti-cheat phạt lộn do confirm()
+            
             if(confirm("Bạn có chắc chắn muốn rút lui khỏi trận này? Hệ thống sẽ xử thua!")) {
                 window.isSpectating = false;
                 let myName = userData.displayName;
@@ -1011,19 +1027,20 @@
                     if(m && m.status !== 'finished') {
                         let oppName = (m.p1 === myName) ? m.p2 : m.p1;
                         
-                        // Cập nhật Sơ đồ nhánh (Bracket) để hiện dấu sao và gạch tên
                         if(m.stage && m.match_idx !== undefined && m.league) {
                             let key = `tournament_status/${currentRealm}/${m.league}_bracket/${m.stage}`;
-                            if(m.stage !== 'sfl' && m.stage !== 'sfr' && m.stage !== 'final' && m.stage !== 'third_place' && m.stage !== 'super_cup' && m.stage !== 'promotion_playoff') { 
+                            if(!['sfl', 'sfr', 'final', 'third_place', 'super_cup', 'promotion_playoff'].includes(m.stage)) { 
                                 key += `/${m.match_idx}`; 
                             }
-                            rtdb.ref(key).update({ winner: oppName });
+                            // Ghi trực tiếp winner để bảo toàn dữ liệu p1/p2
+                            rtdb.ref(key + '/winner').set(oppName);
                         }
 
-                        // Cập nhật trạng thái trận đấu
                         rtdb.ref(`active_pvp_match/${currentRealm}`).update({ status: 'finished', winner: oppName, reason: 'surrender' });
                     }
                 });
+            } else {
+                isUnderSurveillance = tempSurveillance; // Bật lại nếu chọn Hủy
             }
         }
                 
@@ -1282,8 +1299,11 @@
                                     document.getElementById('pvpWaitMsg').style.color = '#00e676';
                                 }
                             } else if (m.reason === 'surrender') {
-                                if(m.winner !== userData.displayName) endMsg = "🚩 BẠN ĐÃ RÚT LUI!\n" + endMsg;
-                                else endMsg = "🚩 ĐỐI PHƯƠNG ĐẦU HÀNG!\n" + endMsg;
+                                if(m.winner !== userData.displayName && m.winner !== 'HỦY BỞI QUẢN TRỊ') endMsg = "🚩 BẠN ĐÃ RÚT LUI!\n" + endMsg;
+                                else if (m.winner !== 'HỦY BỞI QUẢN TRỊ') endMsg = "🚩 ĐỐI PHƯƠNG ĐẦU HÀNG!\n" + endMsg;
+                            } else if (m.reason === 'force_end') {
+                                endMsg = "🛑 TRẬN ĐẤU ĐÃ BỊ HỦY BỞI QUẢN TRỊ VIÊN!";
+                                document.getElementById('pvpWaitMsg').style.color = '#ff1744';
                             }
 
                             document.getElementById('pvpWaitMsg').innerText = endMsg; 
@@ -1636,7 +1656,7 @@
                 const vocabList = [${vocabArray.join(',\n')}]; let currentIndex = 0; const flashcardEl = document.getElementById('flashcard'); function loadCard(index) { flashcardEl.classList.remove('flipped'); setTimeout(() => { document.getElementById('word-en').innerText = vocabList[index].en; document.getElementById('word-pro').innerText = vocabList[index].pro; document.getElementById('word-type').innerText = vocabList[index].type; document.getElementById('word-vi').innerText = vocabList[index].vi; document.getElementById('card-counter').innerText = 'Thẻ ' + (index + 1) + ' / ' + vocabList.length; const nextBtn = document.getElementById('next-btn'); if (index === vocabList.length - 1) { nextBtn.innerText = "BẮT ĐẦU THI"; nextBtn.className = "flex-1 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700"; } else { nextBtn.innerText = "Tiếp ➡"; nextBtn.className = "flex-1 py-3 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700"; } }, 150); } function flipCard() { flashcardEl.classList.toggle('flipped'); } function prevCard() { if (currentIndex > 0) { currentIndex--; loadCard(currentIndex); } } function nextCard() { if (currentIndex < vocabList.length - 1) { currentIndex++; loadCard(currentIndex); } else { startQuiz(); } } let currentQuizIndex = 0; let quizOrder = []; let timerId; let timeLeft = 10; let correctAnswersCount = 0; 
                 function startTimer() { timeLeft = 10; document.getElementById('timer-circle').style.strokeDashoffset = '0'; document.getElementById('timer-text').innerText = timeLeft; clearInterval(timerId); timerId = setInterval(() => { timeLeft--; const offset = 283 - (timeLeft / 10) * 283; document.getElementById('timer-circle').style.strokeDashoffset = offset; document.getElementById('timer-text').innerText = timeLeft; if(timeLeft <= 0) { clearInterval(timerId); timeOut(); } }, 1000); } function timeOut() { const optionsContainer = document.getElementById('quiz-options'); optionsContainer.classList.add('disabled'); const correctWord = vocabList[quizOrder[currentQuizIndex]]; Array.from(optionsContainer.children).forEach(child => { child.style.visibility = 'visible'; if (child.innerText === correctWord.vi) child.classList.add('correct'); else child.classList.add('wrong'); }); setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadQuizQuestion(); else finishQuiz(); }, 1500); } function startQuiz() { document.getElementById('flashcard-section').classList.add('hidden'); document.getElementById('quiz-section').classList.remove('hidden'); quizOrder = [...Array(vocabList.length).keys()].sort(() => Math.random() - 0.5); currentQuizIndex = 0; loadQuizQuestion(); } function loadQuizQuestion() { const optionsContainer = document.getElementById('quiz-options'); optionsContainer.innerHTML = ''; optionsContainer.classList.remove('disabled'); const correctWord = vocabList[quizOrder[currentQuizIndex]]; document.getElementById('quiz-question').innerText = correctWord.en; let options = [correctWord.vi]; let wrongOptions = vocabList.filter(w => w.en !== correctWord.en).map(w => w.vi); wrongOptions = wrongOptions.sort(() => Math.random() - 0.5).slice(0, 3); options = options.concat(wrongOptions); options.sort(() => Math.random() - 0.5); options.forEach(opt => { const btn = document.createElement('button'); btn.className = 'quiz-btn'; btn.innerText = opt; btn.onclick = () => checkAnswer(btn, opt, correctWord.vi); optionsContainer.appendChild(btn); }); startTimer(); } 
                 function finishQuiz() { clearInterval(timerId); document.getElementById('timer-display').style.display = 'none'; let ratio = correctAnswersCount / vocabList.length; let optionsContainer = document.getElementById('quiz-options'); optionsContainer.classList.remove('disabled'); if (ratio >= 0.8) { if (${currentDay} < ${totalDays}) { optionsContainer.innerHTML = '<div class="text-center p-6 bg-green-100 text-green-900 rounded-xl font-bold text-xl mb-4">✅ Đã vượt qua Nhịp ' + ${currentDay} + ' (' + correctAnswersCount + '/' + vocabList.length + ')</div><button onclick="window.parent.postMessage(\\'TM_NEXT_DAY\\', \\'*\\')" class="quiz-btn" style="background: linear-gradient(45deg, #10b981, #059669); color: white; border: none; text-align: center;">Chuyển sang ngày tiếp theo ➡</button>'; } else { optionsContainer.innerHTML = '<div class="text-center p-6 bg-yellow-100 text-yellow-900 rounded-xl font-bold text-xl mb-4">🎉 XUYÊN KHÔNG THÀNH CÔNG! (' + correctAnswersCount + '/' + vocabList.length + ')</div><button onclick="window.parent.postMessage(\\'TM_RESULT_PASS\\', \\'*\\')" class="quiz-btn" style="background: linear-gradient(45deg, #f59e0b, #d97706); color: white; border: none; text-align: center;">Nhận Lại Chuỗi Của Bạn</button>'; } } else { optionsContainer.innerHTML = '<div class="text-center p-6 bg-red-100 text-red-900 rounded-xl font-bold text-xl mb-4">❌ THẤT BẠI! Bạn chỉ đạt ' + correctAnswersCount + '/' + vocabList.length + ' (' + Math.round(ratio*100) + '%). Yêu cầu >= 80%.</div><button onclick="window.parent.postMessage(\\'TM_RESULT_FAIL\\', \\'*\\')" class="quiz-btn" style="background: linear-gradient(45deg, #ef4444, #b91c1c); color: white; border: none; text-align: center;">Chấp nhận hình phạt</button>'; } } 
-                function checkAnswer(btn, selectedVi, correctVi) { clearInterval(timerId); const optionsContainer = document.getElementById('quiz-options'); optionsContainer.classList.add('disabled'); if (selectedVi === correctVi) { btn.classList.add('correct'); correctAnswersCount++; setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadQuizQuestion(); else finishQuiz(); }, 800); } else { btn.classList.add('wrong'); Array.from(optionsContainer.children).forEach(child => { child.style.visibility = 'visible'; if (child.innerText === correctVi) child.classList.add('correct'); }); setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadQuizQuestion(); else finishQuiz(); }, 1500); } } loadCard(0); 
+function checkAnswer(btn, selectedVi, correctVi) { clearInterval(timerId); const optionsContainer = document.getElementById('quiz-options'); optionsContainer.classList.add('disabled'); if (selectedVi === correctVi) { btn.classList.add('correct'); correctAnswersCount++; setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadQuizQuestion(); else finishQuiz(); }, 800); } else { btn.classList.add('wrong'); Array.from(optionsContainer.children).forEach(child => { child.style.visibility = 'visible'; if (child.innerText === correctVi) child.classList.add('correct'); }); setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadQuizQuestion(); else finishQuiz(); }, 1500); } } loadCard(0); 
             <\/script></body></html>`;
             document.getElementById('modalFrame').srcdoc = tmTemplate; document.getElementById('previewModal').classList.add('active');
         }
@@ -1690,7 +1710,7 @@
 
         function openMigrationModal() { 
             if(availableRealms.length <= 1) return alert("Hệ thống hiện tại chỉ mới có 1 Lãnh Thổ duy nhất.");
-            if(userData.role !== 'teacher' && userData.gold < 100000) return alert("Bệ hạ/Khanh không đủ 100.000 Vàng để mua Giấy Thông Hành!"); 
+            if(userData.role !== 'teacher' && userData.gold < 100000) return alert("Bạn không đủ 100.000 Vàng để mua Giấy Thông Hành!"); 
             document.getElementById('currentRealmDisplay').innerText = currentRealm; 
             let select = document.getElementById('realmSelect'); 
             select.innerHTML = ''; 
