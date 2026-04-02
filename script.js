@@ -1348,5 +1348,3 @@ let availableRealms = [];
             switchTab('library');
         });
 
-</body>
-</html>
