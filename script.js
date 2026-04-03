@@ -113,13 +113,12 @@ function checkAuth() {
                         
                         updateUI(); setupRealmListeners(); fetchLessonsFromFirebase(); 
                     } else { 
-                        userData.lastLogin = todayStr; userData.role = trueRole; 
-                        userData.realm = availableRealms[0]; currentRealm = userData.realm;
-                        document.getElementById('nameModal').classList.add('active'); 
-                    }
-                }).catch(err => {
-                    console.error("Lỗi xác thực:", err); alert("Lỗi tải hồ sơ! Bệ hạ chưa mở khóa Firebase Rules.");
-                });
+    // TẨY TỦY: Đưa mọi thứ về số 0 cho người mới để không nhận nhầm Vàng của Admin
+    userData = { role: trueRole, gold: 0, xp: 0, lifetime_xp: 0, realm: availableRealms[0], streak: 1, displayName: '', lastLogin: todayStr, hasShield: false, potionExpiry: null, potionX3Expiry: null, maskExpiry: null, magnifyingGlass: 0, vouchers: [], blindBoxCount: 0, lastBlindBoxDate: todayStr, streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: getCurrentWeekStr(), highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, timeMachine: null };
+    
+    currentRealm = userData.realm;
+    document.getElementById('nameModal').classList.add('active'); 
+}
             } else { 
                 currentUser = null; userData = { role: 'student', gold: 0, xp: 0, lifetime_xp: 0, realm: "Khởi Nguyên", streak: 0, displayName: 'Khách', vouchers: [], streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: '', highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, potionX3Expiry: null, timeMachine: null };
                 currentRealm = "Khởi Nguyên"; applyTheme('theme_default'); updateUI(); fetchLessonsFromFirebase();
