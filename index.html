@@ -14,7 +14,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
     <div id="sidebarOverlay" class="overlay" onclick="toggleSidebar()"></div>
@@ -36,6 +36,7 @@
         <div class="nav-item" id="nav-creator" onclick="switchTab('creator')" style="display:none">⚡ Ngự Thư Phòng (Admin)</div>
         <div class="nav-item nav-arena" id="nav-arena" onclick="switchTab('arena')" style="display:none">⚔️ Đài Tỷ Võ</div>
         <div class="nav-item active" id="nav-library" onclick="switchTab('library')">☁️ Kho Bài Học</div>
+        <div class="nav-item" id="nav-stats" onclick="switchTab('stats')">📊 Thống Kê</div>
         <div class="nav-item" id="nav-shop" onclick="switchTab('shop')">🛒 Cửa Hàng</div>
         <div class="nav-item" id="nav-leaderboard" onclick="switchTab('leaderboard')">🏆 Xếp Hạng</div>
         <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">⚙️ Cài Đặt</div>
@@ -56,6 +57,23 @@
             <div id="view-library" class="view-section active">
                 <div class="header"><h1>☁️ Kho Bài Học</h1></div>
                 <div class="library-grid" id="libraryContainer"></div>
+            </div>
+
+            <div id="view-stats" class="view-section">
+                <div class="header"><h1>📊 Thống Kê & Thành Tựu</h1><p>Nơi phô diễn sự uyên bác và công sức tu luyện của bạn.</p></div>
+                <div class="stats-overview-card">
+                    <div class="stats-divider">
+                        <div class="stats-label">Tổng Số Từ Đã Thành Thạo</div>
+                        <div class="stats-value-1"><span id="ui-mastered-words">0</span> 🎓</div>
+                    </div>
+                    <div class="stats-nodivider">
+                        <div class="stats-label">Bài Học Đã Vượt Ải (100%)</div>
+                        <div class="stats-value-2"><span id="ui-mastered-lessons">0</span> 📚</div>
+                    </div>
+                </div>
+                <h3 style="color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px;">🏆 Bảo Các Thành Tựu</h3>
+                <div class="achieve-grid" id="achieveGrid">
+                    </div>
             </div>
 
             <div id="view-arena" class="view-section">
@@ -254,6 +272,6 @@
 
     <div id="rewardAnim" class="reward-anim">🎉 +10 🪙 | +15 ⭐</div>
 
-    <script src="script.js?v=3"></script>
+    <script src="script.js?v=4"></script>
 </body>
 </html>
