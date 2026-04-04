@@ -722,10 +722,12 @@ function renderBracket() {
         const colTitle = document.createElement('div'); colTitle.style.cssText = 'font-size: 12px; font-weight: bold; color: #ffd700; text-align: center; margin-bottom: 15px; border-bottom: 1px dashed #ffd700; padding-bottom: 5px;'; colTitle.innerText = col.title; colEl.appendChild(colTitle);
 
         if (col.key === 'center_col') {
-            if (currentLeagueView === 'c1' && currentFullBracketData.super_cup) {
+            // YỂM BÙA: Chỉ vẽ Siêu Cúp nếu tồn tại giải C2 (currentC2Data != null)
+            if (currentLeagueView === 'c1' && currentFullBracketData.super_cup && currentC2Data) {
                 let scLabel = document.createElement('div'); scLabel.innerHTML = '<div style="font-size:12px; color:#ff1744; margin-top:5px; margin-bottom:5px; font-weight:900; animation: pulse 1.5s infinite;">🔥 SIÊU CÚP MÙA GIẢI</div>'; colEl.appendChild(scLabel);
                 colEl.appendChild(createMatchBox(currentFullBracketData.super_cup, 'super_cup', 0, currentLeagueView));
             }
+            // Chung kết và Tranh hạng 3 thì lúc nào cũng phải có
             if (currentFullBracketData.final) {
                 let fLabel = document.createElement('div'); fLabel.innerHTML = '<div style="font-size:12px; color:#ffd700; margin-top:15px; margin-bottom:5px; font-weight:bold;">🥇 CHUNG KẾT</div>'; colEl.appendChild(fLabel);
                 colEl.appendChild(createMatchBox(currentFullBracketData.final, 'final', 0, currentLeagueView));
@@ -734,7 +736,8 @@ function renderBracket() {
                 let tLabel = document.createElement('div'); tLabel.innerHTML = '<div style="font-size:12px; color:#cd7f32; margin-top:15px; margin-bottom:5px; font-weight:bold;">🥉 TRANH HẠNG 3</div>'; colEl.appendChild(tLabel);
                 colEl.appendChild(createMatchBox(currentFullBracketData.third_place, 'third_place', 0, currentLeagueView));
             }
-            if (currentLeagueView === 'c1' && currentFullBracketData.promotion_playoff) {
+            // YỂM BÙA: Chỉ vẽ Play-off nếu tồn tại giải C2
+            if (currentLeagueView === 'c1' && currentFullBracketData.promotion_playoff && currentC2Data) {
                 let poLabel = document.createElement('div'); poLabel.innerHTML = '<div style="font-size:12px; color:#00e676; margin-top:15px; margin-bottom:5px; font-weight:900;">⚔️ PLAY-OFF THĂNG HẠNG</div>'; colEl.appendChild(poLabel);
                 colEl.appendChild(createMatchBox(currentFullBracketData.promotion_playoff, 'promotion_playoff', 0, currentLeagueView));
             }
