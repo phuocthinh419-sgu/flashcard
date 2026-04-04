@@ -278,46 +278,75 @@ function renderAchievements() {
     const container = document.getElementById('achieveGrid');
     if (!container) return;
     const mw = userData.mastered_words || 0;
+    
+    // Bộ danh hiệu Lục Địa Digital cực cháy
     const badges = [
-        { id: 'a1', title: 'Tân Binh', target: 30, icon: '🐣' },
-        { id: 'a2', title: 'Người Sưu Tập', target: 50, icon: '📚' },
-        { id: 'a3', title: 'Bậc Thầy Từ Vựng', target: 100, icon: '🧙‍♂️' },
-        { id: 'a4', title: 'Chuyên Gia', target: 150, icon: '🎓' },
-        { id: 'a5', title: 'Học Giả', target: 300, icon: '📖' },
-        { id: 'a6', title: 'Huyền Thoại', target: 500, icon: '👑' }
+        { id: 'a1', title: 'Tân Binh (Rookie)', target: 30, icon: '🐣', color: '#9e9e9e' },
+        { id: 'a2', title: 'Nhặt Đồ (Looter)', target: 50, icon: '🎒', color: '#8d6e63' },
+        { id: 'a3', title: 'Thợ Săn Từ (Hunter)', target: 100, icon: '🏹', color: '#4caf50' },
+        { id: 'a4', title: 'Chuyên Gia (Pro)', target: 150, icon: '🎓', color: '#03a9f4' },
+        { id: 'a5', title: 'Học Giả (Elite)', target: 300, icon: '📖', color: '#3f51b5' },
+        { id: 'a6', title: 'Huyền Thoại (Legendary)', target: 500, icon: '👑', color: '#ff9800' },
+        { id: 'a7', title: 'Cỗ Máy Học (Cyborg)', target: 1000, icon: '🤖', color: '#e91e63' },
+        { id: 'a8', title: 'Bậc Thầy (Mastermind)', target: 2500, icon: '🧠', color: '#9c27b0' },
+        { id: 'a9', title: 'Siêu Việt (Transcendent)', target: 5000, icon: '🌌', color: 'linear-gradient(45deg, #00f2fe, #4facfe)' },
+        { id: 'a10', title: 'Vị Thần (God of Vocab)', target: 10000, icon: '⚡', color: 'linear-gradient(45deg, #f12711, #f5af19)' }
     ];
     
     let html = '';
-    badges.forEach(b => {
+    badges.forEach((b, index) => {
         let isUnlocked = mw >= b.target;
         let progress = Math.min((mw / b.target) * 100, 100);
         let classState = isUnlocked ? 'unlocked' : 'locked';
-        let iconColor = isUnlocked ? '' : 'style="opacity: 0.5"';
         
+        // Cơ chế sương mù: Ẩn danh hiệu khủng nếu mốc trước đó chưa đạt 80%
+        let isHidden = false;
+        if (index >= 6) { // Áp dụng từ mốc số 7 (Cỗ Máy Học - 1000 từ)
+            let prevBadge = badges[index - 1];
+            if (mw < prevBadge.target * 0.8) isHidden = true;
+        }
+
+        let displayTitle = isHidden ? '??? (Bí ẩn)' : b.title;
+        let displayIcon = isHidden ? '🔒' : b.icon;
+        let iconColor = isUnlocked ? '' : 'style="opacity: 0.4; filter: grayscale(100%);"';
+        
+        // Render màu sắc (Hỗ trợ cả mã màu thường và dải màu Gradient)
+        let titleStyle = '';
+        let barBg = '#4caf50'; 
+        let cardBorder = '#333';
+        
+        if (!isHidden) {
+            if (b.color.includes('gradient')) {
+                titleStyle = `background: ${b.color}; -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900;`;
+                barBg = b.color;
+                cardBorder = isUnlocked ? '#f5af19' : '#333';
+            } else {
+                titleStyle = `color: ${b.color}; font-weight: 800;`;
+                barBg = b.color;
+                cardBorder = isUnlocked ? b.color : '#333';
+            }
+        } else {
+            titleStyle = `color: #666; font-weight: bold; font-style: italic;`;
+            barBg = '#555';
+        }
+
         html += `
-            <div class="achieve-card ${classState}">
-                <div class="achieve-icon" ${iconColor}>${b.icon}</div>
+            <div class="achieve-card ${classState}" style="border-color: ${cardBorder}; transition: all 0.3s ease;">
+                <div class="achieve-icon" ${iconColor} style="font-size: 32px; margin-bottom: 8px;">${displayIcon}</div>
                 <div class="achieve-info">
-                    <div class="achieve-title">${b.title}</div>
-                    <div class="achieve-desc">Thành thạo ${b.target} từ vựng</div>
-                    <div class="achieve-progress-bg">
-                        <div class="achieve-progress-fill" style="width: ${progress}%"></div>
+                    <div class="achieve-title" style="${titleStyle}">${displayTitle}</div>
+                    <div class="achieve-desc" style="font-size: 11px; color: #aaa; margin-bottom: 6px;">
+                        ${isHidden ? 'Đạt 80% mốc trước để giải mã' : 'Thành thạo ' + b.target + ' từ vựng'}
                     </div>
-                    <div class="achieve-progress-text">${mw}/${b.target}</div>
+                    <div class="achieve-progress-bg" style="background: rgba(255,255,255,0.1); border-radius: 10px; height: 6px; overflow: hidden; margin-bottom: 4px;">
+                        <div class="achieve-progress-fill" style="width: ${progress}%; background: ${barBg}; height: 100%; transition: width 1s ease-out;"></div>
+                    </div>
+                    <div class="achieve-progress-text" style="font-size: 11px; text-align: right; color: #ccc;">${mw}/${b.target}</div>
                 </div>
             </div>
         `;
     });
     container.innerHTML = html;
-}
-
-let isSpinning = false;
-function openWheelModal() {
-    if (!currentUser) return alert("Vui lòng thực hiện đăng nhập để dùng chức năng này.");
-    let todayStr = new Date().toLocaleDateString('en-GB');
-    if (userData.lastBlindBoxDate !== todayStr) { userData.blindBoxCount = 0; userData.lastBlindBoxDate = todayStr; }
-    document.getElementById('ui-wheel-left').innerText = 3 - (userData.blindBoxCount || 0);
-    document.getElementById('wheelModal').classList.add('active');
 }
 
 function spinWheel() {
