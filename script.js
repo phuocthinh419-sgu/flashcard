@@ -545,7 +545,10 @@ function executeAntiCheatPunishment() {
         key += `/${surveillanceData.matchIndex}`; 
     }
     
-    rtdb.ref(key + '/winner').set(surveillanceData.oppName);
+    let p1_s = surveillanceData.playerSlot === 'p1' ? 0 : 2;
+    let p2_s = surveillanceData.playerSlot === 'p2' ? 0 : 2;
+
+    rtdb.ref(key).update({ winner: surveillanceData.oppName, p1_set: p1_s, p2_set: p2_s });
     
     rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
         let m = snap.val();
@@ -605,7 +608,9 @@ function surrenderMatch() {
                     if(!['sfl', 'sfr', 'final', 'third_place', 'super_cup', 'promotion_playoff'].includes(m.stage)) { 
                         key += `/${m.match_idx}`; 
                     }
-                    rtdb.ref(key + '/winner').set(oppName);
+                    let p1s = (oppName === m.p1) ? 2 : 0;
+                    let p2s = (oppName === m.p2) ? 2 : 0;
+                    rtdb.ref(key).update({ winner: oppName, p1_set: p1s, p2_set: p2s });
                 }
 
                 rtdb.ref(`active_pvp_match/${currentRealm}`).update({ status: 'finished', winner: oppName, reason: 'surrender' });
@@ -615,11 +620,6 @@ function surrenderMatch() {
         isUnderSurveillance = tempSurveillance; 
     }
 }
-        
-setInterval(() => {
-    if(userData.role !== 'teacher' || !currentRealm) return;
-    let now = Date.now();
-    let updates = {}; let needsUpdate = false;
 
     function checkWalkover(m, stage, idx, league) {
         if(m && m.p1 && m.p2 && m.p1 !== "---" && m.p2 !== "---" && !m.winner && m.schedule) {
@@ -718,9 +718,18 @@ function createMatchBox(m, stageKey, matchIndex, league) {
     let p1Name = m.p1 || '---'; let p2Name = m.p2 || '---';
     let p1Class = ''; let p2Class = ''; let p1Star = ''; let p2Star = '';
     
+    let s1Text = (m.p1_set !== undefined) ? `<span style="float:right; background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px; font-family:monospace; margin-left:8px;">${m.p1_set}</span>` : '';
+    let s2Text = (m.p2_set !== undefined) ? `<span style="float:right; background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px; font-family:monospace; margin-left:8px;">${m.p2_set}</span>` : '';
+
     if (isFinished) {
-        if (m.winner === m.p1) { p1Class = 'won'; p2Class = 'lost'; p1Star = ' ⭐'; } 
-        else if (m.winner === m.p2) { p2Class = 'won'; p1Class = 'lost'; p2Star = ' ⭐'; }
+        if (m.winner === m.p1) { 
+            p1Class = 'won'; p2Class = 'lost'; p1Star = ' ⭐'; 
+            if(m.p1_set !== undefined) { s1Text = `<span style="float:right; background:#00c853; color:#000; padding:2px 6px; border-radius:4px; font-family:monospace; margin-left:8px;">${m.p1_set}</span>`; s2Text = `<span style="float:right; background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px; font-family:monospace; margin-left:8px;">${m.p2_set}</span>`; }
+        } 
+        else if (m.winner === m.p2) { 
+            p2Class = 'won'; p1Class = 'lost'; p2Star = ' ⭐'; 
+            if(m.p2_set !== undefined) { s2Text = `<span style="float:right; background:#00c853; color:#000; padding:2px 6px; border-radius:4px; font-family:monospace; margin-left:8px;">${m.p2_set}</span>`; s1Text = `<span style="float:right; background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px; font-family:monospace; margin-left:8px;">${m.p1_set}</span>`; }
+        }
     }
 
     let timeInfo = ''; let btnAction = '';
@@ -772,9 +781,9 @@ function createMatchBox(m, stageKey, matchIndex, league) {
 
     const matchEl = document.createElement('div'); matchEl.className = 'bracket-match';
     matchEl.innerHTML = `
-        <div class="player-name ${p1Class}"><span>${p1Name}${p1Star}</span> ${p1Badge}</div>
+        <div class="player-name ${p1Class}" style="text-align: left;"><span>${p1Name}${p1Star}</span> ${p1Badge}${s1Text}</div>
         <div class="vs-text">VS</div>
-        <div class="player-name ${p2Class}"><span>${p2Name}${p2Star}</span> ${p2Badge}</div>
+        <div class="player-name ${p2Class}" style="text-align: left;"><span>${p2Name}${p2Star}</span> ${p2Badge}${s2Text}</div>
         ${timeInfo}
         ${btnAction}
     `;
@@ -1154,8 +1163,11 @@ function processNextRound(currentQIdx) {
                     let matchInfo = matchSnap.val();
                     if(matchInfo.stage && matchInfo.match_idx !== undefined && matchInfo.league) {
                         let key = `tournament_status/${currentRealm}/${matchInfo.league}_bracket/${matchInfo.stage}`;
-                        if(matchInfo.stage === 'sfl' || matchInfo.stage === 'sfr' || matchInfo.stage === 'final' || matchInfo.stage === 'third_place' || matchInfo.stage === 'super_cup' || matchInfo.stage === 'promotion_playoff') { key += `/winner`; } else { key += `/${matchInfo.match_idx}/winner`; }
-                        rtdb.ref(key).set(winner);
+                        if(matchInfo.stage === 'sfl' || matchInfo.stage === 'sfr' || matchInfo.stage === 'final' || matchInfo.stage === 'third_place' || matchInfo.stage === 'super_cup' || matchInfo.stage === 'promotion_playoff') { 
+                            rtdb.ref(key).update({ winner: winner, p1_set: set1, p2_set: set2 }); 
+                        } else { 
+                            rtdb.ref(key + `/${matchInfo.match_idx}`).update({ winner: winner, p1_set: set1, p2_set: set2 }); 
+                        }
                     }
                 });
             }
