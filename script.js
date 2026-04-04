@@ -1153,13 +1153,24 @@ function processNextRound(currentQIdx) {
         let m = snap.val(); if(!m || m.q_idx !== currentQIdx || m.status !== 'showing_result') return; 
         let nextIdx = m.q_idx + 1; let s1 = m.p1_score; let s2 = m.p2_score; let set1 = m.p1_set; let set2 = m.p2_set; let status = 'playing'; let winner = "";
 
+        // CHỐT SET 1 (Câu 10) HOẶC SET 2 (Câu 20)
         if(m.q_idx === 10 || m.q_idx === 20) {
+            // Cộng điểm Set cho người thắng Set đó
             if(s1 > s2) set1++; else if(s2 > s1) set2++; 
             s1 = 0; s2 = 0; 
             
+            // Nếu ai đạt 2 Set trước thì thắng luôn
             if(set1 === 2) { status = 'finished'; winner = m.p1; } 
             else if(set2 === 2) { status = 'finished'; winner = m.p2; } 
+            
+            // LUẬT MỚI: Nếu hết Set 2 (Câu 20) mà một người dẫn trước (1-0), THẮNG LUÔN KHÔNG CẦN SET 3!
+            else if (m.q_idx === 20) {
+                if(set1 > set2) { status = 'finished'; winner = m.p1; }
+                else if(set2 > set1) { status = 'finished'; winner = m.p2; }
+                // Nếu 1-1 hoặc 0-0 thì status vẫn là 'playing', hệ thống tự động tràn qua Set 3 (Câu 21)
+            }
         } 
+        // SET 3 SINH TỬ (Câu 21 trở đi - Ai 3 điểm trước người đó thắng chung cuộc)
         else if (m.q_idx >= 21) {
             if(s1 >= 3) { status = 'finished'; winner = m.p1; set1++; } 
             else if (s2 >= 3) { status = 'finished'; winner = m.p2; set2++;}
