@@ -723,18 +723,24 @@ function createMatchBox(m, stageKey, matchIndex, league) {
     let p1Name = m.p1 || '---'; let p2Name = m.p2 || '---';
     let p1Class = ''; let p2Class = ''; let p1Star = ''; let p2Star = '';
     
-    // Giao diện hộp điểm (Tự động canh lề vuông vức)
-    let s1Text = (m.p1_set !== undefined) ? `<div style="background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:4px; font-family:monospace; margin-left:8px; flex-shrink:0;">${m.p1_set}</div>` : '';
-    let s2Text = (m.p2_set !== undefined) ? `<div style="background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:4px; font-family:monospace; margin-left:8px; flex-shrink:0;">${m.p2_set}</div>` : '';
+    // Đúc lại thẻ Tỷ số cho to, rõ và cân đối
+    let s1Text = (m.p1_set !== undefined) ? `<span style="background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:bold; font-size:14px;">${m.p1_set}</span>` : '';
+    let s2Text = (m.p2_set !== undefined) ? `<span style="background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:bold; font-size:14px;">${m.p2_set}</span>` : '';
 
     if (isFinished) {
         if (m.winner === m.p1) { 
             p1Class = 'won'; p2Class = 'lost'; p1Star = ' ⭐'; 
-            if(m.p1_set !== undefined) { s1Text = `<div style="background:#00c853; color:#000; padding:2px 8px; border-radius:4px; font-family:monospace; margin-left:8px; flex-shrink:0; font-weight:900;">${m.p1_set}</div>`; s2Text = `<div style="background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:4px; font-family:monospace; margin-left:8px; flex-shrink:0;">${m.p2_set}</div>`; }
+            if(m.p1_set !== undefined) { 
+                s1Text = `<span style="background:#00c853; color:#000; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px;">${m.p1_set}</span>`; 
+                s2Text = `<span style="background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:bold; font-size:14px;">${m.p2_set}</span>`; 
+            }
         } 
         else if (m.winner === m.p2) { 
             p2Class = 'won'; p1Class = 'lost'; p2Star = ' ⭐'; 
-            if(m.p2_set !== undefined) { s2Text = `<div style="background:#00c853; color:#000; padding:2px 8px; border-radius:4px; font-family:monospace; margin-left:8px; flex-shrink:0; font-weight:900;">${m.p2_set}</div>`; s1Text = `<div style="background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:4px; font-family:monospace; margin-left:8px; flex-shrink:0;">${m.p1_set}</div>`; }
+            if(m.p2_set !== undefined) { 
+                s2Text = `<span style="background:#00c853; color:#000; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px;">${m.p2_set}</span>`; 
+                s1Text = `<span style="background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:bold; font-size:14px;">${m.p1_set}</span>`; 
+            }
         }
     }
 
@@ -782,22 +788,23 @@ function createMatchBox(m, stageKey, matchIndex, league) {
         }
     }
 
-    // Đưa huy hiệu Ready về đúng vị trí cạnh tên
-    let p1Badge = m.p1_ready && !isFinished ? `<span style="color:#00e676; font-size:12px; margin-left:5px;">✅</span>` : '';
-    let p2Badge = m.p2_ready && !isFinished ? `<span style="color:#00e676; font-size:12px; margin-left:5px;">✅</span>` : '';
+    let p1Badge = m.p1_ready && !isFinished ? `<span style="color:#00e676; font-size:12px; margin-left:4px;">✅</span>` : '';
+    let p2Badge = m.p2_ready && !isFinished ? `<span style="color:#00e676; font-size:12px; margin-left:4px;">✅</span>` : '';
 
     const matchEl = document.createElement('div'); matchEl.className = 'bracket-match';
     
-    // Thuật Flexbox: Căn tên bên trái, ép điểm số bám chặt mép phải, chữ VS nằm cân giữa
+    // Kiến thiết lại bố cục: Tên 1 -> Tỷ số & VS -> Tên 2 (Tất cả căn giữa)
     matchEl.innerHTML = `
-        <div class="player-name ${p1Class}" style="display:flex; justify-content:space-between; align-items:center; padding: 6px 10px;">
-            <div style="flex:1; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p1Name}${p1Star}${p1Badge}</div>
-            ${s1Text}
+        <div class="player-name ${p1Class}" style="text-align: center; border-bottom: none; padding-bottom: 2px;">
+            <span>${p1Name}${p1Star}</span> ${p1Badge}
         </div>
-        <div class="vs-text" style="display:table; margin: 4px auto;">VS</div>
-        <div class="player-name ${p2Class}" style="display:flex; justify-content:space-between; align-items:center; padding: 6px 10px;">
-            <div style="flex:1; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p2Name}${p2Star}${p2Badge}</div>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin: 4px 0;">
+            ${s1Text}
+            <div class="vs-text" style="margin: 0; padding: 2px 8px;">VS</div>
             ${s2Text}
+        </div>
+        <div class="player-name ${p2Class}" style="text-align: center; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-top: 2px; padding-bottom: 8px;">
+            <span>${p2Name}${p2Star}</span> ${p2Badge}
         </div>
         ${timeInfo}
         ${btnAction}
