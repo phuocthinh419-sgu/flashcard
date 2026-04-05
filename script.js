@@ -764,9 +764,9 @@ function createMatchBox(m, stageKey, matchIndex, league) {
     let p1Name = m.p1 || '---'; let p2Name = m.p2 || '---';
     let p1Class = ''; let p2Class = ''; let p1Star = ''; let p2Star = '';
     
-    // Đúc lại thẻ Tỷ số: Cả 2 ô đều màu Đỏ rực, chữ Trắng béo
-    let s1Text = (m.p1_set !== undefined) ? `<span style="background:#ff1744; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px; box-shadow: 0 0 5px rgba(255,23,68,0.6);">${m.p1_set}</span>` : '';
-    let s2Text = (m.p2_set !== undefined) ? `<span style="background:#ff1744; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px; box-shadow: 0 0 5px rgba(255,23,68,0.6);">${m.p2_set}</span>` : '';
+    // Đã ếm thêm bùa "pulse" (nhịp đập lấp lánh) giống hệt nút Đại Sảnh Danh Vọng
+    let s1Text = (m.p1_set !== undefined) ? `<span style="background:#ff1744; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px; box-shadow: 0 0 10px #ff1744; animation: pulse 1.5s infinite;">${m.p1_set}</span>` : '';
+    let s2Text = (m.p2_set !== undefined) ? `<span style="background:#ff1744; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px; box-shadow: 0 0 10px #ff1744; animation: pulse 1.5s infinite;">${m.p2_set}</span>` : '';
 
     if (isFinished) {
         if (m.winner === m.p1) { 
