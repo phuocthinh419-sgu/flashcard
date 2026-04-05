@@ -702,78 +702,35 @@ setInterval(() => {
 }, 5000);
 
 function renderBracket() {
-    // Ảo thuật Vàng Hoàng Kim Tối Thượng (Bản chuẩn thẻ Ultra - Nét chữ thanh mảnh)
+    // Ảo thuật Phục Hưng: Chỉ lấy Vệt sáng lướt chéo, giữ nguyên nền bóng đêm nguyên bản
     if (!document.getElementById('c1-elite-style')) {
         const style = document.createElement('style');
         style.id = 'c1-elite-style';
         style.innerHTML = `
-            @keyframes c1BgGlow {
-                0% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
-                100% { background-position: 0% 50%; }
-            }
             @keyframes sweepShine {
                 0% { left: -100%; }
                 20% { left: 100%; }
                 100% { left: 100%; }
             }
             .c1-elite-theme {
-                background: linear-gradient(135deg, #dfb342, #fdf0a6, #d4af37, #fdf0a6) !important;
-                background-size: 300% 300% !important;
-                animation: c1BgGlow 8s ease infinite !important;
                 position: relative;
                 overflow: hidden;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.3), inset 0 0 20px rgba(255,255,255,0.5) !important;
-                border-radius: 12px;
-                border: 2px solid #fff;
+                border-radius: 8px;
+                /* Tạo độ sâu nhẹ cho võ đài trên nền web */
+                box-shadow: 0 0 15px rgba(0, 0, 0, 0.4) !important; 
+                background-color: rgba(0, 0, 0, 0.1); 
             }
             .c1-elite-theme::before {
                 content: '';
                 position: absolute;
                 top: 0; left: -100%;
                 width: 50%; height: 100%;
-                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+                /* Vệt sáng trắng lướt trên nền tối sẽ cực kỳ sắc nét */
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
                 transform: skewX(-25deg);
                 animation: sweepShine 3s infinite;
                 pointer-events: none;
                 z-index: 1;
-            }
-            /* Chữ cơ bản: Nâu Đen vương giả, thanh mảnh, loại bỏ bóng nhòe */
-            .c1-elite-text {
-                color: #3e2723 !important; 
-                font-weight: 500 !important; /* Đã giảm độ béo */
-                text-shadow: none !important;
-                position: relative;
-                z-index: 2;
-            }
-            /* Tên tuyển thủ: Đen tuyền, thanh nét dễ đọc */
-            .player-name-c1 {
-                color: #212121 !important;
-                font-weight: 600 !important; /* Đã giảm độ béo */
-                text-shadow: none !important;
-            }
-            /* Kẻ chiến thắng: Nổi bật màu Đỏ Thẫm */
-            .player-name-c1.won {
-                color: #b71c1c !important;
-                font-weight: bold !important;
-            }
-            /* Kẻ thảm bại: Gạch tên, làm mờ không thương tiếc */
-            .player-name-c1.lost {
-                text-decoration: line-through !important;
-                opacity: 0.5 !important;
-            }
-            /* Vỏ bọc VS: Pill đen xám, chữ Vàng sáng */
-            .vs-badge-c1 {
-                background: #3e2723 !important;
-                color: #ffeb3b !important;
-                padding: 2px 10px;
-                border-radius: 12px;
-                font-size: 11px;
-                font-weight: bold;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-                margin: 0;
-                position: relative;
-                z-index: 2;
             }
         `;
         document.head.appendChild(style);
@@ -789,20 +746,19 @@ function renderBracket() {
     let boardEl = document.getElementById('bracketBoard');
     boardEl.style.display = 'block';
     
-    // Kích hoạt bùa Hoàng kim C1
     if (currentLeagueView === 'c1') boardEl.classList.add('c1-elite-theme');
     else boardEl.classList.remove('c1-elite-theme');
 
-    // Chỉnh màu Tiêu đề & Trạng thái giải đấu thanh thoát hơn
+    // Trả lại màu chữ gốc cho Tiêu đề
     let statusEl = document.getElementById('bracketStatus');
     if (statusEl) {
         statusEl.innerText = `GIAI ĐOẠN: Sơ đồ loại trực tiếp | Trạng thái: Đang tiến hành`;
-        statusEl.style.color = currentLeagueView === 'c1' ? '#3e2723' : '#ccc';
-        statusEl.style.fontWeight = currentLeagueView === 'c1' ? '600' : 'normal';
+        statusEl.style.color = '#ccc';
+        statusEl.style.fontWeight = 'normal';
     }
     let titleEl = document.getElementById('leagueTitle');
     if (titleEl) {
-        titleEl.style.color = currentLeagueView === 'c1' ? '#212121' : '#ffd700';
+        titleEl.style.color = currentLeagueView === 'c1' ? '#ffd700' : '#c0c0c0';
         titleEl.style.textShadow = 'none';
     }
 
@@ -824,8 +780,8 @@ function renderBracket() {
     columns.forEach(col => {
         const colEl = document.createElement('div'); colEl.className = 'bracket-column';
         
-        let titleColor = currentLeagueView === 'c1' ? '#4e342e' : '#ffd700'; 
-        let borderStyle = currentLeagueView === 'c1' ? '1px solid #8d6e63' : '1px dashed #ffd700';
+        let titleColor = currentLeagueView === 'c1' ? '#ffd700' : '#ffd700'; 
+        let borderStyle = currentLeagueView === 'c1' ? '1px dashed #ffd700' : '1px dashed #ffd700';
 
         const colTitle = document.createElement('div'); 
         colTitle.style.cssText = `font-size: 13px; font-weight: bold; color: ${titleColor}; text-align: center; margin-bottom: 15px; border-bottom: ${borderStyle}; padding-bottom: 5px; position: relative; z-index: 2;`; 
@@ -833,20 +789,19 @@ function renderBracket() {
 
         if (col.key === 'center_col') {
             if (currentLeagueView === 'c1' && currentFullBracketData.super_cup && currentC2Data) {
-                let scLabel = document.createElement('div'); scLabel.innerHTML = `<div style="font-size:13px; color:#d50000; margin-top:5px; margin-bottom:5px; font-weight:bold; animation: pulse 1.5s infinite; position: relative; z-index: 2;">🔥 SIÊU CÚP MÙA GIẢI</div>`; colEl.appendChild(scLabel);
+                let scLabel = document.createElement('div'); scLabel.innerHTML = `<div style="font-size:13px; color:#ff1744; margin-top:5px; margin-bottom:5px; font-weight:900; animation: pulse 1.5s infinite; position: relative; z-index: 2;">🔥 SIÊU CÚP MÙA GIẢI</div>`; colEl.appendChild(scLabel);
                 colEl.appendChild(createMatchBox(currentFullBracketData.super_cup, 'super_cup', 0, currentLeagueView));
             }
             if (currentFullBracketData.final) {
-                let fLabel = document.createElement('div'); fLabel.innerHTML = `<div style="font-size:13px; color:${currentLeagueView === 'c1' ? '#b71c1c' : titleColor}; margin-top:15px; margin-bottom:5px; font-weight:bold; position: relative; z-index: 2;">🥇 CHUNG KẾT</div>`; colEl.appendChild(fLabel);
+                let fLabel = document.createElement('div'); fLabel.innerHTML = `<div style="font-size:13px; color:#ffd700; margin-top:15px; margin-bottom:5px; font-weight:bold; position: relative; z-index: 2;">🥇 CHUNG KẾT</div>`; colEl.appendChild(fLabel);
                 colEl.appendChild(createMatchBox(currentFullBracketData.final, 'final', 0, currentLeagueView));
             }
             if (currentFullBracketData.third_place && (currentFullBracketData.sfl || currentFullBracketData.sfr)) { 
-                let tColor = currentLeagueView === 'c1' ? '#d84315' : '#cd7f32';
-                let tLabel = document.createElement('div'); tLabel.innerHTML = `<div style="font-size:13px; color:${tColor}; margin-top:15px; margin-bottom:5px; font-weight:bold; position: relative; z-index: 2;">🥉 TRANH HẠNG 3</div>`; colEl.appendChild(tLabel);
+                let tLabel = document.createElement('div'); tLabel.innerHTML = `<div style="font-size:13px; color:#cd7f32; margin-top:15px; margin-bottom:5px; font-weight:bold; position: relative; z-index: 2;">🥉 TRANH HẠNG 3</div>`; colEl.appendChild(tLabel);
                 colEl.appendChild(createMatchBox(currentFullBracketData.third_place, 'third_place', 0, currentLeagueView));
             }
             if (currentLeagueView === 'c1' && currentFullBracketData.promotion_playoff && currentC2Data) {
-                let poLabel = document.createElement('div'); poLabel.innerHTML = `<div style="font-size:13px; color:#004d40; margin-top:15px; margin-bottom:5px; font-weight:bold; position: relative; z-index: 2;">⚔️ PLAY-OFF THĂNG HẠNG</div>`; colEl.appendChild(poLabel);
+                let poLabel = document.createElement('div'); poLabel.innerHTML = `<div style="font-size:13px; color:#00e676; margin-top:15px; margin-bottom:5px; font-weight:900; position: relative; z-index: 2;">⚔️ PLAY-OFF THĂNG HẠNG</div>`; colEl.appendChild(poLabel);
                 colEl.appendChild(createMatchBox(currentFullBracketData.promotion_playoff, 'promotion_playoff', 0, currentLeagueView));
             }
         } else {
@@ -865,20 +820,11 @@ function createMatchBox(m, stageKey, matchIndex, league) {
     let p1Name = m.p1 || '---'; let p2Name = m.p2 || '---';
     let p1Class = ''; let p2Class = ''; let p1Star = ''; let p2Star = '';
     
-    // Gán class phân loại
-    let textClass = league === 'c1' ? 'c1-elite-text' : '';
-    let playerNameClass = league === 'c1' ? 'player-name-c1' : '';
-    let borderVS = league === 'c1' ? '1px solid #a1887f' : '1px dashed rgba(255,255,255,0.2)';
+    // Tỷ số đỏ lấp lánh (nổi bật hoàn hảo trên nền tối)
+    let s1Text = (m.p1_set !== undefined) ? `<span style="background:#ff1744; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px; box-shadow: 0 0 10px #ff1744; animation: pulse 1.5s infinite; position: relative; z-index: 3;">${m.p1_set}</span>` : '';
+    let s2Text = (m.p2_set !== undefined) ? `<span style="background:#ff1744; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px; box-shadow: 0 0 10px #ff1744; animation: pulse 1.5s infinite; position: relative; z-index: 3;">${m.p2_set}</span>` : '';
 
-    let vsHtml = league === 'c1' 
-        ? `<div class="vs-badge-c1">VS</div>` 
-        : `<div style="margin: 0; padding: 2px 8px;">VS</div>`;
-
-    // Ô tỷ số Đỏ lấp lánh (vẫn để nét béo 900 cho số nó khỏe)
-    let s1Text = (m.p1_set !== undefined) ? `<span style="background:#ff1744; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px; box-shadow: 0 0 8px #ff1744; animation: pulse 1.5s infinite; position: relative; z-index: 3;">${m.p1_set}</span>` : '';
-    let s2Text = (m.p2_set !== undefined) ? `<span style="background:#ff1744; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px; box-shadow: 0 0 8px #ff1744; animation: pulse 1.5s infinite; position: relative; z-index: 3;">${m.p2_set}</span>` : '';
-
-    // Phân xử Thắng Bại 
+    // Logic thắng bại: CSS gốc sẽ lo việc gạch tên và làm mờ kẻ thua
     if (isFinished) {
         if (m.winner === m.p1) { p1Class = 'won'; p2Class = 'lost'; p1Star = ' ⭐'; } 
         else if (m.winner === m.p2) { p2Class = 'won'; p1Class = 'lost'; p2Star = ' ⭐'; }
@@ -893,11 +839,10 @@ function createMatchBox(m, stageKey, matchIndex, league) {
             let diff = m.schedule - now;
             if(diff > 0) {
                 let d = new Date(m.schedule);
-                timeInfo = `<div class="match-time ${textClass}" style="font-weight:500;">🕒 Lịch: ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')} ${d.getDate()}/${d.getMonth()+1}</div>`;
+                timeInfo = `<div class="match-time" style="position: relative; z-index: 2;">🕒 Lịch: ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')} ${d.getDate()}/${d.getMonth()+1}</div>`;
             } else if (diff <= 0 && diff > -600000) { 
                 let minsLeft = Math.floor((600000 + diff)/60000) + 1;
-                let activeColor = league === 'c1' ? '#006064' : '#00e676';
-                timeInfo = `<div class="match-time" style="color:${activeColor}; font-weight:bold; animation: pulse 1s infinite; position: relative; z-index: 2;">🟢 ĐANG MỞ (Còn ${minsLeft}p)</div>`;
+                timeInfo = `<div class="match-time" style="color:#00e676; font-weight:bold; animation: pulse 1s infinite; position: relative; z-index: 2;">🟢 ĐANG MỞ (Còn ${minsLeft}p)</div>`;
                 
                 let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
                 
@@ -905,11 +850,10 @@ function createMatchBox(m, stageKey, matchIndex, league) {
                 if(isP2 && !m.p2_ready) btnAction = `<button class="btn-join" style="display:block; position: relative; z-index: 2;" onclick="showAntiCheatModal('${league}', '${stageKey}', ${matchIndex}, 'p2')">🚪 VÀO PHÒNG (P2)</button>`;
                 
                 if(m.p1_ready && m.p2_ready) {
-                    timeInfo = `<div class="match-time" style="color:${activeColor}; font-weight:bold; animation: pulse 1s infinite; position: relative; z-index: 2;">✅ SẴN SÀNG - CHỜ LỆNH BẮT ĐẦU</div>`;
+                    timeInfo = `<div class="match-time" style="color:#00e676; font-weight:bold; animation: pulse 1s infinite; position: relative; z-index: 2;">✅ SẴN SÀNG - CHỜ LỆNH BẮT ĐẦU</div>`;
                 }
             } else { 
-                let waitColor = league === 'c1' ? '#d50000' : '#ff5252';
-                timeInfo = `<div class="match-time" style="color:${waitColor}; font-weight:bold; position: relative; z-index: 2;">⏳ Đang cập nhật...</div>`;
+                timeInfo = `<div class="match-time" style="color:#ff5252; position: relative; z-index: 2;">⏳ Đang cập nhật...</div>`;
             }
         }
         
@@ -927,16 +871,19 @@ function createMatchBox(m, stageKey, matchIndex, league) {
 
     const matchEl = document.createElement('div'); matchEl.className = 'bracket-match';
     
+    // Khôi phục vỏ bọc VS nguyên bản
+    let vsPill = `<div class="vs-text" style="margin: 0; padding: 2px 8px; position: relative; z-index: 2;">VS</div>`;
+
     matchEl.innerHTML = `
-        <div class="player-name ${playerNameClass} ${p1Class}" style="text-align: center; border-bottom: none; padding-bottom: 2px; position: relative; z-index: 2;">
+        <div class="player-name ${p1Class}" style="text-align: center; border-bottom: none; padding-bottom: 2px; position: relative; z-index: 2;">
             <span>${p1Name}${p1Star}</span> ${p1Badge}
         </div>
         <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin: 4px 0; position: relative; z-index: 2;">
             ${s1Text}
-            ${vsHtml}
+            ${vsPill}
             ${s2Text}
         </div>
-        <div class="player-name ${playerNameClass} ${p2Class}" style="text-align: center; border-bottom: ${borderVS}; padding-top: 2px; padding-bottom: 8px; position: relative; z-index: 2;">
+        <div class="player-name ${p2Class}" style="text-align: center; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-top: 2px; padding-bottom: 8px; position: relative; z-index: 2;">
             <span>${p2Name}${p2Star}</span> ${p2Badge}
         </div>
         ${timeInfo}
