@@ -702,7 +702,7 @@ setInterval(() => {
 }, 5000);
 
 function renderBracket() {
-    // Ảo thuật Hoàng kim Nguyên chất cho giải C1
+    // Ảo thuật Hoàng kim Diệu Nhẹ cho giải C1
     if (!document.getElementById('c1-elite-style')) {
         const style = document.createElement('style');
         style.id = 'c1-elite-style';
@@ -718,8 +718,8 @@ function renderBracket() {
                 100% { left: 100%; }
             }
             .c1-elite-theme {
-                /* Đã loại bỏ màu xanh! Chỉ dùng dải Vàng hoàng kim sáng rực */
-                background: linear-gradient(270deg, #fceabb, #f8b500, #fceabb, #ffd700) !important;
+                /* Giảm độ chói của nền: Vàng diệu nhẹ hoàng gia */
+                background: linear-gradient(270deg, #f8b500, #e6ac00, #f8b500, #d4a017) !important;
                 background-size: 600% 600% !important;
                 animation: c1BgGlow 6s ease infinite !important;
                 position: relative;
@@ -739,11 +739,11 @@ function renderBracket() {
                 pointer-events: none;
                 z-index: 1;
             }
-            /* Chữ cơ bản cho C1: Màu đen đậm không đổ bóng trắng */
+            /* Chữ cơ bản cho C1: Màu ĐEN đậm hoàn toàn để nổi bật */
             .c1-elite-text {
-                color: #212121 !important; 
+                color: #000 !important; 
                 font-weight: 900 !important;
-                text-shadow: none !important; 
+                text-shadow: 0 0 10px #000 !important; /* Tăng shadow đen để làm nổi trên nền sáng */
                 position: relative;
                 z-index: 2;
             }
@@ -751,12 +751,21 @@ function renderBracket() {
             .player-name-c1 {
                 color: #000 !important;
                 font-weight: 900 !important;
+                text-shadow: 0 0 4px #000 !important; /* Tăng shadow đen để làm nổi */
             }
-            /* Chữ VS C1: Chuyển sang đỏ thẫm */
+            /* Vỏ bọc VS: Badge đen bo tròn, chữ VS vàng */
             .vs-text-c1 {
-                color: #b71c1c !important;
+                color: #ffd700 !important; /* Chuyển chữ VS thành vàng */
+                background-color: #000 !important; /* Badge nền đen bo tròn */
+                padding: 2px 8px;
+                border-radius: 999px; /* Bo tròn hoàn toàn */
                 font-weight: 900 !important;
                 text-shadow: none !important;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                z-index: 2;
             }
         `;
         document.head.appendChild(style);
@@ -795,12 +804,14 @@ function renderBracket() {
     columns.forEach(col => {
         const colEl = document.createElement('div'); colEl.className = 'bracket-column';
         
-        let titleColor = currentLeagueView === 'c1' ? '#4e342e' : '#ffd700'; // Tiêu đề cột C1 thành Nâu sẫm
+        // Vòng đấu: Màu đỏ sẫm sẫm sẫm nổi bật hơn trên nền vàng sáng
+        let titleColor = currentLeagueView === 'c1' ? '#b71c1c' : '#ffd700';
         let titleShadow = currentLeagueView === 'c1' ? '' : '';
-        let borderStyle = currentLeagueView === 'c1' ? '2px solid #8d6e63' : '1px dashed #ffd700'; // Đường gạch ngang C1
+        let borderStyle = currentLeagueView === 'c1' ? '2px solid #fff' : '1px dashed #ffd700'; // Đường gạch ngang C1
 
         const colTitle = document.createElement('div'); 
-        colTitle.style.cssText = `font-size: 12px; font-weight: 900; color: ${titleColor}; ${titleShadow} text-align: center; margin-bottom: 15px; border-bottom: ${borderStyle}; padding-bottom: 5px; position: relative; z-index: 2;`; 
+        // Font-size: 14px cho vòng đấu to hơn
+        colTitle.style.cssText = `font-size: 14px; font-weight: 900; color: ${titleColor}; ${titleShadow} text-align: center; margin-bottom: 15px; border-bottom: ${borderStyle}; padding-bottom: 5px; position: relative; z-index: 2;`; 
         colTitle.innerText = col.title; colEl.appendChild(colTitle);
 
         if (col.key === 'center_col') {
@@ -809,7 +820,7 @@ function renderBracket() {
                 colEl.appendChild(createMatchBox(currentFullBracketData.super_cup, 'super_cup', 0, currentLeagueView));
             }
             if (currentFullBracketData.final) {
-                let fLabel = document.createElement('div'); fLabel.innerHTML = `<div style="font-size:12px; color:${currentLeagueView === 'c1' ? '#b71c1c' : titleColor}; margin-top:15px; margin-bottom:5px; font-weight:900; position: relative; z-index: 2;">🥇 CHUNG KẾT</div>`; colEl.appendChild(fLabel);
+                let fLabel = document.createElement('div'); fLabel.innerHTML = `<div style="font-size:12px; color:${titleColor}; margin-top:15px; margin-bottom:5px; font-weight:900; position: relative; z-index: 2;">🥇 CHUNG KẾT</div>`; colEl.appendChild(fLabel);
                 colEl.appendChild(createMatchBox(currentFullBracketData.final, 'final', 0, currentLeagueView));
             }
             if (currentFullBracketData.third_place && (currentFullBracketData.sfl || currentFullBracketData.sfr)) { 
@@ -863,8 +874,8 @@ function createMatchBox(m, stageKey, matchIndex, league) {
                 timeInfo = `<div class="match-time ${textClass}">🕒 Lịch: ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')} ${d.getDate()}/${d.getMonth()+1}</div>`;
             } else if (diff <= 0 && diff > -600000) { 
                 let minsLeft = Math.floor((600000 + diff)/60000) + 1;
-                let activeColor = league === 'c1' ? '#006064' : '#00e676'; // Màu xanh lá rêu cho C1
-                timeInfo = `<div class="match-time" style="color:${activeColor}; font-weight:900; animation: pulse 1s infinite; position: relative; z-index: 2;">🟢 ĐANG MỞ (Còn ${minsLeft}p)</div>`;
+                let activeColor = league === 'c1' ? '#006064' : '#00e676';
+                timeInfo = `<div class="match-time" style="color:${activeColor}; font-weight:900; animation: pulse 1s infinite; position: relative; z-index: 2; text-shadow: 0 0 4px #000;">🟢 ĐANG MỞ (Còn ${minsLeft}p)</div>`;
                 
                 let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
                 
@@ -872,11 +883,11 @@ function createMatchBox(m, stageKey, matchIndex, league) {
                 if(isP2 && !m.p2_ready) btnAction = `<button class="btn-join" style="display:block; position: relative; z-index: 2;" onclick="showAntiCheatModal('${league}', '${stageKey}', ${matchIndex}, 'p2')">🚪 VÀO PHÒNG (P2)</button>`;
                 
                 if(m.p1_ready && m.p2_ready) {
-                    timeInfo = `<div class="match-time" style="color:${activeColor}; font-weight:900; animation: pulse 1s infinite; position: relative; z-index: 2;">✅ SẴN SÀNG - CHỜ LỆNH BẮT ĐẦU</div>`;
+                    timeInfo = `<div class="match-time" style="color:${activeColor}; font-weight:900; animation: pulse 1s infinite; position: relative; z-index: 2; text-shadow: 0 0 4px #000;">✅ SẴN SÀNG - CHỜ LỆNH BẮT ĐẦU</div>`;
                 }
             } else { 
                 let waitColor = league === 'c1' ? '#b71c1c' : '#d50000';
-                timeInfo = `<div class="match-time" style="color:${waitColor}; font-weight:900; position: relative; z-index: 2;">⏳ Đang cập nhật...</div>`;
+                timeInfo = `<div class="match-time" style="color:${waitColor}; font-weight:900; position: relative; z-index: 2; text-shadow: 0 0 4px #000;">⏳ Đang cập nhật...</div>`;
             }
         }
         
@@ -889,8 +900,8 @@ function createMatchBox(m, stageKey, matchIndex, league) {
         }
     }
 
-    let p1Badge = m.p1_ready && !isFinished ? `<span style="color:#00c853; font-size:12px; margin-left:4px; position: relative; z-index: 2;">✅</span>` : '';
-    let p2Badge = m.p2_ready && !isFinished ? `<span style="color:#00c853; font-size:12px; margin-left:4px; position: relative; z-index: 2;">✅</span>` : '';
+    let p1Badge = m.p1_ready && !isFinished ? `<span style="color:#00e676; font-size:12px; margin-left:4px; position: relative; z-index: 2;">✅</span>` : '';
+    let p2Badge = m.p2_ready && !isFinished ? `<span style="color:#00e676; font-size:12px; margin-left:4px; position: relative; z-index: 2;">✅</span>` : '';
 
     const matchEl = document.createElement('div'); matchEl.className = 'bracket-match';
     
