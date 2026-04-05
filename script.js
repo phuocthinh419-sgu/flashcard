@@ -701,12 +701,129 @@ setInterval(() => {
     if(needsUpdate) { rtdb.ref().update(updates); }
 }, 5000);
 
+function renderBracket() {
+    // Nhúng CSS Ảo thuật Hoàng kim cho giải C1
+    if (!document.getElementById('c1-elite-style')) {
+        const style = document.createElement('style');
+        style.id = 'c1-elite-style';
+        style.innerHTML = `
+            @keyframes c1BgGlow {
+                0% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+                100% { background-position: 0% 50%; }
+            }
+            @keyframes sweepShine {
+                0% { left: -100%; }
+                20% { left: 100%; }
+                100% { left: 100%; }
+            }
+            .c1-elite-theme {
+                background: linear-gradient(270deg, #1a237e, #b8860b, #ffd700, #1a237e) !important;
+                background-size: 600% 600% !important;
+                animation: c1BgGlow 8s ease infinite !important;
+                position: relative;
+                overflow: hidden;
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.5) !important;
+                border-radius: 8px;
+            }
+            .c1-elite-theme::before {
+                content: '';
+                position: absolute;
+                top: 0; left: -100%;
+                width: 60%; height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+                transform: skewX(-25deg);
+                animation: sweepShine 3s infinite;
+                pointer-events: none;
+                z-index: 1;
+            }
+            .c1-elite-text {
+                color: #000 !important;
+                font-weight: 900 !important;
+                text-shadow: 0 0 4px #fff, 0 0 4px #fff !important;
+                position: relative;
+                z-index: 2;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    currentFullBracketData = currentLeagueView === 'c1' ? currentC1Data : currentC2Data;
+    
+    if (!currentFullBracketData) {
+        document.getElementById('bracketMatches').innerHTML = '<div style="color:#888; text-align:center; width:100%;">Giai đoạn này hiện tại chưa có dữ liệu.</div>';
+        return;
+    }
+    
+    let boardEl = document.getElementById('bracketBoard');
+    boardEl.style.display = 'block';
+    
+    // Kích hoạt bùa Hoàng kim nếu là C1
+    if (currentLeagueView === 'c1') boardEl.classList.add('c1-elite-theme');
+    else boardEl.classList.remove('c1-elite-theme');
+
+    document.getElementById('bracketStatus').innerText = `GIAI ĐOẠN: Sơ đồ loại trực tiếp | Trạng thái: Đang tiến hành`;
+    const container = document.getElementById('bracketMatches'); container.innerHTML = ''; 
+
+    const columns = [];
+    if (currentFullBracketData.r16l) columns.push({ title: 'Vòng 1/8', key: 'r16l' });
+    if (currentFullBracketData.qfl) columns.push({ title: 'Tứ Kết', key: 'qfl' });
+    if (currentFullBracketData.sfl) columns.push({ title: 'Bán Kết', key: 'sfl' });
+    
+    columns.push({ title: 'TRẬN CHIẾN TỐI THƯỢNG', key: 'center_col' });
+    
+    if (currentFullBracketData.sfr) columns.push({ title: 'Bán Kết', key: 'sfr' });
+    if (currentFullBracketData.qfr) columns.push({ title: 'Tứ Kết', key: 'qfr' });
+    if (currentFullBracketData.r16r) columns.push({ title: 'Vòng 1/8', key: 'r16r' });
+
+    container.style.gridTemplateColumns = `repeat(${columns.length}, minmax(130px, 1fr))`;
+
+    columns.forEach(col => {
+        const colEl = document.createElement('div'); colEl.className = 'bracket-column';
+        
+        let titleColor = currentLeagueView === 'c1' ? '#800000' : '#ffd700'; 
+        let titleShadow = currentLeagueView === 'c1' ? 'text-shadow: 0 0 3px #fff;' : '';
+        let borderStyle = currentLeagueView === 'c1' ? '1px solid #800000' : '1px dashed #ffd700';
+
+        const colTitle = document.createElement('div'); 
+        colTitle.style.cssText = `font-size: 12px; font-weight: bold; color: ${titleColor}; ${titleShadow} text-align: center; margin-bottom: 15px; border-bottom: ${borderStyle}; padding-bottom: 5px; position: relative; z-index: 2;`; 
+        colTitle.innerText = col.title; colEl.appendChild(colTitle);
+
+        if (col.key === 'center_col') {
+            if (currentLeagueView === 'c1' && currentFullBracketData.super_cup && currentC2Data) {
+                let scLabel = document.createElement('div'); scLabel.innerHTML = `<div style="font-size:12px; color:#ff1744; ${titleShadow} margin-top:5px; margin-bottom:5px; font-weight:900; animation: pulse 1.5s infinite; position: relative; z-index: 2;">🔥 SIÊU CÚP MÙA GIẢI</div>`; colEl.appendChild(scLabel);
+                colEl.appendChild(createMatchBox(currentFullBracketData.super_cup, 'super_cup', 0, currentLeagueView));
+            }
+            if (currentFullBracketData.final) {
+                let fLabel = document.createElement('div'); fLabel.innerHTML = `<div style="font-size:12px; color:${titleColor}; ${titleShadow} margin-top:15px; margin-bottom:5px; font-weight:bold; position: relative; z-index: 2;">🥇 CHUNG KẾT</div>`; colEl.appendChild(fLabel);
+                colEl.appendChild(createMatchBox(currentFullBracketData.final, 'final', 0, currentLeagueView));
+            }
+            if (currentFullBracketData.third_place && (currentFullBracketData.sfl || currentFullBracketData.sfr)) { 
+                let tColor = currentLeagueView === 'c1' ? '#d84315' : '#cd7f32';
+                let tLabel = document.createElement('div'); tLabel.innerHTML = `<div style="font-size:12px; color:${tColor}; ${titleShadow} margin-top:15px; margin-bottom:5px; font-weight:bold; position: relative; z-index: 2;">🥉 TRANH HẠNG 3</div>`; colEl.appendChild(tLabel);
+                colEl.appendChild(createMatchBox(currentFullBracketData.third_place, 'third_place', 0, currentLeagueView));
+            }
+            if (currentLeagueView === 'c1' && currentFullBracketData.promotion_playoff && currentC2Data) {
+                let poLabel = document.createElement('div'); poLabel.innerHTML = `<div style="font-size:12px; color:#004d40; ${titleShadow} margin-top:15px; margin-bottom:5px; font-weight:900; position: relative; z-index: 2;">⚔️ PLAY-OFF THĂNG HẠNG</div>`; colEl.appendChild(poLabel);
+                colEl.appendChild(createMatchBox(currentFullBracketData.promotion_playoff, 'promotion_playoff', 0, currentLeagueView));
+            }
+        } else {
+            const data = currentFullBracketData[col.key];
+            if (Array.isArray(data)) { data.forEach((m, index) => { colEl.appendChild(createMatchBox(m, col.key, index, currentLeagueView)); }); } 
+            else if (data) { colEl.appendChild(createMatchBox(data, col.key, 0, currentLeagueView)); }
+        }
+        container.appendChild(colEl);
+    });
+}
+
 function createMatchBox(m, stageKey, matchIndex, league) {
+    if (!m) return document.createElement('div');
+
     const isFinished = !!m.winner;
     let p1Name = m.p1 || '---'; let p2Name = m.p2 || '---';
     let p1Class = ''; let p2Class = ''; let p1Star = ''; let p2Star = '';
     
-    // Nếu là giải C1, gán thêm class để làm đen chữ và nhấc chữ lên trên hiệu ứng ánh sáng
+    // Nếu là C1, font chữ đen tuyền viền trắng nổi bật. Nếu C2 thì giữ nguyên.
     let textClass = league === 'c1' ? 'c1-elite-text' : '';
     let borderVS = league === 'c1' ? '1px solid #333' : '1px dashed rgba(255,255,255,0.2)';
 
