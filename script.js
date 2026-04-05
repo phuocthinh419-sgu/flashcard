@@ -805,9 +805,12 @@ function createMatchBox(m, stageKey, matchIndex, league) {
                 if(isP2 && !m.p2_ready) btnAction = `<button class="btn-join" style="display:block;" onclick="showAntiCheatModal('${league}', '${stageKey}', ${matchIndex}, 'p2')">🚪 VÀO PHÒNG (P2)</button>`;
                 
                 if(m.p1_ready && m.p2_ready) {
-    timeInfo = `<div class="match-time" style="color:#00e676; animation: pulse 1s infinite;">✅ SẴN SÀNG - CHỜ LỆNH BẮT ĐẦU</div>`;
-    // Đã tước quyền tự động bốc đề. Chờ bệ hạ bấm "BẮT ĐẦU NGAY".
-}
+                    timeInfo = `<div class="match-time" style="color:#00e676; animation: pulse 1s infinite;">✅ SẴN SÀNG - CHỜ LỆNH BẮT ĐẦU</div>`;
+                }
+            } else { 
+                timeInfo = `<div class="match-time" style="color:#ff5252;">⏳ Hệ thống đang cập nhật kết quả...</div>`;
+            }
+        }
         
         if (userData.role === 'teacher') {
             let safeP1 = (m.p1 || '').replace(/'/g, "\\'");
@@ -823,7 +826,6 @@ function createMatchBox(m, stageKey, matchIndex, league) {
 
     const matchEl = document.createElement('div'); matchEl.className = 'bracket-match';
     
-    // Kiến thiết lại bố cục: Tên 1 -> Tỷ số & VS -> Tên 2 (Tất cả căn giữa)
     matchEl.innerHTML = `
         <div class="player-name ${p1Class}" style="text-align: center; border-bottom: none; padding-bottom: 2px;">
             <span>${p1Name}${p1Star}</span> ${p1Badge}
