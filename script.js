@@ -764,23 +764,16 @@ function createMatchBox(m, stageKey, matchIndex, league) {
     let p1Name = m.p1 || '---'; let p2Name = m.p2 || '---';
     let p1Class = ''; let p2Class = ''; let p1Star = ''; let p2Star = '';
     
-    let s1Text = (m.p1_set !== undefined) ? `<span style="background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:bold; font-size:14px;">${m.p1_set}</span>` : '';
-    let s2Text = (m.p2_set !== undefined) ? `<span style="background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:bold; font-size:14px;">${m.p2_set}</span>` : '';
+    // Đúc lại thẻ Tỷ số: Cả 2 ô đều màu Đỏ rực, chữ Trắng béo
+    let s1Text = (m.p1_set !== undefined) ? `<span style="background:#ff1744; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px; box-shadow: 0 0 5px rgba(255,23,68,0.6);">${m.p1_set}</span>` : '';
+    let s2Text = (m.p2_set !== undefined) ? `<span style="background:#ff1744; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px; box-shadow: 0 0 5px rgba(255,23,68,0.6);">${m.p2_set}</span>` : '';
 
     if (isFinished) {
         if (m.winner === m.p1) { 
             p1Class = 'won'; p2Class = 'lost'; p1Star = ' ⭐'; 
-            if(m.p1_set !== undefined) { 
-                s1Text = `<span style="background:#00c853; color:#000; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px;">${m.p1_set}</span>`; 
-                s2Text = `<span style="background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:bold; font-size:14px;">${m.p2_set}</span>`; 
-            }
         } 
         else if (m.winner === m.p2) { 
             p2Class = 'won'; p1Class = 'lost'; p2Star = ' ⭐'; 
-            if(m.p2_set !== undefined) { 
-                s2Text = `<span style="background:#00c853; color:#000; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px;">${m.p2_set}</span>`; 
-                s1Text = `<span style="background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:bold; font-size:14px;">${m.p1_set}</span>`; 
-            }
         }
     }
 
