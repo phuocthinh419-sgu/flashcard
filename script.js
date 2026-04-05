@@ -816,17 +816,17 @@ function renderBracket() {
 }
 
 function createMatchBox(m, stageKey, matchIndex, league) {
-    if (!m) return document.createElement('div');
+    if (!m) return document.createElement('div'); // Bùa chống sập Firebase
 
     const isFinished = !!m.winner;
     let p1Name = m.p1 || '---'; let p2Name = m.p2 || '---';
     let p1Class = ''; let p2Class = ''; let p1Star = ''; let p2Star = '';
     
-    // Tỷ số đỏ lấp lánh (nổi bật hoàn hảo trên nền tối)
-    let s1Text = (m.p1_set !== undefined) ? `<span style="background:#ff1744; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px; box-shadow: 0 0 10px #ff1744; animation: pulse 1.5s infinite; position: relative; z-index: 3;">${m.p1_set}</span>` : '';
-    let s2Text = (m.p2_set !== undefined) ? `<span style="background:#ff1744; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px; box-shadow: 0 0 10px #ff1744; animation: pulse 1.5s infinite; position: relative; z-index: 3;">${m.p2_set}</span>` : '';
+    // Tỷ số đỏ lấp lánh đập thình thịch
+    let s1Text = (m.p1_set !== undefined) ? `<span style="background:#ff1744; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px; box-shadow: 0 0 8px #ff1744; animation: pulse 1.5s infinite; position: relative; z-index: 3;">${m.p1_set}</span>` : '';
+    let s2Text = (m.p2_set !== undefined) ? `<span style="background:#ff1744; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px; box-shadow: 0 0 8px #ff1744; animation: pulse 1.5s infinite; position: relative; z-index: 3;">${m.p2_set}</span>` : '';
 
-    // Logic thắng bại: CSS gốc sẽ lo việc gạch tên và làm mờ kẻ thua
+    // Khôi phục logic cũ: Class "won" và "lost" sẽ tự động tô xanh kẻ thắng và gạch ngang làm mờ kẻ thua
     if (isFinished) {
         if (m.winner === m.p1) { p1Class = 'won'; p2Class = 'lost'; p1Star = ' ⭐'; } 
         else if (m.winner === m.p2) { p2Class = 'won'; p1Class = 'lost'; p2Star = ' ⭐'; }
@@ -868,8 +868,8 @@ function createMatchBox(m, stageKey, matchIndex, league) {
         }
     }
 
-    let p1Badge = m.p1_ready && !isFinished ? `<span style="color:#00c853; font-size:12px; margin-left:4px; position: relative; z-index: 2;">✅</span>` : '';
-    let p2Badge = m.p2_ready && !isFinished ? `<span style="color:#00c853; font-size:12px; margin-left:4px; position: relative; z-index: 2;">✅</span>` : '';
+    let p1Badge = m.p1_ready && !isFinished ? `<span style="color:#00e676; font-size:12px; margin-left:4px; position: relative; z-index: 2;">✅</span>` : '';
+    let p2Badge = m.p2_ready && !isFinished ? `<span style="color:#00e676; font-size:12px; margin-left:4px; position: relative; z-index: 2;">✅</span>` : '';
 
     const matchEl = document.createElement('div'); matchEl.className = 'bracket-match';
     
@@ -897,7 +897,8 @@ function createMatchBox(m, stageKey, matchIndex, league) {
 function setupRealmListeners() {
     if(rtdb && currentRealm) {
         rtdb.ref('tournament_status').off(); 
-        // Lắng nghe Loa Phát Thanh
+        
+        // Lắng nghe Loa Phát Thanh Tối Thượng
         rtdb.ref(`tournament_status/${currentRealm}/global_notice`).on('value', (snap) => {
             let noticeText = snap.val();
             let board = document.getElementById('adminNoticeBoard');
@@ -905,12 +906,13 @@ function setupRealmListeners() {
             if(board && content) {
                 if(noticeText && noticeText.trim() !== "") {
                     content.innerText = noticeText;
-                    board.style.display = 'flex'; // Trồi lên
+                    board.style.display = 'flex'; // Trồi lên chễm chệ
                 } else {
                     board.style.display = 'none'; // Lặn xuống
                 }
             }
         });
+        
         rtdb.ref(`tournament_status/${currentRealm}`).on('value', (snapshot) => { 
             let data = snapshot.val() || {}; currentC1Data = data.c1_bracket || null; currentC2Data = data.c2_bracket || null; 
             if (isUnderSurveillance && surveillanceData) { 
@@ -1459,5 +1461,3 @@ function clearNotice() {
         alert("🔇 Đã tắt loa phát thanh!");
     });
 }
-
-
