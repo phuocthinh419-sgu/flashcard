@@ -349,6 +349,15 @@ function renderAchievements() {
     container.innerHTML = html;
 }
 
+let isSpinning = false;
+function openWheelModal() {
+    if (!currentUser) return alert("Vui lòng thực hiện đăng nhập để dùng chức năng này.");
+    let todayStr = new Date().toLocaleDateString('en-GB');
+    if (userData.lastBlindBoxDate !== todayStr) { userData.blindBoxCount = 0; userData.lastBlindBoxDate = todayStr; }
+    document.getElementById('ui-wheel-left').innerText = 3 - (userData.blindBoxCount || 0);
+    document.getElementById('wheelModal').classList.add('active');
+}
+
 function spinWheel() {
     if (isSpinning) return;
     if (!currentUser) return alert("Vui lòng thực hiện đăng nhập để dùng chức năng này.");
