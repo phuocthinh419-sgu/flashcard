@@ -1368,3 +1368,12 @@ window.addEventListener('DOMContentLoaded', () => {
     switchTab('library');
 });
 
+// Đạo luật "Đồng Hồ Cát": Tự động làm mới Sơ đồ mỗi 10 giây để canh giờ mở cửa
+setInterval(() => {
+    if (currentRealm && currentFullBracketData) {
+        if (typeof renderBracket === 'function') {
+            renderBracket();
+        }
+    }
+}, 10000);
+
