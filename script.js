@@ -764,7 +764,6 @@ function createMatchBox(m, stageKey, matchIndex, league) {
     let p1Name = m.p1 || '---'; let p2Name = m.p2 || '---';
     let p1Class = ''; let p2Class = ''; let p1Star = ''; let p2Star = '';
     
-    // Đúc lại thẻ Tỷ số cho to, rõ và cân đối
     let s1Text = (m.p1_set !== undefined) ? `<span style="background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:bold; font-size:14px;">${m.p1_set}</span>` : '';
     let s2Text = (m.p2_set !== undefined) ? `<span style="background:rgba(0,0,0,0.4); padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:bold; font-size:14px;">${m.p2_set}</span>` : '';
 
@@ -895,12 +894,10 @@ function setupRealmListeners() {
                     let myAns = isP1 ? m.p1_ans : (isP2 ? m.p2_ans : ""); 
                     
                     if (window.currentPlayingQIdx !== m.q_idx) { 
-    window.currentPlayingQIdx = m.q_idx; window.localPvPTime = m.time_limit; clearInterval(window.pvpTimer); 
-    // Hủy bỏ hiệu ứng delay. Tất cả các Set đấu đều bung đáp án đồng loạt, dập tắt rủi ro mạng lag!
-    window.localUnlockTime = Date.now(); 
-    revealOptions(m, myAns, [0, 1, 2, 3]); 
-    startCountdown(m); 
-}
+                        window.currentPlayingQIdx = m.q_idx; window.localPvPTime = m.time_limit; clearInterval(window.pvpTimer); 
+                        window.localUnlockTime = Date.now(); 
+                        revealOptions(m, myAns, [0, 1, 2, 3]); 
+                        startCountdown(m); 
                     } 
                     
                     let oppAns = isP1 ? m.p2_ans : m.p1_ans; let botStatus = document.getElementById('botStatusMsg'); 
