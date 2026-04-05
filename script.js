@@ -259,13 +259,15 @@ function updateUI() {
         document.getElementById('nav-creator').style.display = 'flex'; 
         document.getElementById('nav-arena').style.display = 'flex'; 
         if(forceBtn) forceBtn.style.display = 'block'; 
+        if(document.getElementById('adminNoticeControl')) document.getElementById('adminNoticeControl').style.display = 'block';
     } else { 
         badge.className = 'user-badge badge-student'; 
         badge.innerText = '👨‍🎓 Học Sinh'; 
         document.getElementById('nav-creator').style.display = 'none'; 
         document.getElementById('nav-arena').style.display = 'none'; 
         if(forceBtn) forceBtn.style.display = 'none'; 
-    }            
+        if(document.getElementById('adminNoticeControl')) document.getElementById('adminNoticeControl').style.display = 'none';
+    }           
     let itemsToCheck = ['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow', 'theme_royal']; if(userData.purchasedItems) { itemsToCheck.forEach(item => { let btn = document.getElementById('btn-' + item); let priceTag = document.getElementById('price-' + item); if(btn && priceTag) { if(userData.purchasedItems.includes(item)) { btn.innerText = "Dùng Ngay"; btn.style.background = "#9e9e9e"; priceTag.innerText = "Đã sở hữu"; } else { btn.innerText = "Đổi Ngay"; btn.style.background = ""; let price = 5000; if(item === 'theme_aurora' || item === 'theme_snow') price = 15000; else if(item === 'theme_royal') price = 20000; priceTag.innerText = "🪙 " + price; } } }); }
     if (document.getElementById('ui-weekly-xp')) document.getElementById('ui-weekly-xp').innerText = userData.weeklyXp || 0; if (document.getElementById('ui-highest-xp')) document.getElementById('ui-highest-xp').innerText = userData.highestWeeklyXp || 0;
     let progressText = "Đang tích lũy"; let progressColor = "#888"; let lastW = userData.lastWeekXp || 0; let currW = userData.weeklyXp || 0; if (lastW > 0) { let ratio = ((currW - lastW) / lastW) * 100; if (ratio > 20) { progressText = "🔥 Bứt phá (>" + Math.round(ratio) + "%)"; progressColor = "#ff5722"; } else if (ratio >= -5 && ratio <= 20) { progressText = "📈 Ổn định (" + (ratio > 0 ? "+" : "") + Math.round(ratio) + "%)"; progressColor = "#00c853"; } else if (ratio >= -20 && ratio < -5) { progressText = "⚠️ Chững lại (" + Math.round(ratio) + "%)"; progressColor = "#fbc02d"; } else { progressText = "❄️ Sa sút (" + Math.round(ratio) + "%)"; progressColor = "#2962ff"; } } if (document.getElementById('ui-weekly-progress')) { document.getElementById('ui-weekly-progress').innerText = progressText; document.getElementById('ui-weekly-progress').style.color = progressColor; }
@@ -895,6 +897,20 @@ function createMatchBox(m, stageKey, matchIndex, league) {
 function setupRealmListeners() {
     if(rtdb && currentRealm) {
         rtdb.ref('tournament_status').off(); 
+        // Lắng nghe Loa Phát Thanh
+        rtdb.ref(`tournament_status/${currentRealm}/global_notice`).on('value', (snap) => {
+            let noticeText = snap.val();
+            let board = document.getElementById('adminNoticeBoard');
+            let content = document.getElementById('noticeContent');
+            if(board && content) {
+                if(noticeText && noticeText.trim() !== "") {
+                    content.innerText = noticeText;
+                    board.style.display = 'flex'; // Trồi lên
+                } else {
+                    board.style.display = 'none'; // Lặn xuống
+                }
+            }
+        });
         rtdb.ref(`tournament_status/${currentRealm}`).on('value', (snapshot) => { 
             let data = snapshot.val() || {}; currentC1Data = data.c1_bracket || null; currentC2Data = data.c2_bracket || null; 
             if (isUnderSurveillance && surveillanceData) { 
@@ -1425,5 +1441,23 @@ setInterval(() => {
         }
     }
 }, 10000);
+
+// Phát loa
+function publishNotice() {
+    let text = document.getElementById('adminNoticeInput').value;
+    if(!text) return alert("Bệ hạ chưa nhập thánh ý!");
+    rtdb.ref(`tournament_status/${currentRealm}/global_notice`).set(text).then(() => {
+        alert("📢 Đã truyền loa thành công ra toàn cõi!");
+        document.getElementById('adminNoticeInput').value = "";
+    });
+}
+
+// Tắt loa
+function clearNotice() {
+    if(!confirm("Bệ hạ muốn thu hồi Thánh chỉ và tắt bảng LED?")) return;
+    rtdb.ref(`tournament_status/${currentRealm}/global_notice`).set("").then(() => {
+        alert("🔇 Đã tắt loa phát thanh!");
+    });
+}
 
 
