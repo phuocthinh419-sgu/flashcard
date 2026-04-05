@@ -805,20 +805,9 @@ function createMatchBox(m, stageKey, matchIndex, league) {
                 if(isP2 && !m.p2_ready) btnAction = `<button class="btn-join" style="display:block;" onclick="showAntiCheatModal('${league}', '${stageKey}', ${matchIndex}, 'p2')">🚪 VÀO PHÒNG (P2)</button>`;
                 
                 if(m.p1_ready && m.p2_ready) {
-                    timeInfo = `<div class="match-time" style="color:#ff5252;">⚔️ ĐANG THI ĐẤU...</div>`;
-                    if(userData.role === 'teacher' || isP2) {
-                        rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(s => {
-                            let ac = s.val();
-                            if(!ac || ac.stage !== stageKey || ac.league !== league || ac.status === 'finished') {
-                                adminStartPvP(league, stageKey, matchIndex, m.p1, m.p2);
-                            }
-                        });
-                    }
-                }
-            } else { 
-                timeInfo = `<div class="match-time" style="color:#ff5252;">⏳ Hệ thống đang cập nhật kết quả...</div>`;
-            }
-        }
+    timeInfo = `<div class="match-time" style="color:#00e676; animation: pulse 1s infinite;">✅ SẴN SÀNG - CHỜ LỆNH BẮT ĐẦU</div>`;
+    // Đã tước quyền tự động bốc đề. Chờ bệ hạ bấm "BẮT ĐẦU NGAY".
+}
         
         if (userData.role === 'teacher') {
             let safeP1 = (m.p1 || '').replace(/'/g, "\\'");
@@ -904,18 +893,12 @@ function setupRealmListeners() {
                     let myAns = isP1 ? m.p1_ans : (isP2 ? m.p2_ans : ""); 
                     
                     if (window.currentPlayingQIdx !== m.q_idx) { 
-                        window.currentPlayingQIdx = m.q_idx; window.localPvPTime = m.time_limit; clearInterval(window.pvpTimer); 
-                        if (m.mode === 'normal') { 
-                            window.localUnlockTime = Date.now(); revealOptions(m, myAns, [0, 1, 2, 3]); startCountdown(m); 
-                        } else { 
-                            document.getElementById('pvpTimerBanner').innerText = `🔒 Thiết lập thông...`; 
-                            for(let i=0; i<4; i++) { let btn = document.getElementById('pvpOpt'+i); btn.innerText = "???"; btn.style.pointerEvents = 'none'; btn.style.backgroundColor = 'rgba(0,0,0,0.5)'; btn.style.borderColor = '#555'; } 
-                            setTimeout(() => { if(m.status==='playing') document.getElementById('pvpOpt0').innerText = m.current_q.opts[0]; }, 1500); 
-                            setTimeout(() => { if(m.status==='playing') document.getElementById('pvpOpt1').innerText = m.current_q.opts[1]; }, 3000); 
-                            setTimeout(() => { if(m.status==='playing') document.getElementById('pvpOpt2').innerText = m.current_q.opts[2]; }, 4500); 
-                            setTimeout(() => { if(m.status==='playing') document.getElementById('pvpOpt3').innerText = m.current_q.opts[3]; }, 6000); 
-                            setTimeout(() => { if(m.status==='playing' && myAns === "") { window.localUnlockTime = Date.now(); revealOptions(m, myAns, [0, 1, 2, 3]); startCountdown(m); } }, 6500); 
-                        } 
+    window.currentPlayingQIdx = m.q_idx; window.localPvPTime = m.time_limit; clearInterval(window.pvpTimer); 
+    // Hủy bỏ hiệu ứng delay. Tất cả các Set đấu đều bung đáp án đồng loạt, dập tắt rủi ro mạng lag!
+    window.localUnlockTime = Date.now(); 
+    revealOptions(m, myAns, [0, 1, 2, 3]); 
+    startCountdown(m); 
+}
                     } 
                     
                     let oppAns = isP1 ? m.p2_ans : m.p1_ans; let botStatus = document.getElementById('botStatusMsg'); 
