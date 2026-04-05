@@ -738,11 +738,22 @@ function renderBracket() {
                 z-index: 1;
             }
             .c1-elite-text {
-                color: #000 !important;
+                color: #fff !important; /* Chuyển màu chữ thành màu trắng để nổi bật hơn */
                 font-weight: 900 !important;
-                text-shadow: 0 0 4px #fff, 0 0 4px #fff !important;
+                text-shadow: 0 0 5px #000, 0 0 5px #000 !important; /* Tăng text-shadow đen để làm nổi bật chữ trên nền vàng lấp lánh */
                 position: relative;
                 z-index: 2;
+            }
+            /* Lớp mới cho tên người chơi */
+            .player-name-c1 {
+                color: #fff !important;
+                font-weight: bold !important;
+            }
+            /* VS Text màu vàng */
+            .vs-text-c1 {
+                color: #ffd700 !important;
+                font-weight: bold !important;
+                text-shadow: 0 0 3px #fff !important;
             }
         `;
         document.head.appendChild(style);
@@ -781,9 +792,9 @@ function renderBracket() {
     columns.forEach(col => {
         const colEl = document.createElement('div'); colEl.className = 'bracket-column';
         
-        let titleColor = currentLeagueView === 'c1' ? '#800000' : '#ffd700'; 
+        let titleColor = currentLeagueView === 'c1' ? '#ff9800' : '#ffd700'; /* Chỉnh tiêu đề cột thành màu cam rực rỡ cho C1 */
         let titleShadow = currentLeagueView === 'c1' ? 'text-shadow: 0 0 3px #fff;' : '';
-        let borderStyle = currentLeagueView === 'c1' ? '1px solid #800000' : '1px dashed #ffd700';
+        let borderStyle = currentLeagueView === 'c1' ? '1px solid #ff9800' : '1px dashed #ffd700';
 
         const colTitle = document.createElement('div'); 
         colTitle.style.cssText = `font-size: 12px; font-weight: bold; color: ${titleColor}; ${titleShadow} text-align: center; margin-bottom: 15px; border-bottom: ${borderStyle}; padding-bottom: 5px; position: relative; z-index: 2;`; 
@@ -799,12 +810,12 @@ function renderBracket() {
                 colEl.appendChild(createMatchBox(currentFullBracketData.final, 'final', 0, currentLeagueView));
             }
             if (currentFullBracketData.third_place && (currentFullBracketData.sfl || currentFullBracketData.sfr)) { 
-                let tColor = currentLeagueView === 'c1' ? '#d84315' : '#cd7f32';
+                let tColor = currentLeagueView === 'c1' ? '#ff9800' : '#cd7f32'; /* Chỉnh tiêu đề cột tranh hạng 3 thành màu cam rực rỡ cho C1 */
                 let tLabel = document.createElement('div'); tLabel.innerHTML = `<div style="font-size:12px; color:${tColor}; ${titleShadow} margin-top:15px; margin-bottom:5px; font-weight:bold; position: relative; z-index: 2;">🥉 TRANH HẠNG 3</div>`; colEl.appendChild(tLabel);
                 colEl.appendChild(createMatchBox(currentFullBracketData.third_place, 'third_place', 0, currentLeagueView));
             }
             if (currentLeagueView === 'c1' && currentFullBracketData.promotion_playoff && currentC2Data) {
-                let poLabel = document.createElement('div'); poLabel.innerHTML = `<div style="font-size:12px; color:#004d40; ${titleShadow} margin-top:15px; margin-bottom:5px; font-weight:900; position: relative; z-index: 2;">⚔️ PLAY-OFF THĂNG HẠNG</div>`; colEl.appendChild(poLabel);
+                let poLabel = document.createElement('div'); poLabel.innerHTML = `<div style="font-size:12px; color:#00e676; ${titleShadow} margin-top:15px; margin-bottom:5px; font-weight:900; position: relative; z-index: 2;">⚔️ PLAY-OFF THĂNG HẠNG</div>`; colEl.appendChild(poLabel);
                 colEl.appendChild(createMatchBox(currentFullBracketData.promotion_playoff, 'promotion_playoff', 0, currentLeagueView));
             }
         } else {
@@ -823,9 +834,11 @@ function createMatchBox(m, stageKey, matchIndex, league) {
     let p1Name = m.p1 || '---'; let p2Name = m.p2 || '---';
     let p1Class = ''; let p2Class = ''; let p1Star = ''; let p2Star = '';
     
-    // Nếu là C1, font chữ đen tuyền viền trắng nổi bật. Nếu C2 thì giữ nguyên.
+    // Sử dụng lớp mới cho tên người chơi và VS Text
     let textClass = league === 'c1' ? 'c1-elite-text' : '';
-    let borderVS = league === 'c1' ? '1px solid #333' : '1px dashed rgba(255,255,255,0.2)';
+    let playerNameClass = league === 'c1' ? 'player-name-c1' : '';
+    let vsTextClass = league === 'c1' ? 'vs-text-c1' : '';
+    let borderVS = league === 'c1' ? '1px solid #fff' : '1px dashed rgba(255,255,255,0.2)';
 
     let s1Text = (m.p1_set !== undefined) ? `<span style="background:#ff1744; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px; box-shadow: 0 0 10px #ff1744; animation: pulse 1.5s infinite; position: relative; z-index: 3;">${m.p1_set}</span>` : '';
     let s2Text = (m.p2_set !== undefined) ? `<span style="background:#ff1744; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace; font-weight:900; font-size:14px; box-shadow: 0 0 10px #ff1744; animation: pulse 1.5s infinite; position: relative; z-index: 3;">${m.p2_set}</span>` : '';
@@ -847,7 +860,7 @@ function createMatchBox(m, stageKey, matchIndex, league) {
                 timeInfo = `<div class="match-time ${textClass}">🕒 Lịch: ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')} ${d.getDate()}/${d.getMonth()+1}</div>`;
             } else if (diff <= 0 && diff > -600000) { 
                 let minsLeft = Math.floor((600000 + diff)/60000) + 1;
-                let activeColor = league === 'c1' ? '#004d40' : '#00e676';
+                let activeColor = league === 'c1' ? '#00e676' : '#00e676';
                 timeInfo = `<div class="match-time" style="color:${activeColor}; font-weight:900; animation: pulse 1s infinite; position: relative; z-index: 2; text-shadow: 0 0 3px #fff;">🟢 ĐANG MỞ (Còn ${minsLeft}p)</div>`;
                 
                 let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
@@ -878,15 +891,15 @@ function createMatchBox(m, stageKey, matchIndex, league) {
     const matchEl = document.createElement('div'); matchEl.className = 'bracket-match';
     
     matchEl.innerHTML = `
-        <div class="player-name ${p1Class} ${textClass}" style="text-align: center; border-bottom: none; padding-bottom: 2px;">
+        <div class="${playerNameClass} ${p1Class}" style="text-align: center; border-bottom: none; padding-bottom: 2px;">
             <span>${p1Name}${p1Star}</span> ${p1Badge}
         </div>
         <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin: 4px 0; position: relative; z-index: 2;">
             ${s1Text}
-            <div class="vs-text ${textClass}" style="margin: 0; padding: 2px 8px;">VS</div>
+            <div class="${vsTextClass}" style="margin: 0; padding: 2px 8px;">VS</div>
             ${s2Text}
         </div>
-        <div class="player-name ${p2Class} ${textClass}" style="text-align: center; border-bottom: ${borderVS}; padding-top: 2px; padding-bottom: 8px;">
+        <div class="${playerNameClass} ${p2Class}" style="text-align: center; border-bottom: ${borderVS}; padding-top: 2px; padding-bottom: 8px;">
             <span>${p2Name}${p2Star}</span> ${p2Badge}
         </div>
         ${timeInfo}
