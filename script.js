@@ -888,7 +888,9 @@ function setupRealmListeners() {
                 document.getElementById('pvpQIndex').innerText = m.q_idx; 
                 
                 if(m.status === 'playing') { 
-                    document.getElementById('pvpWaitMsg').style.display = 'none'; document.getElementById('pvpQuestion').style.display = 'block'; document.getElementById('pvpOptions').style.display = 'grid'; 
+                    document.getElementById('pvpWaitMsg').style.display = 'none'; 
+                    document.getElementById('pvpQuestion').style.display = 'block'; 
+                    document.getElementById('pvpOptions').style.display = 'grid'; 
                     let modeText = m.mode === 'delay' ? "⏱️ [SET 2]" : m.mode === 'golden' ? "🔥 [BÀN THẮNG VÀNG]" : "🟢 [SET 1]"; 
                     document.getElementById('pvpQuestion').innerHTML = `<div style="font-size:16px; color:#ffeb3b; margin-bottom:10px;">${modeText}</div>` + m.current_q.en; 
                     let myAns = isP1 ? m.p1_ans : (isP2 ? m.p2_ans : ""); 
