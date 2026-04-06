@@ -995,7 +995,7 @@ function setupRealmListeners() {
                     
                     let myAns = isP1 ? m.p1_ans : (isP2 ? m.p2_ans : ""); 
                     
-                    if (window.currentPlayingQIdx !== m.q_idx) { 
+                   if (window.currentPlayingQIdx !== m.q_idx) { 
                         window.currentPlayingQIdx = m.q_idx; 
                         window.localPvPTime = m.time_limit; 
                         clearInterval(window.pvpTimer); 
@@ -1007,13 +1007,13 @@ function setupRealmListeners() {
                         document.getElementById('lockOverlay').classList.remove('active');
 
                         if (isSpellingMode) {
-                            // GIAO DIỆN GÕ CHÍNH TẢ TRÊN LÔI ĐÀI PVP
-                            document.getElementById('pvpOptions').style.display = 'none'; // Ẩn nút trắc nghiệm
+                            // GIAO DIỆN GÕ CHÍNH TẢ ĐÃ ĐƯỢC TÂN TRANG TOÀN DIỆN
+                            document.getElementById('pvpOptions').style.display = 'none'; 
                             let pvpSpellContainer = document.getElementById('pvpSpellContainer');
                             if(!pvpSpellContainer) {
                                 pvpSpellContainer = document.createElement('div');
                                 pvpSpellContainer.id = 'pvpSpellContainer';
-                                pvpSpellContainer.className = 'w-full mt-4 mb-4';
+                                pvpSpellContainer.style.cssText = 'width: 100%; margin-top: 15px; margin-bottom: 15px; text-align: center;';
                                 document.getElementById('pvpOptions').parentNode.insertBefore(pvpSpellContainer, document.getElementById('pvpOptions'));
                             }
                             pvpSpellContainer.style.display = 'block';
@@ -1021,21 +1021,47 @@ function setupRealmListeners() {
 
                             let words = m.current_q.en.trim().split(' '); 
                             words.forEach((w) => { 
-                                let wordDiv = document.createElement('div'); wordDiv.className = 'flex justify-center gap-1 mb-3 w-full'; 
+                                let wordDiv = document.createElement('div'); 
+                                wordDiv.style.cssText = 'display: flex; justify-content: center; gap: 4px; margin-bottom: 10px; width: 100%; flex-wrap: wrap;'; 
                                 w.split('').forEach((char) => { 
                                     let inp = document.createElement('input'); 
-                                    inp.className = 'spell-char w-10 h-12 text-center text-xl font-bold rounded-lg border-2 border-red-300 focus:border-red-600 focus:outline-none uppercase bg-white shadow-sm text-black'; 
+                                    inp.className = 'spell-char'; 
+                                    inp.style.cssText = "width:36px; height:46px; text-align:center; font-size:20px; font-weight:900; border-radius:8px; border:2px solid #ff5252; outline:none; text-transform:uppercase; background:white; color:black; box-shadow:0 2px 5px rgba(0,0,0,0.3); transition: all 0.2s;";
                                     inp.maxLength = 1; inp.dataset.char = char.toUpperCase(); 
-                                    if(char === '-') { inp.value = '-'; inp.disabled = true; inp.classList.add('bg-gray-200'); } 
+                                    if(char === '-') { 
+                                        inp.value = '-'; 
+                                        inp.disabled = true; 
+                                        inp.style.backgroundColor = '#ddd'; 
+                                        inp.style.borderColor = '#aaa';
+                                    } 
                                     wordDiv.appendChild(inp); 
                                 }); 
                                 pvpSpellContainer.appendChild(wordDiv); 
                             }); 
                             
-                            // Gắn hiệu ứng nhảy ô và Backspace
+                            // ĐÚC THÊM NÚT CHỐT ĐÁP ÁN UY LỰC
+                            let submitBtn = document.getElementById('pvpSpellSubmitBtn');
+                            if(!submitBtn) {
+                                submitBtn = document.createElement('button');
+                                submitBtn.id = 'pvpSpellSubmitBtn';
+                                submitBtn.innerText = "CHỐT ĐÁP ÁN (ENTER)";
+                                submitBtn.style.cssText = "display: block; width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 16px; background: linear-gradient(45deg, #d50000, #ff1744); color: white; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); margin-top: 10px;";
+                                pvpSpellContainer.parentNode.insertBefore(submitBtn, pvpSpellContainer.nextSibling);
+                            }
+                            submitBtn.style.display = 'block';
+
                             let allInputs = Array.from(document.querySelectorAll('#pvpSpellContainer .spell-char')); 
+                            
+                            submitBtn.onclick = () => {
+                                let fullAns = '';
+                                allInputs.forEach(i => fullAns += i.value || '');
+                                submitPvPAnswer(fullAns);
+                            };
+
                             allInputs.forEach((inp, idx) => { 
                                 if(!inp.disabled) { 
+                                    inp.addEventListener('focus', () => inp.style.borderColor = '#ff1744');
+                                    inp.addEventListener('blur', () => inp.style.borderColor = '#ff5252');
                                     inp.addEventListener('input', function() { 
                                         this.value = this.value.toUpperCase(); 
                                         if(this.value && idx < allInputs.length - 1) { 
@@ -1051,9 +1077,7 @@ function setupRealmListeners() {
                                             if(prev && !prev.disabled) { prev.focus(); prev.value = ''; e.preventDefault(); } 
                                         } 
                                         if(e.key === 'Enter') {
-                                            let fullAns = '';
-                                            allInputs.forEach(i => fullAns += i.value || '');
-                                            submitPvPAnswer(fullAns); // Phóng đáp án lên mây
+                                            submitBtn.click();
                                         }
                                     }); 
                                 } 
@@ -1061,13 +1085,13 @@ function setupRealmListeners() {
                             let first = allInputs.find(i => !i.disabled); 
                             if(first) setTimeout(() => first.focus(), 300);
 
-                            // Gõ chính tả không có lật thẻ nên tính giờ luôn
                             startCountdown(m); 
                         } else {
-                            // GIAO DIỆN TRẮC NGHIỆM: ĐÃ KHÔI PHỤC HIỆU ỨNG LẬT TỪNG THẺ 2S!
                             document.getElementById('pvpOptions').style.display = 'grid'; 
                             let pvpSpellContainer = document.getElementById('pvpSpellContainer');
                             if(pvpSpellContainer) pvpSpellContainer.style.display = 'none';
+                            let submitBtn = document.getElementById('pvpSpellSubmitBtn');
+                            if(submitBtn) submitBtn.style.display = 'none';
 
                             if (waitTime > 0 && myAns === "") {
                                 document.getElementById('botStatusMsg').innerText = "Hệ thống đang lật đáp án...";
@@ -1078,6 +1102,10 @@ function setupRealmListeners() {
                                     btn.style.pointerEvents = 'none';
                                     btn.style.opacity = '0.3';
                                     btn.style.transform = 'scale(0.95)';
+                                    
+                                    // VÁ LỖI HIỆN MÀU CŨ CỦA CÂU TRƯỚC (RỬA SẠCH NÚT)
+                                    btn.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                                    btn.style.borderColor = 'rgba(255,255,255,0.3)';
                                     
                                     setTimeout(() => {
                                         btn.innerText = m.current_q.opts[i]; 
@@ -1111,6 +1139,8 @@ function setupRealmListeners() {
                     } else {
                         let allInputs = Array.from(document.querySelectorAll('#pvpSpellContainer .spell-char'));
                         allInputs.forEach(i => i.disabled = true);
+                        let submitBtn = document.getElementById('pvpSpellSubmitBtn');
+                        if(submitBtn) submitBtn.style.display = 'none';
                     }
                 } else if (m.status === 'finished') { 
                     isUnderSurveillance = false; clearInterval(window.pvpTimer); document.getElementById('pvpTimerBanner').innerText = `⏳ 0s`;
@@ -1139,6 +1169,8 @@ function setupRealmListeners() {
                     document.getElementById('pvpQuestion').style.display = 'none'; document.getElementById('pvpOptions').style.display = 'none'; 
                     let pvpSpellContainer = document.getElementById('pvpSpellContainer');
                     if(pvpSpellContainer) pvpSpellContainer.style.display = 'none';
+                    let submitBtn = document.getElementById('pvpSpellSubmitBtn');
+                    if(submitBtn) submitBtn.style.display = 'none';
                     document.getElementById('lockOverlay').classList.remove('active'); 
                     
                     setTimeout(() => {
@@ -1146,7 +1178,7 @@ function setupRealmListeners() {
                         window.isSpectating = false;
                         if (isP1 || userData.role === 'teacher') { rtdb.ref(`active_pvp_match/${currentRealm}`).remove(); }
                     }, 5000); 
-                } 
+                }
             } 
         });
         fetchLeaderboard();
@@ -1360,17 +1392,27 @@ function submitPvPAnswer(idxOrStr) {
         if (typeof idxOrStr === 'string') {
             // Xử lý Gõ chính tả
             selectedText = idxOrStr.trim().toUpperCase();
-            isCorrect = selectedText === m.current_q.en.trim().toUpperCase();
             
-            let allInputs = Array.from(document.querySelectorAll('.spell-char'));
+            // Ép xóa sạch mọi khoảng trắng của cả người dùng và đáp án gốc để đối chiếu
+            let compareUser = selectedText.replace(/\s+/g, '');
+            let compareCorrect = m.current_q.en.toUpperCase().replace(/\s+/g, '');
+            isCorrect = compareUser === compareCorrect;
+            
+            let allInputs = Array.from(document.querySelectorAll('#pvpSpellContainer .spell-char'));
             allInputs.forEach(i => i.disabled = true);
             if (isCorrect) {
                 allInputs.forEach(i => { i.style.backgroundColor = '#d1fae5'; i.style.borderColor = '#10b981'; i.style.color = '#065f46'; });
             } else {
-                allInputs.forEach(inp => { inp.style.backgroundColor = '#fee2e2'; inp.style.borderColor = '#ef4444'; inp.style.color = '#991b1b'; inp.value = inp.dataset.char; });
+                allInputs.forEach(inp => { 
+                    inp.style.backgroundColor = '#fee2e2'; 
+                    inp.style.borderColor = '#ef4444'; 
+                    inp.style.color = '#991b1b'; 
+                    if(inp.dataset.char !== '-') inp.value = inp.dataset.char; 
+                });
             }
-            document.getElementById('spell-submit-btn').classList.add('hidden');
-        } else {
+            let submitBtn = document.getElementById('pvpSpellSubmitBtn');
+            if(submitBtn) submitBtn.style.display = 'none';
+        }
             // Xử lý Trắc nghiệm
             selectedText = m.current_q.opts[idxOrStr]; 
             isCorrect = selectedText === m.current_q.vi;
@@ -1397,16 +1439,16 @@ function triggerEval() {
             // Xử lý chấm điểm linh hoạt cho cả 2 Mode
             let p1_c = false; let p2_c = false;
             if (m.mode === 'spelling' || (m.mode === 'golden' && m.current_q.is_spelling)) {
-                // Chấm Gõ chính tả (So sánh tiếng Anh)
-                let correctStr = m.current_q.en.toUpperCase().trim();
-                p1_c = m.p1_ans.toUpperCase().trim() === correctStr;
-                p2_c = m.p2_ans.toUpperCase().trim() === correctStr;
+                // Chấm Gõ chính tả (Xóa bỏ khoảng trắng để chấm cho các từ ghép)
+                let correctStr = m.current_q.en.toUpperCase().replace(/\s+/g, '');
+                p1_c = (m.p1_ans || "").toUpperCase().replace(/\s+/g, '') === correctStr;
+                p2_c = (m.p2_ans || "").toUpperCase().replace(/\s+/g, '') === correctStr;
             } else {
-                // Chấm Trắc nghiệm (So sánh tiếng Việt)
+                // Chấm Trắc nghiệm
                 p1_c = m.p1_ans === m.current_q.vi; 
                 p2_c = m.p2_ans === m.current_q.vi;
             }
-
+            
             let p1_w = false; let p2_w = false;
             
             if (p1_c && p2_c) { 
