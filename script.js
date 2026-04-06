@@ -954,16 +954,18 @@ function setupRealmListeners() {
                 let p1Short = m.p1.length > 4 ? m.p1.substring(0, 3).toUpperCase() : m.p1.toUpperCase();
                 let p2Short = m.p2.length > 4 ? m.p2.substring(0, 3).toUpperCase() : m.p2.toUpperCase();
                 
-                let elP1Name = document.getElementById('pvpP1Name').querySelector('.abbr-name');
-                let elP2Name = document.getElementById('pvpP2Name').querySelector('.abbr-name');
+                // Tự động trảm tên dài thành 3 chữ cái viết hoa
+                let p1Short = m.p1.length > 4 ? m.p1.substring(0, 3).toUpperCase() : m.p1.toUpperCase();
+                let p2Short = m.p2.length > 4 ? m.p2.substring(0, 3).toUpperCase() : m.p2.toUpperCase();
                 
-                if (elP1Name) elP1Name.innerText = p1Short; 
-                document.getElementById('pvpP1Name').title = m.p1; // Chạm giữ để xem tên đầy đủ
+                // Gắn thẳng tên vào ID (Không querySelector lằng nhằng nữa)
+                document.getElementById('pvpP1Name').innerText = p1Short; 
+                document.getElementById('pvpP1NameDisplay').title = m.p1; 
                 document.getElementById('pvpP1Correct').innerText = m.p1_score; 
                 document.getElementById('pvpP1Set').innerText = m.p1_set; 
                 
-                if (elP2Name) elP2Name.innerText = p2Short; 
-                document.getElementById('pvpP2Name').title = m.p2; // Chạm giữ để xem tên đầy đủ
+                document.getElementById('pvpP2Name').innerText = p2Short; 
+                document.getElementById('pvpP2NameDisplay').title = m.p2; 
                 document.getElementById('pvpP2Correct').innerText = m.p2_score; 
                 document.getElementById('pvpP2Set').innerText = m.p2_set; 
                 document.getElementById('pvpQIndex').innerText = m.q_idx;
