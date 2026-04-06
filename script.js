@@ -1019,7 +1019,8 @@ function setupRealmListeners() {
                             pvpSpellContainer.style.display = 'block';
                             pvpSpellContainer.innerHTML = ''; 
 
-                            let words = m.current_q.en.trim().split(' '); 
+                            let targetEn = m.current_q.en.split('/')[0].trim();
+                            let words = targetEn.split(' '); 
                             words.forEach((w) => { 
                                 let wordDiv = document.createElement('div'); 
                                 wordDiv.style.cssText = 'display: flex; justify-content: center; gap: 4px; margin-bottom: 10px; width: 100%; flex-wrap: wrap;'; 
@@ -1380,84 +1381,79 @@ async function adminStartPvP(league, stageKey, matchIndex, p1Name, p2Name) { 
 }
 
 function submitPvPAnswer(idxOrStr) {
-    // Nếu tham số truyền vào là string, tức là Gõ Chính Tả. Nếu là số, tức là Trắc Nghiệm.
-    rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
-        let m = snap.val(); if(!m || m.status !== 'playing' || m.evaluating) return;
-        let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
-        if((isP1 && m.p1_ans !== "") || (isP2 && m.p2_ans !== "")) return;
-        
-        let selectedText = "";
-        let isCorrect = false;
+    rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
+        let m = snap.val(); if(!m || m.status !== 'playing' || m.evaluating) return;
+        let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
+        if((isP1 && m.p1_ans !== "") || (isP2 && m.p2_ans !== "")) return;
+        
+        let selectedText = "";
+        let isCorrect = false;
 
-        if (typeof idxOrStr === 'string') {
-            // Xử lý Gõ chính tả
-            selectedText = idxOrStr.trim().toUpperCase();
-            
-            // Ép xóa sạch mọi khoảng trắng của cả người dùng và đáp án gốc để đối chiếu
-            let compareUser = selectedText.replace(/\s+/g, '');
-            let compareCorrect = m.current_q.en.toUpperCase().replace(/\s+/g, '');
-            isCorrect = compareUser === compareCorrect;
-            
-            let allInputs = Array.from(document.querySelectorAll('#pvpSpellContainer .spell-char'));
-            allInputs.forEach(i => i.disabled = true);
-            if (isCorrect) {
-                allInputs.forEach(i => { i.style.backgroundColor = '#d1fae5'; i.style.borderColor = '#10b981'; i.style.color = '#065f46'; });
-            } else {
-                allInputs.forEach(inp => { 
-                    inp.style.backgroundColor = '#fee2e2'; 
-                    inp.style.borderColor = '#ef4444'; 
-                    inp.style.color = '#991b1b'; 
-                    if(inp.dataset.char !== '-') inp.value = inp.dataset.char; 
-                });
-            }
-            let submitBtn = document.getElementById('pvpSpellSubmitBtn');
-            if(submitBtn) submitBtn.style.display = 'none';
-        } else {
-            // Xử lý Trắc nghiệm
-            selectedText = m.current_q.opts[idxOrStr]; 
-            isCorrect = selectedText === m.current_q.vi;
-            let btn = document.getElementById('pvpOpt' + idxOrStr); 
-            btn.style.backgroundColor = isCorrect ? '#00c853' : '#d50000'; 
-            btn.style.borderColor = isCorrect ? '#00e676' : '#ff1744';
-            for(let i=0; i<4; i++) { document.getElementById('pvpOpt'+i).style.pointerEvents = 'none'; } 
-        }
+        if (typeof idxOrStr === 'string') {
+            selectedText = idxOrStr.trim().toUpperCase();
+            
+            // ĐẠO LUẬT THÔNG MINH: Lấy từ trước dấu / và xóa khoảng trắng để đọ đáp án
+            let compareUser = selectedText.replace(/\s+/g, '');
+            let compareCorrect = m.current_q.en.split('/')[0].toUpperCase().replace(/\s+/g, '');
+            isCorrect = compareUser === compareCorrect;
+            
+            let allInputs = Array.from(document.querySelectorAll('#pvpSpellContainer .spell-char'));
+            allInputs.forEach(i => i.disabled = true);
+            if (isCorrect) {
+                allInputs.forEach(i => { i.style.backgroundColor = '#d1fae5'; i.style.borderColor = '#10b981'; i.style.color = '#065f46'; });
+            } else {
+                allInputs.forEach(inp => { 
+                    inp.style.backgroundColor = '#fee2e2'; 
+                    inp.style.borderColor = '#ef4444'; 
+                    inp.style.color = '#991b1b'; 
+                    if(inp.dataset.char !== '-') inp.value = inp.dataset.char; 
+                });
+            }
+            let submitBtn = document.getElementById('pvpSpellSubmitBtn');
+            if(submitBtn) submitBtn.style.display = 'none';
+        } else {
+            selectedText = m.current_q.opts[idxOrStr]; 
+            isCorrect = selectedText === m.current_q.vi;
+            let btn = document.getElementById('pvpOpt' + idxOrStr); 
+            btn.style.backgroundColor = isCorrect ? '#00c853' : '#d50000'; 
+            btn.style.borderColor = isCorrect ? '#00e676' : '#ff1744';
+            for(let i=0; i<4; i++) { document.getElementById('pvpOpt'+i).style.pointerEvents = 'none'; } 
+        }
 
-        let time_taken = Date.now() - (window.localUnlockTime || Date.now());
-        
-        let updates = {}; 
-        if(isP1) { updates.p1_ans = selectedText; updates.p1_time = time_taken; } 
-        if(isP2) { updates.p2_ans = selectedText; updates.p2_time = time_taken; }
-        rtdb.ref(`active_pvp_match/${currentRealm}`).update(updates);
-    });
+        let time_taken = Date.now() - (window.localUnlockTime || Date.now());
+        
+        let updates = {}; 
+        if(isP1) { updates.p1_ans = selectedText; updates.p1_time = time_taken; } 
+        if(isP2) { updates.p2_ans = selectedText; updates.p2_time = time_taken; }
+        rtdb.ref(`active_pvp_match/${currentRealm}`).update(updates);
+    });
 }
 
 function triggerEval() {
-    rtdb.ref(`active_pvp_match/${currentRealm}`).transaction(m => {
-        if (m && m.status === 'playing' && m.evaluating === false) {
-            m.evaluating = true; m.status = 'showing_result';
-            
-            // Xử lý chấm điểm linh hoạt cho cả 2 Mode
-            let p1_c = false; let p2_c = false;
-            if (m.mode === 'spelling' || (m.mode === 'golden' && m.current_q.is_spelling)) {
-                // Chấm Gõ chính tả (Xóa bỏ khoảng trắng để chấm cho các từ ghép)
-                let correctStr = m.current_q.en.toUpperCase().replace(/\s+/g, '');
-                p1_c = (m.p1_ans || "").toUpperCase().replace(/\s+/g, '') === correctStr;
-                p2_c = (m.p2_ans || "").toUpperCase().replace(/\s+/g, '') === correctStr;
-            } else {
-                // Chấm Trắc nghiệm
-                p1_c = m.p1_ans === m.current_q.vi; 
-                p2_c = m.p2_ans === m.current_q.vi;
-            }
-            
-            let p1_w = false; let p2_w = false;
-            
-            if (p1_c && p2_c) { 
-                if (m.p1_time <= m.p2_time) p1_w = true; else p2_w = true; 
-            } else if (p1_c) { p1_w = true; } else if (p2_c) { p2_w = true; }
-            
-            m.p1_score += p1_w ? 1 : 0; m.p2_score += p2_w ? 1 : 0; m.p1_won_this_round = p1_w; m.p2_won_this_round = p2_w; return m;
-        } return; 
-    }, (err, comm, snap) => { if(comm && snap.val()) setTimeout(() => processNextRound(snap.val().q_idx), 3500); });
+    rtdb.ref(`active_pvp_match/${currentRealm}`).transaction(m => {
+        if (m && m.status === 'playing' && m.evaluating === false) {
+            m.evaluating = true; m.status = 'showing_result';
+            
+            let p1_c = false; let p2_c = false;
+            if (m.mode === 'spelling' || (m.mode === 'golden' && m.current_q.is_spelling)) {
+                // ĐẠO LUẬT THÔNG MINH: Chỉ so sánh với từ đầu tiên trước dấu /
+                let correctStr = m.current_q.en.split('/')[0].toUpperCase().replace(/\s+/g, '');
+                p1_c = (m.p1_ans || "").toUpperCase().replace(/\s+/g, '') === correctStr;
+                p2_c = (m.p2_ans || "").toUpperCase().replace(/\s+/g, '') === correctStr;
+            } else {
+                p1_c = m.p1_ans === m.current_q.vi; 
+                p2_c = m.p2_ans === m.current_q.vi;
+            }
+            
+            let p1_w = false; let p2_w = false;
+            
+            if (p1_c && p2_c) { 
+                if (m.p1_time <= m.p2_time) p1_w = true; else p2_w = true; 
+            } else if (p1_c) { p1_w = true; } else if (p2_c) { p2_w = true; }
+            
+            m.p1_score += p1_w ? 1 : 0; m.p2_score += p2_w ? 1 : 0; m.p1_won_this_round = p1_w; m.p2_won_this_round = p2_w; return m;
+        } return; 
+    }, (err, comm, snap) => { if(comm && snap.val()) setTimeout(() => processNextRound(snap.val().q_idx), 3500); });
 }
 
 function processNextRound(currentQIdx) {
