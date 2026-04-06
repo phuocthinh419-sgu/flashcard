@@ -951,27 +951,43 @@ function setupRealmListeners() {
             if(isP1 || isP2 || window.isSpectating) { 
                 document.getElementById('pvpModal').classList.add('active'); 
                 
-                // Tự động trảm tên dài thành 3 chữ cái viết hoa (Ví dụ: MoTobike -> MOT)
+                // Tự động trảm tên dài thành 3 chữ cái viết hoa
                 let p1Short = m.p1.length > 4 ? m.p1.substring(0, 3).toUpperCase() : m.p1.toUpperCase();
                 let p2Short = m.p2.length > 4 ? m.p2.substring(0, 3).toUpperCase() : m.p2.toUpperCase();
                 
-                // Gắn thẳng tên vào ID (Không querySelector lằng nhằng nữa)
+                // Gắn thẳng tên vào ID
                 let elP1Name = document.getElementById('pvpP1Name');
                 let elP2Name = document.getElementById('pvpP2Name');
                 
                 if (elP1Name) elP1Name.innerText = p1Short; 
                 
-                // Cố gắng gán title (tooltip) cho đúng phần tử hiển thị (nếu có id Display, nếu không gán thẳng vào tên)
                 let p1Display = document.getElementById('pvpP1NameDisplay') || elP1Name;
                 let p2Display = document.getElementById('pvpP2NameDisplay') || elP2Name;
                 if (p1Display) p1Display.title = m.p1; 
                 if (p2Display) p2Display.title = m.p2; 
 
-                document.getElementById('pvpP1Correct').innerText = m.p1_score; 
+                // Động cơ lăn số Ngoại Hạng Anh cho P1
+                let elP1Score = document.getElementById('pvpP1Correct');
+                if(elP1Score && elP1Score.innerText != m.p1_score) {
+                    elP1Score.innerText = m.p1_score;
+                    elP1Score.style.animation = 'none'; 
+                    void elP1Score.offsetWidth; 
+                    elP1Score.style.animation = 'premierLeagueRoll 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; 
+                }
+
                 document.getElementById('pvpP1Set').innerText = m.p1_set; 
                 
                 if (elP2Name) elP2Name.innerText = p2Short; 
-                document.getElementById('pvpP2Correct').innerText = m.p2_score; 
+                
+                // Động cơ lăn số Ngoại Hạng Anh cho P2
+                let elP2Score = document.getElementById('pvpP2Correct');
+                if(elP2Score && elP2Score.innerText != m.p2_score) {
+                    elP2Score.innerText = m.p2_score;
+                    elP2Score.style.animation = 'none'; 
+                    void elP2Score.offsetWidth; 
+                    elP2Score.style.animation = 'premierLeagueRoll 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; 
+                }
+
                 document.getElementById('pvpP2Set').innerText = m.p2_set; 
                 document.getElementById('pvpQIndex').innerText = m.q_idx;
                 
