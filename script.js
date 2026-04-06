@@ -950,22 +950,27 @@ function setupRealmListeners() {
             let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2; 
             if(isP1 || isP2 || window.isSpectating) { 
                 document.getElementById('pvpModal').classList.add('active'); 
+                
                 // Tự động trảm tên dài thành 3 chữ cái viết hoa (Ví dụ: MoTobike -> MOT)
                 let p1Short = m.p1.length > 4 ? m.p1.substring(0, 3).toUpperCase() : m.p1.toUpperCase();
                 let p2Short = m.p2.length > 4 ? m.p2.substring(0, 3).toUpperCase() : m.p2.toUpperCase();
                 
-                // Tự động trảm tên dài thành 3 chữ cái viết hoa
-                let p1Short = m.p1.length > 4 ? m.p1.substring(0, 3).toUpperCase() : m.p1.toUpperCase();
-                let p2Short = m.p2.length > 4 ? m.p2.substring(0, 3).toUpperCase() : m.p2.toUpperCase();
-                
                 // Gắn thẳng tên vào ID (Không querySelector lằng nhằng nữa)
-                document.getElementById('pvpP1Name').innerText = p1Short; 
-                document.getElementById('pvpP1NameDisplay').title = m.p1; 
+                let elP1Name = document.getElementById('pvpP1Name');
+                let elP2Name = document.getElementById('pvpP2Name');
+                
+                if (elP1Name) elP1Name.innerText = p1Short; 
+                
+                // Cố gắng gán title (tooltip) cho đúng phần tử hiển thị (nếu có id Display, nếu không gán thẳng vào tên)
+                let p1Display = document.getElementById('pvpP1NameDisplay') || elP1Name;
+                let p2Display = document.getElementById('pvpP2NameDisplay') || elP2Name;
+                if (p1Display) p1Display.title = m.p1; 
+                if (p2Display) p2Display.title = m.p2; 
+
                 document.getElementById('pvpP1Correct').innerText = m.p1_score; 
                 document.getElementById('pvpP1Set').innerText = m.p1_set; 
                 
-                document.getElementById('pvpP2Name').innerText = p2Short; 
-                document.getElementById('pvpP2NameDisplay').title = m.p2; 
+                if (elP2Name) elP2Name.innerText = p2Short; 
                 document.getElementById('pvpP2Correct').innerText = m.p2_score; 
                 document.getElementById('pvpP2Set').innerText = m.p2_set; 
                 document.getElementById('pvpQIndex').innerText = m.q_idx;
