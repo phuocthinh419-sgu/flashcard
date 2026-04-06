@@ -287,4 +287,18 @@
     20% { left: 100%; }
     100% { left: 100%; }
 }
-       
+
+/* Hiệu ứng Lăn Số kiểu Ngoại Hạng Anh (Premier League Roll) */
+@keyframes premierLeagueRoll {
+    0% { 
+        transform: translateY(-80%); 
+        opacity: 0; 
+    }
+    50% { 
+        opacity: 1; 
+    }
+    100% { 
+        transform: translateY(0); 
+        opacity: 1; 
+    }
+}
