@@ -950,23 +950,23 @@ function setupRealmListeners() {
             let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2; 
             if(isP1 || isP2 || window.isSpectating) { 
                 document.getElementById('pvpModal').classList.add('active'); 
-             // Tự động trảm tên dài thành 3 chữ cái viết hoa (Ví dụ: MoTobike -> MOT)
+                // Tự động trảm tên dài thành 3 chữ cái viết hoa (Ví dụ: MoTobike -> MOT)
                 let p1Short = m.p1.length > 4 ? m.p1.substring(0, 3).toUpperCase() : m.p1.toUpperCase();
                 let p2Short = m.p2.length > 4 ? m.p2.substring(0, 3).toUpperCase() : m.p2.toUpperCase();
                 
-                let elP1Name = document.getElementById('pvpP1Name');
-                let elP2Name = document.getElementById('pvpP2Name');
+                let elP1Name = document.getElementById('pvpP1Name').querySelector('.abbr-name');
+                let elP2Name = document.getElementById('pvpP2Name').querySelector('.abbr-name');
                 
-                elP1Name.innerText = p1Short; 
-                elP1Name.title = m.p1; // Chạm giữ để xem tên đầy đủ
+                if (elP1Name) elP1Name.innerText = p1Short; 
+                document.getElementById('pvpP1Name').title = m.p1; // Chạm giữ để xem tên đầy đủ
                 document.getElementById('pvpP1Correct').innerText = m.p1_score; 
                 document.getElementById('pvpP1Set').innerText = m.p1_set; 
                 
-                elP2Name.innerText = p2Short; 
-                elP2Name.title = m.p2; // Chạm giữ để xem tên đầy đủ
+                if (elP2Name) elP2Name.innerText = p2Short; 
+                document.getElementById('pvpP2Name').title = m.p2; // Chạm giữ để xem tên đầy đủ
                 document.getElementById('pvpP2Correct').innerText = m.p2_score; 
                 document.getElementById('pvpP2Set').innerText = m.p2_set; 
-                document.getElementById('pvpQIndex').innerText = m.q_idx; 
+                document.getElementById('pvpQIndex').innerText = m.q_idx;
                 
                 if(m.status === 'playing') { 
                     document.getElementById('pvpWaitMsg').style.display = 'none'; 
