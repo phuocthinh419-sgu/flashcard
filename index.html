@@ -261,27 +261,47 @@
     <div class="modal" id="previewModal"><div class="modal-content" style="background:white; width:100%; max-width:900px; height:85vh; border-radius:12px; overflow:hidden; display:flex; flex-direction:column;"><div style="padding:15px; background:#fafafa; display:flex; justify-content:space-between; border-bottom:1px solid #eee;"><h3>Hệ Thống Huấn Luyện</h3><button onclick="closeModal()" style="color:#333; background:#ccc; padding:5px 15px; font-weight:bold; border-radius:4px;">Đóng X</button></div><iframe id="modalFrame" style="flex:1; border:none;"></iframe></div></div>
     <div class="modal" id="recordModal"><div class="modal-content name-modal-content" style="background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%); color: white; border: 4px solid #fff; text-align: center;"><div style="font-size: 50px; margin-bottom: 10px;">🎉</div><h2 style="font-size: 28px; font-weight: 900; margin-bottom: 10px; text-transform: uppercase;">Kỷ Lục Mới!</h2><p style="font-size: 16px; margin-bottom: 20px; opacity: 0.9;">Bạn đã vượt qua giới hạn của chính mình!</p><div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 20px;"><div style="font-size: 14px; opacity: 0.8; margin-bottom: 5px;">Tuần này</div><div style="font-size: 32px; font-weight: 900; color: #ffd700;" id="recordCurrentXp">0 XP</div><div style="font-size: 12px; margin-top: 5px; opacity: 0.7;">Kỷ lục cũ: <span id="recordOldXp">0</span> XP</div></div><button class="btn-save" style="width: 100%; padding: 12px; font-size: 16px; background: white; color: #ff5722;" onclick="document.getElementById('recordModal').classList.remove('active')">Tuyệt Vời!</button></div></div>
    
-    <div class="modal" id="pvpModal">
-        <button id="adminForceEndBtn" onclick="forceEndMatch()" style="display: none; position: fixed; top: 20px; left: 20px; background: #d50000; color: white; border: 2px solid #ff1744; padding: 10px 15px; border-radius: 8px; font-weight: 900; z-index: 99999; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">🛑 HỦY TRẬN (ADMIN)</button>
-        <button onclick="surrenderMatch()" style="position: fixed; top: 20px; right: 20px; background: #555; color: white; border: 2px solid #888; padding: 10px 15px; border-radius: 8px; font-weight: bold; z-index: 99999; cursor: pointer;">🚩 THOÁT / BỎ CUỘC</button>
-        
-        <div class="battle-arena" style="position: relative;">
-         <div style="padding-top: 70px; padding-bottom: 10px; display: flex; justify-content: center; align-items: center; width: 100%;">
-            <div style="display: flex; align-items: stretch; height: 46px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.6); font-family: 'Segoe UI', sans-serif;">
-                <div style="background: #f0f0f0; color: #111; font-weight: 900; font-size: 20px; padding: 0 15px; display: flex; align-items: center; justify-content: center; min-width: 75px; letter-spacing: 1px;" id="pvpP1Name">P1</div>
-                
-                <div style="background: #311b92; color: #fff; font-weight: 900; font-size: 26px; padding: 0 15px; display: flex; align-items: center; justify-content: center; min-width: 50px;" id="pvpP1Correct">0</div>
-                
-                <div style="background: #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 12px; border-left: 1px solid #ccc; border-right: 1px solid #ccc;">
-                    <div style="font-size: 14px; font-weight: 900; color: #333; line-height: 1; margin-bottom: 2px;">🏆</div>
-                    <div style="background: #d81b60; color: white; font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">SET <span id="pvpP1Set">0</span> - <span id="pvpP2Set">0</span></div>
-                </div>
-                
-                <div style="background: #311b92; color: #fff; font-weight: 900; font-size: 26px; padding: 0 15px; display: flex; align-items: center; justify-content: center; min-width: 50px;" id="pvpP2Correct">0</div>
-                
-                <div style="background: #f0f0f0; color: #111; font-weight: 900; font-size: 20px; padding: 0 15px; display: flex; align-items: center; justify-content: center; min-width: 75px; letter-spacing: 1px;" id="pvpP2Name">P2</div>
+  <div class="modal" id="pvpModal">
+    <div style="padding-top: 70px; padding-bottom: 20px; display: flex; justify-content: center; align-items: center; width: 100%;">
+        <div style="display: flex; align-items: stretch; height: 50px; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.7); font-family: 'Segoe UI', sans-serif;">
+            <div style="background: #f0f0f0; color: #111; font-weight: 900; font-size: 22px; padding: 0 20px; display: flex; align-items: center; justify-content: center; min-width: 90px; letter-spacing: 1px;" id="pvpP1Name">
+                <span style="font-size: 14px; margin-right: 5px;">☯️</span><span class="abbr-name">THN</span>
+            </div>
+            
+            <div style="background: #311b92; color: #fff; font-weight: 900; font-size: 30px; padding: 0 20px; display: flex; align-items: center; justify-content: center; min-width: 60px;" id="pvpP1Correct">1</div>
+            
+            <div style="background: #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 15px; border-left: 1px solid #ccc; border-right: 1px solid #ccc;">
+                <div style="font-size: 16px; font-weight: 900; color: #333; line-height: 1; margin-bottom: 3px;">🏆</div>
+                <div style="background: #000; color: white; font-size: 12px; font-weight: bold; padding: 3px 8px; border-radius: 5px; white-space: nowrap;">SET <span id="pvpP1Set">1</span> - <span id="pvpP2Set">0</span></div>
+            </div>
+            
+            <div style="background: #311b92; color: #fff; font-weight: 900; font-size: 30px; padding: 0 20px; display: flex; align-items: center; justify-content: center; min-width: 60px;" id="pvpP2Correct">0</div>
+            
+            <div style="background: #f0f0f0; color: #111; font-weight: 900; font-size: 22px; padding: 0 20px; display: flex; align-items: center; justify-content: center; min-width: 90px; letter-spacing: 1px;" id="pvpP2Name">
+                <span class="abbr-name">NHI</span>
             </div>
         </div>
+    </div>
+
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; color: #eee; text-align: center;">
+        <div id="pvpQuestionArea" style="margin-bottom: 30px;">
+            <p style="font-size: 18px; margin-bottom: 10px;">Translate the word:</p>
+            <h2 id="pvpQuestion" style="font-size: 32px; font-weight: bold; color: yellow;">epiphany</h2>
+        </div>
+        
+        <div id="pvpAnswerArea" style="width: 100%; max-width: 600px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <button class="pvp-answer-btn">A. Khải huyền</button>
+            <button class="pvp-answer-btn">B. Nhận thức thình lình</button>
+            <button class="pvp-answer-btn">C. Sách Phúc âm</button>
+            <button class="pvp-answer-btn">D. Lời tiên tri</button>
+        </div>
+    </div>
+
+    <div style="position: absolute; top: 10px; left: 10px; display: flex; gap: 10px; z-index: 100;">
+        <button class="btn-danger pvp-cancel-btn">HỦY TRẬN (ADMIN)</button>
+        <button class="btn-quit pvp-quit-btn">THOÁT</button>
+    </div>
+</div>
 
     <div class="modal" id="streakBrokenModal">
         <div class="modal-content name-modal-content" style="border: 4px solid var(--danger);">
