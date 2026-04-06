@@ -1000,11 +1000,35 @@ function setupRealmListeners() {
                     let myAns = isP1 ? m.p1_ans : (isP2 ? m.p2_ans : ""); 
                     
                     if (window.currentPlayingQIdx !== m.q_idx) { 
-                        window.currentPlayingQIdx = m.q_idx; window.localPvPTime = m.time_limit; clearInterval(window.pvpTimer); 
-                        window.localUnlockTime = Date.now(); 
-                        revealOptions(m, myAns, [0, 1, 2, 3]); 
-                        startCountdown(m); 
-                    } 
+                        window.currentPlayingQIdx = m.q_idx; 
+                        window.localPvPTime = m.time_limit; 
+                        clearInterval(window.pvpTimer); 
+                        
+                        // Tính toán thời gian delay (Set 1 = 0s, Set 2 & 3 = 6.5s)
+                        let waitTime = m.unlock_time ? Math.max(0, m.unlock_time - Date.now()) : 0;
+                        window.localUnlockTime = waitTime > 0 ? m.unlock_time : Date.now();
+
+                        // Nếu có delay, phủ màng sương mù che đáp án lại
+                        if (waitTime > 0 && myAns === "") {
+                            document.getElementById('lockOverlay').classList.add('active');
+                            document.getElementById('lockMsg').innerText = "ĐỌC KỸ CÂU HỎI...";
+                            document.getElementById('botStatusMsg').innerText = "Đáp án sẽ hiện ra sau vài giây!";
+                            for(let i=0; i<4; i++) {
+                                let btn = document.getElementById('pvpOpt'+i);
+                                btn.innerText = "???"; // Ẩn đáp án
+                                btn.style.pointerEvents = 'none';
+                            }
+                        }
+
+                        // Hết thời gian delay mới bung đáp án và bắt đầu tính giờ đếm ngược
+                        setTimeout(() => {
+                            if(document.getElementById('lockMsg').innerText === "ĐỌC KỸ CÂU HỎI...") {
+                                document.getElementById('lockMsg').innerText = "ĐÃ CHỐT ĐÁP ÁN!";
+                            }
+                            revealOptions(m, myAns, [0, 1, 2, 3]); 
+                            startCountdown(m); 
+                        }, waitTime);
+                    }
                     
                     let oppAns = isP1 ? m.p2_ans : m.p1_ans; let botStatus = document.getElementById('botStatusMsg'); 
                     if(oppAns !== "") { botStatus.innerText = "Đối thủ đã chốt!"; botStatus.style.color = "#ff1744"; } else { botStatus.innerText = "Đang kết nối..."; botStatus.style.color = "#00e676"; } 
