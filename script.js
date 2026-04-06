@@ -1259,24 +1259,51 @@ async function adminStartPvP(league, stageKey, matchIndex, p1Name, p2Name) {
     }); 
     
     window.isSpectating = true; 
+    
+    // Ghi chú Mùa 2: Set 1 (1-10) là Trắc nghiệm có delay. 
     rtdb.ref(`active_pvp_match/${currentRealm}`).set({ 
         league: league, stage: stageKey, match_idx: matchIndex, p1: p1Name, p2: p2Name, 
         p1_set: 0, p2_set: 0, p1_score: 0, p2_score: 0, status: 'playing', 
-        q_idx: 1, current_q: pvpQuestionBank[0], mode: 'normal', time_limit: 15, unlock_time: 0, 
+        q_idx: 1, current_q: pvpQuestionBank[0], 
+        mode: 'normal', // Mặc định là Trắc Nghiệm Delay
+        time_limit: 15, unlock_time: Date.now() + 8000, // Thêm delay 8s (2s x 4 đáp án) cho Câu 1
         p1_ans: "", p1_time: 0, p2_ans: "", p2_time: 0, evaluating: false, question_bank: pvpQuestionBank 
     }); 
 }
 
-function submitPvPAnswer(idx) {
+function submitPvPAnswer(idxOrStr) {
+    // Nếu tham số truyền vào là string, tức là Gõ Chính Tả. Nếu là số, tức là Trắc Nghiệm.
     rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
         let m = snap.val(); if(!m || m.status !== 'playing' || m.evaluating) return;
         let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
         if((isP1 && m.p1_ans !== "") || (isP2 && m.p2_ans !== "")) return;
         
-        const selectedText = m.current_q.opts[idx]; const isCorrect = selectedText === m.current_q.vi;
-        let btn = document.getElementById('pvpOpt' + idx); btn.style.backgroundColor = isCorrect ? '#00c853' : '#d50000'; btn.style.borderColor = isCorrect ? '#00e676' : '#ff1744';
-        for(let i=0; i<4; i++) { document.getElementById('pvpOpt'+i).style.pointerEvents = 'none'; } document.getElementById('lockOverlay').classList.add('active');
-        
+        let selectedText = "";
+        let isCorrect = false;
+
+        if (typeof idxOrStr === 'string') {
+            // Xử lý Gõ chính tả
+            selectedText = idxOrStr.trim().toUpperCase();
+            isCorrect = selectedText === m.current_q.en.trim().toUpperCase();
+            
+            let allInputs = Array.from(document.querySelectorAll('.spell-char'));
+            allInputs.forEach(i => i.disabled = true);
+            if (isCorrect) {
+                allInputs.forEach(i => { i.style.backgroundColor = '#d1fae5'; i.style.borderColor = '#10b981'; i.style.color = '#065f46'; });
+            } else {
+                allInputs.forEach(inp => { inp.style.backgroundColor = '#fee2e2'; inp.style.borderColor = '#ef4444'; inp.style.color = '#991b1b'; inp.value = inp.dataset.char; });
+            }
+            document.getElementById('spell-submit-btn').classList.add('hidden');
+        } else {
+            // Xử lý Trắc nghiệm
+            selectedText = m.current_q.opts[idxOrStr]; 
+            isCorrect = selectedText === m.current_q.vi;
+            let btn = document.getElementById('pvpOpt' + idxOrStr); 
+            btn.style.backgroundColor = isCorrect ? '#00c853' : '#d50000'; 
+            btn.style.borderColor = isCorrect ? '#00e676' : '#ff1744';
+            for(let i=0; i<4; i++) { document.getElementById('pvpOpt'+i).style.pointerEvents = 'none'; } 
+        }
+
         let time_taken = Date.now() - (window.localUnlockTime || Date.now());
         
         let updates = {}; 
@@ -1290,7 +1317,21 @@ function triggerEval() {
     rtdb.ref(`active_pvp_match/${currentRealm}`).transaction(m => {
         if (m && m.status === 'playing' && m.evaluating === false) {
             m.evaluating = true; m.status = 'showing_result';
-            let p1_c = m.p1_ans === m.current_q.vi; let p2_c = m.p2_ans === m.current_q.vi; let p1_w = false; let p2_w = false;
+            
+            // Xử lý chấm điểm linh hoạt cho cả 2 Mode
+            let p1_c = false; let p2_c = false;
+            if (m.mode === 'spelling' || (m.mode === 'golden' && m.current_q.is_spelling)) {
+                // Chấm Gõ chính tả (So sánh tiếng Anh)
+                let correctStr = m.current_q.en.toUpperCase().trim();
+                p1_c = m.p1_ans.toUpperCase().trim() === correctStr;
+                p2_c = m.p2_ans.toUpperCase().trim() === correctStr;
+            } else {
+                // Chấm Trắc nghiệm (So sánh tiếng Việt)
+                p1_c = m.p1_ans === m.current_q.vi; 
+                p2_c = m.p2_ans === m.current_q.vi;
+            }
+
+            let p1_w = false; let p2_w = false;
             
             if (p1_c && p2_c) { 
                 if (m.p1_time <= m.p2_time) p1_w = true; else p2_w = true; 
@@ -1312,15 +1353,13 @@ function processNextRound(currentQIdx) {
             if(s1 > s2) set1++; else if(s2 > s1) set2++; 
             s1 = 0; s2 = 0; 
             
-            // Nếu ai đạt 2 Set trước thì thắng luôn
             if(set1 === 2) { status = 'finished'; winner = m.p1; } 
             else if(set2 === 2) { status = 'finished'; winner = m.p2; } 
             
-            // LUẬT MỚI: Nếu hết Set 2 (Câu 20) mà một người dẫn trước (1-0), THẮNG LUÔN KHÔNG CẦN SET 3!
+            // Nếu hết Set 2 (Câu 20) mà một người dẫn trước (1-0), THẮNG LUÔN KHÔNG CẦN SET 3!
             else if (m.q_idx === 20) {
                 if(set1 > set2) { status = 'finished'; winner = m.p1; }
                 else if(set2 > set1) { status = 'finished'; winner = m.p2; }
-                // Nếu 1-1 hoặc 0-0 thì status vẫn là 'playing', hệ thống tự động tràn qua Set 3 (Câu 21)
             }
         } 
         // SET 3 SINH TỬ (Câu 21 trở đi - Ai 3 điểm trước người đó thắng chung cuộc)
@@ -1336,11 +1375,39 @@ function processNextRound(currentQIdx) {
             updates.status = 'finished'; updates.winner = winner; 
         } 
         else { 
-            updates.status = 'playing'; updates.q_idx = nextIdx; updates.current_q = m.question_bank[nextIdx - 1]; 
+            updates.status = 'playing'; updates.q_idx = nextIdx; 
+            let nextQ = m.question_bank[nextIdx - 1];
+            updates.current_q = nextQ; 
             
-            if (nextIdx <= 10) { updates.mode = 'normal'; updates.time_limit = 15; updates.unlock_time = 0; } 
-            else if (nextIdx <= 20) { updates.mode = 'delay'; updates.time_limit = 15; updates.unlock_time = Date.now() + 6500; } 
-            else { updates.mode = 'golden'; updates.time_limit = 7; updates.unlock_time = Date.now() + 6500; }
+            // PHÂN LUỒNG MÙA 2
+            if (nextIdx <= 10) { 
+                // SET 1: Trắc nghiệm có Delay
+                updates.mode = 'normal'; 
+                updates.time_limit = 15; 
+                updates.unlock_time = Date.now() + 8000; // 2s * 4 đáp án
+            } 
+            else if (nextIdx <= 20) { 
+                // SET 2: Gõ Chính Tả
+                updates.mode = 'spelling'; 
+                updates.time_limit = 30; 
+                updates.unlock_time = 0; // Gõ chính tả thì vô tư gõ luôn, không khóa
+            } 
+            else { 
+                // SET 3: Bàn Thắng Vàng (Ngẫu nhiên Trắc nghiệm / Gõ chính tả)
+                let isSpellingNow = Math.random() > 0.5;
+                updates.mode = 'golden'; 
+                
+                // Đánh dấu ngầm vào câu hỏi để frontend biết cách xử lý
+                updates.current_q.is_spelling = isSpellingNow; 
+
+                if (isSpellingNow) {
+                    updates.time_limit = 20; 
+                    updates.unlock_time = 0;
+                } else {
+                    updates.time_limit = 7; 
+                    updates.unlock_time = Date.now() + 8000;
+                }
+            }
         }
 
         rtdb.ref(`active_pvp_match/${currentRealm}`).update(updates).then(() => {
