@@ -267,20 +267,26 @@
         
         <div class="battle-arena" style="position: relative; width: 100%; max-width: 800px; height: 100%; max-height: 90vh; overflow-y: auto; background: transparent; padding-top: 60px; display: flex; flex-direction: column;">
             
-            <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 20px;">
-                <div style="display: flex; align-items: stretch; height: 50px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.6); font-family: 'Segoe UI', sans-serif;">
-                    <div style="background: #f0f0f0; color: #111; font-weight: 900; font-size: 22px; padding: 0 20px; display: flex; align-items: center; justify-content: center; min-width: 90px; letter-spacing: 1px;" id="pvpP1NameDisplay">
-                        <span style="font-size: 14px; margin-right: 5px;">☯️</span><span id="pvpP1Name" class="abbr-name">P1</span>
+            <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 20px; padding: 0 10px; box-sizing: border-box;">
+                <div style="display: flex; align-items: stretch; height: clamp(40px, 10vw, 50px); background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.6); font-family: 'Segoe UI', sans-serif; width: 100%; max-width: 500px;">
+                    
+                    <div style="background: #f0f0f0; color: #111; font-weight: 900; font-size: clamp(14px, 4vw, 22px); padding: 0 clamp(5px, 2vw, 15px); display: flex; align-items: center; justify-content: center; flex: 1; letter-spacing: 1px; text-align: center; white-space: nowrap; overflow: hidden;" id="pvpP1NameDisplay">
+                        <span id="pvpP1Name" class="abbr-name">P1</span>
                     </div>
-                    <div style="background: #311b92; color: #fff; font-weight: 900; font-size: 30px; padding: 0 20px; display: flex; align-items: center; justify-content: center; min-width: 60px;" id="pvpP1Correct">0</div>
-                    <div style="background: #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 15px; border-left: 1px solid #ccc; border-right: 1px solid #ccc;">
-                        <div style="font-size: 16px; font-weight: 900; color: #333; line-height: 1; margin-bottom: 3px;">🏆</div>
-                        <div style="background: #d81b60; color: white; font-size: 12px; font-weight: bold; padding: 3px 8px; border-radius: 4px; white-space: nowrap;">SET <span id="pvpP1Set">0</span> - <span id="pvpP2Set">0</span></div>
+                    
+                    <div style="background: #311b92; color: #fff; font-weight: 900; font-size: clamp(20px, 6vw, 30px); padding: 0 clamp(10px, 3vw, 20px); display: flex; align-items: center; justify-content: center; min-width: clamp(40px, 10vw, 60px);" id="pvpP1Correct">0</div>
+                    
+                    <div style="background: #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 clamp(5px, 2vw, 15px); border-left: 1px solid #ccc; border-right: 1px solid #ccc; min-width: clamp(50px, 15vw, 80px);">
+                        <div style="font-size: clamp(12px, 3vw, 16px); font-weight: 900; color: #333; line-height: 1; margin-bottom: 2px;">🏆</div>
+                        <div style="background: #d81b60; color: white; font-size: clamp(9px, 2.5vw, 12px); font-weight: bold; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">SET <span id="pvpP1Set">0</span> - <span id="pvpP2Set">0</span></div>
                     </div>
-                    <div style="background: #311b92; color: #fff; font-weight: 900; font-size: 30px; padding: 0 20px; display: flex; align-items: center; justify-content: center; min-width: 60px;" id="pvpP2Correct">0</div>
-                    <div style="background: #f0f0f0; color: #111; font-weight: 900; font-size: 22px; padding: 0 20px; display: flex; align-items: center; justify-content: center; min-width: 90px; letter-spacing: 1px;" id="pvpP2NameDisplay">
+                    
+                    <div style="background: #311b92; color: #fff; font-weight: 900; font-size: clamp(20px, 6vw, 30px); padding: 0 clamp(10px, 3vw, 20px); display: flex; align-items: center; justify-content: center; min-width: clamp(40px, 10vw, 60px);" id="pvpP2Correct">0</div>
+                    
+                    <div style="background: #f0f0f0; color: #111; font-weight: 900; font-size: clamp(14px, 4vw, 22px); padding: 0 clamp(5px, 2vw, 15px); display: flex; align-items: center; justify-content: center; flex: 1; letter-spacing: 1px; text-align: center; white-space: nowrap; overflow: hidden;" id="pvpP2NameDisplay">
                         <span id="pvpP2Name" class="abbr-name">P2</span>
                     </div>
+                    
                 </div>
             </div>
 
