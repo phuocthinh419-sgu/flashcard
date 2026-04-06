@@ -951,52 +951,48 @@ function setupRealmListeners() {
             if(isP1 || isP2 || window.isSpectating) { 
                 document.getElementById('pvpModal').classList.add('active'); 
                 
-                // Tự động trảm tên dài thành 3 chữ cái viết hoa
                 let p1Short = m.p1.length > 4 ? m.p1.substring(0, 3).toUpperCase() : m.p1.toUpperCase();
                 let p2Short = m.p2.length > 4 ? m.p2.substring(0, 3).toUpperCase() : m.p2.toUpperCase();
                 
-                // Gắn thẳng tên vào ID
                 let elP1Name = document.getElementById('pvpP1Name');
                 let elP2Name = document.getElementById('pvpP2Name');
-                
                 if (elP1Name) elP1Name.innerText = p1Short; 
+                if (elP2Name) elP2Name.innerText = p2Short; 
                 
                 let p1Display = document.getElementById('pvpP1NameDisplay') || elP1Name;
                 let p2Display = document.getElementById('pvpP2NameDisplay') || elP2Name;
                 if (p1Display) p1Display.title = m.p1; 
                 if (p2Display) p2Display.title = m.p2; 
 
-                // Động cơ lăn số Ngoại Hạng Anh cho P1
                 let elP1Score = document.getElementById('pvpP1Correct');
                 if(elP1Score && elP1Score.innerText != m.p1_score) {
                     elP1Score.innerText = m.p1_score;
-                    elP1Score.style.animation = 'none'; 
-                    void elP1Score.offsetWidth; 
+                    elP1Score.style.animation = 'none'; void elP1Score.offsetWidth; 
                     elP1Score.style.animation = 'premierLeagueRoll 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; 
                 }
-
                 document.getElementById('pvpP1Set').innerText = m.p1_set; 
                 
-                if (elP2Name) elP2Name.innerText = p2Short; 
-                
-                // Động cơ lăn số Ngoại Hạng Anh cho P2
                 let elP2Score = document.getElementById('pvpP2Correct');
                 if(elP2Score && elP2Score.innerText != m.p2_score) {
                     elP2Score.innerText = m.p2_score;
-                    elP2Score.style.animation = 'none'; 
-                    void elP2Score.offsetWidth; 
+                    elP2Score.style.animation = 'none'; void elP2Score.offsetWidth; 
                     elP2Score.style.animation = 'premierLeagueRoll 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; 
                 }
-
                 document.getElementById('pvpP2Set').innerText = m.p2_set; 
                 document.getElementById('pvpQIndex').innerText = m.q_idx;
                 
                 if(m.status === 'playing') { 
                     document.getElementById('pvpWaitMsg').style.display = 'none'; 
                     document.getElementById('pvpQuestion').style.display = 'block'; 
-                    document.getElementById('pvpOptions').style.display = 'grid'; 
-                    let modeText = m.mode === 'delay' ? "⏱️ [SET 2]" : m.mode === 'golden' ? "🔥 [BÀN THẮNG VÀNG]" : "🟢 [SET 1]"; 
-                    document.getElementById('pvpQuestion').innerHTML = `<div style="font-size:16px; color:#ffeb3b; margin-bottom:10px;">${modeText}</div>` + m.current_q.en; 
+                    
+                    // Nhận diện đang ở Mode nào để hiển thị Tiêu đề cho cháy
+                    let isSpellingMode = m.mode === 'spelling' || (m.mode === 'golden' && m.current_q.is_spelling);
+                    let modeLabel = m.mode === 'normal' ? "🟢 [SET 1: TRẮC NGHIỆM]" : m.mode === 'spelling' ? "✍️ [SET 2: GÕ CHÍNH TẢ]" : (isSpellingMode ? "🔥 [BÀN THẮNG VÀNG - GÕ CHÍNH TẢ]" : "🔥 [BÀN THẮNG VÀNG - TRẮC NGHIỆM]");
+                    
+                    // NẾU GÕ CHÍNH TẢ: Đề bài là Tiếng Việt. NẾU TRẮC NGHIỆM: Đề bài là Tiếng Anh
+                    let questionText = isSpellingMode ? m.current_q.vi : m.current_q.en;
+                    document.getElementById('pvpQuestion').innerHTML = `<div style="font-size:16px; color:#ffeb3b; margin-bottom:10px; font-weight:bold;">${modeLabel}</div>` + questionText; 
+                    
                     let myAns = isP1 ? m.p1_ans : (isP2 ? m.p2_ans : ""); 
                     
                     if (window.currentPlayingQIdx !== m.q_idx) { 
@@ -1004,30 +1000,100 @@ function setupRealmListeners() {
                         window.localPvPTime = m.time_limit; 
                         clearInterval(window.pvpTimer); 
                         
-                        // Tính toán thời gian delay (Set 1 = 0s, Set 2 & 3 = 6.5s)
                         let waitTime = m.unlock_time ? Math.max(0, m.unlock_time - Date.now()) : 0;
                         window.localUnlockTime = waitTime > 0 ? m.unlock_time : Date.now();
 
-                        // Nếu có delay, phủ màng sương mù che đáp án lại
-                        if (waitTime > 0 && myAns === "") {
-                            document.getElementById('lockOverlay').classList.add('active');
-                            document.getElementById('lockMsg').innerText = "ĐỌC KỸ CÂU HỎI...";
-                            document.getElementById('botStatusMsg').innerText = "Đáp án sẽ hiện ra sau vài giây!";
-                            for(let i=0; i<4; i++) {
-                                let btn = document.getElementById('pvpOpt'+i);
-                                btn.innerText = "???"; // Ẩn đáp án
-                                btn.style.pointerEvents = 'none';
-                            }
-                        }
+                        // Trả lại ánh sáng cho Đề bài
+                        document.getElementById('lockOverlay').classList.remove('active');
 
-                        // Hết thời gian delay mới bung đáp án và bắt đầu tính giờ đếm ngược
-                        setTimeout(() => {
-                            if(document.getElementById('lockMsg').innerText === "ĐỌC KỸ CÂU HỎI...") {
-                                document.getElementById('lockMsg').innerText = "ĐÃ CHỐT ĐÁP ÁN!";
+                        if (isSpellingMode) {
+                            // GIAO DIỆN GÕ CHÍNH TẢ TRÊN LÔI ĐÀI PVP
+                            document.getElementById('pvpOptions').style.display = 'none'; // Ẩn nút trắc nghiệm
+                            let pvpSpellContainer = document.getElementById('pvpSpellContainer');
+                            if(!pvpSpellContainer) {
+                                pvpSpellContainer = document.createElement('div');
+                                pvpSpellContainer.id = 'pvpSpellContainer';
+                                pvpSpellContainer.className = 'w-full mt-4 mb-4';
+                                document.getElementById('pvpOptions').parentNode.insertBefore(pvpSpellContainer, document.getElementById('pvpOptions'));
                             }
-                            revealOptions(m, myAns, [0, 1, 2, 3]); 
+                            pvpSpellContainer.style.display = 'block';
+                            pvpSpellContainer.innerHTML = ''; 
+
+                            let words = m.current_q.en.trim().split(' '); 
+                            words.forEach((w) => { 
+                                let wordDiv = document.createElement('div'); wordDiv.className = 'flex justify-center gap-1 mb-3 w-full'; 
+                                w.split('').forEach((char) => { 
+                                    let inp = document.createElement('input'); 
+                                    inp.className = 'spell-char w-10 h-12 text-center text-xl font-bold rounded-lg border-2 border-red-300 focus:border-red-600 focus:outline-none uppercase bg-white shadow-sm text-black'; 
+                                    inp.maxLength = 1; inp.dataset.char = char.toUpperCase(); 
+                                    if(char === '-') { inp.value = '-'; inp.disabled = true; inp.classList.add('bg-gray-200'); } 
+                                    wordDiv.appendChild(inp); 
+                                }); 
+                                pvpSpellContainer.appendChild(wordDiv); 
+                            }); 
+                            
+                            // Gắn hiệu ứng nhảy ô và Backspace
+                            let allInputs = Array.from(document.querySelectorAll('#pvpSpellContainer .spell-char')); 
+                            allInputs.forEach((inp, idx) => { 
+                                if(!inp.disabled) { 
+                                    inp.addEventListener('input', function() { 
+                                        this.value = this.value.toUpperCase(); 
+                                        if(this.value && idx < allInputs.length - 1) { 
+                                            let next = allInputs[idx + 1]; 
+                                            while(next && next.disabled && idx < allInputs.length - 1) { idx++; next = allInputs[idx + 1]; } 
+                                            if(next && !next.disabled) next.focus(); 
+                                        } 
+                                    }); 
+                                    inp.addEventListener('keydown', function(e) { 
+                                        if(e.key === 'Backspace' && !this.value && idx > 0) { 
+                                            let prevIdx = idx - 1; let prev = allInputs[prevIdx]; 
+                                            while(prev && prev.disabled && prevIdx > 0) { prevIdx--; prev = allInputs[prevIdx]; } 
+                                            if(prev && !prev.disabled) { prev.focus(); prev.value = ''; e.preventDefault(); } 
+                                        } 
+                                        if(e.key === 'Enter') {
+                                            let fullAns = '';
+                                            allInputs.forEach(i => fullAns += i.value || '');
+                                            submitPvPAnswer(fullAns); // Phóng đáp án lên mây
+                                        }
+                                    }); 
+                                } 
+                            }); 
+                            let first = allInputs.find(i => !i.disabled); 
+                            if(first) setTimeout(() => first.focus(), 300);
+
+                            // Gõ chính tả không có lật thẻ nên tính giờ luôn
                             startCountdown(m); 
-                        }, waitTime);
+                        } else {
+                            // GIAO DIỆN TRẮC NGHIỆM: ĐÃ KHÔI PHỤC HIỆU ỨNG LẬT TỪNG THẺ 2S!
+                            document.getElementById('pvpOptions').style.display = 'grid'; 
+                            let pvpSpellContainer = document.getElementById('pvpSpellContainer');
+                            if(pvpSpellContainer) pvpSpellContainer.style.display = 'none';
+
+                            if (waitTime > 0 && myAns === "") {
+                                document.getElementById('botStatusMsg').innerText = "Hệ thống đang lật đáp án...";
+                                let stepTime = waitTime / 4; 
+                                for(let i=0; i<4; i++) {
+                                    let btn = document.getElementById('pvpOpt'+i);
+                                    btn.innerText = "???"; 
+                                    btn.style.pointerEvents = 'none';
+                                    btn.style.opacity = '0.3';
+                                    btn.style.transform = 'scale(0.95)';
+                                    
+                                    setTimeout(() => {
+                                        btn.innerText = m.current_q.opts[i]; 
+                                        btn.style.opacity = '0.8'; 
+                                        btn.style.transform = 'scale(1)';
+                                        btn.style.transition = 'all 0.3s ease';
+                                    }, stepTime * (i + 1));
+                                }
+                            }
+
+                            setTimeout(() => {
+                                if(waitTime > 0) document.getElementById('botStatusMsg').innerText = "ĐÃ ĐẾN LÚC! CHỐT NHANH!";
+                                revealOptions(m, myAns, [0, 1, 2, 3]); 
+                                startCountdown(m); 
+                            }, waitTime);
+                        }
                     }
                     
                     let oppAns = isP1 ? m.p2_ans : m.p1_ans; let botStatus = document.getElementById('botStatusMsg'); 
@@ -1036,9 +1102,16 @@ function setupRealmListeners() {
                 } else if (m.status === 'showing_result') { 
                     clearInterval(window.pvpTimer); document.getElementById('pvpTimerBanner').innerText = `⏳ 0s`; 
                     let myWin = (isP1 && m.p1_won_this_round) || (isP2 && m.p2_won_this_round); let waitMsg = document.getElementById('pvpWaitMsg'); waitMsg.style.display = 'block'; 
-                    if (myWin) { waitMsg.innerText = "🎉 CHÍNH XÁC & NHANH NHẤT! (+1)"; waitMsg.style.color = "#00e676"; } else { let wasWrong = false; let myAns = isP1 ? m.p1_ans : m.p2_ans; if(myAns !== "" && myAns !== m.current_q.vi) wasWrong = true; if(!wasWrong && myAns !== "") waitMsg.innerText = "❌ CHÍNH XÁC NHƯNG CHẬM HƠN!"; else if(wasWrong) waitMsg.innerText = "❌ SAI RỒI!"; else waitMsg.innerText = "❌ HẾT GIỜ!"; waitMsg.style.color = "#ff1744"; } 
+                    if (myWin) { waitMsg.innerText = "🎉 CHÍNH XÁC & NHANH NHẤT! (+1)"; waitMsg.style.color = "#00e676"; } else { let wasWrong = false; let myAns = isP1 ? m.p1_ans : m.p2_ans; if(myAns !== "") wasWrong = true; if(!wasWrong && myAns !== "") waitMsg.innerText = "❌ CHÍNH XÁC NHƯNG CHẬM HƠN!"; else if(wasWrong) waitMsg.innerText = "❌ SAI RỒI!"; else waitMsg.innerText = "❌ HẾT GIỜ!"; waitMsg.style.color = "#ff1744"; } 
                     document.getElementById('lockOverlay').classList.remove('active'); 
-                    for(let i=0; i<4; i++) { let btn = document.getElementById('pvpOpt'+i); btn.style.pointerEvents = 'none'; if (btn.innerText === m.current_q.vi) { btn.style.backgroundColor = '#00c853'; btn.style.borderColor = '#00e676'; btn.style.opacity = '1'; } else { btn.style.opacity = '0.3'; } } 
+                    
+                    let isSpellingMode = m.mode === 'spelling' || (m.mode === 'golden' && m.current_q.is_spelling);
+                    if (!isSpellingMode) {
+                        for(let i=0; i<4; i++) { let btn = document.getElementById('pvpOpt'+i); btn.style.pointerEvents = 'none'; if (btn.innerText === m.current_q.vi) { btn.style.backgroundColor = '#00c853'; btn.style.borderColor = '#00e676'; btn.style.opacity = '1'; } else { btn.style.opacity = '0.3'; } } 
+                    } else {
+                        let allInputs = Array.from(document.querySelectorAll('#pvpSpellContainer .spell-char'));
+                        allInputs.forEach(i => i.disabled = true);
+                    }
                 } else if (m.status === 'finished') { 
                     isUnderSurveillance = false; clearInterval(window.pvpTimer); document.getElementById('pvpTimerBanner').innerText = `⏳ 0s`;
                     document.getElementById('pvpWaitMsg').style.display = 'block'; 
@@ -1063,7 +1136,10 @@ function setupRealmListeners() {
                     }
 
                     document.getElementById('pvpWaitMsg').innerText = endMsg; 
-                    document.getElementById('pvpQuestion').style.display = 'none'; document.getElementById('pvpOptions').style.display = 'none'; document.getElementById('lockOverlay').classList.remove('active'); 
+                    document.getElementById('pvpQuestion').style.display = 'none'; document.getElementById('pvpOptions').style.display = 'none'; 
+                    let pvpSpellContainer = document.getElementById('pvpSpellContainer');
+                    if(pvpSpellContainer) pvpSpellContainer.style.display = 'none';
+                    document.getElementById('lockOverlay').classList.remove('active'); 
                     
                     setTimeout(() => {
                         document.getElementById('pvpModal').classList.remove('active');
