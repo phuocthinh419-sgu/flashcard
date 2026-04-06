@@ -266,9 +266,22 @@
         <button onclick="surrenderMatch()" style="position: fixed; top: 20px; right: 20px; background: #555; color: white; border: 2px solid #888; padding: 10px 15px; border-radius: 8px; font-weight: bold; z-index: 99999; cursor: pointer;">🚩 THOÁT / BỎ CUỘC</button>
         
         <div class="battle-arena" style="position: relative;">
-            <div class="battle-header"><div class="fighter"><div id="pvpP1Name" style="font-weight:bold;">P1</div><span id="pvpP1Correct" style="font-size: 50px; font-weight: 900; color: #fff;">0</span><div style="font-size: 14px; color: #ffd700;">Set: <b id="pvpP1Set">0</b></div></div><div class="vs-badge">VS</div><div class="fighter"><div id="pvpP2Name" style="font-weight:bold;">P2</div><span id="pvpP2Correct" style="font-size: 50px; font-weight: 900; color: #fff;">0</span><div style="font-size: 14px; color: #ffd700;">Set: <b id="pvpP2Set">0</b></div></div></div><div style="text-align:center; color:#ccc; margin-top:10px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 5px;">CÂU HỎI: <span id="pvpQIndex" style="color:#ffd700;">1</span> / 30 <div id="pvpTimerBanner" style="font-size: 24px; color: #ff1744; margin-top: 5px;">⏳ 15s</div></div><div class="battle-body"><div class="lock-overlay" id="lockOverlay"><div class="lock-text" id="lockMsg">ĐÃ CHỐT ĐÁP ÁN!</div><div class="bot-thinking" id="botStatusMsg">Đang đợi đối thủ...</div></div><div id="pvpWaitMsg" style="font-size:24px; font-weight:bold; color:#ffd700; text-align:center; display:none; margin-bottom:15px;">Đang thiết lập...</div><div class="battle-question" id="pvpQuestion" style="display:none; margin-top: 10px;">READY?</div><div class="battle-options" id="pvpOptions" style="display:none;"><button class="btn-ans" onclick="submitPvPAnswer(0)" id="pvpOpt0">-</button><button class="btn-ans" onclick="submitPvPAnswer(1)" id="pvpOpt1">-</button><button class="btn-ans" onclick="submitPvPAnswer(2)" id="pvpOpt2">-</button><button class="btn-ans" onclick="submitPvPAnswer(3)" id="pvpOpt3">-</button></div></div>
+         <div style="padding-top: 70px; padding-bottom: 10px; display: flex; justify-content: center; align-items: center; width: 100%;">
+            <div style="display: flex; align-items: stretch; height: 46px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.6); font-family: 'Segoe UI', sans-serif;">
+                <div style="background: #f0f0f0; color: #111; font-weight: 900; font-size: 20px; padding: 0 15px; display: flex; align-items: center; justify-content: center; min-width: 75px; letter-spacing: 1px;" id="pvpP1Name">P1</div>
+                
+                <div style="background: #311b92; color: #fff; font-weight: 900; font-size: 26px; padding: 0 15px; display: flex; align-items: center; justify-content: center; min-width: 50px;" id="pvpP1Correct">0</div>
+                
+                <div style="background: #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 12px; border-left: 1px solid #ccc; border-right: 1px solid #ccc;">
+                    <div style="font-size: 14px; font-weight: 900; color: #333; line-height: 1; margin-bottom: 2px;">🏆</div>
+                    <div style="background: #d81b60; color: white; font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">SET <span id="pvpP1Set">0</span> - <span id="pvpP2Set">0</span></div>
+                </div>
+                
+                <div style="background: #311b92; color: #fff; font-weight: 900; font-size: 26px; padding: 0 15px; display: flex; align-items: center; justify-content: center; min-width: 50px;" id="pvpP2Correct">0</div>
+                
+                <div style="background: #f0f0f0; color: #111; font-weight: 900; font-size: 20px; padding: 0 15px; display: flex; align-items: center; justify-content: center; min-width: 75px; letter-spacing: 1px;" id="pvpP2Name">P2</div>
+            </div>
         </div>
-    </div>
 
     <div class="modal" id="streakBrokenModal">
         <div class="modal-content name-modal-content" style="border: 4px solid var(--danger);">
