@@ -1422,24 +1422,106 @@ function archiveSeason() {
         let relegated = (playoffWinner === c2Champ) ? c1Fourth : c1Fourth; 
         let historyData = { c1_champ: c1Champ, promoted_player: promoted, relegated_player: relegated }; 
         
-        rtdb.ref(`tournament_status/${currentRealm}/hall_of_fame`).once('value').then(snap => { 
-            let hof = snap.val() || []; let nextSeason = hof.length + 1; 
-            
-            // Lưu trọn bộ 7 Dũng tướng vào sổ thiên tào
-            hof.push({ 
-                season: nextSeason, 
-                c1: c1Champ, c1_runner: c1RunnerUp, c1_third: c1Third, 
-                c2: c2Champ, c2_runner: c2RunnerUp, c2_third: c2Third, 
-                sc: scChamp, date: new Date().toLocaleDateString('en-GB') 
-            }); 
-            
-            let finalUpdates = {}; 
-            finalUpdates[`tournament_status/${currentRealm}/hall_of_fame`] = hof; 
-            finalUpdates[`tournament_status/${currentRealm}/history`] = historyData; 
-            rtdb.ref().update(finalUpdates).then(() => alert(`🎉 Ghi nhận thành công! Lịch sử đã khắc tên các Dũng sĩ!`)); 
-        }); 
-    } 
-}
+        rtdb.ref(`tournament_status/${currentRealm}/hall_of_fame`).on('value', (snap) => { 
+            let hof = snap.val() || []; let container = document.getElementById('hofList'); 
+            if (hof.length === 0) { 
+                container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; padding: 20px;">Dữ liệu chưa được cập nhật.</div>'; 
+            } else { 
+                // Lưu dữ liệu vào rương toàn cục để lúc bệ hạ bấm nút thì móc ra xem
+                window.hofData = hof; 
+                
+                // Xây dựng Dàn nút bấm chọn Mùa giải
+                let buttonsHtml = '<div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; padding: 10px;">';
+                hof.forEach((item, index) => {
+                    buttonsHtml += `<button onclick="showHofSeason(${index})" style="padding: 12px 25px; background: linear-gradient(135deg, #1a1a2e, #16213e); border: 2px solid #ffd700; color: #ffd700; font-size: 16px; font-weight: 900; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 12px rgba(255,215,0,0.4)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.3)'">MÙA ${item.season}</button>`;
+                });
+                buttonsHtml += '</div>';
+
+                // Phân chia Đại sảnh thành 2 vùng: Vùng Menu và Vùng Chi tiết (ẩn)
+                container.innerHTML = `
+                    <div id="hof-buttons-view">${buttonsHtml}</div>
+                    <div id="hof-detail-view" style="display: none; animation: fadeIn 0.3s ease-in-out;"></div>
+                `;
+                
+                // Đúc hàm mở Tháp Vinh Quang khi bệ hạ bấm nút (Chỉ đúc 1 lần)
+                if (!window.showHofSeason) {
+                    window.showHofSeason = function(idx) {
+                        let item = window.hofData[idx];
+                        if(!item) return;
+
+                        let c1_1st = item.c1 || item.name || "---"; 
+                        let c1_2nd = item.c1_runner || "---"; 
+                        let c1_3rd = item.c1_third || "---";   
+                        
+                        let c2_1st = item.c2 || "---"; 
+                        let c2_2nd = item.c2_runner || "---"; 
+                        let c2_3rd = item.c2_third || "---";   
+                        
+                        let sc = item.sc || (item.name ? item.name : "---"); 
+                        
+                        let detailHtml = `
+                        <button onclick="document.getElementById('hof-detail-view').style.display='none'; document.getElementById('hof-buttons-view').style.display='block';" style="margin-bottom: 15px; background: transparent; border: 1px solid #ffd700; color: #ffd700; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='rgba(255,215,0,0.1)'" onmouseout="this.style.background='transparent'">⬅ Danh mục Mùa Giải</button>
+                        
+                        <div style="background: #1a1a2e; margin-bottom: 25px; border-radius: 12px; padding: 25px; border-left: 5px solid #ffd700; box-shadow: 0 6px 15px rgba(0,0,0,0.6);">
+                            <div style="color: #ccc; font-size: 18px; margin-bottom: 25px; font-weight: 900; text-align: center; border-bottom: 1px solid rgba(255,215,0,0.3); padding-bottom: 15px; text-transform: uppercase; letter-spacing: 2px;">
+                                MÙA ${item.season} - Cập nhật: ${item.date || ""}
+                            </div>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 20px;">
+                                <div style="background: rgba(255,215,0,0.05); border-radius: 10px; padding: 15px; text-align: center; border: 1px solid rgba(255,215,0,0.3);">
+                                    <div style="color: #ffd700; font-size: 15px; font-weight: 900; margin-bottom: 20px; letter-spacing: 2px;">🏆 MES CHAMPIONS LEAGUE ELITE</div>
+                                    <div style="display: flex; justify-content: center; align-items: flex-end; height: 80px; gap: 10px;">
+                                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                            <div style="font-size: 13px; color: #cd7f32; font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c1_3rd}">${c1_3rd !== "---" ? c1_3rd : ""}</div>
+                                            <div style="width: 80%; height: 35px; background: linear-gradient(to top, rgba(205, 127, 50, 0.5), transparent); border-top: 3px solid #cd7f32; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 14px; font-weight: 900; color: #cd7f32;">3rd</div>
+                                        </div>
+                                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                            <div style="font-size: 16px; color: #ffd700; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c1_1st}">${c1_1st !== "---" ? c1_1st : ""}</div>
+                                            <div style="width: 90%; height: 60px; background: linear-gradient(to top, rgba(255, 215, 0, 0.5), transparent); border-top: 3px solid #ffd700; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 18px; font-weight: 900; color: #ffd700;">1st</div>
+                                        </div>
+                                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                            <div style="font-size: 14px; color: #c0c0c0; font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c1_2nd}">${c1_2nd !== "---" ? c1_2nd : ""}</div>
+                                            <div style="width: 80%; height: 45px; background: linear-gradient(to top, rgba(192, 192, 192, 0.5), transparent); border-top: 3px solid #c0c0c0; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 15px; font-weight: 900; color: #c0c0c0;">2nd</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="background: rgba(192,192,192,0.05); border-radius: 10px; padding: 15px; text-align: center; border: 1px solid rgba(192,192,192,0.3); width: 85%; margin: 0 auto;">
+                                    <div style="color: #c0c0c0; font-size: 14px; font-weight: 900; margin-bottom: 15px; letter-spacing: 2px;">🥈 MES CHAMPIONS LEAGUE TWO</div>
+                                    <div style="display: flex; justify-content: center; align-items: flex-end; height: 60px; gap: 8px;">
+                                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                            <div style="font-size: 11px; color: #cd7f32; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c2_3rd}">${c2_3rd !== "---" ? c2_3rd : ""}</div>
+                                            <div style="width: 70%; height: 25px; background: linear-gradient(to top, rgba(205, 127, 50, 0.4), transparent); border-top: 2px solid #cd7f32; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 3px; font-size: 12px; font-weight: bold; color: #cd7f32;">3rd</div>
+                                        </div>
+                                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                            <div style="font-size: 13px; color: #c0c0c0; font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c2_1st}">${c2_1st !== "---" ? c2_1st : ""}</div>
+                                            <div style="width: 80%; height: 45px; background: linear-gradient(to top, rgba(192, 192, 192, 0.4), transparent); border-top: 2px solid #c0c0c0; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 3px; font-size: 14px; font-weight: 900; color: #c0c0c0;">1st</div>
+                                        </div>
+                                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                            <div style="font-size: 12px; color: #a9a9a9; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c2_2nd}">${c2_2nd !== "---" ? c2_2nd : ""}</div>
+                                            <div style="width: 70%; height: 35px; background: linear-gradient(to top, rgba(169, 169, 169, 0.4), transparent); border-top: 2px solid #a9a9a9; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 3px; font-size: 13px; font-weight: bold; color: #a9a9a9;">2nd</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="background: rgba(255,82,82,0.05); border-radius: 10px; padding: 15px; text-align: center; border: 1px solid rgba(255,82,82,0.3); width: 60%; margin: 0 auto;">
+                                    <div style="color: #ff5252; font-size: 14px; font-weight: 900; margin-bottom: 10px; letter-spacing: 2px; animation: pulse 2s infinite;">🔥 SIÊU CÚP MÙA GIẢI</div>
+                                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
+                                        <div style="font-size: 15px; color: #fff; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${sc}">${sc !== "---" ? sc : ""}</div>
+                                        <div style="width: 50%; height: 30px; background: linear-gradient(to top, rgba(255, 82, 82, 0.5), transparent); border-top: 3px solid #ff5252; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 16px; font-weight: 900; color: #ff5252;">👑</div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>`;
+                        
+                        document.getElementById('hof-detail-view').innerHTML = detailHtml;
+                        document.getElementById('hof-buttons-view').style.display = 'none';
+                        document.getElementById('hof-detail-view').style.display = 'block';
+                    }
+                }
+            } 
+        });
 
 async function adminStartPvP(league, stageKey, matchIndex, p1Name, p2Name) { 
     const syllabusSnap = await rtdb.ref(`tournament_status/${currentRealm}/syllabus`).once('value'); 
