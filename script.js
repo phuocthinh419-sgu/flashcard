@@ -436,6 +436,19 @@ function buyItem(itemType, basePrice) {
          return;
     }
     
+    // ĐẠO LUẬT MUA SỈ KÍNH LÚP
+    let quantity = 1;
+    if (itemType === 'glass') {
+        let qStr = prompt("🔍 Nhập số lượng Kính Lúp ngài muốn mua:\n(🔥 ƯU ĐÃI: Mua từ 3 kính trở lên, giá giảm chỉ còn 150 🪙 / kính)", "1");
+        if (qStr === null) return; // Nhấn Hủy thì thoát
+        quantity = parseInt(qStr);
+        if (isNaN(quantity) || quantity <= 0) return alert("Số lượng không hợp lệ!");
+        
+        // Chốt giá: Nếu số lượng >= 3 thì giá 150, ngược lại giá cũ 200
+        let unitPrice = quantity >= 3 ? 150 : 200;
+        basePrice = unitPrice * quantity;
+    }
+    
     let bestVoucher = 0; let vIndex = -1;
     if(userData.vouchers && userData.vouchers.length > 0) {
         bestVoucher = userData.vouchers[0]; vIndex = 0;
@@ -446,7 +459,9 @@ function buyItem(itemType, basePrice) {
     
     if (userData.gold < finalPrice) return alert(`Giao dịch thất bại! Bạn cần thanh toán ${finalPrice} 🪙.`);
     
-    let confirmMsg = `Xác nhận thanh toán ${finalPrice} Vàng cho vật phẩm này?`;
+    // Đổi chữ hiển thị cho oách
+    let itemName = itemType === 'glass' ? `${quantity} Kính Lúp` : 'vật phẩm này';
+    let confirmMsg = `Xác nhận thanh toán ${finalPrice} Vàng cho ${itemName}?`;
     if (bestVoucher > 0) confirmMsg = `🎟️ Hệ thống đang tự áp dụng ưu đãi Giảm ${bestVoucher}% từ kho!\nSố dư yêu cầu giảm từ ${basePrice} xuống còn ${finalPrice} Vàng. Mua ngay?`;
     
     if(confirm(confirmMsg)) {
@@ -461,7 +476,9 @@ function buyItem(itemType, basePrice) {
         if (itemType === 'potion') updates.potionExpiry = Date.now() + 86400000; 
         if (itemType === 'potion_x3') updates.potionX3Expiry = Date.now() + 10800000; 
         if (itemType === 'mask') updates.maskExpiry = Date.now() + 86400000; 
-        if (itemType === 'glass') updates.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
+        
+        // Cộng dồn chuẩn số lượng kính lúp đã mua
+        if (itemType === 'glass') updates.magnifyingGlass = (userData.magnifyingGlass || 0) + quantity;
         
         if (['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow', 'theme_royal'].includes(itemType)) {
             if (!userData.purchasedItems) userData.purchasedItems = [];
