@@ -436,15 +436,12 @@ function buyItem(itemType, basePrice) {
          return;
     }
     
-    // ĐẠO LUẬT MUA SỈ KÍNH LÚP
     let quantity = 1;
     if (itemType === 'glass') {
         let qStr = prompt("🔍 Nhập số lượng Kính Lúp ngài muốn mua:\n(🔥 ƯU ĐÃI: Mua từ 3 kính trở lên, giá giảm chỉ còn 150 🪙 / kính)", "1");
-        if (qStr === null) return; // Nhấn Hủy thì thoát
+        if (qStr === null) return; 
         quantity = parseInt(qStr);
         if (isNaN(quantity) || quantity <= 0) return alert("Số lượng không hợp lệ!");
-        
-        // Chốt giá: Nếu số lượng >= 3 thì giá 150, ngược lại giá cũ 200
         let unitPrice = quantity >= 3 ? 150 : 200;
         basePrice = unitPrice * quantity;
     }
@@ -459,7 +456,6 @@ function buyItem(itemType, basePrice) {
     
     if (userData.gold < finalPrice) return alert(`Giao dịch thất bại! Bạn cần thanh toán ${finalPrice} 🪙.`);
     
-    // Đổi chữ hiển thị cho oách
     let itemName = itemType === 'glass' ? `${quantity} Kính Lúp` : 'vật phẩm này';
     let confirmMsg = `Xác nhận thanh toán ${finalPrice} Vàng cho ${itemName}?`;
     if (bestVoucher > 0) confirmMsg = `🎟️ Hệ thống đang tự áp dụng ưu đãi Giảm ${bestVoucher}% từ kho!\nSố dư yêu cầu giảm từ ${basePrice} xuống còn ${finalPrice} Vàng. Mua ngay?`;
@@ -477,7 +473,6 @@ function buyItem(itemType, basePrice) {
         if (itemType === 'potion_x3') updates.potionX3Expiry = Date.now() + 10800000; 
         if (itemType === 'mask') updates.maskExpiry = Date.now() + 86400000; 
         
-        // Cộng dồn chuẩn số lượng kính lúp đã mua
         if (itemType === 'glass') updates.magnifyingGlass = (userData.magnifyingGlass || 0) + quantity;
         
         if (['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow', 'theme_royal'].includes(itemType)) {
@@ -908,7 +903,6 @@ function archiveSeason() {
     let c1Champ = "---", c1RunnerUp = "---", c1Third = "---";
     let c2Champ = "---", c2RunnerUp = "---", c2Third = "---";
     
-    // Thu thập danh hiệu C1 Elite
     if (currentC1Data && currentC1Data.final && currentC1Data.final.winner !== "") {
         c1Champ = currentC1Data.final.winner;
         c1RunnerUp = (c1Champ === currentC1Data.final.p1) ? currentC1Data.final.p2 : currentC1Data.final.p1;
@@ -917,7 +911,6 @@ function archiveSeason() {
         c1Third = currentC1Data.third_place.winner; 
     }
 
-    // Thu thập danh hiệu C2 Two
     if (currentC2Data && currentC2Data.final && currentC2Data.final.winner !== "") {
         c2Champ = currentC2Data.final.winner;
         c2RunnerUp = (c2Champ === currentC2Data.final.p1) ? currentC2Data.final.p2 : currentC2Data.final.p1;
@@ -987,7 +980,7 @@ function setupRealmListeners() {
             renderBracket(); 
         });
         
-       rtdb.ref(`tournament_status/${currentRealm}/hall_of_fame`).on('value', (snap) => { 
+        rtdb.ref(`tournament_status/${currentRealm}/hall_of_fame`).on('value', (snap) => { 
             let hof = snap.val() || []; let container = document.getElementById('hofList'); 
             if (hof.length === 0) { 
                 container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; padding: 20px;">Dữ liệu chưa được cập nhật.</div>'; 
@@ -1086,12 +1079,14 @@ function setupRealmListeners() {
 
         rtdb.ref(`active_pvp_match/${currentRealm}`).on('value', (snap) => { 
             let m = snap.val(); 
-            let pvpModalEl = document.getElementById('pvpModal'); // Lấy cái Lôi Đài ra
+            let pvpModalEl = document.getElementById('pvpModal');
             
             if(!m) {
                 if(pvpModalEl) {
                     pvpModalEl.classList.remove('active');
-                    pvpModalEl.style.display = 'none'; // Ép ẩn đi khi không có trận
+                    pvpModalEl.style.display = 'none';
+                    pvpModalEl.style.opacity = '0';
+                    pvpModalEl.style.visibility = 'hidden';
                 }
                 window.isSpectating = false;
                 return;
@@ -1100,11 +1095,13 @@ function setupRealmListeners() {
             let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2; 
             if(isP1 || isP2 || window.isSpectating) { 
                 
-                // BÙA ÉP BUỘC HIỂN THỊ LÔI ĐÀI MẠNH MẼ NHẤT!
                 if(pvpModalEl) {
                     pvpModalEl.classList.add('active'); 
-                    pvpModalEl.style.display = 'flex'; // Ép hiển thị dạng Flexbox y như modal thường
-                    pvpModalEl.style.zIndex = '9999';  // Đẩy nó lên tầng mây cao nhất, không bị ai che khuất
+                    pvpModalEl.style.display = 'flex';
+                    pvpModalEl.style.opacity = '1';
+                    pvpModalEl.style.visibility = 'visible';
+                    pvpModalEl.style.pointerEvents = 'auto';
+                    pvpModalEl.style.zIndex = '99999';
                 }
                 
                 let p1Short = m.p1.length > 4 ? m.p1.substring(0, 3).toUpperCase() : m.p1.toUpperCase();
@@ -1138,7 +1135,7 @@ function setupRealmListeners() {
                 document.getElementById('pvpQIndex').innerText = m.q_idx;
                 
                 if(m.status === 'playing') { 
-                    window.hasAlertedAntiCheat = false; // Reset bùa cáo thị
+                    window.hasAlertedAntiCheat = false;
                     document.getElementById('pvpWaitMsg').style.display = 'none'; 
                     document.getElementById('pvpQuestion').style.display = 'block'; 
                     
@@ -1308,7 +1305,6 @@ function setupRealmListeners() {
                         } else if (m.violator) {
                             endMsg = "🎉 ĐỐI THỦ GIAN LẬN (CHUYỂN TAB)!\n" + endMsg;
                             document.getElementById('pvpWaitMsg').style.color = '#00e676';
-                            // Cáo thị chúc mừng cho người chiến thắng khi đối thủ gian lận
                             if (!window.hasAlertedAntiCheat) {
                                 alert("🎉 ĐỐI THỦ ĐÃ BỎ TRỐN HOẶC GIAN LẬN!\nHệ thống đã xử thắng cho bạn!");
                                 window.hasAlertedAntiCheat = true;
@@ -1479,6 +1475,45 @@ async function advanceTournament() {
     if (updateNeeded) { await rtdb.ref().update(updates); alert("Hoàn tất cập nhật lịch trình tiến cấp!"); } else { alert("Trạng thái ổn định."); } 
 }
 
+async function adminStartPvP(league, stageKey, matchIndex, p1Name, p2Name) { 
+    const syllabusSnap = await rtdb.ref(`tournament_status/${currentRealm}/syllabus`).once('value'); 
+    const selectedLessons = syllabusSnap.val(); 
+    
+    // Đã thêm lệnh cảnh báo gắt gao nếu chưa có giáo án!
+    if(!selectedLessons || selectedLessons.length === 0) return alert("❌ Báo cáo: Ngự Thiện Phòng chưa có giáo án!\nBệ hạ vui lòng chọn Bài Học và bấm 'Khóa đề thi' trước khi khởi động trận đấu."); 
+    
+    let allVocab = []; 
+    selectedLessons.forEach(ln => { 
+        let lesson = allLessonsData.find(l => l.name === ln); 
+        if(lesson) allVocab = allVocab.concat(lesson.vocab); 
+    }); 
+    
+    // Đã nới lỏng yêu cầu số từ xuống 10 (thay vì 30) để dễ test, và báo lỗi sập màn hình nếu thiếu!
+    if(allVocab.length < 10) return alert(`❌ Lỗi: Kho dữ liệu hiện tại chỉ có ${allVocab.length} từ. Lôi đài cần ít nhất 10 từ để khởi động!\nBệ hạ hãy chọn thêm Bài học ở Ngự Thiện Phòng.`); 
+    
+    allVocab.sort(() => Math.random() - 0.5); 
+    let bankSize = Math.min(30, allVocab.length); // Tự động co giãn từ 10 - 30 câu tùy ngân hàng
+    
+    let pvpQuestionBank = allVocab.slice(0, bankSize).map(v => { 
+        let wrong = allVocab.filter(x => x.vi !== v.vi).sort(() => Math.random() - 0.5).slice(0, 3); 
+        // Bơm thêm đáp án ảo nếu kho từ vựng quá nghèo nàn, tránh nổ tung
+        while(wrong.length < 3) { wrong.push({vi: "Nhiễu " + Math.random().toString(36).substr(2, 5)}); }
+        let opts = [v.vi, ...wrong.map(w => w.vi)].sort(() => Math.random() - 0.5); 
+        return { en: v.en, vi: v.vi, opts: opts }; 
+    }); 
+    
+    window.isSpectating = true; 
+    
+    rtdb.ref(`active_pvp_match/${currentRealm}`).set({ 
+        league: league, stage: stageKey, match_idx: matchIndex, p1: p1Name, p2: p2Name, 
+        p1_set: 0, p2_set: 0, p1_score: 0, p2_score: 0, status: 'playing', 
+        q_idx: 1, current_q: pvpQuestionBank[0], 
+        mode: 'normal', 
+        time_limit: 15, unlock_time: Date.now() + 8000, 
+        p1_ans: "", p1_time: 0, p2_ans: "", p2_time: 0, evaluating: false, question_bank: pvpQuestionBank 
+    }); 
+}
+
 function submitPvPAnswer(idxOrStr) {
     rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
         let m = snap.val(); if(!m || m.status !== 'playing' || m.evaluating) return;
@@ -1504,7 +1539,7 @@ function submitPvPAnswer(idxOrStr) {
                     inp.style.backgroundColor = '#fee2e2'; 
                     inp.style.borderColor = '#ef4444'; 
                     inp.style.color = '#991b1b'; 
-                    if(inp.dataset.char !== '-') inp.value = inp.dataset.char; 
+                    if(inp.dataset.char !== '-' && inp.dataset.char !== '/') inp.value = inp.dataset.char; 
                 });
             }
             let submitBtn = document.getElementById('pvpSpellSubmitBtn');
@@ -1636,7 +1671,6 @@ window.addEventListener('message', function(e) {
         if (currentUser && userData) { 
             let multiplier = (userData.potionX3Expiry && userData.potionX3Expiry > Date.now()) ? 3 : ((userData.potionExpiry && userData.potionExpiry > Date.now()) ? 2 : 1);
             
-            // Đạo luật ban thưởng Mùa 2: Gõ chính tả xịn hơn Trắc nghiệm
             let baseXP = (e.data === 'SPELLING_CORRECT') ? 25 : 15;
             let baseGold = (e.data === 'SPELLING_CORRECT') ? 25 : 10;
 
@@ -1771,7 +1805,6 @@ window.addEventListener('DOMContentLoaded', () => {
     switchTab('library');
 });
 
-// Đạo luật "Đồng Hồ Cát": Tự động làm mới Sơ đồ mỗi 10 giây để canh giờ mở cửa
 setInterval(() => {
     if (currentRealm && currentFullBracketData) {
         if (typeof renderBracket === 'function') {
@@ -1780,7 +1813,6 @@ setInterval(() => {
     }
 }, 10000);
 
-// Phát loa
 function publishNotice() {
     let text = document.getElementById('adminNoticeInput').value;
     if(!text) return alert("Bệ hạ chưa nhập thánh ý!");
@@ -1790,7 +1822,6 @@ function publishNotice() {
     });
 }
 
-// Tắt loa
 function clearNotice() {
     if(!confirm("Bệ hạ muốn thu hồi Thánh chỉ và tắt bảng LED?")) return;
     rtdb.ref(`tournament_status/${currentRealm}/global_notice`).set("").then(() => {
