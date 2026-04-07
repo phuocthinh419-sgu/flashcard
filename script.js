@@ -1526,8 +1526,9 @@ function submitPvPAnswer(idxOrStr) {
         if (typeof idxOrStr === 'string') {
             selectedText = idxOrStr.trim().toUpperCase();
             
-            let compareUser = selectedText.replace(/\s+/g, '');
-            let compareCorrect = m.current_q.en.toUpperCase().replace(/\s+/g, '');
+            // ĐẠO LUẬT BAO DUNG: Băm chuỗi theo dấu /, sắp xếp lại, rồi mới so sánh
+            let compareUser = selectedText.replace(/\s+/g, '').split('/').sort().join('/');
+            let compareCorrect = m.current_q.en.toUpperCase().replace(/\s+/g, '').split('/').sort().join('/');
             isCorrect = compareUser === compareCorrect;
             
             let allInputs = Array.from(document.querySelectorAll('#pvpSpellContainer .spell-char'));
@@ -1569,9 +1570,10 @@ function triggerEval() {
             
             let p1_c = false; let p2_c = false;
             if (m.mode === 'spelling' || (m.mode === 'golden' && m.current_q.is_spelling)) {
-                let correctStr = m.current_q.en.toUpperCase().replace(/\s+/g, '');
-                p1_c = (m.p1_ans || "").toUpperCase().replace(/\s+/g, '') === correctStr;
-                p2_c = (m.p2_ans || "").toUpperCase().replace(/\s+/g, '') === correctStr;
+                // ĐẠO LUẬT BAO DUNG: Băm chuỗi theo dấu /, sắp xếp lại, rồi mới so sánh
+                let correctStr = m.current_q.en.toUpperCase().replace(/\s+/g, '').split('/').sort().join('/');
+                p1_c = (m.p1_ans || "").toUpperCase().replace(/\s+/g, '').split('/').sort().join('/') === correctStr;
+                p2_c = (m.p2_ans || "").toUpperCase().replace(/\s+/g, '').split('/').sort().join('/') === correctStr;
             } else {
                 p1_c = m.p1_ans === m.current_q.vi; 
                 p2_c = m.p2_ans === m.current_q.vi;
