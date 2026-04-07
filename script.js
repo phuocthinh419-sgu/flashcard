@@ -594,6 +594,9 @@ function executeAntiCheatPunishment() {
     if (!isUnderSurveillance || !surveillanceData) return;
     isUnderSurveillance = false; 
     
+    // Cáo thị xử trảm đập thẳng vào mặt kẻ gian lận
+    alert("❌ PHÁT HIỆN GIAN LẬN!\nNgài đã thoát khỏi Đấu Trường (chuyển tab) trong lúc tỷ võ. Hệ thống đã lập tức XỬ THUA!");
+
     let key = `tournament_status/${currentRealm}/${surveillanceData.league}_bracket/${surveillanceData.stageKey}`;
     if (!['sfl', 'sfr', 'final', 'third_place', 'super_cup', 'promotion_playoff'].includes(surveillanceData.stageKey)) { 
         key += `/${surveillanceData.matchIndex}`; 
@@ -1123,6 +1126,7 @@ function setupRealmListeners() {
                 document.getElementById('pvpQIndex').innerText = m.q_idx;
                 
                 if(m.status === 'playing') { 
+                    window.hasAlertedAntiCheat = false; // Reset bùa cáo thị
                     document.getElementById('pvpWaitMsg').style.display = 'none'; 
                     document.getElementById('pvpQuestion').style.display = 'block'; 
                     
@@ -1292,6 +1296,11 @@ function setupRealmListeners() {
                         } else if (m.violator) {
                             endMsg = "🎉 ĐỐI THỦ GIAN LẬN (CHUYỂN TAB)!\n" + endMsg;
                             document.getElementById('pvpWaitMsg').style.color = '#00e676';
+                            // Cáo thị chúc mừng cho người chiến thắng khi đối thủ gian lận
+                            if (!window.hasAlertedAntiCheat) {
+                                alert("🎉 ĐỐI THỦ ĐÃ BỎ TRỐN HOẶC GIAN LẬN!\nHệ thống đã xử thắng cho bạn!");
+                                window.hasAlertedAntiCheat = true;
+                            }
                         }
                     } else if (m.reason === 'surrender') {
                         if(m.winner !== userData.displayName && m.winner !== 'HỦY BỞI QUẢN TRỊ') endMsg = "🚩 BẠN ĐÃ RÚT LUI!\n" + endMsg;
