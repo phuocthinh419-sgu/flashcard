@@ -1117,6 +1117,20 @@ function setupRealmListeners() {
                 if (p1Display) p1Display.title = m.p1; 
                 if (p2Display) p2Display.title = m.p2; 
 
+                // CHÈN BÙA ĐỔI TÊN NEON VÀO ĐÂY
+                let leagueNameEl = document.getElementById('pvpLeagueNameDisplay');
+                if(leagueNameEl) {
+                    if(m.league === 'c1') {
+                        leagueNameEl.innerText = "🏆 MES CHAMPIONS LEAGUE ELITE";
+                        leagueNameEl.style.color = "#4a148c"; 
+                        leagueNameEl.style.borderBottom = "2px solid #ea80fc";
+                    } else if(m.league === 'c2') {
+                        leagueNameEl.innerText = "🥈 MES CHAMPIONS LEAGUE TWO";
+                        leagueNameEl.style.color = "#424242"; 
+                        leagueNameEl.style.borderBottom = "2px solid #9e9e9e";
+                    }
+                }
+
                 let elP1Score = document.getElementById('pvpP1Correct');
                 if(elP1Score && elP1Score.innerText != m.p1_score) {
                     elP1Score.innerText = m.p1_score;
