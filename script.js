@@ -1086,14 +1086,26 @@ function setupRealmListeners() {
 
         rtdb.ref(`active_pvp_match/${currentRealm}`).on('value', (snap) => { 
             let m = snap.val(); 
+            let pvpModalEl = document.getElementById('pvpModal'); // Lấy cái Lôi Đài ra
+            
             if(!m) {
-                document.getElementById('pvpModal').classList.remove('active');
+                if(pvpModalEl) {
+                    pvpModalEl.classList.remove('active');
+                    pvpModalEl.style.display = 'none'; // Ép ẩn đi khi không có trận
+                }
                 window.isSpectating = false;
                 return;
             } 
+            
             let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2; 
             if(isP1 || isP2 || window.isSpectating) { 
-                document.getElementById('pvpModal').classList.add('active'); 
+                
+                // BÙA ÉP BUỘC HIỂN THỊ LÔI ĐÀI MẠNH MẼ NHẤT!
+                if(pvpModalEl) {
+                    pvpModalEl.classList.add('active'); 
+                    pvpModalEl.style.display = 'flex'; // Ép hiển thị dạng Flexbox y như modal thường
+                    pvpModalEl.style.zIndex = '9999';  // Đẩy nó lên tầng mây cao nhất, không bị ai che khuất
+                }
                 
                 let p1Short = m.p1.length > 4 ? m.p1.substring(0, 3).toUpperCase() : m.p1.toUpperCase();
                 let p2Short = m.p2.length > 4 ? m.p2.substring(0, 3).toUpperCase() : m.p2.toUpperCase();
