@@ -1019,8 +1019,8 @@ function setupRealmListeners() {
                             pvpSpellContainer.style.display = 'block';
                             pvpSpellContainer.innerHTML = ''; 
 
-                            let targetEn = m.current_q.en.split('/')[0].trim();
-                            let words = targetEn.split(' '); 
+                            // MỞ KHÓA LUẬT MỚI: Không split('/') nữa, hiển thị toàn bộ chữ
+                            let words = m.current_q.en.trim().split(' '); 
                             words.forEach((w) => { 
                                 let wordDiv = document.createElement('div'); 
                                 wordDiv.style.cssText = 'display: flex; justify-content: center; gap: 4px; margin-bottom: 10px; width: 100%; flex-wrap: wrap;'; 
@@ -1029,8 +1029,10 @@ function setupRealmListeners() {
                                     inp.className = 'spell-char'; 
                                     inp.style.cssText = "width:36px; height:46px; text-align:center; font-size:20px; font-weight:900; border-radius:8px; border:2px solid #ff5252; outline:none; text-transform:uppercase; background:white; color:black; box-shadow:0 2px 5px rgba(0,0,0,0.3); transition: all 0.2s;";
                                     inp.maxLength = 1; inp.dataset.char = char.toUpperCase(); 
-                                    if(char === '-') { 
-                                        inp.value = '-'; 
+                                    
+                                    // LUẬT MỚI: Khóa cả dấu gạch nối và gạch chéo
+                                    if(char === '-' || char === '/') { 
+                                        inp.value = char; 
                                         inp.disabled = true; 
                                         inp.style.backgroundColor = '#ddd'; 
                                         inp.style.borderColor = '#aaa';
@@ -1392,9 +1394,10 @@ function submitPvPAnswer(idxOrStr) {
         if (typeof idxOrStr === 'string') {
             selectedText = idxOrStr.trim().toUpperCase();
             
-            // ĐẠO LUẬT THÔNG MINH: Lấy từ trước dấu / và xóa khoảng trắng để đọ đáp án
+            // Ép xóa sạch mọi khoảng trắng của cả người dùng và đáp án gốc để đối chiếu
             let compareUser = selectedText.replace(/\s+/g, '');
-            let compareCorrect = m.current_q.en.split('/')[0].toUpperCase().replace(/\s+/g, '');
+            // Đã gỡ bỏ bùa chém dấu /, so sánh toàn bộ chuỗi
+            let compareCorrect = m.current_q.en.toUpperCase().replace(/\s+/g, '');
             isCorrect = compareUser === compareCorrect;
             
             let allInputs = Array.from(document.querySelectorAll('#pvpSpellContainer .spell-char'));
@@ -1436,8 +1439,8 @@ function triggerEval() {
             
             let p1_c = false; let p2_c = false;
             if (m.mode === 'spelling' || (m.mode === 'golden' && m.current_q.is_spelling)) {
-                // ĐẠO LUẬT THÔNG MINH: Chỉ so sánh với từ đầu tiên trước dấu /
-                let correctStr = m.current_q.en.split('/')[0].toUpperCase().replace(/\s+/g, '');
+                // Yêu cầu gõ chính xác toàn bộ chuỗi có chứa dấu /
+                let correctStr = m.current_q.en.toUpperCase().replace(/\s+/g, '');
                 p1_c = (m.p1_ans || "").toUpperCase().replace(/\s+/g, '') === correctStr;
                 p2_c = (m.p2_ans || "").toUpperCase().replace(/\s+/g, '') === correctStr;
             } else {
