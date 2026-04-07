@@ -933,8 +933,71 @@ function setupRealmListeners() {
             } else { 
                 let html = ''; 
                 hof.forEach(item => { 
-                    let c1 = item.c1 || item.name || "---"; let c2 = item.c2 || "---"; let sc = item.sc || (item.name ? item.name : "---"); 
-                    html += `<div style="background: rgba(255,255,255,0.05); margin-bottom: 15px; border-radius: 8px; padding: 15px; border-left: 4px solid #ffd700; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><div style="color: #ccc; font-size: 14px; margin-bottom: 12px; font-weight: bold; text-align: center; border-bottom: 1px dashed rgba(255,215,0,0.3); padding-bottom: 8px;">MÙA ${item.season} - Cập nhật: ${item.date || ""}</div><div style="display: flex; justify-content: space-between; text-align: center; gap: 10px;"><div style="flex: 1;"><div style="color: #ffd700; font-size: 12px; font-weight: 900; margin-bottom: 5px;">🏆 C1 ELITE</div><div style="color: #fff; font-size: 15px; font-weight: bold;">${c1}</div></div><div style="flex: 1; border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1);"><div style="color: #c0c0c0; font-size: 12px; font-weight: 900; margin-bottom: 5px;">🥈 C2 TWO</div><div style="color: #fff; font-size: 15px; font-weight: bold;">${c2}</div></div><div style="flex: 1;"><div style="color: #ff5252; font-size: 12px; font-weight: 900; margin-bottom: 5px;">🔥 SIÊU CÚP</div><div style="color: #fff; font-size: 15px; font-weight: bold;">${sc}</div></div></div></div>`; 
+                    // Nhặt số liệu Mùa 2 trở đi. Nếu Mùa 1 cũ không có thì để "---"
+                    let c1_1st = item.c1 || item.name || "---"; 
+                    let c1_2nd = item.c1_runner || "---"; 
+                    let c1_3rd = item.c1_third || "---";   
+                    
+                    let c2_1st = item.c2 || "---"; 
+                    let c2_2nd = item.c2_runner || "---"; 
+                    let c2_3rd = item.c2_third || "---";   
+                    
+                    let sc = item.sc || (item.name ? item.name : "---"); 
+                    
+                    html += `
+                    <div style="background: #1a1a2e; margin-bottom: 20px; border-radius: 12px; padding: 20px; border-left: 5px solid #ffd700; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                        <div style="color: #ccc; font-size: 16px; margin-bottom: 15px; font-weight: 900; text-align: center; border-bottom: 1px solid rgba(255,215,0,0.3); padding-bottom: 10px; text-transform: uppercase;">
+                            MÙA ${item.season} - Cập nhật: ${item.date || ""}
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; gap: 15px;">
+                            
+                            <div style="flex: 1; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px; text-align: center; border: 1px solid rgba(255,215,0,0.2);">
+                                <div style="color: #ffd700; font-size: 13px; font-weight: 900; margin-bottom: 15px; letter-spacing: 1px;">🏆 C1 ELITE</div>
+                                <div style="display: flex; justify-content: center; align-items: flex-end; height: 70px; gap: 5px;">
+                                    <div style="width: 30%; display: flex; flex-direction: column; align-items: center;">
+                                        <div style="font-size: 10px; color: #cd7f32; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c1_3rd}">${c1_3rd !== "---" ? c1_3rd : ""}</div>
+                                        <div style="width: 100%; height: 30px; background: linear-gradient(to top, rgba(205, 127, 50, 0.4), transparent); border-top: 2px solid #cd7f32; margin-top: 5px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 12px; font-weight: bold; color: #cd7f32;">3rd</div>
+                                    </div>
+                                    <div style="width: 40%; display: flex; flex-direction: column; align-items: center;">
+                                        <div style="font-size: 12px; color: #ffd700; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c1_1st}">${c1_1st !== "---" ? c1_1st : ""}</div>
+                                        <div style="width: 100%; height: 50px; background: linear-gradient(to top, rgba(255, 215, 0, 0.4), transparent); border-top: 2px solid #ffd700; margin-top: 5px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 14px; font-weight: 900; color: #ffd700;">1st</div>
+                                    </div>
+                                    <div style="width: 30%; display: flex; flex-direction: column; align-items: center;">
+                                        <div style="font-size: 10px; color: #c0c0c0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c1_2nd}">${c1_2nd !== "---" ? c1_2nd : ""}</div>
+                                        <div style="width: 100%; height: 40px; background: linear-gradient(to top, rgba(192, 192, 192, 0.4), transparent); border-top: 2px solid #c0c0c0; margin-top: 5px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 12px; font-weight: bold; color: #c0c0c0;">2nd</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="flex: 1; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px; text-align: center; border: 1px solid rgba(192,192,192,0.2);">
+                                <div style="color: #c0c0c0; font-size: 13px; font-weight: 900; margin-bottom: 15px; letter-spacing: 1px;">🥈 C2 TWO</div>
+                                <div style="display: flex; justify-content: center; align-items: flex-end; height: 70px; gap: 5px;">
+                                    <div style="width: 30%; display: flex; flex-direction: column; align-items: center;">
+                                        <div style="font-size: 10px; color: #cd7f32; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c2_3rd}">${c2_3rd !== "---" ? c2_3rd : ""}</div>
+                                        <div style="width: 100%; height: 30px; background: linear-gradient(to top, rgba(205, 127, 50, 0.4), transparent); border-top: 2px solid #cd7f32; margin-top: 5px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 12px; font-weight: bold; color: #cd7f32;">3rd</div>
+                                    </div>
+                                    <div style="width: 40%; display: flex; flex-direction: column; align-items: center;">
+                                        <div style="font-size: 12px; color: #c0c0c0; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c2_1st}">${c2_1st !== "---" ? c2_1st : ""}</div>
+                                        <div style="width: 100%; height: 50px; background: linear-gradient(to top, rgba(192, 192, 192, 0.4), transparent); border-top: 2px solid #c0c0c0; margin-top: 5px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 14px; font-weight: 900; color: #c0c0c0;">1st</div>
+                                    </div>
+                                    <div style="width: 30%; display: flex; flex-direction: column; align-items: center;">
+                                        <div style="font-size: 10px; color: #a9a9a9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c2_2nd}">${c2_2nd !== "---" ? c2_2nd : ""}</div>
+                                        <div style="width: 100%; height: 40px; background: linear-gradient(to top, rgba(169, 169, 169, 0.4), transparent); border-top: 2px solid #a9a9a9; margin-top: 5px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 12px; font-weight: bold; color: #a9a9a9;">2nd</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="flex: 1; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px; text-align: center; border: 1px solid rgba(255,82,82,0.2); display: flex; flex-direction: column; justify-content: flex-end;">
+                                <div style="color: #ff5252; font-size: 13px; font-weight: 900; margin-bottom: auto; letter-spacing: 1px; animation: pulse 2s infinite;">🔥 SIÊU CÚP</div>
+                                <div style="display: flex; flex-direction: column; align-items: center; height: 70px; justify-content: flex-end;">
+                                    <div style="font-size: 13px; color: #fff; font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${sc}">${sc !== "---" ? sc : ""}</div>
+                                    <div style="width: 60%; height: 50px; background: linear-gradient(to top, rgba(255, 82, 82, 0.4), transparent); border-top: 2px solid #ff5252; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 16px; font-weight: 900; color: #ff5252;">👑</div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>`; 
                 }); 
                 container.innerHTML = html; 
             } 
@@ -1325,29 +1388,57 @@ async function advanceTournament() { 
     if (updateNeeded) { await rtdb.ref().update(updates); alert("Hoàn tất cập nhật lịch trình tiến cấp!"); } else { alert("Trạng thái ổn định."); } 
 }
 
-function archiveSeason() { 
-    let c1Champ = (currentC1Data && currentC1Data.final && currentC1Data.final.winner) ? currentC1Data.final.winner : "---"; 
-    let c2Champ = (currentC2Data && currentC2Data.final && currentC2Data.final.winner) ? currentC2Data.final.winner : "---"; 
-    let scChamp = (currentC1Data && currentC1Data.super_cup && currentC1Data.super_cup.winner) ? currentC1Data.super_cup.winner : "---"; 
-    let playoffWinner = (currentC1Data && currentC1Data.promotion_playoff && currentC1Data.promotion_playoff.winner) ? currentC1Data.promotion_playoff.winner : "---"; 
-    if(c1Champ === "---") return alert("Cần xác định kết quả nhánh Elite (C1) trước khi ghi nhận."); 
-    if(c2Champ !== "---" && (scChamp === "---" || playoffWinner === "---")) return alert("Vui lòng hoàn tất trận Siêu Cúp và Play-off!"); 
-    
-    if(confirm(`Xác nhận tổng kết Mùa giải tại ${currentRealm}?`)) { 
-        let c1Fourth = (currentC1Data.third_place.winner === currentC1Data.third_place.p1) ? currentC1Data.third_place.p2 : currentC1Data.third_place.p1; 
-        let promoted = (playoffWinner === c2Champ) ? c2Champ : "---"; 
-        let relegated = (playoffWinner === c2Champ) ? c1Fourth : c1Fourth; 
-        let historyData = { c1_champ: c1Champ, promoted_player: promoted, relegated_player: relegated }; 
-        
-        rtdb.ref(`tournament_status/${currentRealm}/hall_of_fame`).once('value').then(snap => { 
-            let hof = snap.val() || []; let nextSeason = hof.length + 1; 
-            hof.push({ season: nextSeason, c1: c1Champ, c2: c2Champ, sc: scChamp, date: new Date().toLocaleDateString('en-GB') }); 
-            let finalUpdates = {}; 
-            finalUpdates[`tournament_status/${currentRealm}/hall_of_fame`] = hof; 
-            finalUpdates[`tournament_status/${currentRealm}/history`] = historyData; 
-            rtdb.ref().update(finalUpdates).then(() => alert(`🎉 Ghi nhận thành công!`)); 
-        }); 
-    } 
+function archiveSeason() { 
+    let c1Champ = "---", c1RunnerUp = "---", c1Third = "---";
+    let c2Champ = "---", c2RunnerUp = "---", c2Third = "---";
+    
+    // Thu thập danh hiệu C1 Elite
+    if (currentC1Data && currentC1Data.final && currentC1Data.final.winner !== "") {
+        c1Champ = currentC1Data.final.winner;
+        c1RunnerUp = (c1Champ === currentC1Data.final.p1) ? currentC1Data.final.p2 : currentC1Data.final.p1;
+    }
+    if (currentC1Data && currentC1Data.third_place && currentC1Data.third_place.winner !== "") {
+        c1Third = currentC1Data.third_place.winner; 
+    }
+
+    // Thu thập danh hiệu C2 Two
+    if (currentC2Data && currentC2Data.final && currentC2Data.final.winner !== "") {
+        c2Champ = currentC2Data.final.winner;
+        c2RunnerUp = (c2Champ === currentC2Data.final.p1) ? currentC2Data.final.p2 : currentC2Data.final.p1;
+    }
+    if (currentC2Data && currentC2Data.third_place && currentC2Data.third_place.winner !== "") {
+        c2Third = currentC2Data.third_place.winner; 
+    }
+
+    let scChamp = (currentC1Data && currentC1Data.super_cup && currentC1Data.super_cup.winner) ? currentC1Data.super_cup.winner : "---"; 
+    let playoffWinner = (currentC1Data && currentC1Data.promotion_playoff && currentC1Data.promotion_playoff.winner) ? currentC1Data.promotion_playoff.winner : "---"; 
+    
+    if(c1Champ === "---") return alert("Cần xác định kết quả nhánh Elite (C1) trước khi ghi nhận."); 
+    if(c2Champ !== "---" && (scChamp === "---" || playoffWinner === "---")) return alert("Vui lòng hoàn tất trận Siêu Cúp và Play-off!"); 
+    
+    if(confirm(`Xác nhận tổng kết Mùa giải tại ${currentRealm}?`)) { 
+        let c1Fourth = (currentC1Data.third_place && currentC1Data.third_place.winner !== "") ? ((currentC1Data.third_place.winner === currentC1Data.third_place.p1) ? currentC1Data.third_place.p2 : currentC1Data.third_place.p1) : "---"; 
+        let promoted = (playoffWinner === c2Champ) ? c2Champ : "---"; 
+        let relegated = (playoffWinner === c2Champ) ? c1Fourth : c1Fourth; 
+        let historyData = { c1_champ: c1Champ, promoted_player: promoted, relegated_player: relegated }; 
+        
+        rtdb.ref(`tournament_status/${currentRealm}/hall_of_fame`).once('value').then(snap => { 
+            let hof = snap.val() || []; let nextSeason = hof.length + 1; 
+            
+            // Lưu trọn bộ 7 Dũng tướng vào sổ thiên tào
+            hof.push({ 
+                season: nextSeason, 
+                c1: c1Champ, c1_runner: c1RunnerUp, c1_third: c1Third, 
+                c2: c2Champ, c2_runner: c2RunnerUp, c2_third: c2Third, 
+                sc: scChamp, date: new Date().toLocaleDateString('en-GB') 
+            }); 
+            
+            let finalUpdates = {}; 
+            finalUpdates[`tournament_status/${currentRealm}/hall_of_fame`] = hof; 
+            finalUpdates[`tournament_status/${currentRealm}/history`] = historyData; 
+            rtdb.ref().update(finalUpdates).then(() => alert(`🎉 Ghi nhận thành công! Lịch sử đã khắc tên các Dũng sĩ!`)); 
+        }); 
+    } 
 }
 
 async function adminStartPvP(league, stageKey, matchIndex, p1Name, p2Name) { 
