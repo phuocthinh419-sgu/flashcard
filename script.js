@@ -967,7 +967,7 @@ function setupRealmListeners() {
             renderBracket(); 
         });
         
-        rtdb.ref(`tournament_status/${currentRealm}/hall_of_fame`).on('value', (snap) => { 
+       rtdb.ref(`tournament_status/${currentRealm}/hall_of_fame`).on('value', (snap) => { 
             let hof = snap.val() || []; let container = document.getElementById('hofList'); 
             if (hof.length === 0) { 
                 container.innerHTML = '<div style="text-align: center; color: #888; font-style: italic; padding: 20px;">Dữ liệu chưa được cập nhật.</div>'; 
@@ -1011,47 +1011,48 @@ function setupRealmListeners() {
                             <div style="display: flex; flex-direction: column; gap: 20px;">
                                 <div style="background: rgba(255,215,0,0.05); border-radius: 10px; padding: 15px; text-align: center; border: 1px solid rgba(255,215,0,0.3);">
                                     <div style="color: #ffd700; font-size: 15px; font-weight: 900; margin-bottom: 20px; letter-spacing: 2px;">🏆 MES CHAMPIONS LEAGUE ELITE</div>
-                                    <div style="display: flex; justify-content: center; align-items: flex-end; height: 80px; gap: 10px;">
-                                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
-                                            <div style="font-size: 13px; color: #cd7f32; font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c1_3rd}">${c1_3rd !== "---" ? c1_3rd : ""}</div>
-                                            <div style="width: 80%; height: 35px; background: linear-gradient(to top, rgba(205, 127, 50, 0.5), transparent); border-top: 3px solid #cd7f32; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 14px; font-weight: 900; color: #cd7f32;">3rd</div>
+                                    <div style="display: flex; justify-content: center; align-items: flex-end; height: 80px; gap: 5px;">
+                                        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center;">
+                                            <div style="font-size: 12px; color: #cd7f32; font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; box-sizing: border-box; padding: 0 2px;" title="${c1_3rd}">${c1_3rd !== "---" ? c1_3rd : ""}</div>
+                                            <div style="width: 85%; height: 35px; background: linear-gradient(to top, rgba(205, 127, 50, 0.5), transparent); border-top: 3px solid #cd7f32; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 14px; font-weight: 900; color: #cd7f32;">3rd</div>
                                         </div>
-                                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
-                                            <div style="font-size: 16px; color: #ffd700; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c1_1st}">${c1_1st !== "---" ? c1_1st : ""}</div>
-                                            <div style="width: 90%; height: 60px; background: linear-gradient(to top, rgba(255, 215, 0, 0.5), transparent); border-top: 3px solid #ffd700; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 18px; font-weight: 900; color: #ffd700;">1st</div>
+                                        <div style="flex: 1.2; min-width: 0; display: flex; flex-direction: column; align-items: center;">
+                                            <div style="font-size: 14px; color: #ffd700; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; box-sizing: border-box; padding: 0 2px;" title="${c1_1st}">${c1_1st !== "---" ? c1_1st : ""}</div>
+                                            <div style="width: 95%; height: 60px; background: linear-gradient(to top, rgba(255, 215, 0, 0.5), transparent); border-top: 3px solid #ffd700; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 18px; font-weight: 900; color: #ffd700;">1st</div>
                                         </div>
-                                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
-                                            <div style="font-size: 14px; color: #c0c0c0; font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c1_2nd}">${c1_2nd !== "---" ? c1_2nd : ""}</div>
-                                            <div style="width: 80%; height: 45px; background: linear-gradient(to top, rgba(192, 192, 192, 0.5), transparent); border-top: 3px solid #c0c0c0; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 15px; font-weight: 900; color: #c0c0c0;">2nd</div>
+                                        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center;">
+                                            <div style="font-size: 12px; color: #c0c0c0; font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; box-sizing: border-box; padding: 0 2px;" title="${c1_2nd}">${c1_2nd !== "---" ? c1_2nd : ""}</div>
+                                            <div style="width: 85%; height: 45px; background: linear-gradient(to top, rgba(192, 192, 192, 0.5), transparent); border-top: 3px solid #c0c0c0; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 15px; font-weight: 900; color: #c0c0c0;">2nd</div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div style="background: rgba(192,192,192,0.05); border-radius: 10px; padding: 15px; text-align: center; border: 1px solid rgba(192,192,192,0.3); width: 85%; margin: 0 auto;">
+                                <div style="background: rgba(192,192,192,0.05); border-radius: 10px; padding: 15px; text-align: center; border: 1px solid rgba(192,192,192,0.3); width: 90%; margin: 0 auto;">
                                     <div style="color: #c0c0c0; font-size: 14px; font-weight: 900; margin-bottom: 15px; letter-spacing: 2px;">🥈 MES CHAMPIONS LEAGUE TWO</div>
-                                    <div style="display: flex; justify-content: center; align-items: flex-end; height: 60px; gap: 8px;">
-                                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
-                                            <div style="font-size: 11px; color: #cd7f32; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c2_3rd}">${c2_3rd !== "---" ? c2_3rd : ""}</div>
-                                            <div style="width: 70%; height: 25px; background: linear-gradient(to top, rgba(205, 127, 50, 0.4), transparent); border-top: 2px solid #cd7f32; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 3px; font-size: 12px; font-weight: bold; color: #cd7f32;">3rd</div>
+                                    <div style="display: flex; justify-content: center; align-items: flex-end; height: 60px; gap: 5px;">
+                                        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center;">
+                                            <div style="font-size: 11px; color: #cd7f32; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; box-sizing: border-box; padding: 0 2px;" title="${c2_3rd}">${c2_3rd !== "---" ? c2_3rd : ""}</div>
+                                            <div style="width: 80%; height: 25px; background: linear-gradient(to top, rgba(205, 127, 50, 0.4), transparent); border-top: 2px solid #cd7f32; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 3px; font-size: 12px; font-weight: bold; color: #cd7f32;">3rd</div>
                                         </div>
-                                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
-                                            <div style="font-size: 13px; color: #c0c0c0; font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c2_1st}">${c2_1st !== "---" ? c2_1st : ""}</div>
-                                            <div style="width: 80%; height: 45px; background: linear-gradient(to top, rgba(192, 192, 192, 0.4), transparent); border-top: 2px solid #c0c0c0; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 3px; font-size: 14px; font-weight: 900; color: #c0c0c0;">1st</div>
+                                        <div style="flex: 1.2; min-width: 0; display: flex; flex-direction: column; align-items: center;">
+                                            <div style="font-size: 13px; color: #c0c0c0; font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; box-sizing: border-box; padding: 0 2px;" title="${c2_1st}">${c2_1st !== "---" ? c2_1st : ""}</div>
+                                            <div style="width: 90%; height: 45px; background: linear-gradient(to top, rgba(192, 192, 192, 0.4), transparent); border-top: 2px solid #c0c0c0; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 3px; font-size: 14px; font-weight: 900; color: #c0c0c0;">1st</div>
                                         </div>
-                                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
-                                            <div style="font-size: 12px; color: #a9a9a9; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${c2_2nd}">${c2_2nd !== "---" ? c2_2nd : ""}</div>
-                                            <div style="width: 70%; height: 35px; background: linear-gradient(to top, rgba(169, 169, 169, 0.4), transparent); border-top: 2px solid #a9a9a9; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 3px; font-size: 13px; font-weight: bold; color: #a9a9a9;">2nd</div>
+                                        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center;">
+                                            <div style="font-size: 11px; color: #a9a9a9; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; box-sizing: border-box; padding: 0 2px;" title="${c2_2nd}">${c2_2nd !== "---" ? c2_2nd : ""}</div>
+                                            <div style="width: 80%; height: 35px; background: linear-gradient(to top, rgba(169, 169, 169, 0.4), transparent); border-top: 2px solid #a9a9a9; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 3px; font-size: 13px; font-weight: bold; color: #a9a9a9;">2nd</div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div style="background: rgba(255,82,82,0.05); border-radius: 10px; padding: 15px; text-align: center; border: 1px solid rgba(255,82,82,0.3); width: 60%; margin: 0 auto;">
                                     <div style="color: #ff5252; font-size: 14px; font-weight: 900; margin-bottom: 10px; letter-spacing: 2px; animation: pulse 2s infinite;">🔥 SIÊU CÚP MÙA GIẢI</div>
-                                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
-                                        <div style="font-size: 15px; color: #fff; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${sc}">${sc !== "---" ? sc : ""}</div>
-                                        <div style="width: 50%; height: 30px; background: linear-gradient(to top, rgba(255, 82, 82, 0.5), transparent); border-top: 3px solid #ff5252; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 16px; font-weight: 900; color: #ff5252;">👑</div>
+                                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 0;">
+                                        <div style="font-size: 15px; color: #fff; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; box-sizing: border-box; padding: 0 5px;" title="${sc}">${sc !== "---" ? sc : ""}</div>
+                                        <div style="width: 60%; height: 30px; background: linear-gradient(to top, rgba(255, 82, 82, 0.5), transparent); border-top: 3px solid #ff5252; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 16px; font-weight: 900; color: #ff5252;">👑</div>
                                     </div>
                                 </div>
+                                
                             </div>
                         </div>`;
                         
