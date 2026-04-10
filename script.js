@@ -71,6 +71,11 @@ function checkAuth() {
                         if(!userData.lifetime_xp) userData.lifetime_xp = 0; if(!userData.weeklyXp) userData.weeklyXp = 0;
                         if(!userData.lastWeekXp) userData.lastWeekXp = 0; if(!userData.highestWeeklyXp) userData.highestWeeklyXp = 0;
                         if(!userData.mastered_words) userData.mastered_words = 0; if(!userData.mastered_lessons) userData.mastered_lessons = [];
+                        
+                        // BẢO TOÀN THỜI GIAN BÌNH TIÊN KHI ĐĂNG NHẬP (Chống vô hiệu hóa)
+                        if(userData.potionExpiry && userData.potionExpiry < Date.now()) userData.potionExpiry = null;
+                        if(userData.potionX3Expiry && userData.potionX3Expiry < Date.now()) userData.potionX3Expiry = null;
+                        if(userData.maskExpiry && userData.maskExpiry < Date.now()) userData.maskExpiry = null;
 
                         let currentWeek = getCurrentWeekStr();
                         if(userData.currentWeekStr !== currentWeek) {
@@ -84,32 +89,56 @@ function checkAuth() {
 
                         applyTheme(userData.theme);
                         
+                        // CHUẨN HÓA CƠ CHẾ TÍNH CHUỖI VÀ MÁY DU HÀNH
                         let lastParts = userData.lastLogin.split('/');
                         if (lastParts.length === 3) {
                             let todayDate = new Date(); let lastDate = new Date(lastParts[2], lastParts[1] - 1, lastParts[0]);
-                            let diffDays = Math.round((new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate()) - lastDate) / 86400000);
+                            
+                            // Ép thời gian về 00:00:00 để đếm ngày chuẩn xác tuyệt đối
+                            let tToday = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate()).getTime();
+                            let tLast = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate()).getTime();
+                            let diffDays = Math.round((tToday - tLast) / 86400000);
+                            
                             if (diffDays === 1) { 
+                                // Đăng nhập ngày kế tiếp -> Tăng chuỗi
                                 userData.streak += 1; userData.lastLogin = todayStr; 
                                 let mod = userData.streak % 100; let reward = 0;
                                 if (mod === 15) reward = 20; else if (mod === 30) reward = 35; else if (mod === 60) reward = 50; else if (mod === 0 && userData.streak >= 100) reward = 100;
                                 if (reward > 0) { userData.vouchers.push(reward); userData.vouchers.sort((a,b) => b - a); alert(`🎉 Mã giảm giá ${reward}%!`); }
                                 db.collection('vocab_users').doc(user.uid).update({ streak: userData.streak, lastLogin: todayStr, vouchers: userData.vouchers }); 
                             } else if (diffDays > 1) {
-                                if (userData.hasShield) { userData.hasShield = false; userData.lastLogin = todayStr; db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr, hasShield: false }); alert("🛡️ Đã dùng Bùa Bảo Hộ!"); } 
-                                else { 
+                                // Vắng mặt từ 1 ngày trở lên -> Xử phạt hoặc Kích hoạt bảo hộ
+                                if (userData.hasShield) { 
+                                    // Kích hoạt Bùa Bảo Hộ
+                                    userData.hasShield = false; 
+                                    userData.lastLogin = todayStr; 
+                                    db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr, hasShield: false }); 
+                                    alert("🛡️ May quá! Hệ thống đã dùng 1 Bùa Bảo Hộ để giữ lại chuỗi của bạn!"); 
+                                } else { 
+                                    // Đứt chuỗi thực sự
                                     userData.xp = Math.max(0, userData.xp - Math.floor(userData.xp * 0.2));
                                     userData.gold = Math.max(0, userData.gold - Math.floor(userData.gold * 0.2));
-                                    if (diffDays > 1 && diffDays <= 4) userData.timeMachine = { lostStreak: userData.streak, missedDays: diffDays - 1, lostTimestamp: Date.now(), status: 'available', attemptsToday: 0, lastAttemptDate: todayStr, daysRecovered: 0, currentBank: [] };
-                                    else userData.timeMachine = null;
+                                    
+                                    // Máy Du Hành chỉ kích hoạt nếu vắng <= 4 ngày (nghĩa là lỡ 1-3 ngày học)
+                                    if (diffDays <= 4) {
+                                        userData.timeMachine = { lostStreak: userData.streak, missedDays: diffDays - 1, lostTimestamp: Date.now(), status: 'available', attemptsToday: 0, lastAttemptDate: todayStr, daysRecovered: 0, currentBank: [] };
+                                    } else {
+                                        userData.timeMachine = null; // Vắng lâu quá thì máy du hành cũng bó tay
+                                    }
+                                    
                                     userData.streak = 1; userData.lastLogin = todayStr; 
                                     db.collection('vocab_users').doc(user.uid).update({ streak: 1, lastLogin: todayStr, xp: userData.xp, gold: userData.gold, timeMachine: userData.timeMachine || null }).then(() => { 
                                         let oldStreak = userData.timeMachine ? userData.timeMachine.lostStreak : "cũ";
-                                        console.error(`[HỆ THỐNG] Cảnh báo: Chuỗi ${oldStreak} ngày đã đứt do vắng mặt ${diffDays} ngày. Đang thiết lập lại về 1.`);
-                                        document.getElementById('missedDaysCount').innerText = diffDays;
+                                        console.error(`[HỆ THỐNG] Cảnh báo: Chuỗi ${oldStreak} ngày đã đứt do vắng mặt ${diffDays - 1} ngày. Đang thiết lập lại về 1.`);
+                                        document.getElementById('missedDaysCount').innerText = diffDays - 1;
                                         document.getElementById('streakBrokenModal').classList.add('active'); 
                                     });
                                 }
-                            } else if (diffDays === 0 && userData.lastLogin !== todayStr) { userData.lastLogin = todayStr; db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr }); }
+                            } else if (diffDays === 0 && userData.lastLogin !== todayStr) { 
+                                // Đăng nhập lại trong cùng 1 ngày
+                                userData.lastLogin = todayStr; 
+                                db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr }); 
+                            }
                         }
                         
                         updateUI(); setupRealmListeners(); fetchLessonsFromFirebase(); 
