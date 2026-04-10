@@ -72,7 +72,6 @@ function checkAuth() {
                         if(!userData.lastWeekXp) userData.lastWeekXp = 0; if(!userData.highestWeeklyXp) userData.highestWeeklyXp = 0;
                         if(!userData.mastered_words) userData.mastered_words = 0; if(!userData.mastered_lessons) userData.mastered_lessons = [];
                         
-                        // BẢO TOÀN THỜI GIAN BÌNH TIÊN KHI ĐĂNG NHẬP
                         if(userData.potionExpiry && userData.potionExpiry < Date.now()) userData.potionExpiry = null;
                         if(userData.potionX3Expiry && userData.potionX3Expiry < Date.now()) userData.potionX3Expiry = null;
                         if(userData.maskExpiry && userData.maskExpiry < Date.now()) userData.maskExpiry = null;
@@ -97,11 +96,11 @@ function checkAuth() {
                             let diffDays = Math.round((tToday - tLast) / 86400000);
                             
                             if (diffDays === 1) { 
+                                let oldStreak = userData.streak;
                                 userData.streak += 1; userData.lastLogin = todayStr; 
-                                let mod = userData.streak % 100; let reward = 0;
-                                if (mod === 15) reward = 20; else if (mod === 30) reward = 35; else if (mod === 60) reward = 50; else if (mod === 0 && userData.streak >= 100) reward = 100;
-                                if (reward > 0) { userData.vouchers.push(reward); userData.vouchers.sort((a,b) => b - a); alert(`🎉 Mã giảm giá ${reward}%!`); }
-                                db.collection('vocab_users').doc(user.uid).update({ streak: userData.streak, lastLogin: todayStr, vouchers: userData.vouchers }); 
+                                db.collection('vocab_users').doc(user.uid).update({ streak: userData.streak, lastLogin: todayStr }).then(() => {
+                                    if(window.checkAndGrantStreakRewards) window.checkAndGrantStreakRewards(oldStreak, userData.streak);
+                                });
                             } else if (diffDays > 1) {
                                 if (userData.hasShield) { 
                                     userData.hasShield = false; 
@@ -132,10 +131,8 @@ function checkAuth() {
                         
                         updateUI(); setupRealmListeners(); fetchLessonsFromFirebase(); 
                     } else { 
-                        // KHI LÀ TÂN BINH MỚI TINH (CHƯA CÓ HỒ SƠ)
                         userData = { role: trueRole, gold: 0, xp: 0, lifetime_xp: 0, realm: "", streak: 1, displayName: '', lastLogin: todayStr, hasShield: false, potionExpiry: null, potionX3Expiry: null, maskExpiry: null, magnifyingGlass: 0, vouchers: [], blindBoxCount: 0, lastBlindBoxDate: todayStr, streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: getCurrentWeekStr(), highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, timeMachine: null, mastered_words: 0, mastered_lessons: [] };
                         
-                        // Đổ danh sách Khóa học vào Bảng Chào mừng
                         let obSelect = document.getElementById('onboardRealmSelect');
                         if (obSelect) {
                             obSelect.innerHTML = '';
@@ -144,11 +141,10 @@ function checkAuth() {
                             });
                         }
                         
-                        // Bật Bảng Chào mừng lên
                         document.getElementById('nameModal').classList.add('active'); 
                     }
                 }).catch(err => {
-                    console.error("Lỗi xác thực:", err); alert("Lỗi tải hồ sơ! Bệ hạ chưa mở khóa Firebase Rules.");
+                    console.error("Lỗi xác thực:", err); alert("Lỗi tải hồ sơ! Có thể do mạng yếu hoặc kết nối bị gián đoạn.");
                 });
             } else { 
                 currentUser = null; userData = { role: 'student', gold: 0, xp: 0, lifetime_xp: 0, realm: "Khởi Nguyên", streak: 0, displayName: 'Khách', vouchers: [], streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: '', highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, potionX3Expiry: null, timeMachine: null, mastered_words: 0, mastered_lessons: [] };
@@ -700,6 +696,24 @@ function surrenderMatch() {
     
     if(confirm("Bạn có chắc chắn muốn rút lui khỏi trận này? Hệ thống sẽ xử thua!")) {
         window.isSpectating = false;
+        window.checkAndGrantStreakRewards = function(oldS, newS) {
+    if (oldS >= newS) return;
+    let granted = false;
+    for(let s = oldS + 1; s <= newS; s++) {
+        let mod = s % 100; let reward = 0;
+        if (mod === 15) reward = 20; else if (mod === 30) reward = 35; else if (mod === 60) reward = 50; else if (mod === 0 && s >= 100) reward = 100;
+        if (reward > 0) {
+            if(!userData.vouchers) userData.vouchers = [];
+            userData.vouchers.push(reward);
+            granted = true;
+            alert(`🔥 QUÀ TẶNG CHUỖI ${s} NGÀY!\nHệ thống ban tặng 1 Mã giảm giá ${reward}% vào Cửa Hàng!`);
+        }
+    }
+    if (granted) {
+        userData.vouchers.sort((a,b) => b - a);
+        if(currentUser && db) db.collection('vocab_users').doc(currentUser.uid).update({ vouchers: userData.vouchers }).then(() => updateUI());
+    }
+};
         let myName = userData.displayName;
         rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
             let m = snap.val();
@@ -1785,7 +1799,7 @@ window.addEventListener('message', function(e) {
     }
     else if (e.data === 'REQ_GLASS') { if (userData.magnifyingGlass > 0) { userData.magnifyingGlass--; syncStatsToCloud(); document.getElementById('modalFrame').contentWindow.postMessage('APPROVE_GLASS', '*'); } else { alert("Số lượng Kính Lúp hiện tại là 0!"); } }
     else if (e.data === 'TM_NEXT_DAY') { userData.timeMachine.daysRecovered++; let allVocab = []; allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab)); userData.timeMachine.currentBank = allVocab.sort(() => Math.random() - 0.5).slice(0, Math.min(30, allVocab.length)); db.collection('vocab_users').doc(currentUser.uid).update({ timeMachine: userData.timeMachine }).then(() => { openTimeMachineModal(); }); }
-    else if (e.data === 'TM_RESULT_PASS') { closeModal(); userData.streak = userData.timeMachine.lostStreak + userData.timeMachine.missedDays; userData.timeMachine = null; db.collection('vocab_users').doc(currentUser.uid).update({ streak: userData.streak, timeMachine: null }).then(() => { updateUI(); alert(`🎉 KỲ TÍCH! Chuỗi đã phục hồi lên mốc ${userData.streak}!`); triggerConfetti(); }); }
+    else if (e.data === 'TM_RESULT_PASS') { closeModal(); let oldS = userData.streak; userData.streak = userData.timeMachine.lostStreak + userData.timeMachine.missedDays; userData.timeMachine = null; db.collection('vocab_users').doc(currentUser.uid).update({ streak: userData.streak, timeMachine: null }).then(() => { updateUI(); alert(`🎉 KỲ TÍCH! Chuỗi đã phục hồi lên mốc ${userData.streak}!`); triggerConfetti(); if(window.checkAndGrantStreakRewards) window.checkAndGrantStreakRewards(oldS, userData.streak); }); }
     else if (e.data === 'TM_RESULT_FAIL') { closeModal(); userData.timeMachine.status = 'available'; userData.timeMachine.currentBank = []; db.collection('vocab_users').doc(currentUser.uid).update({ timeMachine: userData.timeMachine }).then(() => { updateUI(); alert(`❌ THẤT BẠI! Hãy thử lại nếu còn lượt.`); }); }
 });
 
