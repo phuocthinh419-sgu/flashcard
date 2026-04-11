@@ -1544,7 +1544,8 @@ function setupRealmListeners() {
         });
         fetchLeaderboard();
     }
-    
+}
+
 function revealOptions(m, myAns, indices) {
     if(myAns !== "") return;
     document.getElementById('lockOverlay').classList.remove('active');
