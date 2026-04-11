@@ -260,7 +260,12 @@ function triggerConfetti() { for (let i = 0; i < 60; i++) { let conf = document.
 function loginWithGoogle() { 
     if (!auth) return; 
     var provider = new firebase.auth.GoogleAuthProvider(); 
-    // Chuyển từ Popup sang Redirect để trị Edge và Safari
+    
+    // Đạo bùa ép buộc: Trói buộc Google phải hiện bảng "Chọn tài khoản"
+    provider.setCustomParameters({
+        prompt: 'select_account'
+    });
+    
     auth.signInWithRedirect(provider); 
 }
 function loginWithEmail() { if (!auth) return; const email = document.getElementById('loginEmail').value.trim(); const pass = document.getElementById('loginPass').value.trim(); if (!email || !pass) return alert("Vui lòng cung cấp đầy đủ thông tin truy cập!"); auth.signInWithEmailAndPassword(email, pass).catch(err => alert("Lỗi: " + err.message)); }
