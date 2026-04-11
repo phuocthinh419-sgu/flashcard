@@ -666,10 +666,10 @@ function confirmJoinMatch() {
 }
 
 function executeAntiCheatPunishment() {
-    if (!window.isUnderSurveillance || !surveillanceData) return;
-    window.isUnderSurveillance = false; 
+    // 🛑 Đã bỏ chữ 'window.' đi để JS không bị lỗi
+    if (!isUnderSurveillance || !surveillanceData) return;
+    isUnderSurveillance = false; 
 
-    // 🛑 CƯỠNG ÉP HIỂN THỊ ÁN TỬ HÌNH NGAY LẬP TỨC (TRỊ BỆNH MOBILE)
     let waitMsg = document.getElementById('pvpWaitMsg');
     if(waitMsg) {
         waitMsg.style.display = 'block';
@@ -1194,7 +1194,7 @@ function setupRealmListeners() {
             } 
         });
 
-        rtdb.ref(`active_pvp_match/${currentRealm}`).on('value', (snap) => { 
+       rtdb.ref(`active_pvp_match/${currentRealm}`).on('value', (snap) => { 
             let m = snap.val(); 
             let pvpModalEl = document.getElementById('pvpModal');
             
@@ -1497,7 +1497,7 @@ function setupRealmListeners() {
                         if(submitBtn) submitBtn.style.display = 'none';
                     }
                 } else if (m.status === 'finished') { 
-                    window.isUnderSurveillance = false; clearInterval(window.pvpTimer); document.getElementById('pvpTimerBanner').innerText = `⏳ 0s`;
+                    isUnderSurveillance = false; clearInterval(window.pvpTimer); document.getElementById('pvpTimerBanner').innerText = `⏳ 0s`;
                     document.getElementById('pvpWaitMsg').style.display = 'block'; 
                     
                     let endMsg = "🏆 NGƯỜI CHIẾN THẮNG: " + m.winner;
@@ -2066,19 +2066,19 @@ function logoutApp() {
 // =========================================================================
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === 'hidden') { 
-        if (window.isUnderSurveillance) {
+        // 🛑 Bỏ chữ window.
+        if (isUnderSurveillance) {
             if (typeof executeAntiCheatPunishment === 'function') executeAntiCheatPunishment(); 
-            // Cắt mạng ngay lập tức để ép Firebase thả Bùa Tuyệt Mệnh!
             if (rtdb) rtdb.goOffline(); 
         }
     } else if (document.visibilityState === 'visible') {
-        // Nối lại mạng khi mở lại tab
         if (rtdb) rtdb.goOnline(); 
     }
 });
 
 window.addEventListener("blur", () => {
-    if (window.isUnderSurveillance) {
+    // 🛑 Bỏ chữ window.
+    if (isUnderSurveillance) {
         if (typeof executeAntiCheatPunishment === 'function') executeAntiCheatPunishment();
         if (rtdb) rtdb.goOffline(); 
     }
