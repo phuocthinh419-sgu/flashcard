@@ -55,8 +55,10 @@ function initSystem() {
 function checkAuth() {
     if (!auth) return;
 
-    // Hàm lõi xử lý đăng nhập (thần gói lại để tái sử dụng)
-    const handleAuthState = (user) => {
+    // ĐẠO BÙA HỨNG KẾT QUẢ: Ép Firebase đọc thông tin từ Google trả về trước khi tự ý lấy acc cũ
+    auth.getRedirectResult().catch(err => console.error("Lỗi Redirect:", err));
+
+    auth.onAuthStateChanged(user => {
         if (user) {
             currentUser = user; const todayStr = new Date().toLocaleDateString('en-GB'); 
             const isEmperor = (user.email === "phuocthinh419@gmail.com"); const trueRole = isEmperor ? 'teacher' : 'student';
@@ -152,14 +154,6 @@ function checkAuth() {
             currentUser = null; userData = { role: 'student', gold: 0, xp: 0, lifetime_xp: 0, realm: "Khởi Nguyên", streak: 0, displayName: 'Khách', vouchers: [], streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: '', highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, potionX3Expiry: null, timeMachine: null, mastered_words: 0, mastered_lessons: [] };
             currentRealm = "Khởi Nguyên"; applyTheme('theme_default'); updateUI(); fetchLessonsFromFirebase();
         }
-    };
-
-    // ĐẠO BÙA TRÓI CHÂN: Bắt Firebase đợi kết quả Redirect từ Google VỀ ĐẾN NƠI rồi mới được chạy!
-    auth.getRedirectResult().then((result) => {
-        auth.onAuthStateChanged(handleAuthState);
-    }).catch(err => {
-        console.error("Lỗi Redirect:", err);
-        auth.onAuthStateChanged(handleAuthState);
     });
 }
 
@@ -268,18 +262,17 @@ function getCurrentWeekStr() { let d = new Date(); d = new Date(Date.UTC(d.getFu
 function triggerConfetti() { for (let i = 0; i < 60; i++) { let conf = document.createElement('div'); conf.className = 'confetti'; conf.style.left = Math.random() * 100 + 'vw'; conf.style.backgroundColor = ['#fbc02d', '#ff5722', '#00c853', '#2962ff', '#e040fb'][Math.floor(Math.random() * 5)]; conf.style.animationDuration = (Math.random() * 2 + 2) + 's'; document.body.appendChild(conf); setTimeout(() => conf.remove(), 4000); } }
 function loginWithGoogle() { 
     if (!auth) return; 
-    // Ép Đăng xuất để xóa sạch bộ nhớ cũ TRƯỚC KHI bay sang Google
-    auth.signOut().then(() => {
-        // Chờ nửa giây để trình duyệt kịp xóa sạch sẽ rễ cũ
-        setTimeout(() => {
-            var provider = new firebase.auth.GoogleAuthProvider(); 
-            provider.setCustomParameters({ prompt: 'select_account' });
-            auth.signInWithRedirect(provider); 
-        }, 500);
+    var provider = new firebase.auth.GoogleAuthProvider(); 
+    
+    // ĐẠO BÙA CỐT LÕI: Ép Google bắt buộc phải hiện bảng "Choose an account"
+    provider.setCustomParameters({ prompt: 'select_account' }); 
+    
+    // Thử dùng Popup trước cho mượt mà, nếu trình duyệt chặn thì tự động xoay sang Redirect
+    auth.signInWithPopup(provider).then(() => {
+        window.location.reload();
     }).catch(err => {
-        var provider = new firebase.auth.GoogleAuthProvider(); 
-        provider.setCustomParameters({ prompt: 'select_account' });
-        auth.signInWithRedirect(provider); 
+        console.warn("Popup bị chặn, chuyển sang Redirect...", err);
+        auth.signInWithRedirect(provider);
     });
 }
 function loginWithEmail() { if (!auth) return; const email = document.getElementById('loginEmail').value.trim(); const pass = document.getElementById('loginPass').value.trim(); if (!email || !pass) return alert("Vui lòng cung cấp đầy đủ thông tin truy cập!"); auth.signInWithEmailAndPassword(email, pass).catch(err => alert("Lỗi: " + err.message)); }
