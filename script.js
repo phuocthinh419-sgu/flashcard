@@ -53,112 +53,114 @@ function initSystem() {
 }
 
 function checkAuth() {
-    if(auth) {
-        // Đạo bùa mới: Bắt buộc Firebase phải xử lý kết quả từ trang Google trả về trước
-        auth.getRedirectResult().then((result) => {
-            if (result.user) {
-                console.log("Đã nhận diện chân thân mới từ Google:", result.user.email);
-            }
-        }).catch(error => console.error("Lỗi cổng chuyển:", error));
+    if (!auth) return;
 
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                currentUser = user; const todayStr = new Date().toLocaleDateString('en-GB'); 
-                const isEmperor = (user.email === "phuocthinh419@gmail.com"); const trueRole = isEmperor ? 'teacher' : 'student';
+    // Hàm lõi xử lý đăng nhập (thần gói lại để tái sử dụng)
+    const handleAuthState = (user) => {
+        if (user) {
+            currentUser = user; const todayStr = new Date().toLocaleDateString('en-GB'); 
+            const isEmperor = (user.email === "phuocthinh419@gmail.com"); const trueRole = isEmperor ? 'teacher' : 'student';
 
-                db.collection('vocab_users').doc(user.uid).get().then(doc => {
-                    if (doc.exists) {
-                        userData = Object.assign(userData, doc.data()); 
-                        if(!userData.realm || !availableRealms.includes(userData.realm)) userData.realm = availableRealms[0];
-                        currentRealm = userData.realm;
-                        
-                        if(!userData.streak) userData.streak = 1; if(!userData.lastLogin) userData.lastLogin = todayStr;
-                        if(!userData.vouchers) userData.vouchers = []; if(!userData.streakIcon) userData.streakIcon = '🔥';
-                        if(!userData.theme) userData.theme = 'theme_default'; if(!userData.purchasedItems) userData.purchasedItems = [];
-                        if(!userData.lifetime_xp) userData.lifetime_xp = 0; if(!userData.weeklyXp) userData.weeklyXp = 0;
-                        if(!userData.lastWeekXp) userData.lastWeekXp = 0; if(!userData.highestWeeklyXp) userData.highestWeeklyXp = 0;
-                        if(!userData.mastered_words) userData.mastered_words = 0; if(!userData.mastered_lessons) userData.mastered_lessons = [];
-                        
-                        if(userData.potionExpiry && userData.potionExpiry < Date.now()) userData.potionExpiry = null;
-                        if(userData.potionX3Expiry && userData.potionX3Expiry < Date.now()) userData.potionX3Expiry = null;
-                        if(userData.maskExpiry && userData.maskExpiry < Date.now()) userData.maskExpiry = null;
+            db.collection('vocab_users').doc(user.uid).get().then(doc => {
+                if (doc.exists) {
+                    userData = Object.assign(userData, doc.data()); 
+                    if(!userData.realm || !availableRealms.includes(userData.realm)) userData.realm = availableRealms[0];
+                    currentRealm = userData.realm;
+                    
+                    if(!userData.streak) userData.streak = 1; if(!userData.lastLogin) userData.lastLogin = todayStr;
+                    if(!userData.vouchers) userData.vouchers = []; if(!userData.streakIcon) userData.streakIcon = '🔥';
+                    if(!userData.theme) userData.theme = 'theme_default'; if(!userData.purchasedItems) userData.purchasedItems = [];
+                    if(!userData.lifetime_xp) userData.lifetime_xp = 0; if(!userData.weeklyXp) userData.weeklyXp = 0;
+                    if(!userData.lastWeekXp) userData.lastWeekXp = 0; if(!userData.highestWeeklyXp) userData.highestWeeklyXp = 0;
+                    if(!userData.mastered_words) userData.mastered_words = 0; if(!userData.mastered_lessons) userData.mastered_lessons = [];
+                    
+                    if(userData.potionExpiry && userData.potionExpiry < Date.now()) userData.potionExpiry = null;
+                    if(userData.potionX3Expiry && userData.potionX3Expiry < Date.now()) userData.potionX3Expiry = null;
+                    if(userData.maskExpiry && userData.maskExpiry < Date.now()) userData.maskExpiry = null;
 
-                        let currentWeek = getCurrentWeekStr();
-                        if(userData.currentWeekStr !== currentWeek) {
-                            userData.lastWeekXp = userData.weeklyXp || 0;
-                            if (userData.lastWeekXp > (userData.highestWeeklyXp || 0)) userData.highestWeeklyXp = userData.lastWeekXp;
-                            userData.weeklyXp = 0; userData.currentWeekStr = currentWeek; userData.hasBrokenRecordThisWeek = false;
-                            db.collection('vocab_users').doc(user.uid).update({ lastWeekXp: userData.lastWeekXp, weeklyXp: 0, currentWeekStr: currentWeek, hasBrokenRecordThisWeek: false, highestWeeklyXp: userData.highestWeeklyXp });
-                        }
-                        
-                        if(userData.role !== trueRole) { userData.role = trueRole; db.collection('vocab_users').doc(user.uid).update({ role: trueRole }); }
-
-                        applyTheme(userData.theme);
-                        
-                        let lastParts = userData.lastLogin.split('/');
-                        if (lastParts.length === 3) {
-                            let todayDate = new Date(); let lastDate = new Date(lastParts[2], lastParts[1] - 1, lastParts[0]);
-                            let tToday = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate()).getTime();
-                            let tLast = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate()).getTime();
-                            let diffDays = Math.round((tToday - tLast) / 86400000);
-                            
-                            if (diffDays === 1) { 
-                                let oldStreak = userData.streak;
-                                userData.streak += 1; userData.lastLogin = todayStr; 
-                                db.collection('vocab_users').doc(user.uid).update({ streak: userData.streak, lastLogin: todayStr }).then(() => {
-                                    if(window.checkAndGrantStreakRewards) window.checkAndGrantStreakRewards(oldStreak, userData.streak);
-                                });
-                            } else if (diffDays > 1) {
-                                if (userData.hasShield) { 
-                                    userData.hasShield = false; 
-                                    userData.lastLogin = todayStr; 
-                                    db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr, hasShield: false }); 
-                                    alert("🛡️ May quá! Hệ thống đã dùng 1 Bùa Bảo Hộ để giữ lại chuỗi của bạn!"); 
-                                } else { 
-                                    userData.xp = Math.max(0, userData.xp - Math.floor(userData.xp * 0.2));
-                                    userData.gold = Math.max(0, userData.gold - Math.floor(userData.gold * 0.2));
-                                    if (diffDays <= 4) {
-                                        userData.timeMachine = { lostStreak: userData.streak, missedDays: diffDays - 1, lostTimestamp: Date.now(), status: 'available', attemptsToday: 0, lastAttemptDate: todayStr, daysRecovered: 0, currentBank: [] };
-                                    } else {
-                                        userData.timeMachine = null; 
-                                    }
-                                    userData.streak = 1; userData.lastLogin = todayStr; 
-                                    db.collection('vocab_users').doc(user.uid).update({ streak: 1, lastLogin: todayStr, xp: userData.xp, gold: userData.gold, timeMachine: userData.timeMachine || null }).then(() => { 
-                                        let oldStreak = userData.timeMachine ? userData.timeMachine.lostStreak : "cũ";
-                                        console.error(`[HỆ THỐNG] Cảnh báo: Chuỗi ${oldStreak} ngày đã đứt do vắng mặt ${diffDays - 1} ngày. Đang thiết lập lại về 1.`);
-                                        document.getElementById('missedDaysCount').innerText = diffDays - 1;
-                                        document.getElementById('streakBrokenModal').classList.add('active'); 
-                                    });
-                                }
-                            } else if (diffDays === 0 && userData.lastLogin !== todayStr) { 
-                                userData.lastLogin = todayStr; 
-                                db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr }); 
-                            }
-                        }
-                        
-                        updateUI(); setupRealmListeners(); fetchLessonsFromFirebase(); 
-                    } else { 
-                        userData = { role: trueRole, gold: 0, xp: 0, lifetime_xp: 0, realm: "", streak: 1, displayName: '', lastLogin: todayStr, hasShield: false, potionExpiry: null, potionX3Expiry: null, maskExpiry: null, magnifyingGlass: 0, vouchers: [], blindBoxCount: 0, lastBlindBoxDate: todayStr, streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: getCurrentWeekStr(), highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, timeMachine: null, mastered_words: 0, mastered_lessons: [] };
-                        
-                        let obSelect = document.getElementById('onboardRealmSelect');
-                        if (obSelect) {
-                            obSelect.innerHTML = '';
-                            availableRealms.forEach(r => {
-                                obSelect.innerHTML += `<option value="${r}">${r}</option>`;
-                            });
-                        }
-                        
-                        document.getElementById('nameModal').classList.add('active'); 
+                    let currentWeek = getCurrentWeekStr();
+                    if(userData.currentWeekStr !== currentWeek) {
+                        userData.lastWeekXp = userData.weeklyXp || 0;
+                        if (userData.lastWeekXp > (userData.highestWeeklyXp || 0)) userData.highestWeeklyXp = userData.lastWeekXp;
+                        userData.weeklyXp = 0; userData.currentWeekStr = currentWeek; userData.hasBrokenRecordThisWeek = false;
+                        db.collection('vocab_users').doc(user.uid).update({ lastWeekXp: userData.lastWeekXp, weeklyXp: 0, currentWeekStr: currentWeek, hasBrokenRecordThisWeek: false, highestWeeklyXp: userData.highestWeeklyXp });
                     }
-                }).catch(err => {
-                    console.error("Lỗi xác thực:", err); alert("Lỗi tải hồ sơ! Có thể do mạng yếu hoặc kết nối bị gián đoạn.");
-                });
-            } else { 
-                currentUser = null; userData = { role: 'student', gold: 0, xp: 0, lifetime_xp: 0, realm: "Khởi Nguyên", streak: 0, displayName: 'Khách', vouchers: [], streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: '', highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, potionX3Expiry: null, timeMachine: null, mastered_words: 0, mastered_lessons: [] };
-                currentRealm = "Khởi Nguyên"; applyTheme('theme_default'); updateUI(); fetchLessonsFromFirebase();
-            }
-        });
-    }
+                    
+                    if(userData.role !== trueRole) { userData.role = trueRole; db.collection('vocab_users').doc(user.uid).update({ role: trueRole }); }
+
+                    applyTheme(userData.theme);
+                    
+                    let lastParts = userData.lastLogin.split('/');
+                    if (lastParts.length === 3) {
+                        let todayDate = new Date(); let lastDate = new Date(lastParts[2], lastParts[1] - 1, lastParts[0]);
+                        let tToday = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate()).getTime();
+                        let tLast = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate()).getTime();
+                        let diffDays = Math.round((tToday - tLast) / 86400000);
+                        
+                        if (diffDays === 1) { 
+                            let oldStreak = userData.streak;
+                            userData.streak += 1; userData.lastLogin = todayStr; 
+                            db.collection('vocab_users').doc(user.uid).update({ streak: userData.streak, lastLogin: todayStr }).then(() => {
+                                if(window.checkAndGrantStreakRewards) window.checkAndGrantStreakRewards(oldStreak, userData.streak);
+                            });
+                        } else if (diffDays > 1) {
+                            if (userData.hasShield) { 
+                                userData.hasShield = false; 
+                                userData.lastLogin = todayStr; 
+                                db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr, hasShield: false }); 
+                                alert("🛡️ May quá! Hệ thống đã dùng 1 Bùa Bảo Hộ để giữ lại chuỗi của bạn!"); 
+                            } else { 
+                                userData.xp = Math.max(0, userData.xp - Math.floor(userData.xp * 0.2));
+                                userData.gold = Math.max(0, userData.gold - Math.floor(userData.gold * 0.2));
+                                if (diffDays <= 4) {
+                                    userData.timeMachine = { lostStreak: userData.streak, missedDays: diffDays - 1, lostTimestamp: Date.now(), status: 'available', attemptsToday: 0, lastAttemptDate: todayStr, daysRecovered: 0, currentBank: [] };
+                                } else {
+                                    userData.timeMachine = null; 
+                                }
+                                userData.streak = 1; userData.lastLogin = todayStr; 
+                                db.collection('vocab_users').doc(user.uid).update({ streak: 1, lastLogin: todayStr, xp: userData.xp, gold: userData.gold, timeMachine: userData.timeMachine || null }).then(() => { 
+                                    let oldStreak = userData.timeMachine ? userData.timeMachine.lostStreak : "cũ";
+                                    console.error(`[HỆ THỐNG] Cảnh báo: Chuỗi ${oldStreak} ngày đã đứt do vắng mặt ${diffDays - 1} ngày. Đang thiết lập lại về 1.`);
+                                    document.getElementById('missedDaysCount').innerText = diffDays - 1;
+                                    document.getElementById('streakBrokenModal').classList.add('active'); 
+                                });
+                            }
+                        } else if (diffDays === 0 && userData.lastLogin !== todayStr) { 
+                            userData.lastLogin = todayStr; 
+                            db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr }); 
+                        }
+                    }
+                    
+                    updateUI(); setupRealmListeners(); fetchLessonsFromFirebase(); 
+                } else { 
+                    userData = { role: trueRole, gold: 0, xp: 0, lifetime_xp: 0, realm: "", streak: 1, displayName: '', lastLogin: todayStr, hasShield: false, potionExpiry: null, potionX3Expiry: null, maskExpiry: null, magnifyingGlass: 0, vouchers: [], blindBoxCount: 0, lastBlindBoxDate: todayStr, streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: getCurrentWeekStr(), highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, timeMachine: null, mastered_words: 0, mastered_lessons: [] };
+                    
+                    let obSelect = document.getElementById('onboardRealmSelect');
+                    if (obSelect) {
+                        obSelect.innerHTML = '';
+                        availableRealms.forEach(r => {
+                            obSelect.innerHTML += `<option value="${r}">${r}</option>`;
+                        });
+                    }
+                    
+                    document.getElementById('nameModal').classList.add('active'); 
+                }
+            }).catch(err => {
+                console.error("Lỗi xác thực:", err); alert("Lỗi tải hồ sơ! Có thể do mạng yếu hoặc kết nối bị gián đoạn.");
+            });
+        } else { 
+            currentUser = null; userData = { role: 'student', gold: 0, xp: 0, lifetime_xp: 0, realm: "Khởi Nguyên", streak: 0, displayName: 'Khách', vouchers: [], streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: '', highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, potionX3Expiry: null, timeMachine: null, mastered_words: 0, mastered_lessons: [] };
+            currentRealm = "Khởi Nguyên"; applyTheme('theme_default'); updateUI(); fetchLessonsFromFirebase();
+        }
+    };
+
+    // ĐẠO BÙA TRÓI CHÂN: Bắt Firebase đợi kết quả Redirect từ Google VỀ ĐẾN NƠI rồi mới được chạy!
+    auth.getRedirectResult().then((result) => {
+        auth.onAuthStateChanged(handleAuthState);
+    }).catch(err => {
+        console.error("Lỗi Redirect:", err);
+        auth.onAuthStateChanged(handleAuthState);
+    });
 }
 
 function fallbackInit() { availableRealms = ['Khởi Nguyên']; currentRealm = 'Khởi Nguyên'; updateUI(); checkAuth(); }
@@ -266,19 +268,18 @@ function getCurrentWeekStr() { let d = new Date(); d = new Date(Date.UTC(d.getFu
 function triggerConfetti() { for (let i = 0; i < 60; i++) { let conf = document.createElement('div'); conf.className = 'confetti'; conf.style.left = Math.random() * 100 + 'vw'; conf.style.backgroundColor = ['#fbc02d', '#ff5722', '#00c853', '#2962ff', '#e040fb'][Math.floor(Math.random() * 5)]; conf.style.animationDuration = (Math.random() * 2 + 2) + 's'; document.body.appendChild(conf); setTimeout(() => conf.remove(), 4000); } }
 function loginWithGoogle() { 
     if (!auth) return; 
-    
-    // ĐẠO BÙA DIỆT CỎ TẬN GỐC: Đuổi tàn hồn cũ đi trước khi gọi hồn mới!
+    // Ép Đăng xuất để xóa sạch bộ nhớ cũ TRƯỚC KHI bay sang Google
     auth.signOut().then(() => {
-        var provider = new firebase.auth.GoogleAuthProvider(); 
-        provider.setCustomParameters({
-            prompt: 'select_account' // Ép Google hiện bảng chọn acc
-        });
-        auth.signInWithRedirect(provider); 
+        // Chờ nửa giây để trình duyệt kịp xóa sạch sẽ rễ cũ
+        setTimeout(() => {
+            var provider = new firebase.auth.GoogleAuthProvider(); 
+            provider.setCustomParameters({ prompt: 'select_account' });
+            auth.signInWithRedirect(provider); 
+        }, 500);
     }).catch(err => {
-        // Nếu có lỗi lúc đăng xuất, vẫn ép nó đi tiếp
         var provider = new firebase.auth.GoogleAuthProvider(); 
         provider.setCustomParameters({ prompt: 'select_account' });
-        auth.signInWithRedirect(provider);
+        auth.signInWithRedirect(provider); 
     });
 }
 function loginWithEmail() { if (!auth) return; const email = document.getElementById('loginEmail').value.trim(); const pass = document.getElementById('loginPass').value.trim(); if (!email || !pass) return alert("Vui lòng cung cấp đầy đủ thông tin truy cập!"); auth.signInWithEmailAndPassword(email, pass).catch(err => alert("Lỗi: " + err.message)); }
