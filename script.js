@@ -266,14 +266,20 @@ function getCurrentWeekStr() { let d = new Date(); d = new Date(Date.UTC(d.getFu
 function triggerConfetti() { for (let i = 0; i < 60; i++) { let conf = document.createElement('div'); conf.className = 'confetti'; conf.style.left = Math.random() * 100 + 'vw'; conf.style.backgroundColor = ['#fbc02d', '#ff5722', '#00c853', '#2962ff', '#e040fb'][Math.floor(Math.random() * 5)]; conf.style.animationDuration = (Math.random() * 2 + 2) + 's'; document.body.appendChild(conf); setTimeout(() => conf.remove(), 4000); } }
 function loginWithGoogle() { 
     if (!auth) return; 
-    var provider = new firebase.auth.GoogleAuthProvider(); 
     
-    // Đạo bùa ép buộc: Trói buộc Google phải hiện bảng "Chọn tài khoản"
-    provider.setCustomParameters({
-        prompt: 'select_account'
+    // ĐẠO BÙA DIỆT CỎ TẬN GỐC: Đuổi tàn hồn cũ đi trước khi gọi hồn mới!
+    auth.signOut().then(() => {
+        var provider = new firebase.auth.GoogleAuthProvider(); 
+        provider.setCustomParameters({
+            prompt: 'select_account' // Ép Google hiện bảng chọn acc
+        });
+        auth.signInWithRedirect(provider); 
+    }).catch(err => {
+        // Nếu có lỗi lúc đăng xuất, vẫn ép nó đi tiếp
+        var provider = new firebase.auth.GoogleAuthProvider(); 
+        provider.setCustomParameters({ prompt: 'select_account' });
+        auth.signInWithRedirect(provider);
     });
-    
-    auth.signInWithRedirect(provider); 
 }
 function loginWithEmail() { if (!auth) return; const email = document.getElementById('loginEmail').value.trim(); const pass = document.getElementById('loginPass').value.trim(); if (!email || !pass) return alert("Vui lòng cung cấp đầy đủ thông tin truy cập!"); auth.signInWithEmailAndPassword(email, pass).catch(err => alert("Lỗi: " + err.message)); }
 function registerWithEmail() { if (!auth) return; const email = document.getElementById('loginEmail').value.trim(); const pass = document.getElementById('loginPass').value.trim(); if (!email || !pass) return alert("Vui lòng cung cấp đầy đủ thông tin để đăng ký!"); auth.createUserWithEmailAndPassword(email, pass).then(() => alert("Đăng ký thành công!")).catch(err => alert("Lỗi: " + err.message)); }
