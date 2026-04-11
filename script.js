@@ -666,8 +666,22 @@ function confirmJoinMatch() {
 }
 
 function executeAntiCheatPunishment() {
-    if (!isUnderSurveillance || !surveillanceData) return;
-    isUnderSurveillance = false; 
+    if (!window.isUnderSurveillance || !surveillanceData) return;
+    window.isUnderSurveillance = false; 
+
+    // 🛑 CƯỠNG ÉP HIỂN THỊ ÁN TỬ HÌNH NGAY LẬP TỨC (TRỊ BỆNH MOBILE)
+    let waitMsg = document.getElementById('pvpWaitMsg');
+    if(waitMsg) {
+        waitMsg.style.display = 'block';
+        waitMsg.innerText = "❌ BẠN ĐÃ CHUYỂN TAB VÀ BỊ XỬ THUA!";
+        waitMsg.style.color = '#ff1744';
+    }
+    let qEl = document.getElementById('pvpQuestion'); if(qEl) qEl.style.display = 'none';
+    let optEl = document.getElementById('pvpOptions'); if(optEl) optEl.style.display = 'none';
+    let spellEl = document.getElementById('pvpSpellContainer'); if(spellEl) spellEl.style.display = 'none';
+    let subBtn = document.getElementById('pvpSpellSubmitBtn'); if(subBtn) subBtn.style.display = 'none';
+    clearInterval(window.pvpTimer);
+    let banner = document.getElementById('pvpTimerBanner'); if(banner) banner.innerText = `⏳ 0s`;
 
     let key = `tournament_status/${currentRealm}/${surveillanceData.league}_bracket/${surveillanceData.stageKey}`;
     if (!['sfl', 'sfr', 'final', 'third_place', 'super_cup', 'promotion_playoff'].includes(surveillanceData.stageKey)) { 
@@ -677,21 +691,17 @@ function executeAntiCheatPunishment() {
     let p1_s = surveillanceData.playerSlot === 'p1' ? 0 : 2;
     let p2_s = surveillanceData.playerSlot === 'p2' ? 0 : 2;
 
-    // ĐẠO BÙA SINH TỬ: Không đợi đọc dữ liệu nữa! Gom tất cả án tử hình vào 1 gói và đẩy thẳng lên Long Mạch ngay tắp lự!
     let updates = {};
     
-    // 1. Xử thua trên sơ đồ bốc thăm
     updates[`${key}/winner`] = surveillanceData.oppName;
     updates[`${key}/p1_set`] = p1_s;
     updates[`${key}/p2_set`] = p2_s;
     
-    // 2. Tước đoạt sinh mạng, giải tán Lôi đài ngay lập tức
     updates[`active_pvp_match/${currentRealm}/status`] = 'finished';
     updates[`active_pvp_match/${currentRealm}/winner`] = surveillanceData.oppName;
     updates[`active_pvp_match/${currentRealm}/reason`] = 'anti_cheat';
     updates[`active_pvp_match/${currentRealm}/violator`] = surveillanceData.myName;
 
-    // Phóng lôi!
     rtdb.ref().update(updates);
 }
 
@@ -1297,7 +1307,6 @@ function setupRealmListeners() {
                                     let inp = document.createElement('input'); 
                                     inp.className = 'spell-char'; 
                                     inp.style.cssText = "width:36px; height:46px; text-align:center; font-size:20px; font-weight:900; border-radius:8px; border:2px solid #ff5252; outline:none; text-transform:uppercase; background:white; color:black; box-shadow:0 2px 5px rgba(0,0,0,0.3); transition: all 0.2s;";
-                                    // ĐÃ GỠ BỎ MÀN CHẮN MAXLENGTH ĐỂ BỘ GÕ TIẾNG TRUNG TỰ DO THỞ
                                     inp.dataset.char = char.toUpperCase(); 
                                     
                                     if(char === '-' || char === '/') { 
@@ -1334,7 +1343,6 @@ function setupRealmListeners() {
                                     inp.addEventListener('focus', () => inp.style.borderColor = '#ff1744');
                                     inp.addEventListener('blur', () => inp.style.borderColor = '#ff5252');
                                     
-                                    // BÙA CHÚ DÀNH RIÊNG CHO BỘ GÕ PINYIN TIẾNG TRUNG
                                     let isComposing = false;
                                     inp.addEventListener('compositionstart', function() { isComposing = true; });
                                     inp.addEventListener('compositionend', function() { 
@@ -1347,7 +1355,6 @@ function setupRealmListeners() {
                                     
                                     const handleInputAdvance = () => {
                                         if(inp.value) { 
-                                            // Chỉ lấy ký tự đầu tiên để tránh kẹt chữ
                                             inp.value = inp.value.substring(0, 1).toUpperCase(); 
                                             if(idx < allInputs.length - 1) { 
                                                 let curr = idx; 
@@ -1386,20 +1393,22 @@ function setupRealmListeners() {
                                 let stepTime = waitTime / 4; 
                                 for(let i=0; i<4; i++) {
                                     let btn = document.getElementById('pvpOpt'+i);
-                                    btn.innerText = "???"; 
-                                    btn.style.pointerEvents = 'none';
-                                    btn.style.opacity = '0.3';
-                                    btn.style.transform = 'scale(0.95)';
-                                    
-                                    btn.style.backgroundColor = 'rgba(255,255,255,0.1)';
-                                    btn.style.borderColor = 'rgba(255,255,255,0.3)';
-                                    
-                                    setTimeout(() => {
-                                        btn.innerText = m.current_q.opts[i]; 
-                                        btn.style.opacity = '0.8'; 
-                                        btn.style.transform = 'scale(1)';
-                                        btn.style.transition = 'all 0.3s ease';
-                                    }, stepTime * (i + 1));
+                                    if(btn) {
+                                        btn.innerText = "???"; 
+                                        btn.style.pointerEvents = 'none';
+                                        btn.style.opacity = '0.3';
+                                        btn.style.transform = 'scale(0.95)';
+                                        
+                                        btn.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                                        btn.style.borderColor = 'rgba(255,255,255,0.3)';
+                                        
+                                        setTimeout(() => {
+                                            btn.innerText = m.current_q.opts[i]; 
+                                            btn.style.opacity = '0.8'; 
+                                            btn.style.transform = 'scale(1)';
+                                            btn.style.transition = 'all 0.3s ease';
+                                        }, stepTime * (i + 1));
+                                    }
                                 }
                             }
 
@@ -1413,14 +1422,12 @@ function setupRealmListeners() {
                     
                     let oppAns = isP1 ? m.p2_ans : m.p1_ans; let botStatus = document.getElementById('botStatusMsg'); 
                     if(oppAns !== "") { botStatus.innerText = "Đối thủ đã chốt!"; botStatus.style.color = "#ff1744"; } else { botStatus.innerText = "Đang kết nối..."; botStatus.style.color = "#00e676"; } 
-                   // =========================================================
+                    // =========================================================
                     // 🤖 BÙA CHÚ 2: THỔI HỒN CHO BOT TỰ THI ĐẤU (V2.1 - Chống Lú Lẫn)
                     // =========================================================
                     let isOppBot = (isP1 && m.p2.includes('🤖')) || (isP2 && m.p1.includes('🤖'));
                     let isBotVsBot = m.p1.includes('🤖') && m.p2.includes('🤖') && userData.role === 'teacher';
 
-                    // Đạo bùa mới: Ghép Tên 2 cao thủ + Số hiệp để tạo Chìa khóa độc nhất!
-                    // Tránh việc trận mới bị lú lẫn trí nhớ của trận cũ!
                     let roundKey = m.p1 + "_" + m.p2 + "_" + m.q_idx;
 
                     if ((isOppBot || isBotVsBot) && window.botTimerRound !== roundKey) {
@@ -1428,7 +1435,7 @@ function setupRealmListeners() {
                         
                         let waitTime = m.unlock_time ? Math.max(0, m.unlock_time - Date.now()) : 0;
                         
-                        let botThink1 = Math.floor(Math.random() * 4000) + 2000; // Bot nảy số 2s - 6s
+                        let botThink1 = Math.floor(Math.random() * 4000) + 2000; 
                         let botThink2 = Math.floor(Math.random() * 4000) + 2000;
 
                         const executeBotSubmit = (playerSlot, thinkTime) => {
@@ -1440,7 +1447,6 @@ function setupRealmListeners() {
                                         let isSpellingMode = currentM.mode === 'spelling' || (currentM.mode === 'golden' && currentM.current_q.is_spelling);
                                         let correctEn = isSpellingMode ? currentM.current_q.en.toUpperCase().replace(/\s+/g, '').split('/').sort().join('/') : "";
                                         
-                                        // Độ thông minh 85%
                                         const getBotAns = () => {
                                             let isCorrect = Math.random() < 0.85; 
                                             if (isSpellingMode) return isCorrect ? correctEn : "SAI_CHINH_TA";
@@ -1475,7 +1481,15 @@ function setupRealmListeners() {
                     
                     let isSpellingMode = m.mode === 'spelling' || (m.mode === 'golden' && m.current_q.is_spelling);
                     if (!isSpellingMode) {
-                        for(let i=0; i<4; i++) { let btn = document.getElementById('pvpOpt'+i); btn.style.pointerEvents = 'none'; if (btn.innerText === m.current_q.vi) { btn.style.backgroundColor = '#00c853'; btn.style.borderColor = '#00e676'; btn.style.opacity = '1'; } else { btn.style.opacity = '0.3'; } } 
+                        for(let i=0; i<4; i++) { 
+                            let btn = document.getElementById('pvpOpt'+i); 
+                            // 🛑 BẢO HIỂM CHỐNG CRASH KHI F5 NHANH
+                            if(btn) {
+                                btn.style.pointerEvents = 'none'; 
+                                if (btn.innerText === m.current_q.vi) { btn.style.backgroundColor = '#00c853'; btn.style.borderColor = '#00e676'; btn.style.opacity = '1'; } 
+                                else { btn.style.opacity = '0.3'; } 
+                            }
+                        } 
                     } else {
                         let allInputs = Array.from(document.querySelectorAll('#pvpSpellContainer .spell-char'));
                         allInputs.forEach(i => i.disabled = true);
@@ -1483,7 +1497,7 @@ function setupRealmListeners() {
                         if(submitBtn) submitBtn.style.display = 'none';
                     }
                 } else if (m.status === 'finished') { 
-                    isUnderSurveillance = false; clearInterval(window.pvpTimer); document.getElementById('pvpTimerBanner').innerText = `⏳ 0s`;
+                    window.isUnderSurveillance = false; clearInterval(window.pvpTimer); document.getElementById('pvpTimerBanner').innerText = `⏳ 0s`;
                     document.getElementById('pvpWaitMsg').style.display = 'block'; 
                     
                     let endMsg = "🏆 NGƯỜI CHIẾN THẮNG: " + m.winner;
@@ -1510,7 +1524,8 @@ function setupRealmListeners() {
                     }
 
                     document.getElementById('pvpWaitMsg').innerText = endMsg; 
-                    document.getElementById('pvpQuestion').style.display = 'none'; document.getElementById('pvpOptions').style.display = 'none'; 
+                    let qEl = document.getElementById('pvpQuestion'); if(qEl) qEl.style.display = 'none'; 
+                    let optEl = document.getElementById('pvpOptions'); if(optEl) optEl.style.display = 'none'; 
                     let pvpSpellContainer = document.getElementById('pvpSpellContainer');
                     if(pvpSpellContainer) pvpSpellContainer.style.display = 'none';
                     let submitBtn = document.getElementById('pvpSpellSubmitBtn');
@@ -1518,17 +1533,18 @@ function setupRealmListeners() {
                     document.getElementById('lockOverlay').classList.remove('active'); 
                     
                     setTimeout(() => {
-                        document.getElementById('pvpModal').classList.remove('active');
+                        let modal = document.getElementById('pvpModal');
+                        if (modal) modal.classList.remove('active');
                         window.isSpectating = false;
-                        if (isP1 || userData.role === 'teacher') { rtdb.ref(`active_pvp_match/${currentRealm}`).remove(); }
+                        // 🛑 SỬA LỖI MÀN HÌNH KẸT CỨNG: Ai trong trận cũng được quyền dọn dẹp xác chết!
+                        if (isP1 || isP2 || userData.role === 'teacher') { rtdb.ref(`active_pvp_match/${currentRealm}`).remove(); }
                     }, 5000); 
                 } 
             } 
         });
         fetchLeaderboard();
     }
-}
-
+    
 function revealOptions(m, myAns, indices) {
     if(myAns !== "") return;
     document.getElementById('lockOverlay').classList.remove('active');
