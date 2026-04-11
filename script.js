@@ -2044,3 +2044,31 @@ function logoutApp() {
         }).catch(err => alert("Lỗi: " + err.message));
     }
 }
+
+// =========================================================================
+// 👁️ MẮT THẦN CHỐNG GIAN LẬN (Bản Tái Tạo - Trị Vuốt Tab Mobile)
+// =========================================================================
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === 'hidden') { 
+        if (window.isUnderSurveillance) {
+            if (typeof executeAntiCheatPunishment === 'function') executeAntiCheatPunishment(); 
+            // Cắt mạng ngay lập tức để ép Firebase thả Bùa Tuyệt Mệnh!
+            if (rtdb) rtdb.goOffline(); 
+        }
+    } else if (document.visibilityState === 'visible') {
+        // Nối lại mạng khi mở lại tab
+        if (rtdb) rtdb.goOnline(); 
+    }
+});
+
+window.addEventListener("blur", () => {
+    if (window.isUnderSurveillance) {
+        if (typeof executeAntiCheatPunishment === 'function') executeAntiCheatPunishment();
+        if (rtdb) rtdb.goOffline(); 
+    }
+});
+
+window.addEventListener("focus", () => {
+    if (rtdb) rtdb.goOnline(); 
+});
+// =========================================================================
