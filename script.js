@@ -1401,48 +1401,61 @@ function setupRealmListeners() {
                     
                     let oppAns = isP1 ? m.p2_ans : m.p1_ans; let botStatus = document.getElementById('botStatusMsg'); 
                     if(oppAns !== "") { botStatus.innerText = "Đối thủ đã chốt!"; botStatus.style.color = "#ff1744"; } else { botStatus.innerText = "Đang kết nối..."; botStatus.style.color = "#00e676"; } 
-                    // 🤖 BÙA CHÚ 2: THỔI HỒN CHO BOT TỰ THI ĐẤU
+                    // =========================================================
+                    // 🤖 BÙA CHÚ 2: THỔI HỒN CHO BOT TỰ THI ĐẤU (V2 - Cực Kỳ Thông Minh)
+                    // =========================================================
                     let isOppBot = (isP1 && m.p2.includes('🤖')) || (isP2 && m.p1.includes('🤖'));
                     let isBotVsBot = m.p1.includes('🤖') && m.p2.includes('🤖') && userData.role === 'teacher';
 
-                    // Nếu đối thủ là Bot, hoặc Admin đang soi Bot đánh Bot
-                    if ((isOppBot || isBotVsBot) && !window.botTimerSet) {
-                        window.botTimerSet = true;
+                    // Khóa theo số hiệp (q_idx) để đảm bảo mỗi hiệp Bot chỉ lập lịch 1 lần duy nhất, vĩnh viễn không bị kẹt!
+                    if ((isOppBot || isBotVsBot) && window.botTimerRound !== m.q_idx) {
+                        window.botTimerRound = m.q_idx; 
                         
-                        let botDelay1 = Math.floor(Math.random() * 4000) + 2000; // Nghĩ từ 2 đến 6 giây
-                        let botDelay2 = Math.floor(Math.random() * 4000) + 2000;
+                        // Bắt Bot phải tuân thủ thời gian khóa (chờ mở đáp án) y hệt người thật
+                        let waitTime = m.unlock_time ? Math.max(0, m.unlock_time - Date.now()) : 0;
                         
-                        setTimeout(() => {
-                            rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
-                                let currentM = snap.val();
-                                if (currentM && currentM.status === 'playing' && currentM.q_idx === m.q_idx) {
-                                    let botUpdates = {};
-                                    let isSpellingMode = currentM.mode === 'spelling' || (currentM.mode === 'golden' && currentM.current_q.is_spelling);
-                                    let correctEn = isSpellingMode ? currentM.current_q.en.toUpperCase().replace(/\s+/g, '').split('/').sort().join('/') : "";
-                                    
-                                    // Bùa trí tuệ: Tỷ lệ đúng 85% (Ngài có thể chỉnh 0.85 lên xuống tùy ý)
-                                    const getBotAns = () => {
-                                        let isCorrect = Math.random() < 0.85; 
-                                        if (isSpellingMode) return isCorrect ? correctEn : "SAI_CHINH_TA";
-                                        return isCorrect ? currentM.current_q.vi : currentM.current_q.opts.find(o => o !== currentM.current_q.vi);
-                                    };
+                        let botThink1 = Math.floor(Math.random() * 4000) + 2000; // Thời gian não Bot nảy số (2s - 6s)
+                        let botThink2 = Math.floor(Math.random() * 4000) + 2000;
 
-                                    if (isOppBot) {
-                                        if (isP1 && currentM.p2_ans === "") { botUpdates.p2_ans = getBotAns(); botUpdates.p2_time = botDelay1; }
-                                        else if (isP2 && currentM.p1_ans === "") { botUpdates.p1_ans = getBotAns(); botUpdates.p1_time = botDelay1; }
-                                    } else if (isBotVsBot) {
-                                        if (currentM.p1_ans === "") { botUpdates.p1_ans = getBotAns(); botUpdates.p1_time = botDelay1; }
-                                        if (currentM.p2_ans === "") { botUpdates.p2_ans = getBotAns(); botUpdates.p2_time = botDelay2; }
+                        // Khẩu quyết ra đòn của Bot
+                        const executeBotSubmit = (playerSlot, thinkTime) => {
+                            // Tổng thời gian chờ = Chờ hệ thống mở khóa + Thời gian suy nghĩ
+                            setTimeout(() => {
+                                rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
+                                    let currentM = snap.val();
+                                    if (currentM && currentM.status === 'playing' && currentM.q_idx === m.q_idx) {
+                                        let botUpdates = {};
+                                        let isSpellingMode = currentM.mode === 'spelling' || (currentM.mode === 'golden' && currentM.current_q.is_spelling);
+                                        let correctEn = isSpellingMode ? currentM.current_q.en.toUpperCase().replace(/\s+/g, '').split('/').sort().join('/') : "";
+                                        
+                                        // Trí tuệ của Bot: 85% chọn đúng, 15% chọn bậy
+                                        const getBotAns = () => {
+                                            let isCorrect = Math.random() < 0.85; 
+                                            if (isSpellingMode) return isCorrect ? correctEn : "SAI_CHINH_TA";
+                                            return isCorrect ? currentM.current_q.vi : currentM.current_q.opts.find(o => o !== currentM.current_q.vi);
+                                        };
+
+                                        // Chỉ chốt đơn nếu ô đáp án của nó còn trống
+                                        if (currentM[playerSlot + '_ans'] === "") {
+                                            botUpdates[playerSlot + '_ans'] = getBotAns();
+                                            botUpdates[playerSlot + '_time'] = thinkTime; // Chỉ ghi nhận thời gian suy nghĩ
+                                            rtdb.ref(`active_pvp_match/${currentRealm}`).update(botUpdates);
+                                        }
                                     }
-                                    
-                                    if (Object.keys(botUpdates).length > 0) {
-                                        rtdb.ref(`active_pvp_match/${currentRealm}`).update(botUpdates);
-                                    }
-                                }
-                                window.botTimerSet = false;
-                            });
-                        }, Math.min(botDelay1, botDelay2));
+                                });
+                            }, waitTime + thinkTime);
+                        };
+
+                        // Phân phó Bot ra trận
+                        if (isOppBot) {
+                            if (isP1) executeBotSubmit('p2', botThink1);
+                            else executeBotSubmit('p1', botThink1);
+                        } else if (isBotVsBot) {
+                            executeBotSubmit('p1', botThink1);
+                            executeBotSubmit('p2', botThink2);
+                        }
                     }
+                    // =========================================================
                     if (m.p1_ans !== "" && m.p2_ans !== "" && !m.evaluating) { clearInterval(window.pvpTimer); triggerEval(); } 
                 } else if (m.status === 'showing_result') { 
                     clearInterval(window.pvpTimer); document.getElementById('pvpTimerBanner').innerText = `⏳ 0s`; 
