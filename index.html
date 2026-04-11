@@ -224,7 +224,10 @@
                     <div class="form-group" style="margin-bottom: 15px;"><input type="password" id="loginPass" placeholder="Mật khẩu"></div>
                     <div style="display: flex; gap: 10px; margin-bottom: 15px;"><button class="btn-run" style="flex: 1; padding: 12px; font-size: 16px;" onclick="loginWithEmail()">🔑 Đăng Nhập</button><button class="btn-save" style="flex: 1; padding: 12px; font-size: 16px;" onclick="registerWithEmail()">📝 Đăng Ký</button></div>
                     <div style="text-align: center; margin-bottom: 15px; color: #888; font-weight: bold;">HOẶC</div>
-                    <div id="authSection"><button class="btn-google" onclick="loginWithGoogle()">🌐 Đăng nhập bằng Google</button></div>
+                   <div id="authSection">
+    <button class="btn-google" onclick="loginWithGoogle()">🌐 Đăng nhập bằng Google</button>
+    <button class="btn-danger" style="width: 100%; margin-top: 15px; padding: 12px; font-weight: bold; border-radius: 8px;" onclick="logoutApp()">🚪 ĐĂNG XUẤT (GỠ KẸT TÀI KHOẢN)</button>
+</div>
                 </div>
                 <div class="settings-card">
                     <h3>👑 Quyền Quản Trị Hệ Thống</h3>
