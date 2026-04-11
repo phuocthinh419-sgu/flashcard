@@ -54,6 +54,13 @@ function initSystem() {
 
 function checkAuth() {
     if(auth) {
+        // Đạo bùa mới: Bắt buộc Firebase phải xử lý kết quả từ trang Google trả về trước
+        auth.getRedirectResult().then((result) => {
+            if (result.user) {
+                console.log("Đã nhận diện chân thân mới từ Google:", result.user.email);
+            }
+        }).catch(error => console.error("Lỗi cổng chuyển:", error));
+
         auth.onAuthStateChanged(user => {
             if (user) {
                 currentUser = user; const todayStr = new Date().toLocaleDateString('en-GB'); 
@@ -1935,4 +1942,13 @@ function clearNotice() {
     rtdb.ref(`tournament_status/${currentRealm}/global_notice`).set("").then(() => {
         alert("🔇 Đã tắt loa phát thanh!");
     });
+}
+
+function logoutApp() {
+    if(auth) {
+        auth.signOut().then(() => {
+            alert("🚪 Đã thoát xác thành công! Ký ức cũ đã bị xóa sạch.");
+            window.location.reload();
+        }).catch(err => alert("Lỗi: " + err.message));
+    }
 }
