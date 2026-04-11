@@ -640,9 +640,28 @@ function confirmJoinMatch() {
         key += `/${surveillanceData.matchIndex}`; 
     }
     let updateData = {}; updateData[surveillanceData.playerSlot + "_ready"] = true;
+    
     rtdb.ref(key).update(updateData).then(() => {
         isUnderSurveillance = true; 
-        rtdb.ref(`active_pvp_match/${currentRealm}`).onDisconnect().update({ status: 'finished', winner: surveillanceData.oppName });
+        
+        let p1_s = surveillanceData.playerSlot === 'p1' ? 0 : 2;
+        let p2_s = surveillanceData.playerSlot === 'p2' ? 0 : 2;
+        
+        // 🔮 ĐẠO BÙA TUYỆT MỆNH (Bất kỳ lúc nào rớt kết nối, Firebase tự động xử thua)
+        // 1. Giải tán võ đài
+        rtdb.ref(`active_pvp_match/${currentRealm}`).onDisconnect().update({ 
+            status: 'finished', 
+            winner: surveillanceData.oppName,
+            reason: 'anti_cheat',
+            violator: surveillanceData.myName
+        });
+        
+        // 2. Cập nhật nhánh đấu
+        rtdb.ref(key).onDisconnect().update({ 
+            winner: surveillanceData.oppName, 
+            p1_set: p1_s, 
+            p2_set: p2_s 
+        });
     });
 }
 
@@ -1822,6 +1841,20 @@ function processNextRound(currentQIdx) {
 
         rtdb.ref(`active_pvp_match/${currentRealm}`).update(updates).then(() => {
             if (status === 'finished' && winner !== "HÒA NHAU (GIAO THỨC TRẢ HÒA)") {
+                
+                // =========================================================================
+                // 🛑 HỦY BÙA TUYỆT MỆNH: Trận đấu đã kết thúc hợp pháp, không được xử thua oan
+                // =========================================================================
+                rtdb.ref(`active_pvp_match/${currentRealm}`).onDisconnect().cancel();
+                if (surveillanceData) {
+                    let key = `tournament_status/${currentRealm}/${surveillanceData.league}_bracket/${surveillanceData.stageKey}`;
+                    if (!['sfl', 'sfr', 'final', 'third_place', 'super_cup', 'promotion_playoff'].includes(surveillanceData.stageKey)) { 
+                        key += `/${surveillanceData.matchIndex}`; 
+                    }
+                    rtdb.ref(key).onDisconnect().cancel();
+                }
+                // =========================================================================
+
                 rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(matchSnap => {
                     let matchInfo = matchSnap.val();
                     if(matchInfo.stage && matchInfo.match_idx !== undefined && matchInfo.league) {
