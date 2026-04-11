@@ -55,10 +55,8 @@ function initSystem() {
 function checkAuth() {
     if (!auth) return;
 
-    // ĐẠO BÙA HỨNG KẾT QUẢ: Ép Firebase đọc thông tin từ Google trả về trước khi tự ý lấy acc cũ
-    auth.getRedirectResult().catch(err => console.error("Lỗi Redirect:", err));
-
-    auth.onAuthStateChanged(user => {
+    // Đóng gói toàn bộ quá trình tải dữ liệu vào một bùa chú riêng
+    const handleAuthState = (user) => {
         if (user) {
             currentUser = user; const todayStr = new Date().toLocaleDateString('en-GB'); 
             const isEmperor = (user.email === "phuocthinh419@gmail.com"); const trueRole = isEmperor ? 'teacher' : 'student';
@@ -154,6 +152,15 @@ function checkAuth() {
             currentUser = null; userData = { role: 'student', gold: 0, xp: 0, lifetime_xp: 0, realm: "Khởi Nguyên", streak: 0, displayName: 'Khách', vouchers: [], streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: '', highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, potionX3Expiry: null, timeMachine: null, mastered_words: 0, mastered_lessons: [] };
             currentRealm = "Khởi Nguyên"; applyTheme('theme_default'); updateUI(); fetchLessonsFromFirebase();
         }
+    };
+
+    // ĐẠO BÙA TRÓI CHÂN (QUAN TRỌNG NHẤT):
+    // Bắt Firebase phải TỌA THIỀN ĐỢI Google gửi kết quả về, xử lý xong mới được mở cửa!
+    auth.getRedirectResult().then((result) => {
+        auth.onAuthStateChanged(handleAuthState);
+    }).catch(err => {
+        console.error("Lỗi Redirect:", err);
+        auth.onAuthStateChanged(handleAuthState);
     });
 }
 
@@ -264,16 +271,11 @@ function loginWithGoogle() {
     if (!auth) return; 
     var provider = new firebase.auth.GoogleAuthProvider(); 
     
-    // ĐẠO BÙA CỐT LÕI: Ép Google bắt buộc phải hiện bảng "Choose an account"
+    // ĐẠO BÙA CỐT LÕI: Ép Google bắt buộc phải hiện bảng "Chọn tài khoản"
     provider.setCustomParameters({ prompt: 'select_account' }); 
     
-    // Thử dùng Popup trước cho mượt mà, nếu trình duyệt chặn thì tự động xoay sang Redirect
-    auth.signInWithPopup(provider).then(() => {
-        window.location.reload();
-    }).catch(err => {
-        console.warn("Popup bị chặn, chuyển sang Redirect...", err);
-        auth.signInWithRedirect(provider);
-    });
+    // VỨT BỎ POPUP ĐỂ TRỊ BỆNH EDGE & MOBILE: Chuyển 100% sang Redirect
+    auth.signInWithRedirect(provider);
 }
 function loginWithEmail() { if (!auth) return; const email = document.getElementById('loginEmail').value.trim(); const pass = document.getElementById('loginPass').value.trim(); if (!email || !pass) return alert("Vui lòng cung cấp đầy đủ thông tin truy cập!"); auth.signInWithEmailAndPassword(email, pass).catch(err => alert("Lỗi: " + err.message)); }
 function registerWithEmail() { if (!auth) return; const email = document.getElementById('loginEmail').value.trim(); const pass = document.getElementById('loginPass').value.trim(); if (!email || !pass) return alert("Vui lòng cung cấp đầy đủ thông tin để đăng ký!"); auth.createUserWithEmailAndPassword(email, pass).then(() => alert("Đăng ký thành công!")).catch(err => alert("Lỗi: " + err.message)); }
