@@ -649,8 +649,6 @@ function confirmJoinMatch() {
 function executeAntiCheatPunishment() {
     if (!isUnderSurveillance || !surveillanceData) return;
     isUnderSurveillance = false; 
-    
-    // ⚠️ ĐÃ VỨT BỎ LỆNH ALERT Ở ĐÂY VÌ TRÌNH DUYỆT SẼ CHẶN ĐỨNG CODE NẾU BẬT ALERT LÚC ĐANG ẨN TAB!
 
     let key = `tournament_status/${currentRealm}/${surveillanceData.league}_bracket/${surveillanceData.stageKey}`;
     if (!['sfl', 'sfr', 'final', 'third_place', 'super_cup', 'promotion_playoff'].includes(surveillanceData.stageKey)) { 
@@ -660,21 +658,22 @@ function executeAntiCheatPunishment() {
     let p1_s = surveillanceData.playerSlot === 'p1' ? 0 : 2;
     let p2_s = surveillanceData.playerSlot === 'p2' ? 0 : 2;
 
-    // Âm thầm xử thua trên Cây Đấu (Bracket)
-    rtdb.ref(key).update({ winner: surveillanceData.oppName, p1_set: p1_s, p2_set: p2_s });
+    // ĐẠO BÙA SINH TỬ: Không đợi đọc dữ liệu nữa! Gom tất cả án tử hình vào 1 gói và đẩy thẳng lên Long Mạch ngay tắp lự!
+    let updates = {};
     
-    // Âm thầm tước đoạt sinh mạng trên võ đài
-    rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
-        let m = snap.val();
-        if(m && m.status !== 'finished' && (m.p1 === surveillanceData.myName || m.p2 === surveillanceData.myName)) {
-            rtdb.ref(`active_pvp_match/${currentRealm}`).update({ 
-                status: 'finished', 
-                winner: surveillanceData.oppName, 
-                reason: 'anti_cheat', 
-                violator: surveillanceData.myName 
-            });
-        }
-    });
+    // 1. Xử thua trên sơ đồ bốc thăm
+    updates[`${key}/winner`] = surveillanceData.oppName;
+    updates[`${key}/p1_set`] = p1_s;
+    updates[`${key}/p2_set`] = p2_s;
+    
+    // 2. Tước đoạt sinh mạng, giải tán Lôi đài ngay lập tức
+    updates[`active_pvp_match/${currentRealm}/status`] = 'finished';
+    updates[`active_pvp_match/${currentRealm}/winner`] = surveillanceData.oppName;
+    updates[`active_pvp_match/${currentRealm}/reason`] = 'anti_cheat';
+    updates[`active_pvp_match/${currentRealm}/violator`] = surveillanceData.myName;
+
+    // Phóng lôi!
+    rtdb.ref().update(updates);
 }
 
 function forceEndMatch() {
