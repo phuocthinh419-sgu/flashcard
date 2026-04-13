@@ -1299,6 +1299,8 @@ function setupRealmListeners() {
                             pvpSpellContainer.style.display = 'block';
                             pvpSpellContainer.innerHTML = ''; 
 
+                            // Kích hoạt Thiên Nhãn: Xem chữ đích có chứa ký tự Tiếng Trung không
+                            let isChineseTarget = /[\u4E00-\u9FA5]/.test(m.current_q.en);
                             let words = m.current_q.en.trim().split(' '); 
                             words.forEach((w) => { 
                                 let wordDiv = document.createElement('div'); 
@@ -1344,14 +1346,17 @@ function setupRealmListeners() {
                                     inp.addEventListener('blur', () => inp.style.borderColor = '#ff5252');
                                     
                                     let isComposing = false;
-                                    inp.addEventListener('compositionstart', function() { isComposing = true; });
-                                    inp.addEventListener('compositionend', function() { 
-                                        isComposing = false; 
-                                        handleInputAdvance(); 
-                                    });
-                                    inp.addEventListener('input', function() { 
-                                        if(!isComposing) handleInputAdvance(); 
-                                    });
+inp.addEventListener('compositionstart', function() { isComposing = true; });
+inp.addEventListener('compositionend', function() { 
+    isComposing = false; 
+    // Tiếng Trung mới cần đợi gộp chữ xong mới nhảy ô
+    if(isChineseTarget) handleInputAdvance(); 
+});
+inp.addEventListener('input', function() { 
+    // Tiếng Việt/Anh thì tắt khiên, nhảy ô ngay lập tức để gõ Telex/Mobile mượt mà
+    if(!isChineseTarget || !isComposing) handleInputAdvance(); 
+});
+                                    
                                     
                                     const handleInputAdvance = () => {
                                         if(inp.value) { 
