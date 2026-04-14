@@ -1952,3 +1952,112 @@ function openTimeMachineModal() {
         if (rtdb) rtdb.goOnline(); 
     });
     // =========================================================================
+function copyCode() { document.getElementById('generatedCode').select(); document.execCommand("copy"); alert("Thông tin mã được sao chép thành công."); }
+function toggleDarkMode() { document.body.classList.toggle('dark-mode'); const isDark = document.body.classList.contains('dark-mode'); localStorage.setItem('darkMode', isDark ? 'true' : 'false'); document.getElementById('themeToggleBtn').innerText = isDark ? '☀️' : '🌙'; }
+
+function switchTab(tabId) { 
+    try {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active')); 
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); 
+        
+        const viewEl = document.getElementById('view-' + tabId);
+        if (viewEl) viewEl.classList.add('active'); 
+        
+        const navBtn = document.getElementById('nav-' + tabId); 
+        if(navBtn) navBtn.classList.add('active'); 
+        
+        if (window.innerWidth <= 768) toggleSidebar(); 
+        
+        if (tabId === 'library') fetchLessonsFromFirebase(); 
+        if (tabId === 'leaderboard') fetchLeaderboard(); 
+    } catch (error) { console.error("Lỗi khi chuyển tab:", error); }
+}
+
+function toggleSidebar() { 
+    let sidebar = document.getElementById('sidebar'); let overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.toggle('show'); 
+    if(sidebar.classList.contains('show')) { overlay.style.display = 'block'; setTimeout(() => overlay.style.opacity = '1', 10); } 
+    else { overlay.style.opacity = '0'; setTimeout(() => overlay.style.display = 'none', 300); }
+}
+
+async function fixOldUsersRealm() {
+    let targetRealm = document.getElementById('syncRealmSelect').value;
+    if(!targetRealm) return alert("Bệ hạ vui lòng chọn một Phủ ở ô bên trên để cấp hộ khẩu!");
+    if(!confirm(`Bệ hạ có muốn thu nhận toàn bộ thần dân cũ (chưa có phân vùng) vào Phủ [${targetRealm}] không?`)) return;
+    try {
+        const snapshot = await db.collection('vocab_users').get();
+        let count = 0; let batch = db.batch(); 
+        snapshot.forEach(doc => {
+            let data = doc.data();
+            if (!data.realm || data.realm === "") {
+                let ref = db.collection('vocab_users').doc(doc.id);
+                batch.update(ref, { realm: targetRealm }); count++;
+            }
+        });
+        if (count > 0) { await batch.commit(); alert(`Tấu tiệp! Đã cấp hộ khẩu [${targetRealm}] thành công cho ${count} thần dân cũ. Bệ hạ hãy sang Bảng Xếp Hạng kiểm tra lại!`); fetchLeaderboard(); } 
+        else { alert("Báo cáo: Toàn bộ thần dân trong hệ thống đều đã có hộ khẩu rõ ràng, không ai bị lưu lạc."); }
+    } catch(error) { alert("Có lỗi xảy ra trong quá trình thu nhận: " + error.message); }
+}
+
+function openMigrationModal() { 
+    if(availableRealms.length <= 1) return alert("Hệ thống hiện tại chỉ mới có 1 Lãnh Thổ duy nhất.");
+    if(userData.role !== 'teacher' && userData.gold < 100000) return alert("Bạn không đủ 100.000 Vàng để mua Giấy Thông Hành!"); 
+    document.getElementById('currentRealmDisplay').innerText = currentRealm; 
+    let select = document.getElementById('realmSelect'); 
+    select.innerHTML = ''; 
+    availableRealms.forEach(phu => { 
+        if(phu !== currentRealm) select.innerHTML += `<option value="${phu}">${phu}</option>`; 
+    }); 
+    document.getElementById('migrationModal').classList.add('active'); 
+}
+
+function confirmMigration() { 
+    let newRealm = document.getElementById('realmSelect').value; 
+    if(!newRealm) return; 
+    if(userData.role !== 'teacher') {
+        if(userData.gold < 100000) return alert("Không đủ vàng!"); 
+        userData.gold -= 100000; 
+    }
+    userData.lifetime_xp = (userData.lifetime_xp || 0) + userData.xp; 
+    userData.xp = 0; userData.weeklyXp = 0; userData.lastWeekXp = 0; userData.highestWeeklyXp = 0; userData.realm = newRealm; 
+    db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, lifetime_xp: userData.lifetime_xp, xp: 0, weeklyXp: 0, lastWeekXp: 0, highestWeeklyXp: 0, realm: newRealm }).then(() => { alert(`✈️ Đã di cư sang ${newRealm}!`); window.location.reload(); }); 
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    initSystem();
+    if (localStorage.getItem('darkMode') === 'true') { document.body.classList.add('dark-mode'); document.getElementById('themeToggleBtn').innerText = '☀️'; }
+    switchTab('library');
+});
+
+setInterval(() => {
+    if (currentRealm && currentFullBracketData) {
+        if (typeof renderBracket === 'function') {
+            renderBracket();
+        }
+    }
+}, 10000);
+
+function publishNotice() {
+    let text = document.getElementById('adminNoticeInput').value;
+    if(!text) return alert("Bệ hạ chưa nhập thánh ý!");
+    rtdb.ref(`tournament_status/${currentRealm}/global_notice`).set(text).then(() => {
+        alert("📢 Đã truyền loa thành công ra toàn cõi!");
+        document.getElementById('adminNoticeInput').value = "";
+    });
+}
+
+function clearNotice() {
+    if(!confirm("Bệ hạ muốn thu hồi Thánh chỉ và tắt bảng LED?")) return;
+    rtdb.ref(`tournament_status/${currentRealm}/global_notice`).set("").then(() => {
+        alert("🔇 Đã tắt loa phát thanh!");
+    });
+}
+
+function logoutApp() {
+    if(auth) {
+        auth.signOut().then(() => {
+            alert("🚪 Đã thoát xác thành công! Ký ức cũ đã bị xóa sạch.");
+            window.location.reload();
+        }).catch(err => alert("Lỗi: " + err.message));
+    }
+}
