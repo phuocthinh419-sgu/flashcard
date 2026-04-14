@@ -260,9 +260,7 @@ function triggerConfetti() { for (let i = 0; i < 60; i++) { let conf = document.
 function loginWithGoogle() { 
     if (!auth) return; 
     var provider = new firebase.auth.GoogleAuthProvider(); 
-    
     provider.setCustomParameters({ prompt: 'select_account' }); 
-    
     auth.signInWithPopup(provider).then(() => {
         window.location.reload();
     }).catch(err => {
@@ -276,22 +274,18 @@ function registerWithEmail() { if (!auth) return; const email = document.getElem
 function saveDisplayName() { 
     const name = document.getElementById('displayNameInput').value.trim(); 
     if (!name) return alert("Tên hiển thị không được để trống!"); 
-    
     let onboardRealm = document.getElementById('onboardRealmSelect');
     if (onboardRealm && onboardRealm.value && !userData.realm) {
         userData.realm = onboardRealm.value;
         currentRealm = userData.realm;
     }
-    
     userData.displayName = name; 
     userData.email = currentUser.email; 
-    
     db.collection('vocab_users').doc(currentUser.uid).set(userData, {merge: true}).then(() => { 
         document.getElementById('nameModal').classList.remove('active'); 
         updateUI(); 
         setupRealmListeners(); 
         fetchLessonsFromFirebase(); 
-        
         alert(`🎉 Thiết lập thành công! Chào mừng bạn đến với khóa học [${userData.realm}]!`);
     }); 
 }
@@ -1509,488 +1503,428 @@ function setupRealmListeners() {
                     let optEl = document.getElementById('pvpOptions'); if(optEl) optEl.style.display = 'none'; 
                     let pvpSpellContainer = document.getElementById('pvpSpellContainer');
                     if(pvpSpellContainer) pvpSpellContainer.style.display = 'none';
-                    let submitBtn = document.getElementById('pvpSpellSubmitBtn');
-                    if(submitBtn) submitBtn.style.display = 'none';
-                    document.getElementById('lockOverlay').classList.remove('active'); 
-                    
-                    setTimeout(() => {
-                        let modal = document.getElementById('pvpModal');
-                        if (modal) modal.classList.remove('active');
-                        window.isSpectating = false;
-                        if (isP1 || isP2 || userData.role === 'teacher') { rtdb.ref(`active_pvp_match/${currentRealm}`).remove(); }
-                    }, 5000); 
+                    let submitBtn= document.getElementById('pvpSpellSubmitBtn');
+                        if(submitBtn) submitBtn.style.display = 'none';
+                        document.getElementById('lockOverlay').classList.remove('active'); 
+                        
+                        setTimeout(() => {
+                            let modal = document.getElementById('pvpModal');
+                            if (modal) modal.classList.remove('active');
+                            window.isSpectating = false;
+                            // 🛑 SỬA LỖI MÀN HÌNH KẸT CỨNG: Ai trong trận cũng được quyền dọn dẹp xác chết!
+                            if (isP1 || isP2 || userData.role === 'teacher') { rtdb.ref(`active_pvp_match/${currentRealm}`).remove(); }
+                        }, 5000); 
+                    } 
                 } 
-            } 
-        });
-        fetchLeaderboard();
+            });
+            fetchLeaderboard();
+        }
     }
-}
 
-function revealOptions(m, myAns, indices) {
-    if(myAns !== "") return;
-    document.getElementById('lockOverlay').classList.remove('active');
-    indices.forEach(i => {
-        let btn = document.getElementById('pvpOpt'+i); 
-        btn.innerText = m.current_q.opts[i]; 
-        btn.style.backgroundColor = 'rgba(255,255,255,0.1)'; 
-        btn.style.borderColor = 'rgba(255,255,255,0.3)'; 
-        btn.style.pointerEvents = 'auto'; btn.style.opacity = '1';
-    });
-}
+    function revealOptions(m, myAns, indices) {
+        if(myAns !== "") return;
+        document.getElementById('lockOverlay').classList.remove('active');
+        indices.forEach(i => {
+            let btn = document.getElementById('pvpOpt'+i); 
+            btn.innerText = m.current_q.opts[i]; 
+            btn.style.backgroundColor = 'rgba(255,255,255,0.1)'; 
+            btn.style.borderColor = 'rgba(255,255,255,0.3)'; 
+            btn.style.pointerEvents = 'auto'; btn.style.opacity = '1';
+        });
+    }
 
-function startCountdown(m) {
-    clearInterval(window.pvpTimer); 
-    window.pvpTimer = setInterval(() => { 
-        window.localPvPTime--; let t = window.localPvPTime; if (t < 0) t = 0; 
-        document.getElementById('pvpTimerBanner').innerText = `⏳ ${t}s`; 
-        if (t <= 0 && !m.evaluating) { clearInterval(window.pvpTimer); triggerEval(); } 
-    }, 1000);
-}
+    function startCountdown(m) {
+        clearInterval(window.pvpTimer); 
+        window.pvpTimer = setInterval(() => { 
+            window.localPvPTime--; let t = window.localPvPTime; if (t < 0) t = 0; 
+            document.getElementById('pvpTimerBanner').innerText = `⏳ ${t}s`; 
+            if (t <= 0 && !m.evaluating) { clearInterval(window.pvpTimer); triggerEval(); } 
+        }, 1000);
+    }
 
-function fetchLeaderboard() {
-    if(!db || !currentRealm) return;
-    const lbContainer = document.getElementById('leaderboardData'); lbContainer.innerHTML = '<p style="text-align:center">Đang đồng bộ...</p>';
-    db.collection('vocab_users').where('realm', '==', currentRealm).onSnapshot((snapshot) => {
-        let allPlayers = []; snapshot.forEach(doc => { if (doc.data().role !== 'teacher') allPlayers.push(doc.data()); }); 
-        allPlayers.sort((a, b) => (b.xp || 0) - (a.xp || 0)); 
-        allPlayers = allPlayers.slice(0, 50); 
-        let qualified = []; let unqualified = []; 
-        allPlayers.forEach(data => { 
-            let dName = data.displayName || 'Ẩn danh'; let dStreak = data.streak || 1; let isChampion = (dName === defendingChampion && defendingChampion !== ""); 
-            if (dStreak >= 3 || isChampion) qualified.push(data); else unqualified.push(data); 
+    function fetchLeaderboard() {
+        if(!db || !currentRealm) return;
+        const lbContainer = document.getElementById('leaderboardData'); lbContainer.innerHTML = '<p style="text-align:center">Đang đồng bộ...</p>';
+        db.collection('vocab_users').where('realm', '==', currentRealm).onSnapshot((snapshot) => {
+            let allPlayers = []; snapshot.forEach(doc => { if (doc.data().role !== 'teacher') allPlayers.push(doc.data()); }); 
+            allPlayers.sort((a, b) => (b.xp || 0) - (a.xp || 0)); 
+            allPlayers = allPlayers.slice(0, 50); 
+            let qualified = []; let unqualified = []; 
+            allPlayers.forEach(data => { 
+                let dName = data.displayName || 'Ẩn danh'; let dStreak = data.streak || 1; let isChampion = (dName === defendingChampion && defendingChampion !== ""); 
+                if (dStreak >= 3 || isChampion) qualified.push(data); else unqualified.push(data); 
+            }); 
+            let N = qualified.length; let c1Size = 0, c2Size = 0; 
+            if (N >= 4 && N < 8) { c1Size = 4; c2Size = 0; } else if (N >= 8) { let max_pow = Math.pow(2, Math.floor(Math.log2(N))); c1Size = (N - max_pow < 4 && max_pow > 4) ? max_pow / 2 : max_pow; let c2PoolSize = N - c1Size; c2Size = (c2PoolSize >= 4) ? Math.pow(2, Math.floor(Math.log2(c2PoolSize))) : 0; } 
+            let qualifiedHtml = ''; let unqualifiedHtml = ''; let rank = 1; 
+            qualified.forEach((data, index) => { 
+                let dName = data.displayName || 'Ẩn danh'; let dXp = data.xp; let isChampion = (dName === defendingChampion && defendingChampion !== ""); let isMaskActive = data.maskExpiry && data.maskExpiry > Date.now(); let displayDName = dName; 
+                if (isMaskActive) { if (userData.role === 'teacher') displayDName = displayDName + " 🎭(Ẩn)"; else { displayDName = "???"; dXp = "???"; } } 
+                let champBadge = isChampion ? ' <span style="color:#ffd700; font-size: 12px; margin-left:5px; padding: 2px 6px; background: rgba(255,215,0,0.2); border-radius: 8px;">👑 ĐKVĐ</span>' : ''; let leagueBadge = ''; 
+                if (N >= 4) { if (index < c1Size) leagueBadge = '<span style="color:#000; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #ffd700; border-radius: 4px; font-weight: 900; display: inline-block; vertical-align: middle;">🏆 C1</span>'; else if (index < c1Size + c2Size) leagueBadge = '<span style="color:#fff; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #9e9e9e; border-radius: 4px; font-weight: bold; display: inline-block; vertical-align: middle;">🥈 C2</span>'; else leagueBadge = '<span style="color:#fff; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #d32f2f; border-radius: 4px; font-weight: bold; display: inline-block; vertical-align: middle;">⚠️ NGUY HIỂM</span>'; } else leagueBadge = '<span style="color:#888; font-size: 10px; margin-left:8px; font-style:italic; display: inline-block; vertical-align: middle;">(Đang thu thập)</span>'; 
+                let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '.'; let rankClass = rank <= 3 ? `lb-rank-${rank}` : ''; 
+                qualifiedHtml += `<div class="lb-row ${rankClass}"><div style="display: flex; align-items: center;">${medal} ${displayDName}${champBadge}${leagueBadge}</div><span style="color:var(--secondary)">⭐ ${dXp} XP</span></div>`; rank++; 
+            }); 
+            unqualified.forEach(data => { unqualifiedHtml += `<div class="lb-row" style="background:#f0f0f0; color:#888; border: 1px dashed #ccc; padding: 10px 25px;"><span>🔒 ${data.displayName || 'Ẩn danh'}</span><span style="font-size:12px; font-style:italic;">Yêu cầu duy trì chuỗi 3 ngày</span></div>`; }); 
+            lbContainer.innerHTML = qualifiedHtml + unqualifiedHtml || '<p style="text-align:center">Chưa đủ thông tin.</p>';
+        }, err => { lbContainer.innerHTML = `<p style="color:red; text-align:center">Lỗi Firebase: ${err.message}</p>`; });
+    }
+
+    function viewCard(base64, lessonName, totalVocab) { 
+        window.currentLessonContext = lessonName;
+        window.currentLessonCorrectCount = 0;
+        window.currentLessonTotal = totalVocab || 0;
+        document.getElementById('modalFrame').srcdoc = decodeURIComponent(escape(atob(base64))); 
+        document.getElementById('previewModal').classList.add('active'); 
+    }
+
+    function closeModal() { document.getElementById('previewModal').classList.remove('active'); document.getElementById('modalFrame').srcdoc = ''; }
+
+    function saveSyllabusSelection() { const checks = document.querySelectorAll('input[name="syllabusCheck"]:checked'); let selected = []; checks.forEach(c => selected.push(c.value)); rtdb.ref(`tournament_status/${currentRealm}/syllabus`).set(selected); alert("Cấu hình tài liệu thi đấu đã được xác nhận!"); }
+
+    function createBracketObject(players) { let N = players.length; let targetSize = 4; if (N > 4 && N <= 8) targetSize = 8; if (N > 8 && N <= 16) targetSize = 16; let bracket = { final: { p1: "---", p2: "---", winner: "" }, third_place: { p1: "---", p2: "---", winner: "" }, super_cup: { p1: "---", p2: "---", winner: "" }, promotion_playoff: { p1: "---", p2: "---", winner: "" } }; let layout = targetSize === 16 ? [1, 16, 8, 9, 5, 12, 4, 13, 2, 15, 7, 10, 6, 11, 3, 14] : targetSize === 8 ? [1, 8, 4, 5, 2, 7, 3, 6] : [1, 4, 2, 3]; let matches = []; for (let i = 0; i < targetSize; i += 2) { let pA = layout[i] <= N ? players[layout[i] - 1] : "BYE (Đặc cách)"; let pB = layout[i+1] <= N ? players[layout[i+1] - 1] : "BYE (Đặc cách)"; matches.push({ p1: pA, p2: pB, winner: "" }); } if (targetSize === 16) { bracket.r16l = [ matches[0], matches[1], matches[2], matches[3] ]; bracket.r16r = [ matches[4], matches[5], matches[6], matches[7] ]; bracket.qfl = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; bracket.qfr = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; bracket.sfl = { p1: "---", p2: "---", winner: "" }; bracket.sfr = { p1: "---", p2: "---", winner: "" }; } else if (targetSize === 8) { bracket.qfl = [ matches[0], matches[1] ]; bracket.qfr = [ matches[2], matches[3] ]; bracket.sfl = { p1: "---", p2: "---", winner: "" }; bracket.sfr = { p1: "---", p2: "---", winner: "" }; } else if (targetSize === 4) { bracket.sfl = matches[0]; bracket.sfr = matches[1]; } return bracket; }
+
+    async function executeBlindDraw() { 
+        if(!confirm(`Xác nhận bốc thăm phân nhánh lại cho giải đấu tại ${currentRealm}?`)) return; 
+        const histSnap = await rtdb.ref(`tournament_status/${currentRealm}/history`).once('value'); 
+        const history = histSnap.val() || {}; 
+        const snapshot = await db.collection('vocab_users').where('realm', '==', currentRealm).get(); 
+        let allPlayers = []; snapshot.forEach(doc => allPlayers.push(doc.data())); allPlayers.sort((a,b) => (b.xp || 0) - (a.xp || 0)); 
+        let qualifiedPlayers = []; 
+        allPlayers.forEach(d => { 
+            let dName = d.displayName || "Ẩn danh"; let isChampion = (dName === defendingChampion && defendingChampion !== ""); let isPromoted = (dName === history.promoted_player); 
+            if(d.role !== 'teacher' && ((d.streak || 1) >= 3 || isChampion || isPromoted)) { qualifiedPlayers.push(dName); } 
         }); 
-        let N = qualified.length; let c1Size = 0, c2Size = 0; 
-        if (N >= 4 && N < 8) { c1Size = 4; c2Size = 0; } else if (N >= 8) { let max_pow = Math.pow(2, Math.floor(Math.log2(N))); c1Size = (N - max_pow < 4 && max_pow > 4) ? max_pow / 2 : max_pow; let c2PoolSize = N - c1Size; c2Size = (c2PoolSize >= 4) ? Math.pow(2, Math.floor(Math.log2(c2PoolSize))) : 0; } 
-        let qualifiedHtml = ''; let unqualifiedHtml = ''; let rank = 1; 
-        qualified.forEach((data, index) => { 
-            let dName = data.displayName || 'Ẩn danh'; let dXp = data.xp; let isChampion = (dName === defendingChampion && defendingChampion !== ""); let isMaskActive = data.maskExpiry && data.maskExpiry > Date.now(); let displayDName = dName; 
-            if (isMaskActive) { if (userData.role === 'teacher') displayDName = displayDName + " 🎭(Ẩn)"; else { displayDName = "???"; dXp = "???"; } } 
-            let champBadge = isChampion ? ' <span style="color:#ffd700; font-size: 12px; margin-left:5px; padding: 2px 6px; background: rgba(255,215,0,0.2); border-radius: 8px;">👑 ĐKVĐ</span>' : ''; let leagueBadge = ''; 
-            if (N >= 4) { if (index < c1Size) leagueBadge = '<span style="color:#000; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #ffd700; border-radius: 4px; font-weight: 900; display: inline-block; vertical-align: middle;">🏆 C1</span>'; else if (index < c1Size + c2Size) leagueBadge = '<span style="color:#fff; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #9e9e9e; border-radius: 4px; font-weight: bold; display: inline-block; vertical-align: middle;">🥈 C2</span>'; else leagueBadge = '<span style="color:#fff; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #d32f2f; border-radius: 4px; font-weight: bold; display: inline-block; vertical-align: middle;">⚠️ NGUY HIỂM</span>'; } else leagueBadge = '<span style="color:#888; font-size: 10px; margin-left:8px; font-style:italic; display: inline-block; vertical-align: middle;">(Đang thu thập)</span>'; 
-            let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '.'; let rankClass = rank <= 3 ? `lb-rank-${rank}` : ''; 
-            qualifiedHtml += `<div class="lb-row ${rankClass}"><div style="display: flex; align-items: center;">${medal} ${displayDName}${champBadge}${leagueBadge}</div><span style="color:var(--secondary)">⭐ ${dXp} XP</span></div>`; rank++; 
-        }); 
-        unqualified.forEach(data => { unqualifiedHtml += `<div class="lb-row" style="background:#f0f0f0; color:#888; border: 1px dashed #ccc; padding: 10px 25px;"><span>🔒 ${data.displayName || 'Ẩn danh'}</span><span style="font-size:12px; font-style:italic;">Yêu cầu duy trì chuỗi 3 ngày</span></div>`; }); 
-        lbContainer.innerHTML = qualifiedHtml + unqualifiedHtml || '<p style="text-align:center">Chưa đủ thông tin.</p>';
-    }, err => { lbContainer.innerHTML = `<p style="color:red; text-align:center">Lỗi Firebase: ${err.message}</p>`; });
-}
+        let N = qualifiedPlayers.length; if (N < 4) return alert("Chỉ có " + N + " tài khoản thỏa điều kiện. Yêu cầu tối thiểu là 4."); 
+        let c1Size = 0, c2Size = 0; let c1Players = [], c2Players = []; 
+        if (N < 8) { c1Size = N; c1Players = qualifiedPlayers; } else { let max_pow = Math.pow(2, Math.floor(Math.log2(N))); c1Size = (N - max_pow < 4 && max_pow > 4) ? max_pow / 2 : max_pow; let c2PoolSize = N - c1Size; c2Size = (c2PoolSize >= 4) ? Math.pow(2, Math.floor(Math.log2(c2PoolSize))) : 0; let autoC1 = []; let forcedC2 = []; let normalPool = []; qualifiedPlayers.forEach(name => { if (name === defendingChampion || name === history.promoted_player) autoC1.push(name); else if (name === history.relegated_player) forcedC2.push(name); else normalPool.push(name); }); c1Players = [...autoC1]; while (c1Players.length < c1Size && normalPool.length > 0) c1Players.push(normalPool.shift()); c2Players = [...forcedC2]; while (c2Players.length < c2Size && normalPool.length > 0) c2Players.push(normalPool.shift()); } 
+        let c1Bracket = createBracketObject(c1Players); let c2Bracket = c2Size >= 4 ? createBracketObject(c2Players) : null; 
+        let updates = {}; updates[`tournament_status/${currentRealm}/c1_bracket`] = c1Bracket; updates[`tournament_status/${currentRealm}/c2_bracket`] = c2Bracket; 
+        rtdb.ref(`tournament_status/${currentRealm}/result`).remove(); rtdb.ref().update(updates).then(() => alert(`Bốc thăm hoàn thiện.\n🏆 Giải Elite: ${c1Players.length} thành viên.\n🥈 Giải Two: ${c2Players.length} thành viên.`)); 
+    }
 
-function viewCard(base64, lessonName, totalVocab) { 
-    window.currentLessonContext = lessonName;
-    window.currentLessonCorrectCount = 0;
-    window.currentLessonTotal = totalVocab || 0;
-    document.getElementById('modalFrame').srcdoc = decodeURIComponent(escape(atob(base64))); 
-    document.getElementById('previewModal').classList.add('active'); 
-}
-
-function closeModal() { document.getElementById('previewModal').classList.remove('active'); document.getElementById('modalFrame').srcdoc = ''; }
-
-function saveSyllabusSelection() { const checks = document.querySelectorAll('input[name="syllabusCheck"]:checked'); let selected = []; checks.forEach(c => selected.push(c.value)); rtdb.ref(`tournament_status/${currentRealm}/syllabus`).set(selected); alert("Cấu hình tài liệu thi đấu đã được xác nhận!"); }
-
-function createBracketObject(players) { let N = players.length; let targetSize = 4; if (N > 4 && N <= 8) targetSize = 8; if (N > 8 && N <= 16) targetSize = 16; let bracket = { final: { p1: "---", p2: "---", winner: "" }, third_place: { p1: "---", p2: "---", winner: "" }, super_cup: { p1: "---", p2: "---", winner: "" }, promotion_playoff: { p1: "---", p2: "---", winner: "" } }; let layout = targetSize === 16 ? [1, 16, 8, 9, 5, 12, 4, 13, 2, 15, 7, 10, 6, 11, 3, 14] : targetSize === 8 ? [1, 8, 4, 5, 2, 7, 3, 6] : [1, 4, 2, 3]; let matches = []; for (let i = 0; i < targetSize; i += 2) { let pA = layout[i] <= N ? players[layout[i] - 1] : "BYE (Đặc cách)"; let pB = layout[i+1] <= N ? players[layout[i+1] - 1] : "BYE (Đặc cách)"; matches.push({ p1: pA, p2: pB, winner: "" }); } if (targetSize === 16) { bracket.r16l = [ matches[0], matches[1], matches[2], matches[3] ]; bracket.r16r = [ matches[4], matches[5], matches[6], matches[7] ]; bracket.qfl = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; bracket.qfr = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; bracket.sfl = { p1: "---", p2: "---", winner: "" }; bracket.sfr = { p1: "---", p2: "---", winner: "" }; } else if (targetSize === 8) { bracket.qfl = [ matches[0], matches[1] ]; bracket.qfr = [ matches[2], matches[3] ]; bracket.sfl = { p1: "---", p2: "---", winner: "" }; bracket.sfr = { p1: "---", p2: "---", winner: "" }; } else if (targetSize === 4) { bracket.sfl = matches[0]; bracket.sfr = matches[1]; } return bracket; }
-
-async function executeBlindDraw() { 
-    if(!confirm(`Xác nhận bốc thăm phân nhánh lại cho giải đấu tại ${currentRealm}?`)) return; 
-    const histSnap = await rtdb.ref(`tournament_status/${currentRealm}/history`).once('value'); 
-    const history = histSnap.val() || {}; 
-    const snapshot = await db.collection('vocab_users').where('realm', '==', currentRealm).get(); 
-    let allPlayers = []; snapshot.forEach(doc => allPlayers.push(doc.data())); allPlayers.sort((a,b) => (b.xp || 0) - (a.xp || 0)); 
-    let qualifiedPlayers = []; 
-    allPlayers.forEach(d => { 
-        let dName = d.displayName || "Ẩn danh"; let isChampion = (dName === defendingChampion && defendingChampion !== ""); let isPromoted = (dName === history.promoted_player); 
-        if(d.role !== 'teacher' && ((d.streak || 1) >= 3 || isChampion || isPromoted)) { qualifiedPlayers.push(dName); } 
-    }); 
-    let N = qualifiedPlayers.length; if (N < 4) return alert("Chỉ có " + N + " tài khoản thỏa điều kiện. Yêu cầu tối thiểu là 4."); 
-    let c1Size = 0, c2Size = 0; let c1Players = [], c2Players = []; 
-    if (N < 8) { c1Size = N; c1Players = qualifiedPlayers; } else { let max_pow = Math.pow(2, Math.floor(Math.log2(N))); c1Size = (N - max_pow < 4 && max_pow > 4) ? max_pow / 2 : max_pow; let c2PoolSize = N - c1Size; c2Size = (c2PoolSize >= 4) ? Math.pow(2, Math.floor(Math.log2(c2PoolSize))) : 0; let autoC1 = []; let forcedC2 = []; let normalPool = []; qualifiedPlayers.forEach(name => { if (name === defendingChampion || name === history.promoted_player) autoC1.push(name); else if (name === history.relegated_player) forcedC2.push(name); else normalPool.push(name); }); c1Players = [...autoC1]; while (c1Players.length < c1Size && normalPool.length > 0) c1Players.push(normalPool.shift()); c2Players = [...forcedC2]; while (c2Players.length < c2Size && normalPool.length > 0) c2Players.push(normalPool.shift()); } 
-    let c1Bracket = createBracketObject(c1Players); let c2Bracket = c2Size >= 4 ? createBracketObject(c2Players) : null; 
-    let updates = {}; updates[`tournament_status/${currentRealm}/c1_bracket`] = c1Bracket; updates[`tournament_status/${currentRealm}/c2_bracket`] = c2Bracket; 
-    rtdb.ref(`tournament_status/${currentRealm}/result`).remove(); rtdb.ref().update(updates).then(() => alert(`Bốc thăm hoàn thiện.\n🏆 Giải Elite: ${c1Players.length} thành viên.\n🥈 Giải Two: ${c2Players.length} thành viên.`)); 
-}
-
-async function advanceTournament() { 
-    if(!confirm("Tiến hành cập nhật cục diện hiện tại và sắp xếp vòng trong?")) return; 
-    const snap = await rtdb.ref(`tournament_status/${currentRealm}`).once('value'); 
-    let data = snap.val(); if(!data || !data.c1_bracket) return alert("Chưa có thông tin bảng phân nhánh hợp lệ!"); 
-    let updateNeeded = false; let updates = {}; 
-    
-    function processByes(fb, leaguePrefix) { 
-        if(!fb) return; 
-        function checkBye(match, stagePath) { 
-            if (match && match.winner === "" && match.p1 !== "---" && match.p2 !== "---") { 
-                if (match.p2 === "BYE (Đặc cách)") { match.winner = match.p1; updates[`tournament_status/${currentRealm}/${leaguePrefix}_bracket/${stagePath}/winner`] = match.p1; updateNeeded = true; } 
-                else if (match.p1 === "BYE (Đặc cách)") { match.winner = match.p2; updates[`tournament_status/${currentRealm}/${leaguePrefix}_bracket/${stagePath}/winner`] = match.p2; updateNeeded = true; } 
-            } 
-        } 
-        if(fb.r16l) fb.r16l.forEach((m,i) => checkBye(m, `r16l/${i}`)); if(fb.r16r) fb.r16r.forEach((m,i) => checkBye(m, `r16r/${i}`)); if(fb.qfl) fb.qfl.forEach((m,i) => checkBye(m, `qfl/${i}`)); if(fb.qfr) fb.qfr.forEach((m,i) => checkBye(m, `qfr/${i}`)); checkBye(fb.sfl, 'sfl'); checkBye(fb.sfr, 'sfr'); 
-    } 
-    processByes(data.c1_bracket, 'c1'); processByes(data.c2_bracket, 'c2'); 
-    
-    function advanceLeague(fb, leaguePrefix) { 
-        if(!fb) return; 
-        if (!fb.final) fb.final = { p1: "---", p2: "---", winner: "" }; if (!fb.third_place) fb.third_place = { p1: "---", p2: "---", winner: "" }; 
-        if (fb.r16l && !fb.qfl) fb.qfl = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; 
-        if (fb.r16r && !fb.qfr) fb.qfr = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; 
-        if (fb.qfl && !fb.sfl) fb.sfl = { p1: "---", p2: "---", winner: "" }; if (fb.qfr && !fb.sfr) fb.sfr = { p1: "---", p2: "---", winner: "" }; 
+    async function advanceTournament() { 
+        if(!confirm("Tiến hành cập nhật cục diện hiện tại và sắp xếp vòng trong?")) return; 
+        const snap = await rtdb.ref(`tournament_status/${currentRealm}`).once('value'); 
+        let data = snap.val(); if(!data || !data.c1_bracket) return alert("Chưa có thông tin bảng phân nhánh hợp lệ!"); 
+        let updateNeeded = false; let updates = {}; 
         
-        function moveWinner(sourceMatch, targetStage, targetIdx, targetPlayerSlot) { 
-            if (sourceMatch && sourceMatch.winner && sourceMatch.winner !== "" && fb[targetStage]) { 
-                if (Array.isArray(fb[targetStage])) { 
-                    if (fb[targetStage][targetIdx][targetPlayerSlot] !== sourceMatch.winner) { fb[targetStage][targetIdx][targetPlayerSlot] = sourceMatch.winner; updateNeeded = true; } 
-                } else { 
-                    if (fb[targetStage][targetPlayerSlot] !== sourceMatch.winner) { fb[targetStage][targetPlayerSlot] = sourceMatch.winner; updateNeeded = true; } 
+        function processByes(fb, leaguePrefix) { 
+            if(!fb) return; 
+            function checkBye(match, stagePath) { 
+                if (match && match.winner === "" && match.p1 !== "---" && match.p2 !== "---") { 
+                    if (match.p2 === "BYE (Đặc cách)") { match.winner = match.p1; updates[`tournament_status/${currentRealm}/${leaguePrefix}_bracket/${stagePath}/winner`] = match.p1; updateNeeded = true; } 
+                    else if (match.p1 === "BYE (Đặc cách)") { match.winner = match.p2; updates[`tournament_status/${currentRealm}/${leaguePrefix}_bracket/${stagePath}/winner`] = match.p2; updateNeeded = true; } 
                 } 
             } 
+            if(fb.r16l) fb.r16l.forEach((m,i) => checkBye(m, `r16l/${i}`)); if(fb.r16r) fb.r16r.forEach((m,i) => checkBye(m, `r16r/${i}`)); if(fb.qfl) fb.qfl.forEach((m,i) => checkBye(m, `qfl/${i}`)); if(fb.qfr) fb.qfr.forEach((m,i) => checkBye(m, `qfr/${i}`)); checkBye(fb.sfl, 'sfl'); checkBye(fb.sfr, 'sfr'); 
         } 
-        if(fb.r16l) { moveWinner(fb.r16l[0], 'qfl', 0, 'p1'); moveWinner(fb.r16l[1], 'qfl', 0, 'p2'); moveWinner(fb.r16l[2], 'qfl', 1, 'p1'); moveWinner(fb.r16l[3], 'qfl', 1, 'p2'); } 
-        if(fb.r16r) { moveWinner(fb.r16r[0], 'qfr', 0, 'p1'); moveWinner(fb.r16r[1], 'qfr', 0, 'p2'); moveWinner(fb.r16r[2], 'qfr', 1, 'p1'); moveWinner(fb.r16r[3], 'qfr', 1, 'p2'); } 
-        if(fb.qfl) { moveWinner(fb.qfl[0], 'sfl', 0, 'p1'); moveWinner(fb.qfl[1], 'sfl', 0, 'p2'); } 
-        if(fb.qfr) { moveWinner(fb.qfr[0], 'sfr', 0, 'p1'); moveWinner(fb.qfr[1], 'sfr', 0, 'p2'); } 
-        if(fb.sfl && fb.sfl.winner && fb.sfl.winner !== "") { moveWinner(fb.sfl, 'final', 0, 'p1'); let loser1 = fb.sfl.winner === fb.sfl.p1 ? fb.sfl.p2 : fb.sfl.p1; if (fb.third_place.p1 !== loser1) { fb.third_place.p1 = loser1; updateNeeded = true; } } 
-        if(fb.sfr && fb.sfr.winner && fb.sfr.winner !== "") { moveWinner(fb.sfr, 'final', 0, 'p2'); let loser2 = fb.sfr.winner === fb.sfr.p1 ? fb.sfr.p2 : fb.sfr.p1; if (fb.third_place.p2 !== loser2) { fb.third_place.p2 = loser2; updateNeeded = true; } } 
-        updates[`tournament_status/${currentRealm}/${leaguePrefix}_bracket`] = fb; 
-    } 
-    advanceLeague(data.c1_bracket, 'c1'); advanceLeague(data.c2_bracket, 'c2'); 
-    
-    let c1Done = data.c1_bracket && data.c1_bracket.final && data.c1_bracket.final.winner !== ""; 
-    let c1ThirdDone = data.c1_bracket && data.c1_bracket.third_place && data.c1_bracket.third_place.winner !== ""; 
-    let c2Done = data.c2_bracket && data.c2_bracket.final && data.c2_bracket.final.winner !== ""; 
-    if (c1Done && c1ThirdDone && c2Done) { 
-        let c1Champ = data.c1_bracket.final.winner; let c2Champ = data.c2_bracket.final.winner; let c1Fourth = data.c1_bracket.third_place.winner === data.c1_bracket.third_place.p1 ? data.c1_bracket.third_place.p2 : data.c1_bracket.third_place.p1; 
-        if (data.c1_bracket.super_cup && data.c1_bracket.super_cup.p1 === "---") { updates[`tournament_status/${currentRealm}/c1_bracket/super_cup/p1`] = c1Champ; updates[`tournament_status/${currentRealm}/c1_bracket/super_cup/p2`] = c2Champ; updateNeeded = true; alert("🔥 Hệ thống đã xác nhận cặp đấu SIÊU CÚP (Super Cup)!"); } 
-        if (data.c1_bracket.promotion_playoff && data.c1_bracket.promotion_playoff.p1 === "---") { updates[`tournament_status/${currentRealm}/c1_bracket/promotion_playoff/p1`] = c2Champ; updates[`tournament_status/${currentRealm}/c1_bracket/promotion_playoff/p2`] = c1Fourth; updateNeeded = true; alert("⚔️ Hệ thống đã xác nhận cặp đấu PLAY-OFF Tranh vé vớt!"); } 
-    } 
-    if (updateNeeded) { await rtdb.ref().update(updates); alert("Hoàn tất cập nhật lịch trình tiến cấp!"); } else { alert("Trạng thái ổn định."); } 
-}
-
-async function adminStartPvP(league, stageKey, matchIndex, p1Name, p2Name) { 
-    const syllabusSnap = await rtdb.ref(`tournament_status/${currentRealm}/syllabus`).once('value'); 
-    const selectedLessons = syllabusSnap.val(); 
-    
-    if(!selectedLessons || selectedLessons.length === 0) return alert("❌ Báo cáo: Ngự Thiện Phòng chưa có giáo án!\nBệ hạ vui lòng chọn Bài Học và bấm 'Khóa đề thi' trước khi khởi động trận đấu."); 
-    
-    let allVocab = []; 
-    selectedLessons.forEach(ln => { 
-        let lesson = allLessonsData.find(l => l.name === ln); 
-        if(lesson) allVocab = allVocab.concat(lesson.vocab); 
-    }); 
-    
-    if(allVocab.length < 10) return alert(`❌ Lỗi: Kho dữ liệu hiện tại chỉ có ${allVocab.length} từ. Lôi đài cần ít nhất 10 từ để khởi động!\nBệ hạ hãy chọn thêm Bài học ở Ngự Thiện Phòng.`); 
-    
-    allVocab.sort(() => Math.random() - 0.5); 
-    let bankSize = Math.min(30, allVocab.length); 
-    
-    let pvpQuestionBank = allVocab.slice(0, bankSize).map(v => { 
-        let wrong = allVocab.filter(x => x.vi !== v.vi).sort(() => Math.random() - 0.5).slice(0, 3); 
-        while(wrong.length < 3) { wrong.push({vi: "Nhiễu " + Math.random().toString(36).substr(2, 5)}); }
-        let opts = [v.vi, ...wrong.map(w => w.vi)].sort(() => Math.random() - 0.5); 
-        return { en: v.en, vi: v.vi, opts: opts }; 
-    }); 
-    
-    window.isSpectating = true; 
-    
-    rtdb.ref(`active_pvp_match/${currentRealm}`).set({ 
-        league: league, stage: stageKey, match_idx: matchIndex, p1: p1Name, p2: p2Name, 
-        p1_set: 0, p2_set: 0, p1_score: 0, p2_score: 0, status: 'playing', 
-        q_idx: 1, current_q: pvpQuestionBank[0], 
-        mode: 'normal', 
-        time_limit: 15, unlock_time: Date.now() + 8000, 
-        p1_ans: "", p1_time: 0, p2_ans: "", p2_time: 0, evaluating: false, question_bank: pvpQuestionBank 
-    }); 
-}
-
-function submitPvPAnswer(idxOrStr) {
-    rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
-        let m = snap.val(); if(!m || m.status !== 'playing' || m.evaluating) return;
-        let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
-        if((isP1 && m.p1_ans !== "") || (isP2 && m.p2_ans !== "")) return;
+        processByes(data.c1_bracket, 'c1'); processByes(data.c2_bracket, 'c2'); 
         
-        let selectedText = "";
-        let isCorrect = false;
-
-        if (typeof idxOrStr === 'string') {
-            selectedText = idxOrStr.trim().toUpperCase();
+        function advanceLeague(fb, leaguePrefix) { 
+            if(!fb) return; 
+            if (!fb.final) fb.final = { p1: "---", p2: "---", winner: "" }; if (!fb.third_place) fb.third_place = { p1: "---", p2: "---", winner: "" }; 
+            if (fb.r16l && !fb.qfl) fb.qfl = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; 
+            if (fb.r16r && !fb.qfr) fb.qfr = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; 
+            if (fb.qfl && !fb.sfl) fb.sfl = { p1: "---", p2: "---", winner: "" }; if (fb.qfr && !fb.sfr) fb.sfr = { p1: "---", p2: "---", winner: "" }; 
             
-            // SỬA Ở ĐÂY: Thuật toán so sánh mới (bỏ qua dấu /, xếp theo cụm)
-            let compareUser = selectedText.split('/').map(s => s.replace(/[\s\-]/g, '').trim()).sort().join('/');
-            let compareCorrect = m.current_q.en.toUpperCase().split('/').map(s => s.replace(/[\s\-]/g, '').trim()).sort().join('/');
-            isCorrect = (compareUser === compareCorrect);
-            
-            let allInputs = Array.from(document.querySelectorAll('#pvpSpellContainer .spell-char'));
-            let hiddenInput = document.getElementById('pvpHiddenSpell');
-            if(hiddenInput) hiddenInput.disabled = true;
-            
-            if (isCorrect) {
-                allInputs.forEach(i => { if(!i.disabled) { i.style.backgroundColor = '#d1fae5'; i.style.borderColor = '#10b981'; i.style.color = '#065f46'; } });
-            } else {
-                allInputs.forEach(inp => { 
-                    if(!inp.disabled) {
-                        inp.style.backgroundColor = '#fee2e2'; 
-                        inp.style.borderColor = '#ef4444'; 
-                        inp.style.color = '#991b1b'; 
-                        if(inp.dataset.char !== '-' && inp.dataset.char !== '/') inp.value = inp.dataset.char; 
-                    }
-                });
-            }
-            let submitBtn = document.getElementById('pvpSpellSubmitBtn');
-            if(submitBtn) submitBtn.style.display = 'none';
-        } else {
-            selectedText = m.current_q.opts[idxOrStr]; 
-            isCorrect = selectedText === m.current_q.vi;
-            let btn = document.getElementById('pvpOpt' + idxOrStr); 
-            if(btn) {
-                btn.style.backgroundColor = isCorrect ? '#00c853' : '#d50000'; 
-                btn.style.borderColor = isCorrect ? '#00e676' : '#ff1744';
-            }
-            for(let i=0; i<4; i++) { let b = document.getElementById('pvpOpt'+i); if(b) b.style.pointerEvents = 'none'; } 
-        }
-
-        let time_taken = Date.now() - (window.localUnlockTime || Date.now());
-        
-        let updates = {}; 
-        if(isP1) { updates.p1_ans = selectedText; updates.p1_time = time_taken; } 
-        if(isP2) { updates.p2_ans = selectedText; updates.p2_time = time_taken; }
-        rtdb.ref(`active_pvp_match/${currentRealm}`).update(updates);
-    });
-}
-
-function triggerEval() {
-    rtdb.ref(`active_pvp_match/${currentRealm}`).transaction(m => {
-        if (m && m.status === 'playing' && m.evaluating === false) {
-            m.evaluating = true; m.status = 'showing_result';
-            
-            let p1_c = false; let p2_c = false;
-            if (m.mode === 'spelling' || (m.mode === 'golden' && m.current_q.is_spelling)) {
-                let correctStr = m.current_q.en.toUpperCase().replace(/[\s\-\/]/g, '');
-                p1_c = (m.p1_ans || "").toUpperCase().replace(/[\s\-\/]/g, '') === correctStr;
-                p2_c = (m.p2_ans || "").toUpperCase().replace(/[\s\-\/]/g, '') === correctStr;
-            } else {
-                p1_c = m.p1_ans === m.current_q.vi; 
-                p2_c = m.p2_ans === m.current_q.vi;
-            }
-            
-            let p1_w = false; let p2_w = false;
-            
-            if (p1_c && p2_c) { 
-                if (m.p1_time <= m.p2_time) p1_w = true; else p2_w = true; 
-            } else if (p1_c) { p1_w = true; } else if (p2_c) { p2_w = true; }
-            
-            m.p1_score += p1_w ? 1 : 0; m.p2_score += p2_w ? 1 : 0; m.p1_won_this_round = p1_w; m.p2_won_this_round = p2_w; return m;
-        } return; 
-    }, (err, comm, snap) => { if(comm && snap.val()) setTimeout(() => processNextRound(snap.val().q_idx), 3500); });
-}
-
-function processNextRound(currentQIdx) {
-    rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
-        let m = snap.val(); if(!m || m.q_idx !== currentQIdx || m.status !== 'showing_result') return; 
-        let nextIdx = m.q_idx + 1; let s1 = m.p1_score; let s2 = m.p2_score; let set1 = m.p1_set; let set2 = m.p2_set; let status = 'playing'; let winner = "";
-
-        if(m.q_idx === 10 || m.q_idx === 20) {
-            if(s1 > s2) set1++; else if(s2 > s1) set2++; 
-            s1 = 0; s2 = 0; 
-            
-            if(set1 === 2) { status = 'finished'; winner = m.p1; } 
-            else if(set2 === 2) { status = 'finished'; winner = m.p2; } 
-            
-            else if (m.q_idx === 20) {
-                if(set1 > set2) { status = 'finished'; winner = m.p1; }
-                else if(set2 > set1) { status = 'finished'; winner = m.p2; }
-            }
-        } 
-        else if (m.q_idx >= 21) {
-            if(s1 >= 3) { status = 'finished'; winner = m.p1; set1++; } 
-            else if (s2 >= 3) { status = 'finished'; winner = m.p2; set2++;}
-            else if (nextIdx > m.question_bank.length) { winner = "HÒA NHAU (GIAO THỨC TRẢ HÒA)"; status = 'finished'; } 
-        }
-
-        let updates = { p1_score: s1, p2_score: s2, p1_set: set1, p2_set: set2, p1_ans: "", p2_ans: "", p1_time: 0, p2_time: 0, evaluating: false, p1_won_this_round: null, p2_won_this_round: null };
-        
-        if(status === 'finished') { 
-            updates.status = 'finished'; updates.winner = winner; 
-        } 
-        else { 
-            updates.status = 'playing'; updates.q_idx = nextIdx; 
-            let nextQ = m.question_bank[nextIdx - 1];
-            updates.current_q = nextQ; 
-            
-            if (nextIdx <= 10) { 
-                updates.mode = 'normal'; 
-                updates.time_limit = 15; 
-                updates.unlock_time = Date.now() + 8000;
+            function moveWinner(sourceMatch, targetStage, targetIdx, targetPlayerSlot) { 
+                if (sourceMatch && sourceMatch.winner && sourceMatch.winner !== "" && fb[targetStage]) { 
+                    if (Array.isArray(fb[targetStage])) { 
+                        if (fb[targetStage][targetIdx][targetPlayerSlot] !== sourceMatch.winner) { fb[targetStage][targetIdx][targetPlayerSlot] = sourceMatch.winner; updateNeeded = true; } 
+                    } else { 
+                        if (fb[targetStage][targetPlayerSlot] !== sourceMatch.winner) { fb[targetStage][targetPlayerSlot] = sourceMatch.winner; updateNeeded = true; } 
+                    } 
+                } 
             } 
-            else if (nextIdx <= 20) { 
-                updates.mode = 'spelling'; 
-                updates.time_limit = 30; 
-                updates.unlock_time = 0;
+            if(fb.r16l) { moveWinner(fb.r16l[0], 'qfl', 0, 'p1'); moveWinner(fb.r16l[1], 'qfl', 0, 'p2'); moveWinner(fb.r16l[2], 'qfl', 1, 'p1'); moveWinner(fb.r16l[3], 'qfl', 1, 'p2'); } 
+            if(fb.r16r) { moveWinner(fb.r16r[0], 'qfr', 0, 'p1'); moveWinner(fb.r16r[1], 'qfr', 0, 'p2'); moveWinner(fb.r16r[2], 'qfr', 1, 'p1'); moveWinner(fb.r16r[3], 'qfr', 1, 'p2'); } 
+            if(fb.qfl) { moveWinner(fb.qfl[0], 'sfl', 0, 'p1'); moveWinner(fb.qfl[1], 'sfl', 0, 'p2'); } 
+            if(fb.qfr) { moveWinner(fb.qfr[0], 'sfr', 0, 'p1'); moveWinner(fb.qfr[1], 'sfr', 0, 'p2'); } 
+            if(fb.sfl && fb.sfl.winner && fb.sfl.winner !== "") { moveWinner(fb.sfl, 'final', 0, 'p1'); let loser1 = fb.sfl.winner === fb.sfl.p1 ? fb.sfl.p2 : fb.sfl.p1; if (fb.third_place.p1 !== loser1) { fb.third_place.p1 = loser1; updateNeeded = true; } } 
+            if(fb.sfr && fb.sfr.winner && fb.sfr.winner !== "") { moveWinner(fb.sfr, 'final', 0, 'p2'); let loser2 = fb.sfr.winner === fb.sfr.p1 ? fb.sfr.p2 : fb.sfr.p1; if (fb.third_place.p2 !== loser2) { fb.third_place.p2 = loser2; updateNeeded = true; } } 
+            updates[`tournament_status/${currentRealm}/${leaguePrefix}_bracket`] = fb; 
+        } 
+        advanceLeague(data.c1_bracket, 'c1'); advanceLeague(data.c2_bracket, 'c2'); 
+        
+        let c1Done = data.c1_bracket && data.c1_bracket.final && data.c1_bracket.final.winner !== ""; 
+        let c1ThirdDone = data.c1_bracket && data.c1_bracket.third_place && data.c1_bracket.third_place.winner !== ""; 
+        let c2Done = data.c2_bracket && data.c2_bracket.final && data.c2_bracket.final.winner !== ""; 
+        if (c1Done && c1ThirdDone && c2Done) { 
+            let c1Champ = data.c1_bracket.final.winner; let c2Champ = data.c2_bracket.final.winner; let c1Fourth = data.c1_bracket.third_place.winner === data.c1_bracket.third_place.p1 ? data.c1_bracket.third_place.p2 : data.c1_bracket.third_place.p1; 
+            if (data.c1_bracket.super_cup && data.c1_bracket.super_cup.p1 === "---") { updates[`tournament_status/${currentRealm}/c1_bracket/super_cup/p1`] = c1Champ; updates[`tournament_status/${currentRealm}/c1_bracket/super_cup/p2`] = c2Champ; updateNeeded = true; alert("🔥 Hệ thống đã xác nhận cặp đấu SIÊU CÚP (Super Cup)!"); } 
+            if (data.c1_bracket.promotion_playoff && data.c1_bracket.promotion_playoff.p1 === "---") { updates[`tournament_status/${currentRealm}/c1_bracket/promotion_playoff/p1`] = c2Champ; updates[`tournament_status/${currentRealm}/c1_bracket/promotion_playoff/p2`] = c1Fourth; updateNeeded = true; alert("⚔️ Hệ thống đã xác nhận cặp đấu PLAY-OFF Tranh vé vớt!"); } 
+        } 
+        if (updateNeeded) { await rtdb.ref().update(updates); alert("Hoàn tất cập nhật lịch trình tiến cấp!"); } else { alert("Trạng thái ổn định."); } 
+    }
+
+    async function adminStartPvP(league, stageKey, matchIndex, p1Name, p2Name) { 
+        const syllabusSnap = await rtdb.ref(`tournament_status/${currentRealm}/syllabus`).once('value'); 
+        const selectedLessons = syllabusSnap.val(); 
+        
+        if(!selectedLessons || selectedLessons.length === 0) return alert("❌ Báo cáo: Ngự Thiện Phòng chưa có giáo án!\nBệ hạ vui lòng chọn Bài Học và bấm 'Khóa đề thi' trước khi khởi động trận đấu."); 
+        
+        let allVocab = []; 
+        selectedLessons.forEach(ln => { 
+            let lesson = allLessonsData.find(l => l.name === ln); 
+            if(lesson) allVocab = allVocab.concat(lesson.vocab); 
+        }); 
+        
+        if(allVocab.length < 10) return alert(`❌ Lỗi: Kho dữ liệu hiện tại chỉ có ${allVocab.length} từ. Lôi đài cần ít nhất 10 từ để khởi động!\nBệ hạ hãy chọn thêm Bài học ở Ngự Thiện Phòng.`); 
+        
+        allVocab.sort(() => Math.random() - 0.5); 
+        let bankSize = Math.min(30, allVocab.length); 
+        
+        let pvpQuestionBank = allVocab.slice(0, bankSize).map(v => { 
+            let wrong = allVocab.filter(x => x.vi !== v.vi).sort(() => Math.random() - 0.5).slice(0, 3); 
+            while(wrong.length < 3) { wrong.push({vi: "Nhiễu " + Math.random().toString(36).substr(2, 5)}); }
+            let opts = [v.vi, ...wrong.map(w => w.vi)].sort(() => Math.random() - 0.5); 
+            return { en: v.en, vi: v.vi, opts: opts }; 
+        }); 
+        
+        window.isSpectating = true; 
+        
+        rtdb.ref(`active_pvp_match/${currentRealm}`).set({ 
+            league: league, stage: stageKey, match_idx: matchIndex, p1: p1Name, p2: p2Name, 
+            p1_set: 0, p2_set: 0, p1_score: 0, p2_score: 0, status: 'playing', 
+            q_idx: 1, current_q: pvpQuestionBank[0], 
+            mode: 'normal', 
+            time_limit: 15, unlock_time: Date.now() + 8000, 
+            p1_ans: "", p1_time: 0, p2_ans: "", p2_time: 0, evaluating: false, question_bank: pvpQuestionBank 
+        }); 
+    }
+
+    function submitPvPAnswer(idxOrStr) {
+        rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
+            let m = snap.val(); if(!m || m.status !== 'playing' || m.evaluating) return;
+            let isP1 = userData.displayName === m.p1; let isP2 = userData.displayName === m.p2;
+            if((isP1 && m.p1_ans !== "") || (isP2 && m.p2_ans !== "")) return;
+            
+            let selectedText = "";
+            let isCorrect = false;
+
+            if (typeof idxOrStr === 'string') {
+                selectedText = idxOrStr.trim().toUpperCase();
+                
+                let compareUser = selectedText.replace(/[\s\-\/]/g, '');
+                let compareCorrect = m.current_q.en.toUpperCase().replace(/[\s\-\/]/g, '');
+                isCorrect = compareUser === compareCorrect;
+                
+                let allInputs = Array.from(document.querySelectorAll('#pvpSpellContainer .spell-char'));
+                let hiddenInput = document.getElementById('pvpHiddenSpell');
+                if(hiddenInput) hiddenInput.disabled = true;
+                
+                if (isCorrect) {
+                    allInputs.forEach(i => { if(!i.disabled) { i.style.backgroundColor = '#d1fae5'; i.style.borderColor = '#10b981'; i.style.color = '#065f46'; } });
+                } else {
+                    allInputs.forEach(inp => { 
+                        if(!inp.disabled) {
+                            inp.style.backgroundColor = '#fee2e2'; 
+                            inp.style.borderColor = '#ef4444'; 
+                            inp.style.color = '#991b1b'; 
+                            if(inp.dataset.char !== '-' && inp.dataset.char !== '/') inp.value = inp.dataset.char; 
+                        }
+                    });
+                }
+                let submitBtn = document.getElementById('pvpSpellSubmitBtn');
+                if(submitBtn) submitBtn.style.display = 'none';
+            } else {
+                selectedText = m.current_q.opts[idxOrStr]; 
+                isCorrect = selectedText === m.current_q.vi;
+                let btn = document.getElementById('pvpOpt' + idxOrStr); 
+                if(btn) {
+                    btn.style.backgroundColor = isCorrect ? '#00c853' : '#d50000'; 
+                    btn.style.borderColor = isCorrect ? '#00e676' : '#ff1744';
+                }
+                for(let i=0; i<4; i++) { let b = document.getElementById('pvpOpt'+i); if(b) b.style.pointerEvents = 'none'; } 
+            }
+
+            let time_taken = Date.now() - (window.localUnlockTime || Date.now());
+            
+            let updates = {}; 
+            if(isP1) { updates.p1_ans = selectedText; updates.p1_time = time_taken; } 
+            if(isP2) { updates.p2_ans = selectedText; updates.p2_time = time_taken; }
+            rtdb.ref(`active_pvp_match/${currentRealm}`).update(updates);
+        });
+    }
+
+    function triggerEval() {
+        rtdb.ref(`active_pvp_match/${currentRealm}`).transaction(m => {
+            if (m && m.status === 'playing' && m.evaluating === false) {
+                m.evaluating = true; m.status = 'showing_result';
+                
+                let p1_c = false; let p2_c = false;
+                if (m.mode === 'spelling' || (m.mode === 'golden' && m.current_q.is_spelling)) {
+                    let correctStr = m.current_q.en.toUpperCase().replace(/[\s\-\/]/g, '');
+                    p1_c = (m.p1_ans || "").toUpperCase().replace(/[\s\-\/]/g, '') === correctStr;
+                    p2_c = (m.p2_ans || "").toUpperCase().replace(/[\s\-\/]/g, '') === correctStr;
+                } else {
+                    p1_c = m.p1_ans === m.current_q.vi; 
+                    p2_c = m.p2_ans === m.current_q.vi;
+                }
+                
+                let p1_w = false; let p2_w = false;
+                
+                if (p1_c && p2_c) { 
+                    if (m.p1_time <= m.p2_time) p1_w = true; else p2_w = true; 
+                } else if (p1_c) { p1_w = true; } else if (p2_c) { p2_w = true; }
+                
+                m.p1_score += p1_w ? 1 : 0; m.p2_score += p2_w ? 1 : 0; m.p1_won_this_round = p1_w; m.p2_won_this_round = p2_w; return m;
+            } return; 
+        }, (err, comm, snap) => { if(comm && snap.val()) setTimeout(() => processNextRound(snap.val().q_idx), 3500); });
+    }
+
+    function processNextRound(currentQIdx) {
+        rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
+            let m = snap.val(); if(!m || m.q_idx !== currentQIdx || m.status !== 'showing_result') return; 
+            let nextIdx = m.q_idx + 1; let s1 = m.p1_score; let s2 = m.p2_score; let set1 = m.p1_set; let set2 = m.p2_set; let status = 'playing'; let winner = "";
+
+            if(m.q_idx === 10 || m.q_idx === 20) {
+                if(s1 > s2) set1++; else if(s2 > s1) set2++; 
+                s1 = 0; s2 = 0; 
+                
+                if(set1 === 2) { status = 'finished'; winner = m.p1; } 
+                else if(set2 === 2) { status = 'finished'; winner = m.p2; } 
+                
+                else if (m.q_idx === 20) {
+                    if(set1 > set2) { status = 'finished'; winner = m.p1; }
+                    else if(set2 > set1) { status = 'finished'; winner = m.p2; }
+                }
+            } 
+            else if (m.q_idx >= 21) {
+                if(s1 >= 3) { status = 'finished'; winner = m.p1; set1++; } 
+                else if (s2 >= 3) { status = 'finished'; winner = m.p2; set2++;}
+                else if (nextIdx > m.question_bank.length) { winner = "HÒA NHAU (GIAO THỨC TRẢ HÒA)"; status = 'finished'; } 
+            }
+
+            let updates = { p1_score: s1, p2_score: s2, p1_set: set1, p2_set: set2, p1_ans: "", p2_ans: "", p1_time: 0, p2_time: 0, evaluating: false, p1_won_this_round: null, p2_won_this_round: null };
+            
+            if(status === 'finished') { 
+                updates.status = 'finished'; updates.winner = winner; 
             } 
             else { 
-                let isSpellingNow = Math.random() > 0.5;
-                updates.mode = 'golden'; 
-                updates.current_q.is_spelling = isSpellingNow; 
-
-                if (isSpellingNow) {
-                    updates.time_limit = 20; 
-                    updates.unlock_time = 0;
-                } else {
-                    updates.time_limit = 7; 
+                updates.status = 'playing'; updates.q_idx = nextIdx; 
+                let nextQ = m.question_bank[nextIdx - 1];
+                updates.current_q = nextQ; 
+                
+                if (nextIdx <= 10) { 
+                    updates.mode = 'normal'; 
+                    updates.time_limit = 15; 
                     updates.unlock_time = Date.now() + 8000;
+                } 
+                else if (nextIdx <= 20) { 
+                    updates.mode = 'spelling'; 
+                    updates.time_limit = 30; 
+                    updates.unlock_time = 0;
+                } 
+                else { 
+                    let isSpellingNow = Math.random() > 0.5;
+                    updates.mode = 'golden'; 
+                    updates.current_q.is_spelling = isSpellingNow; 
+
+                    if (isSpellingNow) {
+                        updates.time_limit = 20; 
+                        updates.unlock_time = 0;
+                    } else {
+                        updates.time_limit = 7; 
+                        updates.unlock_time = Date.now() + 8000;
+                    }
                 }
             }
-        }
 
-        rtdb.ref(`active_pvp_match/${currentRealm}`).update(updates).then(() => {
-            if (status === 'finished' && winner !== "HÒA NHAU (GIAO THỨC TRẢ HÒA)") {
-                
-                rtdb.ref(`active_pvp_match/${currentRealm}`).onDisconnect().cancel();
-                if (surveillanceData) {
-                    let key = `tournament_status/${currentRealm}/${surveillanceData.league}_bracket/${surveillanceData.stageKey}`;
-                    if (!['sfl', 'sfr', 'final', 'third_place', 'super_cup', 'promotion_playoff'].includes(surveillanceData.stageKey)) { 
-                        key += `/${surveillanceData.matchIndex}`; 
+            rtdb.ref(`active_pvp_match/${currentRealm}`).update(updates).then(() => {
+                if (status === 'finished' && winner !== "HÒA NHAU (GIAO THỨC TRẢ HÒA)") {
+                    
+                    rtdb.ref(`active_pvp_match/${currentRealm}`).onDisconnect().cancel();
+                    if (surveillanceData) {
+                        let key = `tournament_status/${currentRealm}/${surveillanceData.league}_bracket/${surveillanceData.stageKey}`;
+                        if (!['sfl', 'sfr', 'final', 'third_place', 'super_cup', 'promotion_playoff'].includes(surveillanceData.stageKey)) { 
+                            key += `/${surveillanceData.matchIndex}`; 
+                        }
+                        rtdb.ref(key).onDisconnect().cancel();
                     }
-                    rtdb.ref(key).onDisconnect().cancel();
-                }
 
-                rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(matchSnap => {
-                    let matchInfo = matchSnap.val();
-                    if(matchInfo.stage && matchInfo.match_idx !== undefined && matchInfo.league) {
-                        let key = `tournament_status/${currentRealm}/${matchInfo.league}_bracket/${matchInfo.stage}`;
-                        if(matchInfo.stage === 'sfl' || matchInfo.stage === 'sfr' || matchInfo.stage === 'final' || matchInfo.stage === 'third_place' || matchInfo.stage === 'super_cup' || matchInfo.stage === 'promotion_playoff') { 
-                            rtdb.ref(key).update({ winner: winner, p1_set: set1, p2_set: set2 }); 
-                        } else { 
-                            rtdb.ref(key + `/${matchInfo.match_idx}`).update({ winner: winner, p1_set: set1, p2_set: set2 }); 
+                    rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(matchSnap => {
+                        let matchInfo = matchSnap.val();
+                        if(matchInfo.stage && matchInfo.match_idx !== undefined && matchInfo.league) {
+                            let key = `tournament_status/${currentRealm}/${matchInfo.league}_bracket/${matchInfo.stage}`;
+                            if(matchInfo.stage === 'sfl' || matchInfo.stage === 'sfr' || matchInfo.stage === 'final' || matchInfo.stage === 'third_place' || matchInfo.stage === 'super_cup' || matchInfo.stage === 'promotion_playoff') { 
+                                rtdb.ref(key).update({ winner: winner, p1_set: set1, p2_set: set2 }); 
+                            } else { 
+                                rtdb.ref(key + `/${matchInfo.match_idx}`).update({ winner: winner, p1_set: set1, p2_set: set2 }); 
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    function buyTimeMachine() { let todayStr = new Date().toLocaleDateString('en-GB'); if (userData.timeMachine && userData.timeMachine.status === 'in_progress') { openTimeMachineModal(); return; } if (userData.timeMachine && userData.timeMachine.lastAttemptDate !== todayStr) { userData.timeMachine.attemptsToday = 0; userData.timeMachine.lastAttemptDate = todayStr; } if (userData.timeMachine && userData.timeMachine.attemptsToday >= 3) return alert("Hết lượt hôm nay!"); let cost = userData.timeMachine.missedDays * 10000; if (userData.gold < cost) return alert("Không đủ Vàng!"); if (!confirm(`XÁC NHẬN GIAO DỊCH:\nTiêu tốn ${cost} Vàng để thực hiện thử thách.\nCần vượt qua ${userData.timeMachine.missedDays} Giai đoạn. Chấp nhận?`)) return; let allVocab = []; allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab)); if (allVocab.length < 30) return alert("Kho dữ liệu chưa đủ 30 từ."); let bank = allVocab.sort(() => Math.random() - 0.5).slice(0, Math.min(30, allVocab.length)); userData.gold -= cost; userData.timeMachine.attemptsToday++; userData.timeMachine.status = 'in_progress'; userData.timeMachine.daysRecovered = 0; userData.timeMachine.currentBank = bank; db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, timeMachine: userData.timeMachine }).then(() => { updateUI(); openTimeMachineModal(); }); }
+
+    window.addEventListener('message', function(e) {
+        if (e.data === 'CORRECT' || e.data === 'SPELLING_CORRECT') { 
+            if (currentUser && userData) { 
+                let multiplier = (userData.potionX3Expiry && userData.potionX3Expiry > Date.now()) ? 3 : ((userData.potionExpiry && userData.potionExpiry > Date.now()) ? 2 : 1);
+                
+                let baseXP = (e.data === 'SPELLING_CORRECT') ? 25 : 15;
+                let baseGold = (e.data === 'SPELLING_CORRECT') ? 25 : 10;
+
+                let xpGained = baseXP * multiplier; let goldGained = baseGold * multiplier; 
+                userData.xp = (userData.xp || 0) + xpGained; userData.gold = (userData.gold || 0) + goldGained; userData.weeklyXp = (userData.weeklyXp || 0) + xpGained;
+                
+                let oldHighest = userData.highestWeeklyXp || 0; let isRecordBroken = false;
+                if (oldHighest > 0 && userData.weeklyXp > oldHighest) { userData.highestWeeklyXp = userData.weeklyXp; if (!userData.hasBrokenRecordThisWeek) { userData.hasBrokenRecordThisWeek = true; isRecordBroken = true; } } else if (oldHighest === 0 && userData.weeklyXp > 0) { userData.highestWeeklyXp = userData.weeklyXp; }
+                
+                if (window.currentLessonContext) {
+                    window.currentLessonCorrectCount = (window.currentLessonCorrectCount || 0) + 1;
+                    if (window.currentLessonCorrectCount === window.currentLessonTotal) {
+                        if (!userData.mastered_lessons) userData.mastered_lessons = [];
+                        if (!userData.mastered_lessons.includes(window.currentLessonContext)) {
+                            userData.mastered_lessons.push(window.currentLessonContext);
+                            userData.mastered_words = (userData.mastered_words || 0) + window.currentLessonTotal;
+                            setTimeout(() => {
+                                alert(`🎓 CHÚC MỪNG! Bạn đã hoàn thành xuất sắc 100% bài [${window.currentLessonContext}].\nCộng thêm ${window.currentLessonTotal} từ vào Quỹ Thành Thạo!`);
+                                if (typeof renderAchievements === 'function') renderAchievements();
+                            }, 1000);
                         }
                     }
-                });
-            }
-        });
+                }
+
+                syncStatsToCloud(); 
+                if (isRecordBroken) { document.getElementById('recordCurrentXp').innerText = userData.weeklyXp + " XP"; document.getElementById('recordOldXp').innerText = oldHighest; document.getElementById('recordModal').classList.add('active'); triggerConfetti(); } else { let anim = document.getElementById('rewardAnim'); let prefix = multiplier === 3 ? `🏺 ĐANG X3!` : (multiplier === 2 ? `🧪 ĐANG X2!` : `🎉`); anim.innerText = `${prefix} +${goldGained} 🪙 | +${xpGained} ⭐`; anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 2000); }
+            } 
+        }
+        else if (e.data === 'REQ_GLASS') { if (userData.magnifyingGlass > 0) { userData.magnifyingGlass--; syncStatsToCloud(); document.getElementById('modalFrame').contentWindow.postMessage('APPROVE_GLASS', '*'); } else { alert("Số lượng Kính Lúp hiện tại là 0!"); } }
+        else if (e.data === 'TM_NEXT_DAY') { userData.timeMachine.daysRecovered++; let allVocab = []; allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab)); userData.timeMachine.currentBank = allVocab.sort(() => Math.random() - 0.5).slice(0, Math.min(30, allVocab.length)); db.collection('vocab_users').doc(currentUser.uid).update({ timeMachine: userData.timeMachine }).then(() => { openTimeMachineModal(); }); }
+        else if (e.data === 'TM_RESULT_PASS') { closeModal(); let oldS = userData.streak; userData.streak = userData.timeMachine.lostStreak + userData.timeMachine.missedDays; userData.timeMachine = null; db.collection('vocab_users').doc(currentUser.uid).update({ streak: userData.streak, timeMachine: null }).then(() => { updateUI(); alert(`🎉 KỲ TÍCH! Chuỗi đã phục hồi lên mốc ${userData.streak}!`); triggerConfetti(); if(window.checkAndGrantStreakRewards) window.checkAndGrantStreakRewards(oldS, userData.streak); }); }
+        else if (e.data === 'TM_RESULT_FAIL') { closeModal(); userData.timeMachine.status = 'available'; userData.timeMachine.currentBank = []; db.collection('vocab_users').doc(currentUser.uid).update({ timeMachine: userData.timeMachine }).then(() => { updateUI(); alert(`❌ THẤT BẠI! Hãy thử lại nếu còn lượt.`); }); }
     });
-}
 
-function buyTimeMachine() { let todayStr = new Date().toLocaleDateString('en-GB'); if (userData.timeMachine && userData.timeMachine.status === 'in_progress') { openTimeMachineModal(); return; } if (userData.timeMachine && userData.timeMachine.lastAttemptDate !== todayStr) { userData.timeMachine.attemptsToday = 0; userData.timeMachine.lastAttemptDate = todayStr; } if (userData.timeMachine && userData.timeMachine.attemptsToday >= 3) return alert("Hết lượt hôm nay!"); let cost = userData.timeMachine.missedDays * 10000; if (userData.gold < cost) return alert("Không đủ Vàng!"); if (!confirm(`XÁC NHẬN GIAO DỊCH:\nTiêu tốn ${cost} Vàng để thực hiện thử thách.\nCần vượt qua ${userData.timeMachine.missedDays} Giai đoạn. Chấp nhận?`)) return; let allVocab = []; allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab)); if (allVocab.length < 30) return alert("Kho dữ liệu chưa đủ 30 từ."); let bank = allVocab.sort(() => Math.random() - 0.5).slice(0, Math.min(30, allVocab.length)); userData.gold -= cost; userData.timeMachine.attemptsToday++; userData.timeMachine.status = 'in_progress'; userData.timeMachine.daysRecovered = 0; userData.timeMachine.currentBank = bank; db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, timeMachine: userData.timeMachine }).then(() => { updateUI(); openTimeMachineModal(); }); }
-
-window.addEventListener('message', function(e) {
-    if (e.data === 'CORRECT' || e.data === 'SPELLING_CORRECT') { 
-        if (currentUser && userData) { 
-            let multiplier = (userData.potionX3Expiry && userData.potionX3Expiry > Date.now()) ? 3 : ((userData.potionExpiry && userData.potionExpiry > Date.now()) ? 2 : 1);
-            
-            let baseXP = (e.data === 'SPELLING_CORRECT') ? 25 : 15;
-            let baseGold = (e.data === 'SPELLING_CORRECT') ? 25 : 10;
-
-            let xpGained = baseXP * multiplier; let goldGained = baseGold * multiplier; 
-            userData.xp = (userData.xp || 0) + xpGained; userData.gold = (userData.gold || 0) + goldGained; userData.weeklyXp = (userData.weeklyXp || 0) + xpGained;
-            
-            let oldHighest = userData.highestWeeklyXp || 0; let isRecordBroken = false;
-            if (oldHighest > 0 && userData.weeklyXp > oldHighest) { userData.highestWeeklyXp = userData.weeklyXp; if (!userData.hasBrokenRecordThisWeek) { userData.hasBrokenRecordThisWeek = true; isRecordBroken = true; } } else if (oldHighest === 0 && userData.weeklyXp > 0) { userData.highestWeeklyXp = userData.weeklyXp; }
-            
-            if (window.currentLessonContext) {
-                window.currentLessonCorrectCount = (window.currentLessonCorrectCount || 0) + 1;
-                if (window.currentLessonCorrectCount === window.currentLessonTotal) {
-                    if (!userData.mastered_lessons) userData.mastered_lessons = [];
-                    if (!userData.mastered_lessons.includes(window.currentLessonContext)) {
-                        userData.mastered_lessons.push(window.currentLessonContext);
-                        userData.mastered_words = (userData.mastered_words || 0) + window.currentLessonTotal;
-                        setTimeout(() => {
-                            alert(`🎓 CHÚC MỪNG! Bạn đã hoàn thành xuất sắc 100% bài [${window.currentLessonContext}].\nCộng thêm ${window.currentLessonTotal} từ vào Quỹ Thành Thạo!`);
-                            if (typeof renderAchievements === 'function') renderAchievements();
-                        }, 1000);
-                    }
-                }
+    // =========================================================================
+    // 👁️ MẮT THẦN CHỐNG GIAN LẬN (Bản Tái Tạo - Trị Vuốt Tab Mobile)
+    // =========================================================================
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === 'hidden') { 
+            // 🛑 Bỏ chữ window.
+            if (isUnderSurveillance) {
+                if (typeof executeAntiCheatPunishment === 'function') executeAntiCheatPunishment(); 
+                if (rtdb) rtdb.goOffline(); 
             }
+        } else if (document.visibilityState === 'visible') {
+            if (rtdb) rtdb.goOnline(); 
+        }
+    });
 
-            syncStatsToCloud(); 
-            if (isRecordBroken) { document.getElementById('recordCurrentXp').innerText = userData.weeklyXp + " XP"; document.getElementById('recordOldXp').innerText = oldHighest; document.getElementById('recordModal').classList.add('active'); triggerConfetti(); } else { let anim = document.getElementById('rewardAnim'); let prefix = multiplier === 3 ? `🏺 ĐANG X3!` : (multiplier === 2 ? `🧪 ĐANG X2!` : `🎉`); anim.innerText = `${prefix} +${goldGained} 🪙 | +${xpGained} ⭐`; anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 2000); }
-        } 
-    }
-    else if (e.data === 'REQ_GLASS') { if (userData.magnifyingGlass > 0) { userData.magnifyingGlass--; syncStatsToCloud(); document.getElementById('modalFrame').contentWindow.postMessage('APPROVE_GLASS', '*'); } else { alert("Số lượng Kính Lúp hiện tại là 0!"); } }
-    else if (e.data === 'TM_NEXT_DAY') { userData.timeMachine.daysRecovered++; let allVocab = []; allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab)); userData.timeMachine.currentBank = allVocab.sort(() => Math.random() - 0.5).slice(0, Math.min(30, allVocab.length)); db.collection('vocab_users').doc(currentUser.uid).update({ timeMachine: userData.timeMachine }).then(() => { openTimeMachineModal(); }); }
-    else if (e.data === 'TM_RESULT_PASS') { closeModal(); let oldS = userData.streak; userData.streak = userData.timeMachine.lostStreak + userData.timeMachine.missedDays; userData.timeMachine = null; db.collection('vocab_users').doc(currentUser.uid).update({ streak: userData.streak, timeMachine: null }).then(() => { updateUI(); alert(`🎉 KỲ TÍCH! Chuỗi đã phục hồi lên mốc ${userData.streak}!`); triggerConfetti(); if(window.checkAndGrantStreakRewards) window.checkAndGrantStreakRewards(oldS, userData.streak); }); }
-    else if (e.data === 'TM_RESULT_FAIL') { closeModal(); userData.timeMachine.status = 'available'; userData.timeMachine.currentBank = []; db.collection('vocab_users').doc(currentUser.uid).update({ timeMachine: userData.timeMachine }).then(() => { updateUI(); alert(`❌ THẤT BẠI! Hãy thử lại nếu còn lượt.`); }); }
-});
-
-function generateCode() {
-    const raw = document.getElementById('rawInput').value.trim(); 
-    if(!raw) return alert("Yêu cầu nhập nội dung từ khóa!");
-    
-    const lines = raw.split('\n'); let vocabArray = []; 
-    for(let line of lines) { 
-        let parts = line.split('|').map(s => s.trim()); 
-        if(parts.length >= 2) vocabArray.push(`{ en: "${parts[0]}", vi: "${parts[1]}", pro: "${parts[2] || ''}", type: "${parts[3] || ''}" }`); 
-    }
-    
-    const template = `<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://cdn.tailwindcss.com"><\/script><style>body { background-color: transparent; margin: 0; padding: 10px; font-family: 'Segoe UI', sans-serif; } .perspective { perspective: 1000px; } .transform-style-3d { transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); } .backface-hidden { backface-visibility: hidden; } .rotate-y-180 { transform: rotateY(180deg); } .flipped .transform-style-3d { transform: rotateY(180deg); } .quiz-btn { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 2px solid #e0e7ff; background: white; font-weight: bold; color: #3730a3; transition: 0.2s; text-align: left; font-size: 16px; cursor: pointer;} .quiz-btn:hover { border-color: #4f46e5; background: #e0e7ff; } .quiz-btn.correct { background: #10b981; color: white; border-color: #059669; } .quiz-btn.wrong { background: #ef4444; color: white; border-color: #b91c1c; } .disabled { pointer-events: none; }</style></head><body><div id="flashcard-section" class="flex flex-col items-center w-full max-w-md mx-auto"><div class="text-center mb-4 text-indigo-800 font-bold" id="card-counter">Thẻ 1 / ${vocabArray.length}</div><div id="flashcard" class="perspective w-full h-80 cursor-pointer mb-6" onclick="flipCard()"><div class="transform-style-3d relative w-full h-full rounded-2xl shadow-lg"><div id="card-front" class="backface-hidden absolute w-full h-full bg-white rounded-2xl flex flex-col items-center justify-center p-6 border-2 border-indigo-100"><div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;"><div id="word-en" class="text-5xl font-extrabold text-indigo-900">Word</div><button onclick="speakWord(document.getElementById('word-en').innerText); event.stopPropagation();" style="background:none; border:none; font-size: 28px; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="Nghe phát âm">🔊</button></div><div id="word-pro" class="text-lg text-gray-500 mb-4 font-mono">/pronunciation/</div><span id="word-type" class="px-4 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold uppercase">Type</span></div><div id="card-back" class="backface-hidden rotate-y-180 absolute w-full h-full bg-gradient-to-br from-indigo-600 to-blue-800 rounded-2xl flex flex-col items-center justify-center p-6 text-white text-center"><div id="word-vi" class="text-3xl font-bold text-yellow-300">Nghĩa</div></div></div></div><div class="flex gap-4 w-full"><button onclick="prevCard()" class="flex-1 py-3 rounded-xl bg-gray-200 text-gray-700 font-bold hover:bg-gray-300">⬅ Trước</button><button onclick="nextCard()" id="next-btn" class="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700">Tiếp ➡</button></div></div><div id="summary-section" class="hidden w-full max-w-md mx-auto relative"><div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100"><h2 class="text-xl font-bold text-indigo-800 mb-4 text-center border-b pb-3 flex items-center justify-center gap-2">📄 Vocabulary Summary</h2><div id="summary-list" class="max-h-96 overflow-y-auto pr-2 space-y-2"></div></div><button onclick="startQuiz()" class="w-full py-3 rounded-xl bg-yellow-500 text-white font-bold hover:bg-yellow-600 text-lg shadow-md transition mb-3">Làm Trắc Nghiệm 🪙</button><button onclick="startSpelling()" class="w-full py-3 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700 text-lg shadow-md transition">Thử Thách Gõ Chính Tả ✍️</button></div><div id="quiz-section" class="hidden w-full max-w-md mx-auto relative"><div class="text-center mb-4"><span class="inline-block px-4 py-1 bg-yellow-100 text-yellow-800 font-bold rounded-full text-sm mb-2">Bài Tập Trắc Nghiệm 🪙</span><div id="timer-display" style="position: relative; width: 70px; height: 70px; margin: 0 auto 10px auto;"><svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg);" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"></circle><circle id="timer-circle" cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"></circle></svg><div id="timer-text" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; color: #ef4444;">15</div></div><button id="glass-btn" onclick="requestGlass()" class="px-3 py-1 bg-blue-100 text-blue-700 font-bold rounded-lg text-sm mb-4 hover:bg-blue-200 transition">🔍 Dùng Kính Lúp (50/50)</button><div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 8px;"><h2 id="quiz-question" class="text-4xl font-extrabold text-indigo-900">Word</h2><button onclick="speakWord(document.getElementById('quiz-question').innerText);" style="background:none; border:none; font-size: 24px; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="Nghe phát âm">🔊</button></div></div><div id="quiz-options" class="w-full"></div></div><div id="spelling-section" class="hidden w-full max-w-md mx-auto relative"><div class="text-center mb-4"><span class="inline-block px-4 py-1 bg-purple-100 text-purple-800 font-bold rounded-full text-sm mb-2">Gõ Chính Tả ✍️</span><div style="position: relative; width: 70px; height: 70px; margin: 0 auto 10px auto;"><svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg);" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"></circle><circle id="spell-timer-circle" cx="50" cy="50" r="45" fill="none" stroke="#9333ea" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"></circle></svg><div id="spell-timer-text" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; color: #9333ea;">30</div></div><h2 id="spell-question" class="text-3xl font-extrabold text-indigo-900 mt-2 mb-1">Nghĩa Tiếng Việt</h2><div class="text-xs text-gray-500 mb-4">(Mẹo: Có thể đảo thứ tự từ, gõ từ có dấu trước)</div></div><div id="spell-inputs" class="flex flex-wrap justify-center gap-2 mb-6 w-full"></div><button onclick="submitSpelling()" id="spell-submit-btn" class="w-full py-3 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700 text-lg shadow-md transition">Chốt Đáp Án (Enter)</button></div><script>function speakWord(text) { if ('speechSynthesis' in window) { let msg = new SpeechSynthesisUtterance(text); let isChinese = /[\\u4E00-\\u9FA5]/.test(text); msg.lang = isChinese ? 'zh-CN' : 'en-US'; msg.rate = 0.9; let voices = window.speechSynthesis.getVoices(); if(isChinese) { let zhVoice = voices.find(v => v.lang.includes('zh')); if(zhVoice) msg.voice = zhVoice; } else { let femaleVoice = voices.find(v => v.name.includes('Zira') || v.name.includes('Google US English') || v.name.includes('Hazel') || v.name.includes('Samantha')); if (femaleVoice) { msg.voice = femaleVoice; } } window.speechSynthesis.speak(msg); } } const vocabList = [${vocabArray.join(',\n')}]; let currentIndex = 0; const flashcardEl = document.getElementById('flashcard'); function loadCard(index) { flashcardEl.classList.remove('flipped'); setTimeout(() => { document.getElementById('word-en').innerText = vocabList[index].en; document.getElementById('word-pro').innerText = vocabList[index].pro; document.getElementById('word-type').innerText = vocabList[index].type; document.getElementById('word-vi').innerText = vocabList[index].vi; document.getElementById('card-counter').innerText = 'Thẻ ' + (index + 1) + ' / ' + vocabList.length; const nextBtn = document.getElementById('next-btn'); if (index === vocabList.length - 1) { nextBtn.innerText = "Xem Tổng Hợp 📄"; nextBtn.className = "flex-1 py-3 rounded-xl bg-yellow-500 text-white font-bold hover:bg-yellow-600"; } else { nextBtn.innerText = "Tiếp ➡"; nextBtn.className = "flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700"; } }, 150); } function flipCard() { flashcardEl.classList.toggle('flipped'); } function prevCard() { if (currentIndex > 0) { currentIndex--; loadCard(currentIndex); } } function nextCard() { if (currentIndex < vocabList.length - 1) { currentIndex++; loadCard(currentIndex); } else { showSummary(); } } function showSummary() { document.getElementById('flashcard-section').classList.add('hidden'); document.getElementById('summary-section').classList.remove('hidden'); const listContainer = document.getElementById('summary-list'); listContainer.innerHTML = ''; vocabList.forEach(item => { let proText = item.pro ? \`<span class="text-sm text-gray-500 font-mono ml-2">\${item.pro}</span>\` : ''; listContainer.innerHTML += \`<div class="border-b border-gray-100 pb-3 flex justify-between items-center hover:bg-gray-50 p-2 rounded-lg transition"><div><div class="flex items-baseline"><span class="text-lg font-bold text-gray-900">\${item.en}</span>\${proText}</div><div class="text-sm text-gray-600 mt-1">\${item.vi}</div></div><button onclick="speakWord('\${item.en}')" class="text-indigo-500 hover:text-indigo-700 text-2xl" title="Nghe phát âm">🔊</button></div>\`; }); } let currentQuizIndex = 0; let quizOrder = []; let timerId; let timeLeft = 15; let glassUsedThisQuestion = false; function startTimer() { timeLeft = 15; document.getElementById('timer-circle').style.strokeDashoffset = '0'; document.getElementById('timer-text').innerText = timeLeft; clearInterval(timerId); timerId = setInterval(() => { timeLeft--; const offset = 283 - (timeLeft / 15) * 283; document.getElementById('timer-circle').style.strokeDashoffset = offset; document.getElementById('timer-text').innerText = timeLeft; if(timeLeft <= 0) { clearInterval(timerId); timeOut(); } }, 1000); } function timeOut() { const optionsContainer = document.getElementById('quiz-options'); optionsContainer.classList.add('disabled'); const correctWord = vocabList[quizOrder[currentQuizIndex]]; Array.from(optionsContainer.children).forEach(child => { child.style.visibility = 'visible'; if (child.innerText === correctWord.vi) child.classList.add('correct'); else child.classList.add('wrong'); }); setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadQuizQuestion(); else finishQuiz(); }, 2000); } function startQuiz() { document.getElementById('summary-section').classList.add('hidden'); document.getElementById('quiz-section').classList.remove('hidden'); quizOrder = [...Array(vocabList.length).keys()].sort(() => Math.random() - 0.5); currentQuizIndex = 0; loadQuizQuestion(); } function loadQuizQuestion() { glassUsedThisQuestion = false; document.getElementById('glass-btn').classList.remove('hidden'); const optionsContainer = document.getElementById('quiz-options'); optionsContainer.innerHTML = ''; optionsContainer.classList.remove('disabled'); const correctWord = vocabList[quizOrder[currentQuizIndex]]; document.getElementById('quiz-question').innerText = correctWord.en; let options = [correctWord.vi]; let wrongOptions = vocabList.filter(w => w.en !== correctWord.en).map(w => w.vi); wrongOptions = wrongOptions.sort(() => Math.random() - 0.5).slice(0, 3); options = options.concat(wrongOptions); options.sort(() => Math.random() - 0.5); options.forEach(opt => { const btn = document.createElement('button'); btn.className = 'quiz-btn'; btn.innerText = opt; btn.onclick = () => checkAnswer(btn, opt, correctWord.vi); optionsContainer.appendChild(btn); }); startTimer(); } function requestGlass() { if(glassUsedThisQuestion) return; if(window.parent) window.parent.postMessage('REQ_GLASS', '*'); } window.addEventListener('message', function(e) { if(e.data === 'APPROVE_GLASS') { glassUsedThisQuestion = true; document.getElementById('glass-btn').classList.add('hidden'); const optionsContainer = document.getElementById('quiz-options'); const correctWord = vocabList[quizOrder[currentQuizIndex]]; let hiddenCount = 0; Array.from(optionsContainer.children).forEach(btn => { if(btn.innerText !== correctWord.vi && hiddenCount < 2) { btn.style.visibility = 'hidden'; hiddenCount++; } }); } }); function finishQuiz() { const optionsContainer = document.getElementById('quiz-options'); optionsContainer.innerHTML = '<div class="text-center p-6 bg-green-100 text-green-800 rounded-xl font-bold text-xl">🎉 Đã hoàn thành Trắc Nghiệm! Nhấn F5 để ôn lại.</div>'; document.getElementById('timer-display').style.display = 'none'; document.getElementById('glass-btn').style.display = 'none'; } function checkAnswer(btn, selectedVi, correctVi) { clearInterval(timerId); const optionsContainer = document.getElementById('quiz-options'); optionsContainer.classList.add('disabled'); if (selectedVi === correctVi) { btn.classList.add('correct'); if(window.parent) window.parent.postMessage('CORRECT', '*'); setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadQuizQuestion(); else finishQuiz(); }, 1500); } else { btn.classList.add('wrong'); Array.from(optionsContainer.children).forEach(child => { child.style.visibility = 'visible'; if (child.innerText === correctVi) child.classList.add('correct'); }); setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadQuizQuestion(); else finishQuiz(); }, 2000); } } let spellTimerId; let spellTimeLeft = 30; function startSpelling() { document.getElementById('summary-section').classList.add('hidden'); document.getElementById('spelling-section').classList.remove('hidden'); quizOrder = [...Array(vocabList.length).keys()].sort(() => Math.random() - 0.5); currentQuizIndex = 0; loadSpellingQuestion(); } function loadSpellingQuestion() { const correctWord = vocabList[quizOrder[currentQuizIndex]]; document.getElementById('spell-question').innerText = correctWord.vi; document.getElementById('spell-submit-btn').classList.remove('hidden'); const container = document.getElementById('spell-inputs'); container.innerHTML = ''; container.style.position = 'relative'; let words = correctWord.en.trim().split(' '); words.forEach((w) => { let wordDiv = document.createElement('div'); wordDiv.className = 'flex flex-wrap justify-center gap-1 sm:gap-2 mb-3 w-full pointer-events-none relative z-0'; w.split('').forEach((char) => { let inp = document.createElement('input'); inp.className = 'spell-char w-8 sm:w-10 h-11 sm:h-12 text-center text-lg sm:text-xl font-bold rounded-lg border-2 border-purple-300 uppercase bg-white shadow-sm shrink-0'; inp.dataset.char = char.toUpperCase(); inp.readOnly = true; inp.tabIndex = -1; if(char === '-' || char === '/') { inp.value = char; inp.disabled = true; inp.classList.add('bg-gray-200'); } wordDiv.appendChild(inp); }); container.appendChild(wordDiv); }); let hiddenInp = document.getElementById('hidden-spell-input'); if(!hiddenInp) { hiddenInp = document.createElement('input'); hiddenInp.id = 'hidden-spell-input'; hiddenInp.type = 'text'; hiddenInp.setAttribute('autocomplete', 'off'); hiddenInp.setAttribute('autocorrect', 'off'); hiddenInp.setAttribute('spellcheck', 'false'); hiddenInp.className = 'absolute top-0 left-0 w-full h-full opacity-0 z-10 cursor-text'; container.appendChild(hiddenInp); } hiddenInp.value = ''; hiddenInp.disabled = false; let allInputs = Array.from(document.querySelectorAll('.spell-char')); hiddenInp.oninput = function() { let val = this.value.toUpperCase().replace(/[\\\\s\\\\-\\\\/]/g, ''); let vIdx = 0; allInputs.forEach(box => { if(!box.disabled) { box.value = val[vIdx] || ''; if(val[vIdx]) box.classList.replace('border-purple-300', 'border-purple-600'); else box.classList.replace('border-purple-600', 'border-purple-300'); vIdx++; } }); }; hiddenInp.onkeydown = function(e) { if(e.key === 'Enter') submitSpelling(); }; setTimeout(() => hiddenInp.focus(), 300); spellTimeLeft = 30; document.getElementById('spell-timer-circle').style.strokeDashoffset = '0'; document.getElementById('spell-timer-text').innerText = spellTimeLeft; clearInterval(spellTimerId); spellTimerId = setInterval(() => { spellTimeLeft--; const offset = 283 - (spellTimeLeft / 30) * 283; document.getElementById('spell-timer-circle').style.strokeDashoffset = offset; document.getElementById('spell-timer-text').innerText = spellTimeLeft; if(spellTimeLeft <= 0) { checkSpellingAnswer(true); } }, 1000); } function submitSpelling() { checkSpellingAnswer(false); } function checkSpellingAnswer(isTimeOut) { clearInterval(spellTimerId); document.getElementById('spell-submit-btn').classList.add('hidden'); let allInputs = Array.from(document.querySelectorAll('.spell-char')); allInputs.forEach(i => i.disabled = true); let hiddenInp = document.getElementById('hidden-spell-input'); if(hiddenInp) hiddenInp.disabled = true; let finalStr = allInputs.map(box => box.value || '').join('').toUpperCase(); let correctStr = vocabList[quizOrder[currentQuizIndex]].en.toUpperCase().trim(); let compareUser = finalStr.split('/').map(s => s.replace(/[\\\\s\\\\-]/g, '').trim()).sort().join('/'); let compareCorrect = correctStr.split('/').map(s => s.replace(/[\\\\s\\\\-]/g, '').trim()).sort().join('/'); const isCorrect = (compareUser === compareCorrect) && !isTimeOut; if (isCorrect) { allInputs.forEach(i => { i.style.backgroundColor = '#d1fae5'; i.style.borderColor = '#10b981'; i.style.color = '#065f46'; }); if(window.parent) window.parent.postMessage('SPELLING_CORRECT', '*'); setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadSpellingQuestion(); else finishSpelling(); }, 1200); } else { allInputs.forEach(inp => { inp.style.backgroundColor = '#fee2e2'; inp.style.borderColor = '#ef4444'; inp.style.color = '#991b1b'; inp.value = inp.dataset.char; }); setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadSpellingQuestion(); else finishSpelling(); }, 2500); } } function finishSpelling() { document.getElementById('spell-inputs').innerHTML = ''; document.getElementById('spell-question').style.display = 'none'; document.getElementById('spelling-section').innerHTML += '<div class="text-center p-6 bg-purple-100 text-purple-800 rounded-xl font-bold text-xl">🎉 Đã hoàn thành thử thách Gõ Chính Tả! Nhấn F5 để ôn lại.</div>'; } loadCard(0); <\/script></body></html>`;
-    document.getElementById('generatedCode').value = template;
-    let evalVocab = []; try { evalVocab = eval("[" + vocabArray.join(',') + "]"); } catch(e) {}
-    currentGeneratedVocab = evalVocab;
-    alert("Đúc mã thành công! Giao diện đã tương thích hoàn hảo với Mobile!");
-}
-
-function openTimeMachineModal() {
-    let bank = userData.timeMachine.currentBank; let vocabArray = bank.map(v => `{ en: "${v.en.replace(/"/g, '\\"')}", vi: "${v.vi.replace(/"/g, '\\"')}", pro: "${(v.pro||'').replace(/"/g, '\\"')}", type: "${(v.type||'').replace(/"/g, '\\"')}" }`); let currentDay = (userData.timeMachine.daysRecovered || 0) + 1; let totalDays = userData.timeMachine.missedDays;
-    let tmTemplate = `<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://cdn.tailwindcss.com"><\/script><style>body { background-color: #f3e5f5; margin: 0; padding: 10px; font-family: 'Segoe UI', sans-serif; } .perspective { perspective: 1000px; } .transform-style-3d { transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); } .backface-hidden { backface-visibility: hidden; } .rotate-y-180 { transform: rotateY(180deg); } .flipped .transform-style-3d { transform: rotateY(180deg); } .quiz-btn { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 2px solid #e0e7ff; background: white; font-weight: bold; color: #3730a3; transition: 0.2s; text-align: left; font-size: 16px; cursor: pointer;} .quiz-btn:hover { border-color: #4f46e5; background: #e0e7ff; } .quiz-btn.correct { background: #10b981; color: white; border-color: #059669; } .quiz-btn.wrong { background: #ef4444; color: white; border-color: #b91c1c; } .disabled { pointer-events: none; }</style></head><body><div id="flashcard-section" class="flex flex-col items-center w-full max-w-md mx-auto"><div class="text-center mb-4 text-purple-800 font-bold text-xl">⏳ KHỔ HÌNH: NGÀY ${currentDay}/${totalDays} ⏳</div><div class="text-center mb-4 text-purple-600 font-bold" id="card-counter">Thẻ 1 / ${vocabArray.length}</div><div id="flashcard" class="perspective w-full h-80 cursor-pointer mb-6" onclick="flipCard()"><div class="transform-style-3d relative w-full h-full rounded-2xl shadow-lg"><div id="card-front" class="backface-hidden absolute w-full h-full bg-white rounded-2xl flex flex-col items-center justify-center p-6 border-4 border-purple-300"><div id="word-en" class="text-5xl font-extrabold text-purple-900 mb-2">Word</div><div id="word-pro" class="text-lg text-gray-500 mb-4 font-mono">/pronunciation/</div><span id="word-type" class="px-4 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-bold uppercase">Type</span></div><div id="card-back" class="backface-hidden rotate-y-180 absolute w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex flex-col items-center justify-center p-6 text-white text-center"><div id="word-vi" class="text-3xl font-bold text-yellow-300">Nghĩa</div></div></div></div><div class="flex gap-4 w-full"><button onclick="prevCard()" class="flex-1 py-3 rounded-xl bg-gray-300 text-gray-700 font-bold hover:bg-gray-400">⬅ Trước</button><button onclick="nextCard()" id="next-btn" class="flex-1 py-3 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700">Tiếp ➡</button></div></div><div id="quiz-section" class="hidden w-full max-w-md mx-auto relative"><div class="text-center mb-4"><span class="inline-block px-4 py-1 bg-red-100 text-red-800 font-bold rounded-full text-sm mb-2">Sinh Tử Gõ Chính Tả: ${currentDay}/${totalDays} ⏳</span><div style="position: relative; width: 70px; height: 70px; margin: 0 auto 10px auto;"><svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg);" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"></circle><circle id="spell-timer-circle" cx="50" cy="50" r="45" fill="none" stroke="#dc2626" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"></circle></svg><div id="spell-timer-text" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; color: #dc2626;">25</div></div><h2 id="spell-question" class="text-3xl font-extrabold text-purple-900 mt-2 mb-1">Nghĩa Tiếng Việt</h2><div class="text-xs text-gray-500 mb-4">(Mẹo: Có thể đảo thứ tự từ, gõ từ có dấu trước)</div></div><div id="spell-inputs" class="flex flex-wrap justify-center gap-2 mb-6 w-full"></div><button onclick="submitSpelling()" id="spell-submit-btn" class="w-full py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 text-lg shadow-md transition">Chốt Đáp Án (Enter)</button></div><script>const vocabList = [${vocabArray.join(',\n')}]; let currentIndex = 0; const flashcardEl = document.getElementById('flashcard'); function loadCard(index) { flashcardEl.classList.remove('flipped'); setTimeout(() => { document.getElementById('word-en').innerText = vocabList[index].en; document.getElementById('word-pro').innerText = vocabList[index].pro; document.getElementById('word-type').innerText = vocabList[index].type; document.getElementById('word-vi').innerText = vocabList[index].vi; document.getElementById('card-counter').innerText = 'Thẻ ' + (index + 1) + ' / ' + vocabList.length; const nextBtn = document.getElementById('next-btn'); if (index === vocabList.length - 1) { nextBtn.innerText = "BẮT ĐẦU THI"; nextBtn.className = "flex-1 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700"; } else { nextBtn.innerText = "Tiếp ➡"; nextBtn.className = "flex-1 py-3 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700"; } }, 150); } function flipCard() { flashcardEl.classList.toggle('flipped'); } function prevCard() { if (currentIndex > 0) { currentIndex--; loadCard(currentIndex); } } function nextCard() { if (currentIndex < vocabList.length - 1) { currentIndex++; loadCard(currentIndex); } else { startSpelling(); } } let currentQuizIndex = 0; let quizOrder = []; let spellTimerId; let spellTimeLeft = 25; let correctAnswersCount = 0; function startSpelling() { document.getElementById('flashcard-section').classList.add('hidden'); document.getElementById('quiz-section').classList.remove('hidden'); quizOrder = [...Array(vocabList.length).keys()].sort(() => Math.random() - 0.5); currentQuizIndex = 0; loadSpellingQuestion(); } function loadSpellingQuestion() { const correctWord = vocabList[quizOrder[currentQuizIndex]]; document.getElementById('spell-question').innerText = correctWord.vi; document.getElementById('spell-submit-btn').classList.remove('hidden'); const container = document.getElementById('spell-inputs'); container.innerHTML = ''; container.style.position = 'relative'; let words = correctWord.en.trim().split(' '); words.forEach((w) => { let wordDiv = document.createElement('div'); wordDiv.className = 'flex flex-wrap justify-center gap-1 sm:gap-2 mb-3 w-full pointer-events-none relative z-0'; w.split('').forEach((char) => { let inp = document.createElement('input'); inp.className = 'spell-char w-8 sm:w-10 h-11 sm:h-12 text-center text-lg sm:text-xl font-bold rounded-lg border-2 border-red-300 uppercase bg-white shadow-sm shrink-0'; inp.dataset.char = char.toUpperCase(); inp.readOnly = true; inp.tabIndex = -1; if(char === '-' || char === '/') { inp.value = char; inp.disabled = true; inp.classList.add('bg-gray-200'); } wordDiv.appendChild(inp); }); container.appendChild(wordDiv); }); let hiddenInp = document.getElementById('hidden-spell-input'); if(!hiddenInp) { hiddenInp = document.createElement('input'); hiddenInp.id = 'hidden-spell-input'; hiddenInp.type = 'text'; hiddenInp.setAttribute('autocomplete', 'off'); hiddenInp.setAttribute('autocorrect', 'off'); hiddenInp.setAttribute('spellcheck', 'false'); hiddenInp.className = 'absolute top-0 left-0 w-full h-full opacity-0 z-10 cursor-text'; container.appendChild(hiddenInp); } hiddenInp.value = ''; hiddenInp.disabled = false; let allInputs = Array.from(document.querySelectorAll('.spell-char')); hiddenInp.oninput = function() { let val = this.value.toUpperCase().replace(/[\\\\s\\\\-\\\\/]/g, ''); let vIdx = 0; allInputs.forEach(box => { if(!box.disabled) { box.value = val[vIdx] || ''; if(val[vIdx]) box.classList.replace('border-red-300', 'border-red-600'); else box.classList.replace('border-red-600', 'border-red-300'); vIdx++; } }); }; hiddenInp.onkeydown = function(e) { if(e.key === 'Enter') submitSpelling(); }; setTimeout(() => hiddenInp.focus(), 300); spellTimeLeft = 25; document.getElementById('spell-timer-circle').style.strokeDashoffset = '0'; document.getElementById('spell-timer-text').innerText = spellTimeLeft; clearInterval(spellTimerId); spellTimerId = setInterval(() => { spellTimeLeft--; const offset = 283 - (spellTimeLeft / 25) * 283; document.getElementById('spell-timer-circle').style.strokeDashoffset = offset; document.getElementById('spell-timer-text').innerText = spellTimeLeft; if(spellTimeLeft <= 0) { checkSpellingAnswer(true); } }, 1000); } function submitSpelling() { checkSpellingAnswer(false); } function checkSpellingAnswer(isTimeOut) { clearInterval(spellTimerId); document.getElementById('spell-submit-btn').classList.add('hidden'); let allInputs = Array.from(document.querySelectorAll('.spell-char')); allInputs.forEach(i => i.disabled = true); let hiddenInp = document.getElementById('hidden-spell-input'); if(hiddenInp) hiddenInp.disabled = true; let finalStr = allInputs.map(box => box.value || '').join('').toUpperCase(); let correctStr = vocabList[quizOrder[currentQuizIndex]].en.toUpperCase().trim(); let compareUser = finalStr.split('/').map(s => s.replace(/[\\\\s\\\\-]/g, '').trim()).sort().join('/'); let compareCorrect = correctStr.split('/').map(s => s.replace(/[\\\\s\\\\-]/g, '').trim()).sort().join('/'); const isCorrect = (compareUser === compareCorrect) && !isTimeOut; if (isCorrect) { allInputs.forEach(i => { i.style.backgroundColor = '#d1fae5'; i.style.borderColor = '#10b981'; i.style.color = '#065f46'; }); correctAnswersCount++; setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadSpellingQuestion(); else finishSpelling(); }, 800); } else { allInputs.forEach(inp => { inp.style.backgroundColor = '#fee2e2'; inp.style.borderColor = '#ef4444'; inp.style.color = '#991b1b'; inp.value = inp.dataset.char; }); setTimeout(() => { currentQuizIndex++; if (currentQuizIndex < vocabList.length) loadSpellingQuestion(); else finishSpelling(); }, 2000); } } function finishSpelling() { clearInterval(spellTimerId); document.getElementById('spell-timer-text').parentElement.style.display = 'none'; let ratio = correctAnswersCount / vocabList.length; let container = document.getElementById('spell-inputs'); document.getElementById('spell-question').style.display = 'none'; if (ratio >= 0.8) { if (${currentDay} < ${totalDays}) { container.innerHTML = '<div class="text-center p-6 bg-green-100 text-green-900 rounded-xl font-bold text-xl mb-4 w-full">✅ Đã vượt qua Nhịp ' + ${currentDay} + ' (' + correctAnswersCount + '/' + vocabList.length + ')</div><button onclick="window.parent.postMessage(\\'TM_NEXT_DAY\\', \\'*\\')" class="w-full py-3 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700">Chuyển sang ngày tiếp theo ➡</button>'; } else { container.innerHTML = '<div class="text-center p-6 bg-yellow-100 text-yellow-900 rounded-xl font-bold text-xl mb-4 w-full">🎉 XUYÊN KHÔNG THÀNH CÔNG! (' + correctAnswersCount + '/' + vocabList.length + ')</div><button onclick="window.parent.postMessage(\\'TM_RESULT_PASS\\', \\'*\\')" class="w-full py-3 rounded-xl bg-yellow-600 text-white font-bold hover:bg-yellow-700">Nhận Lại Chuỗi Của Bạn</button>'; } } else { container.innerHTML = '<div class="text-center p-6 bg-red-100 text-red-900 rounded-xl font-bold text-xl mb-4 w-full">❌ THẤT BẠI! Bạn chỉ đạt ' + correctAnswersCount + '/' + vocabList.length + '. Yêu cầu >= 80%.</div><button onclick="window.parent.postMessage(\\'TM_RESULT_FAIL\\', \\'*\\')" class="w-full py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700">Chấp nhận hình phạt</button>'; } } loadCard(0); <\/script></body></html>`;
-    document.getElementById('modalFrame').srcdoc = tmTemplate; document.getElementById('previewModal').classList.add('active');
-}
-
-window.addEventListener('message', function(e) {
-    if (e.data === 'CORRECT' || e.data === 'SPELLING_CORRECT') { 
-        if (currentUser && userData) { 
-            let multiplier = (userData.potionX3Expiry && userData.potionX3Expiry > Date.now()) ? 3 : ((userData.potionExpiry && userData.potionExpiry > Date.now()) ? 2 : 1);
-            
-            let baseXP = (e.data === 'SPELLING_CORRECT') ? 25 : 15;
-            let baseGold = (e.data === 'SPELLING_CORRECT') ? 25 : 10;
-
-            let xpGained = baseXP * multiplier; let goldGained = baseGold * multiplier; 
-            userData.xp = (userData.xp || 0) + xpGained; userData.gold = (userData.gold || 0) + goldGained; userData.weeklyXp = (userData.weeklyXp || 0) + xpGained;
-            
-            let oldHighest = userData.highestWeeklyXp || 0; let isRecordBroken = false;
-            if (oldHighest > 0 && userData.weeklyXp > oldHighest) { userData.highestWeeklyXp = userData.weeklyXp; if (!userData.hasBrokenRecordThisWeek) { userData.hasBrokenRecordThisWeek = true; isRecordBroken = true; } } else if (oldHighest === 0 && userData.weeklyXp > 0) { userData.highestWeeklyXp = userData.weeklyXp; }
-            
-            if (window.currentLessonContext) {
-                window.currentLessonCorrectCount = (window.currentLessonCorrectCount || 0) + 1;
-                if (window.currentLessonCorrectCount === window.currentLessonTotal) {
-                    if (!userData.mastered_lessons) userData.mastered_lessons = [];
-                    if (!userData.mastered_lessons.includes(window.currentLessonContext)) {
-                        userData.mastered_lessons.push(window.currentLessonContext);
-                        userData.mastered_words = (userData.mastered_words || 0) + window.currentLessonTotal;
-                        setTimeout(() => {
-                            alert(`🎓 CHÚC MỪNG! Bạn đã hoàn thành xuất sắc 100% bài [${window.currentLessonContext}].\nCộng thêm ${window.currentLessonTotal} từ vào Quỹ Thành Thạo!`);
-                            if (typeof renderAchievements === 'function') renderAchievements();
-                        }, 1000);
-                    }
-                }
-            }
-
-            syncStatsToCloud(); 
-            if (isRecordBroken) { document.getElementById('recordCurrentXp').innerText = userData.weeklyXp + " XP"; document.getElementById('recordOldXp').innerText = oldHighest; document.getElementById('recordModal').classList.add('active'); triggerConfetti(); } else { let anim = document.getElementById('rewardAnim'); let prefix = multiplier === 3 ? `🏺 ĐANG X3!` : (multiplier === 2 ? `🧪 ĐANG X2!` : `🎉`); anim.innerText = `${prefix} +${goldGained} 🪙 | +${xpGained} ⭐`; anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 2000); }
-        } 
-    }
-    else if (e.data === 'REQ_GLASS') { if (userData.magnifyingGlass > 0) { userData.magnifyingGlass--; syncStatsToCloud(); document.getElementById('modalFrame').contentWindow.postMessage('APPROVE_GLASS', '*'); } else { alert("Số lượng Kính Lúp hiện tại là 0!"); } }
-    else if (e.data === 'TM_NEXT_DAY') { userData.timeMachine.daysRecovered++; let allVocab = []; allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab)); userData.timeMachine.currentBank = allVocab.sort(() => Math.random() - 0.5).slice(0, Math.min(30, allVocab.length)); db.collection('vocab_users').doc(currentUser.uid).update({ timeMachine: userData.timeMachine }).then(() => { openTimeMachineModal(); }); }
-    else if (e.data === 'TM_RESULT_PASS') { closeModal(); let oldS = userData.streak; userData.streak = userData.timeMachine.lostStreak + userData.timeMachine.missedDays; userData.timeMachine = null; db.collection('vocab_users').doc(currentUser.uid).update({ streak: userData.streak, timeMachine: null }).then(() => { updateUI(); alert(`🎉 KỲ TÍCH! Chuỗi đã phục hồi lên mốc ${userData.streak}!`); triggerConfetti(); if(window.checkAndGrantStreakRewards) window.checkAndGrantStreakRewards(oldS, userData.streak); }); }
-    else if (e.data === 'TM_RESULT_FAIL') { closeModal(); userData.timeMachine.status = 'available'; userData.timeMachine.currentBank = []; db.collection('vocab_users').doc(currentUser.uid).update({ timeMachine: userData.timeMachine }).then(() => { updateUI(); alert(`❌ THẤT BẠI! Hãy thử lại nếu còn lượt.`); }); }
-});
-
-// =========================================================================
-// 👁️ MẮT THẦN CHỐNG GIAN LẬN (Bản Tái Tạo - Trị Vuốt Tab Mobile)
-// =========================================================================
-document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === 'hidden') { 
+    window.addEventListener("blur", () => {
+        // 🛑 Bỏ chữ window.
         if (isUnderSurveillance) {
-            if (typeof executeAntiCheatPunishment === 'function') executeAntiCheatPunishment(); 
+            if (typeof executeAntiCheatPunishment === 'function') executeAntiCheatPunishment();
             if (rtdb) rtdb.goOffline(); 
         }
-    } else if (document.visibilityState === 'visible') {
+    });
+
+    window.addEventListener("focus", () => {
         if (rtdb) rtdb.goOnline(); 
-    }
-});
-
-window.addEventListener("blur", () => {
-    if (isUnderSurveillance) {
-        if (typeof executeAntiCheatPunishment === 'function') executeAntiCheatPunishment();
-        if (rtdb) rtdb.goOffline(); 
-    }
-});
-
-window.addEventListener("focus", () => {
-    if (rtdb) rtdb.goOnline(); 
-});
-// =========================================================================
+    });
+    // =========================================================================
