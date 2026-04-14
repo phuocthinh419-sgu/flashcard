@@ -49,11 +49,22 @@
         .lib-actions { display: flex; gap: 8px; margin-top: 10px; } .lib-actions button { flex: 1; }
         .btn-delete-lib { position: absolute; top: 10px; right: 10px; background: var(--danger); color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer; display: none;}
         
-        .shop-item { background: #fff; padding: 25px 20px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center; border: 2px solid transparent; transition: all 0.3s ease; position: relative;}
+       .shop-item { 
+    background: #fff; padding: 25px 20px; border-radius: 15px; 
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center; 
+    border: 2px solid transparent; transition: all 0.3s ease; 
+    position: relative;
+    display: flex; flex-direction: column; justify-content: space-between; 
+}
         .shop-item:hover { border-color: #fbc02d; transform: translateY(-5px); }
         .item-icon { font-size: 55px; margin-bottom: 10px; }
         .item-title { font-size: 18px; color: var(--primary); margin-bottom: 5px; font-weight: bold;}
-        .item-desc { font-size: 13px; color: #666; height: 50px;}
+        .item-desc { 
+    font-size: 13px; color: #666; 
+    min-height: 55px; /* Thần đã nới rộng thêm một chút để an toàn */
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 10px;
+}
         .item-price { font-size: 22px; font-weight: 900; color: #fbc02d; margin: 15px 0; background: #fff9c4; padding: 5px; border-radius: 10px; display: inline-block; width: fit-content; margin-left: auto; margin-right: auto;}
         
         .workspace { display: flex; gap: 20px; flex: 1; min-height: 0; flex-wrap: wrap;}
