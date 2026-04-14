@@ -1711,9 +1711,10 @@ function submitPvPAnswer(idxOrStr) {
         if (typeof idxOrStr === 'string') {
             selectedText = idxOrStr.trim().toUpperCase();
             
-            let compareUser = selectedText.replace(/[\s\-\/]/g, '');
-            let compareCorrect = m.current_q.en.toUpperCase().replace(/[\s\-\/]/g, '');
-            isCorrect = compareUser === compareCorrect;
+            // SỬA Ở ĐÂY: Thuật toán so sánh mới (bỏ qua dấu /, xếp theo cụm)
+            let compareUser = selectedText.split('/').map(s => s.replace(/[\s\-]/g, '').trim()).sort().join('/');
+            let compareCorrect = m.current_q.en.toUpperCase().split('/').map(s => s.replace(/[\s\-]/g, '').trim()).sort().join('/');
+            isCorrect = (compareUser === compareCorrect);
             
             let allInputs = Array.from(document.querySelectorAll('#pvpSpellContainer .spell-char'));
             let hiddenInput = document.getElementById('pvpHiddenSpell');
