@@ -1872,29 +1872,36 @@ function triggerEval() {
     }
 
     function buyTimeMachine() { let todayStr = new Date().toLocaleDateString('en-GB'); if (userData.timeMachine && userData.timeMachine.status === 'in_progress') { openTimeMachineModal(); return; } if (userData.timeMachine && userData.timeMachine.lastAttemptDate !== todayStr) { userData.timeMachine.attemptsToday = 0; userData.timeMachine.lastAttemptDate = todayStr; } if (userData.timeMachine && userData.timeMachine.attemptsToday >= 3) return alert("Hết lượt hôm nay!"); let cost = userData.timeMachine.missedDays * 10000; if (userData.gold < cost) return alert("Không đủ Vàng!"); if (!confirm(`XÁC NHẬN GIAO DỊCH:\nTiêu tốn ${cost} Vàng để thực hiện thử thách.\nCần vượt qua ${userData.timeMachine.missedDays} Giai đoạn. Chấp nhận?`)) return; let allVocab = []; allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab)); if (allVocab.length < 30) return alert("Kho dữ liệu chưa đủ 30 từ."); let bank = allVocab.sort(() => Math.random() - 0.5).slice(0, Math.min(30, allVocab.length)); userData.gold -= cost; userData.timeMachine.attemptsToday++; userData.timeMachine.status = 'in_progress'; userData.timeMachine.daysRecovered = 0; userData.timeMachine.currentBank = bank; db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, timeMachine: userData.timeMachine }).then(() => { updateUI(); openTimeMachineModal(); }); }
-   function generateCode() {
-    const raw = document.getElementById('rawInput').value.trim();
-    if (!raw) return alert("Yêu cầu nhập nội dung từ khóa!");
+  function generateCode() {
+    try {
+        const raw = document.getElementById('rawInput').value.trim();
+        if (!raw) return alert("Yêu cầu nhập nội dung từ khóa!");
 
-    const lines = raw.split('\n');
-    let vocabArray = [];
-    for (let line of lines) {
-        let parts = line.split('|').map(s => s.trim());
-        if (parts.length >= 2) {
-            vocabArray.push({ en: parts[0], vi: parts[1], pro: parts[2] || '', type: parts[3] || '' });
+        const lines = raw.split('\n');
+        let vocabArray = [];
+        for (let i = 0; i < lines.length; i++) {
+            let parts = lines[i].split('|').map(s => s.trim());
+            if (parts.length >= 2) {
+                vocabArray.push({
+                    en: parts[0],
+                    vi: parts[1],
+                    pro: parts[2] || '',
+                    type: parts[3] || ''
+                });
+            }
         }
-    }
 
-    if (vocabArray.length === 0) return alert("Định dạng không hợp lệ!");
+        if (vocabArray.length === 0) return alert("Định dạng không hợp lệ!");
 
-    const jsonVocab = JSON.stringify(vocabArray);
+        // Ép dữ liệu thành chuỗi an toàn tuyệt đối
+        const jsonVocab = JSON.stringify(vocabArray);
 
-    const fullHTML = `<!DOCTYPE html>
+        const template = `<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"><\/script>
     <style>
         body { background-color: transparent; margin: 0; padding: 10px; font-family: 'Segoe UI', sans-serif; }
         .perspective { perspective: 1000px; }
@@ -1916,7 +1923,10 @@ function triggerEval() {
         <div id="flashcard" class="perspective w-full h-80 cursor-pointer mb-6" onclick="this.classList.toggle('flipped')">
             <div class="transform-style-3d relative w-full h-full rounded-2xl shadow-lg">
                 <div class="backface-hidden absolute w-full h-full bg-white rounded-2xl flex flex-col items-center justify-center p-6 border-2 border-indigo-100">
-                    <div class="text-5xl font-extrabold text-indigo-900 mb-2" id="word-en"></div>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <div class="text-5xl font-extrabold text-indigo-900 mb-2" id="word-en"></div>
+                        <button onclick="speakWord(document.getElementById('word-en').innerText); event.stopPropagation();" style="background:none; border:none; font-size: 28px; cursor: pointer;">🔊</button>
+                    </div>
                     <div class="text-lg text-gray-500 mb-4 font-mono" id="word-pro"></div>
                     <span class="px-4 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold uppercase" id="word-type"></span>
                 </div>
@@ -1943,7 +1953,10 @@ function triggerEval() {
     <div id="quiz-section" class="hidden w-full max-w-md mx-auto">
         <div class="text-center mb-6">
             <div id="timer-text" class="text-3xl font-black text-red-500 mb-4">15</div>
-            <h2 id="quiz-question" class="text-4xl font-extrabold text-indigo-900"></h2>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+                <h2 id="quiz-question" class="text-4xl font-extrabold text-indigo-900"></h2>
+                <button onclick="speakWord(document.getElementById('quiz-question').innerText);">🔊</button>
+            </div>
         </div>
         <div id="quiz-options" class="w-full"></div>
     </div>
@@ -1958,11 +1971,590 @@ function triggerEval() {
     </div>
 
     <script>
-        const vocabList = ${jsonVocab};
+        function speakWord(t) {
+            if ('speechSynthesis' in window) {
+                let e = new SpeechSynthesisUtterance(t);
+                e.lang = /[\\u4E00-\\u9FA5]/.test(t) ? 'zh-CN' : 'en-US';
+                window.speechSynthesis.speak(e);
+            }
+        }
+
+        // Bơm dữ liệu JSON một cách an toàn tuyệt đối
+        const rawJson = '${jsonVocab.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}';
+        const vocabList = JSON.parse(rawJson);
+        
         let currentIndex = 0;
         let quizOrder = [];
-        let timerId;
-        let timeLeft = 15;
+        let timerId = null;
+        let timeLeft = 0;
+
+        function loadCard(idx) {
+            try {
+                document.getElementById('flashcard').classList.remove('flipped');
+                const item = vocabList[idx];
+                document.getElementById('word-en').innerText = item.en;
+                document.getElementById('word-pro').innerText = item.pro;
+                document.getElementById('word-type').innerText = item.type;
+                document.getElementById('word-vi').innerText = item.vi;
+                document.getElementById('card-counter').innerText = 'Thẻ ' + (idx + 1) + ' / ' + vocabList.length;
+                document.getElementById('next-btn').innerText = idx === vocabList.length - 1 ? "Xem Tổng Hợp 📄" : "Tiếp ➡";
+            } catch (err) { alert("Lỗi loadCard: " + err.message); }
+        }
+
+        function prevCard() { if (currentIndex > 0) { currentIndex--; loadCard(currentIndex); } }
+        function nextCard() { 
+            if (currentIndex < vocabList.length - 1) { currentIndex++; loadCard(currentIndex); } 
+            else { 
+                document.getElementById('flashcard-section').classList.add('hidden');
+                document.getElementById('summary-section').classList.remove('hidden');
+                const list = document.getElementById('summary-list');
+                let html = '';
+                for(let i=0; i<vocabList.length; i++) {
+                    html += '<div class="p-2 border-b flex justify-between items-center"><div><b>'+vocabList[i].en+'</b><br><span class="text-sm text-gray-600">'+vocabList[i].vi+'</span></div><button onclick="speakWord(\\''+vocabList[i].en+'\\')">🔊</button></div>';
+                }
+                list.innerHTML = html;
+            }
+        }
+
+        function startQuiz() {
+            document.getElementById('summary-section').classList.add('hidden');
+            document.getElementById('quiz-section').classList.remove('hidden');
+            quizOrder = [];
+            for (let i = 0; i < vocabList.length; i++) quizOrder.push(i);
+            quizOrder.sort(function() { return Math.random() - 0.5; });
+            currentIndex = 0;
+            loadQuiz();
+        }
+
+        function loadQuiz() {
+            try {
+                const item = vocabList[quizOrder[currentIndex]];
+                document.getElementById('quiz-question').innerText = item.en;
+                
+                let wrongOptions = [];
+                for(let i = 0; i < vocabList.length; i++) {
+                    if(vocabList[i].vi !== item.vi) wrongOptions.push(vocabList[i].vi);
+                }
+                wrongOptions.sort(function() { return Math.random() - 0.5; });
+                wrongOptions = wrongOptions.slice(0, 3);
+                
+                let options = [item.vi].concat(wrongOptions);
+                options.sort(function() { return Math.random() - 0.5; });
+                
+                const container = document.getElementById('quiz-options');
+                container.innerHTML = '';
+                container.classList.remove('disabled');
+                
+                for(let i = 0; i < options.length; i++) {
+                    let opt = options[i];
+                    let btn = document.createElement('button');
+                    btn.className = 'quiz-btn';
+                    btn.innerText = opt;
+                    btn.onclick = function() {
+                        clearInterval(timerId);
+                        container.classList.add('disabled');
+                        if (opt === item.vi) { 
+                            btn.classList.add('correct'); 
+                            if(window.parent) window.parent.postMessage('CORRECT', '*'); 
+                        } else { 
+                            btn.classList.add('wrong'); 
+                            let allBtns = document.getElementsByClassName('quiz-btn');
+                            for(let j=0; j<allBtns.length; j++) {
+                                if(allBtns[j].innerText === item.vi) allBtns[j].classList.add('correct');
+                            }
+                        }
+                        setTimeout(function() { 
+                            currentIndex++; 
+                            if (currentIndex < vocabList.length) loadQuiz(); 
+                            else finish("quiz-section", "Hoàn thành Trắc nghiệm!"); 
+                        }, 1500);
+                    };
+                    container.appendChild(btn);
+                }
+                startTimer(15, 'timer-text', function() {
+                    let btns = document.getElementsByClassName('quiz-btn');
+                    if(btns.length > 0) btns[0].click();
+                });
+            } catch (err) { alert("Lỗi loadQuiz: " + err.message); }
+        }
+
+        function startSpelling() {
+            document.getElementById('summary-section').classList.add('hidden');
+            document.getElementById('spelling-section').classList.remove('hidden');
+            quizOrder = [];
+            for (let i = 0; i < vocabList.length; i++) quizOrder.push(i);
+            quizOrder.sort(function() { return Math.random() - 0.5; });
+            currentIndex = 0;
+            loadSpelling();
+        }
+
+        function loadSpelling() {
+            try {
+                const item = vocabList[quizOrder[currentIndex]];
+                document.getElementById('spell-question').innerText = item.vi;
+                const container = document.getElementById('spell-inputs');
+                container.innerHTML = '';
+                
+                const words = item.en.trim().split(' ');
+                for(let i=0; i<words.length; i++) {
+                    let word = words[i];
+                    let div = document.createElement('div');
+                    div.className = 'flex gap-1 mb-2';
+                    let chars = word.split('');
+                    for(let j=0; j<chars.length; j++) {
+                        let char = chars[j];
+                        let input = document.createElement('input');
+                        input.className = 'spell-char';
+                        input.dataset.char = char.toUpperCase();
+                        if (char === '-' || char === '/') { 
+                            input.value = char; 
+                            input.disabled = true; 
+                            input.style.background = '#eee'; 
+                        }
+                        div.appendChild(input);
+                    }
+                    container.appendChild(div);
+                }
+                
+                let hidden = document.createElement('input');
+                hidden.style.position = 'absolute';
+                hidden.style.opacity = '0';
+                hidden.style.top = '0';
+                hidden.style.left = '0';
+                hidden.style.width = '100%';
+                hidden.style.height = '100%';
+                hidden.style.zIndex = '10';
+                hidden.id = 'h-inp';
+                container.appendChild(hidden);
+                hidden.focus();
+                
+                let inputs = document.querySelectorAll('.spell-char');
+                hidden.oninput = function(e) {
+                    // Xóa khoảng trắng hoàn toàn bằng join('')
+                    let val = e.target.value.toUpperCase().split(' ').join('');
+                    let charIdx = 0;
+                    for(let k=0; k<inputs.length; k++) {
+                        if(!inputs[k].disabled) {
+                            inputs[k].value = val[charIdx] || '';
+                            charIdx++;
+                        }
+                    }
+                };
+                hidden.onkeydown = function(e) { if(e.key === 'Enter') submitSpelling(); };
+                
+                startTimer(30, 'spell-timer-text', submitSpelling);
+            } catch (err) { alert("Lỗi loadSpelling: " + err.message); }
+        }
+
+        function submitSpelling() {
+            try {
+                clearInterval(timerId);
+                let inputs = document.querySelectorAll('.spell-char');
+                let userVal = "";
+                for(let i=0; i<inputs.length; i++) { userVal += inputs[i].value || ""; }
+                userVal = userVal.toUpperCase();
+                
+                let correctVal = vocabList[quizOrder[currentIndex]].en.toUpperCase();
+                
+                // Logic hoán đổi từ đồng nghĩa
+                function formatWords(str) {
+                    let arr = str.split('/');
+                    let res = [];
+                    for(let i=0; i<arr.length; i++) {
+                        res.push(arr[i].trim());
+                    }
+                    res.sort();
+                    return res.join('/');
+                }
+
+                let userWords = formatWords(userVal);
+                let correctWords = formatWords(correctVal);
+                
+                if (userWords === correctWords) {
+                    for(let i=0; i<inputs.length; i++) inputs[i].style.background = '#d1fae5';
+                    if(window.parent) window.parent.postMessage('SPELLING_CORRECT', '*');
+                } else {
+                    for(let i=0; i<inputs.length; i++) {
+                        inputs[i].style.background = '#fee2e2';
+                        inputs[i].value = inputs[i].dataset.char;
+                    }
+                }
+                setTimeout(function() { 
+                    currentIndex++; 
+                    if (currentIndex < vocabList.length) loadSpelling(); 
+                    else finish("spelling-section", "Hoàn thành Gõ chính tả!"); 
+                }, 2000);
+            } catch(err) { alert("Lỗi submitSpelling: " + err.message); }
+        }
+
+        function startTimer(sec, id, cb) {
+            timeLeft = sec;
+            document.getElementById(id).innerText = timeLeft;
+            clearInterval(timerId);
+            timerId = setInterval(function() {
+                timeLeft--;
+                document.getElementById(id).innerText = timeLeft;
+                if (timeLeft <= 0) { clearInterval(timerId); cb(); }
+            }, 1000);
+        }
+
+        function finish(id, msg) { 
+            document.getElementById(id).innerHTML = '<div class="text-center p-10 bg-green-50 text-green-800 font-bold rounded-xl text-xl">🎉 '+msg+'</div>'; 
+        }
+
+        window.onload = function() { loadCard(0); };
+    </script>
+</body>
+</html>`;
+
+        document.getElementById('generatedCode').value = template;
+        currentGeneratedVocab = vocabArray;
+        alert("Đúc mã thành công! Hãy lưu Bài học mới để trải nghiệm.");
+    } catch (e) {
+        alert("Lỗi nghiêm trọng khi đúc mã: " + e.message);
+    }
+}function generateCode() {
+    try {
+        const raw = document.getElementById('rawInput').value.trim();
+        if (!raw) return alert("Yêu cầu nhập nội dung từ khóa!");
+
+        const lines = raw.split('\n');
+        let vocabArray = [];
+        for (let i = 0; i < lines.length; i++) {
+            let parts = lines[i].split('|').map(s => s.trim());
+            if (parts.length >= 2) {
+                vocabArray.push({
+                    en: parts[0],
+                    vi: parts[1],
+                    pro: parts[2] || '',
+                    type: parts[3] || ''
+                });
+            }
+        }
+
+        if (vocabArray.length === 0) return alert("Định dạng không hợp lệ!");
+
+        // Ép dữ liệu thành chuỗi an toàn tuyệt đối
+        const jsonVocab = JSON.stringify(vocabArray);
+
+        const template = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <style>
+        body { background-color: transparent; margin: 0; padding: 10px; font-family: 'Segoe UI', sans-serif; }
+        .perspective { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .flipped .transform-style-3d { transform: rotateY(180deg); }
+        .quiz-btn { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 2px solid #e0e7ff; background: white; font-weight: bold; color: #3730a3; transition: 0.2s; text-align: left; cursor: pointer; }
+        .quiz-btn:hover { border-color: #4f46e5; background: #e0e7ff; }
+        .quiz-btn.correct { background: #10b981; color: white; border-color: #059669; }
+        .quiz-btn.wrong { background: #ef4444; color: white; border-color: #b91c1c; }
+        .disabled { pointer-events: none; }
+        .spell-char { width: 38px; height: 48px; text-align: center; font-size: 20px; font-weight: 900; border-radius: 8px; border: 2px solid #9333ea; outline: none; text-transform: uppercase; background: white; }
+    </style>
+</head>
+<body>
+    <div id="flashcard-section" class="flex flex-col items-center w-full max-w-md mx-auto">
+        <div class="text-center mb-4 text-indigo-800 font-bold" id="card-counter"></div>
+        <div id="flashcard" class="perspective w-full h-80 cursor-pointer mb-6" onclick="this.classList.toggle('flipped')">
+            <div class="transform-style-3d relative w-full h-full rounded-2xl shadow-lg">
+                <div class="backface-hidden absolute w-full h-full bg-white rounded-2xl flex flex-col items-center justify-center p-6 border-2 border-indigo-100">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <div class="text-5xl font-extrabold text-indigo-900 mb-2" id="word-en"></div>
+                        <button onclick="speakWord(document.getElementById('word-en').innerText); event.stopPropagation();" style="background:none; border:none; font-size: 28px; cursor: pointer;">🔊</button>
+                    </div>
+                    <div class="text-lg text-gray-500 mb-4 font-mono" id="word-pro"></div>
+                    <span class="px-4 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold uppercase" id="word-type"></span>
+                </div>
+                <div class="backface-hidden rotate-y-180 absolute w-full h-full bg-gradient-to-br from-indigo-600 to-blue-800 rounded-2xl flex flex-col items-center justify-center p-6 text-white text-center">
+                    <div class="text-3xl font-bold text-yellow-300" id="word-vi"></div>
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-4 w-full">
+            <button onclick="prevCard()" class="flex-1 py-3 rounded-xl bg-gray-200 text-gray-700 font-bold">⬅ Trước</button>
+            <button onclick="nextCard()" id="next-btn" class="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold">Tiếp ➡</button>
+        </div>
+    </div>
+
+    <div id="summary-section" class="hidden w-full max-w-md mx-auto relative">
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+            <h2 class="text-xl font-bold text-indigo-800 mb-4 text-center border-b pb-3">📄 Tổng hợp bài học</h2>
+            <div id="summary-list" class="max-h-96 overflow-y-auto space-y-2"></div>
+        </div>
+        <button onclick="startQuiz()" class="w-full py-3 rounded-xl bg-yellow-500 text-white font-bold mb-3 shadow-md">Làm Trắc Nghiệm 🪙</button>
+        <button onclick="startSpelling()" class="w-full py-3 rounded-xl bg-purple-600 text-white font-bold shadow-md">Gõ Chính Tả ✍️</button>
+    </div>
+
+    <div id="quiz-section" class="hidden w-full max-w-md mx-auto">
+        <div class="text-center mb-6">
+            <div id="timer-text" class="text-3xl font-black text-red-500 mb-4">15</div>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+                <h2 id="quiz-question" class="text-4xl font-extrabold text-indigo-900"></h2>
+                <button onclick="speakWord(document.getElementById('quiz-question').innerText);">🔊</button>
+            </div>
+        </div>
+        <div id="quiz-options" class="w-full"></div>
+    </div>
+
+    <div id="spelling-section" class="hidden w-full max-w-md mx-auto">
+        <div class="text-center mb-6">
+            <div id="spell-timer-text" class="text-3xl font-black text-purple-600 mb-4">30</div>
+            <h2 id="spell-question" class="text-3xl font-extrabold text-indigo-900"></h2>
+        </div>
+        <div id="spell-inputs" class="flex flex-wrap justify-center gap-2 mb-6 relative min-h-[60px]"></div>
+        <button onclick="submitSpelling()" id="spell-submit-btn" class="w-full py-3 rounded-xl bg-purple-600 text-white font-bold">Chốt Đáp Án (Enter)</button>
+    </div>
+
+    <script>
+        function speakWord(t) {
+            if ('speechSynthesis' in window) {
+                let e = new SpeechSynthesisUtterance(t);
+                e.lang = /[\\u4E00-\\u9FA5]/.test(t) ? 'zh-CN' : 'en-US';
+                window.speechSynthesis.speak(e);
+            }
+        }
+
+        // Bơm dữ liệu JSON một cách an toàn tuyệt đối
+        const rawJson = '${jsonVocab.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}';
+        const vocabList = JSON.parse(rawJson);
+        
+        let currentIndex = 0;
+        let quizOrder = [];
+        let timerId = null;
+        let timeLeft = 0;
+
+        function loadCard(idx) {
+            try {
+                document.getElementById('flashcard').classList.remove('flipped');
+                const item = vocabList[idx];
+                document.getElementById('word-en').innerText = item.en;
+                document.getElementById('word-pro').innerText = item.pro;
+                document.getElementById('word-type').innerText = item.type;
+                document.getElementById('word-vi').innerText = item.vi;
+                document.getElementById('card-counter').innerText = 'Thẻ ' + (idx + 1) + ' / ' + vocabList.length;
+                document.getElementById('next-btn').innerText = idx === vocabList.length - 1 ? "Xem Tổng Hợp 📄" : "Tiếp ➡";
+            } catch (err) { alert("Lỗi loadCard: " + err.message); }
+        }
+
+        function prevCard() { if (currentIndex > 0) { currentIndex--; loadCard(currentIndex); } }
+        function nextCard() { 
+            if (currentIndex < vocabList.length - 1) { currentIndex++; loadCard(currentIndex); } 
+            else { 
+                document.getElementById('flashcard-section').classList.add('hidden');
+                document.getElementById('summary-section').classList.remove('hidden');
+                const list = document.getElementById('summary-list');
+                let html = '';
+                for(let i=0; i<vocabList.length; i++) {
+                    html += '<div class="p-2 border-b flex justify-between items-center"><div><b>'+vocabList[i].en+'</b><br><span class="text-sm text-gray-600">'+vocabList[i].vi+'</span></div><button onclick="speakWord(\\''+vocabList[i].en+'\\')">🔊</button></div>';
+                }
+                list.innerHTML = html;
+            }
+        }
+
+        function startQuiz() {
+            document.getElementById('summary-section').classList.add('hidden');
+            document.getElementById('quiz-section').classList.remove('hidden');
+            quizOrder = [];
+            for (let i = 0; i < vocabList.length; i++) quizOrder.push(i);
+            quizOrder.sort(function() { return Math.random() - 0.5; });
+            currentIndex = 0;
+            loadQuiz();
+        }
+
+        function loadQuiz() {
+            try {
+                const item = vocabList[quizOrder[currentIndex]];
+                document.getElementById('quiz-question').innerText = item.en;
+                
+                let wrongOptions = [];
+                for(let i = 0; i < vocabList.length; i++) {
+                    if(vocabList[i].vi !== item.vi) wrongOptions.push(vocabList[i].vi);
+                }
+                wrongOptions.sort(function() { return Math.random() - 0.5; });
+                wrongOptions = wrongOptions.slice(0, 3);
+                
+                let options = [item.vi].concat(wrongOptions);
+                options.sort(function() { return Math.random() - 0.5; });
+                
+                const container = document.getElementById('quiz-options');
+                container.innerHTML = '';
+                container.classList.remove('disabled');
+                
+                for(let i = 0; i < options.length; i++) {
+                    let opt = options[i];
+                    let btn = document.createElement('button');
+                    btn.className = 'quiz-btn';
+                    btn.innerText = opt;
+                    btn.onclick = function() {
+                        clearInterval(timerId);
+                        container.classList.add('disabled');
+                        if (opt === item.vi) { 
+                            btn.classList.add('correct'); 
+                            if(window.parent) window.parent.postMessage('CORRECT', '*'); 
+                        } else { 
+                            btn.classList.add('wrong'); 
+                            let allBtns = document.getElementsByClassName('quiz-btn');
+                            for(let j=0; j<allBtns.length; j++) {
+                                if(allBtns[j].innerText === item.vi) allBtns[j].classList.add('correct');
+                            }
+                        }
+                        setTimeout(function() { 
+                            currentIndex++; 
+                            if (currentIndex < vocabList.length) loadQuiz(); 
+                            else finish("quiz-section", "Hoàn thành Trắc nghiệm!"); 
+                        }, 1500);
+                    };
+                    container.appendChild(btn);
+                }
+                startTimer(15, 'timer-text', function() {
+                    let btns = document.getElementsByClassName('quiz-btn');
+                    if(btns.length > 0) btns[0].click();
+                });
+            } catch (err) { alert("Lỗi loadQuiz: " + err.message); }
+        }
+
+        function startSpelling() {
+            document.getElementById('summary-section').classList.add('hidden');
+            document.getElementById('spelling-section').classList.remove('hidden');
+            quizOrder = [];
+            for (let i = 0; i < vocabList.length; i++) quizOrder.push(i);
+            quizOrder.sort(function() { return Math.random() - 0.5; });
+            currentIndex = 0;
+            loadSpelling();
+        }
+
+        function loadSpelling() {
+            try {
+                const item = vocabList[quizOrder[currentIndex]];
+                document.getElementById('spell-question').innerText = item.vi;
+                const container = document.getElementById('spell-inputs');
+                container.innerHTML = '';
+                
+                const words = item.en.trim().split(' ');
+                for(let i=0; i<words.length; i++) {
+                    let word = words[i];
+                    let div = document.createElement('div');
+                    div.className = 'flex gap-1 mb-2';
+                    let chars = word.split('');
+                    for(let j=0; j<chars.length; j++) {
+                        let char = chars[j];
+                        let input = document.createElement('input');
+                        input.className = 'spell-char';
+                        input.dataset.char = char.toUpperCase();
+                        if (char === '-' || char === '/') { 
+                            input.value = char; 
+                            input.disabled = true; 
+                            input.style.background = '#eee'; 
+                        }
+                        div.appendChild(input);
+                    }
+                    container.appendChild(div);
+                }
+                
+                let hidden = document.createElement('input');
+                hidden.style.position = 'absolute';
+                hidden.style.opacity = '0';
+                hidden.style.top = '0';
+                hidden.style.left = '0';
+                hidden.style.width = '100%';
+                hidden.style.height = '100%';
+                hidden.style.zIndex = '10';
+                hidden.id = 'h-inp';
+                container.appendChild(hidden);
+                hidden.focus();
+                
+                let inputs = document.querySelectorAll('.spell-char');
+                hidden.oninput = function(e) {
+                    // Xóa khoảng trắng hoàn toàn bằng join('')
+                    let val = e.target.value.toUpperCase().split(' ').join('');
+                    let charIdx = 0;
+                    for(let k=0; k<inputs.length; k++) {
+                        if(!inputs[k].disabled) {
+                            inputs[k].value = val[charIdx] || '';
+                            charIdx++;
+                        }
+                    }
+                };
+                hidden.onkeydown = function(e) { if(e.key === 'Enter') submitSpelling(); };
+                
+                startTimer(30, 'spell-timer-text', submitSpelling);
+            } catch (err) { alert("Lỗi loadSpelling: " + err.message); }
+        }
+
+        function submitSpelling() {
+            try {
+                clearInterval(timerId);
+                let inputs = document.querySelectorAll('.spell-char');
+                let userVal = "";
+                for(let i=0; i<inputs.length; i++) { userVal += inputs[i].value || ""; }
+                userVal = userVal.toUpperCase();
+                
+                let correctVal = vocabList[quizOrder[currentIndex]].en.toUpperCase();
+                
+                // Logic hoán đổi từ đồng nghĩa
+                function formatWords(str) {
+                    let arr = str.split('/');
+                    let res = [];
+                    for(let i=0; i<arr.length; i++) {
+                        res.push(arr[i].trim());
+                    }
+                    res.sort();
+                    return res.join('/');
+                }
+
+                let userWords = formatWords(userVal);
+                let correctWords = formatWords(correctVal);
+                
+                if (userWords === correctWords) {
+                    for(let i=0; i<inputs.length; i++) inputs[i].style.background = '#d1fae5';
+                    if(window.parent) window.parent.postMessage('SPELLING_CORRECT', '*');
+                } else {
+                    for(let i=0; i<inputs.length; i++) {
+                        inputs[i].style.background = '#fee2e2';
+                        inputs[i].value = inputs[i].dataset.char;
+                    }
+                }
+                setTimeout(function() { 
+                    currentIndex++; 
+                    if (currentIndex < vocabList.length) loadSpelling(); 
+                    else finish("spelling-section", "Hoàn thành Gõ chính tả!"); 
+                }, 2000);
+            } catch(err) { alert("Lỗi submitSpelling: " + err.message); }
+        }
+
+        function startTimer(sec, id, cb) {
+            timeLeft = sec;
+            document.getElementById(id).innerText = timeLeft;
+            clearInterval(timerId);
+            timerId = setInterval(function() {
+                timeLeft--;
+                document.getElementById(id).innerText = timeLeft;
+                if (timeLeft <= 0) { clearInterval(timerId); cb(); }
+            }, 1000);
+        }
+
+        function finish(id, msg) { 
+            document.getElementById(id).innerHTML = '<div class="text-center p-10 bg-green-50 text-green-800 font-bold rounded-xl text-xl">🎉 '+msg+'</div>'; 
+        }
+
+        window.onload = function() { loadCard(0); };
+    </script>
+</body>
+</html>`;
+
+        document.getElementById('generatedCode').value = template;
+        currentGeneratedVocab = vocabArray;
+        alert("Đúc mã thành công! Hãy lưu Bài học mới để trải nghiệm.");
+    } catch (e) {
+        alert("Lỗi nghiêm trọng khi đúc mã: " + e.message);
+    }
+}
 
         function loadCard(idx) {
             document.getElementById('flashcard').classList.remove('flipped');
