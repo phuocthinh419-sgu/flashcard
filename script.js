@@ -1890,7 +1890,8 @@ function triggerEval() {
 
         if (vocabArray.length === 0) return alert("Định dạng không hợp lệ!");
 
-        const jsonVocab = JSON.stringify(vocabArray);
+        // Truyền dữ liệu siêu an toàn, không sợ trình duyệt nuốt code
+        const jsonVocabStr = JSON.stringify(vocabArray);
 
         const template = `<!DOCTYPE html>
 <html lang="vi">
@@ -1948,7 +1949,13 @@ function triggerEval() {
 
     <div id="quiz-section" class="hidden w-full max-w-md mx-auto">
         <div class="text-center mb-6">
-            <div id="timer-text" class="text-3xl font-black text-red-500 mb-4">15</div>
+            <div style="position: relative; width: 70px; height: 70px; margin: 0 auto 10px auto;">
+                <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg);" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"></circle>
+                    <circle id="quiz-circle" cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"></circle>
+                </svg>
+                <div id="timer-text" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; color: #ef4444;">15</div>
+            </div>
             <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
                 <h2 id="quiz-question" class="text-4xl font-extrabold text-indigo-900"></h2>
                 <button onclick="speakWord(document.getElementById('quiz-question').innerText);">🔊</button>
@@ -1959,8 +1966,14 @@ function triggerEval() {
 
     <div id="spelling-section" class="hidden w-full max-w-md mx-auto">
         <div class="text-center mb-6">
-            <div id="spell-timer-text" class="text-3xl font-black text-purple-600 mb-4">30</div>
-            <h2 id="spell-question" class="text-3xl font-extrabold text-indigo-900"></h2>
+            <div style="position: relative; width: 70px; height: 70px; margin: 0 auto 10px auto;">
+                <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg);" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"></circle>
+                    <circle id="spell-circle" cx="50" cy="50" r="45" fill="none" stroke="#9333ea" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"></circle>
+                </svg>
+                <div id="spell-timer-text" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; color: #9333ea;">30</div>
+            </div>
+            <h2 id="spell-question" class="text-3xl font-extrabold text-indigo-900 mt-2 mb-1"></h2>
         </div>
         <div id="spell-inputs" class="flex flex-wrap justify-center gap-2 mb-6 relative min-h-[60px]"></div>
         <button onclick="submitSpelling()" id="spell-submit-btn" class="w-full py-3 rounded-xl bg-purple-600 text-white font-bold">Chốt Đáp Án (Enter)</button>
@@ -1970,13 +1983,13 @@ function triggerEval() {
         function speakWord(t) {
             if ('speechSynthesis' in window) {
                 let e = new SpeechSynthesisUtterance(t);
-                e.lang = /[\\\\u4E00-\\\\u9FA5]/.test(t) ? 'zh-CN' : 'en-US';
+                e.lang = /[\\u4E00-\\u9FA5]/.test(t) ? 'zh-CN' : 'en-US';
                 window.speechSynthesis.speak(e);
             }
         }
 
-        const rawJson = '${jsonVocab.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}';
-        const vocabList = JSON.parse(rawJson);
+        // Bơm dữ liệu trực tiếp, hoàn toàn miễn nhiễm với lỗi ngoặc kép
+        const vocabList = ${jsonVocabStr};
         
         let currentIndex = 0;
         let quizOrder = [];
@@ -1984,16 +1997,14 @@ function triggerEval() {
         let timeLeft = 0;
 
         function loadCard(idx) {
-            try {
-                document.getElementById('flashcard').classList.remove('flipped');
-                const item = vocabList[idx];
-                document.getElementById('word-en').innerText = item.en;
-                document.getElementById('word-pro').innerText = item.pro;
-                document.getElementById('word-type').innerText = item.type;
-                document.getElementById('word-vi').innerText = item.vi;
-                document.getElementById('card-counter').innerText = 'Thẻ ' + (idx + 1) + ' / ' + vocabList.length;
-                document.getElementById('next-btn').innerText = idx === vocabList.length - 1 ? "Xem Tổng Hợp 📄" : "Tiếp ➡";
-            } catch (err) { console.error(err); }
+            document.getElementById('flashcard').classList.remove('flipped');
+            const item = vocabList[idx];
+            document.getElementById('word-en').innerText = item.en;
+            document.getElementById('word-pro').innerText = item.pro;
+            document.getElementById('word-type').innerText = item.type;
+            document.getElementById('word-vi').innerText = item.vi;
+            document.getElementById('card-counter').innerText = 'Thẻ ' + (idx + 1) + ' / ' + vocabList.length;
+            document.getElementById('next-btn').innerText = idx === vocabList.length - 1 ? "Xem Tổng Hợp 📄" : "Tiếp ➡";
         }
 
         function prevCard() { if (currentIndex > 0) { currentIndex--; loadCard(currentIndex); } }
@@ -2005,7 +2016,7 @@ function triggerEval() {
                 const list = document.getElementById('summary-list');
                 let html = '';
                 for(let i=0; i<vocabList.length; i++) {
-                    html += '<div class="p-2 border-b flex justify-between items-center"><div><b>'+vocabList[i].en+'</b><br><span class="text-sm text-gray-600">'+vocabList[i].vi+'</span></div><button onclick="speakWord(\\\''+vocabList[i].en+'\\')">🔊</button></div>';
+                    html += '<div class="p-2 border-b flex justify-between items-center"><div><b>'+vocabList[i].en+'</b><br><span class="text-sm text-gray-600">'+vocabList[i].vi+'</span></div><button onclick="speakWord(\\''+vocabList[i].en+'\\')">🔊</button></div>';
                 }
                 list.innerHTML = html;
             }
@@ -2065,7 +2076,7 @@ function triggerEval() {
                 };
                 container.appendChild(btn);
             }
-            startTimer(15, 'timer-text', function() {
+            startTimer(15, 'timer-text', 'quiz-circle', function() {
                 let btns = document.getElementsByClassName('quiz-btn');
                 if(btns.length > 0) btns[0].click();
             });
@@ -2122,7 +2133,8 @@ function triggerEval() {
             
             let inputs = document.querySelectorAll('.spell-char');
             hidden.oninput = function(e) {
-                let val = e.target.value.toUpperCase().split(' ').join('');
+                // Tự động lọc bỏ cả khoảng trắng, dấu gạch và gạch chéo khi người dùng lỡ bấm trúng
+                let val = e.target.value.toUpperCase().replace(/[ \\-\\/]/g, '');
                 let charIdx = 0;
                 for(let k=0; k<inputs.length; k++) {
                     if(!inputs[k].disabled) {
@@ -2133,7 +2145,7 @@ function triggerEval() {
             };
             hidden.onkeydown = function(e) { if(e.key === 'Enter') submitSpelling(); };
             
-            startTimer(30, 'spell-timer-text', submitSpelling);
+            startTimer(30, 'spell-timer-text', 'spell-circle', submitSpelling);
         }
 
         function submitSpelling() {
@@ -2143,7 +2155,9 @@ function triggerEval() {
             for(let i=0; i<inputs.length; i++) { userVal += inputs[i].value || ""; }
             userVal = userVal.toUpperCase();
             
-            let correctVal = vocabList[quizOrder[currentIndex]].en.toUpperCase();
+            // Xóa MỌI khoảng trắng khỏi đáp án gốc để so sánh hoàn hảo với các ô input bị dính liền
+            // Việc này sẽ vá triệt để lỗi "Cinema / Movie Theater"
+            let correctVal = vocabList[quizOrder[currentIndex]].en.toUpperCase().replace(/\\s/g, '');
             
             function formatWords(str) {
                 let arr = str.split('/');
@@ -2172,13 +2186,17 @@ function triggerEval() {
             }, 2000);
         }
 
-        function startTimer(sec, id, cb) {
+        function startTimer(sec, textId, circleId, cb) {
             timeLeft = sec;
-            document.getElementById(id).innerText = timeLeft;
+            const total = sec;
+            document.getElementById(textId).innerText = timeLeft;
+            document.getElementById(circleId).style.strokeDashoffset = '0';
             clearInterval(timerId);
             timerId = setInterval(function() {
                 timeLeft--;
-                document.getElementById(id).innerText = timeLeft;
+                document.getElementById(textId).innerText = timeLeft;
+                const offset = 283 - (timeLeft / total) * 283;
+                document.getElementById(circleId).style.strokeDashoffset = offset;
                 if (timeLeft <= 0) { clearInterval(timerId); cb(); }
             }, 1000);
         }
@@ -2194,7 +2212,7 @@ function triggerEval() {
 
         document.getElementById('generatedCode').value = template;
         currentGeneratedVocab = vocabArray;
-        alert("Đúc mã thành công! Mời Bệ hạ F5, đúc lại và lưu Bài mới.");
+        alert("Đúc mã thành công! Hãy lưu Bài học mới để trải nghiệm.");
     } catch (e) {
         alert("Lỗi nghiêm trọng khi đúc mã: " + e.message);
     }
