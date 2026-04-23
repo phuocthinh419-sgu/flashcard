@@ -2522,7 +2522,7 @@ function logoutApp() {
 const mentorsData = {
     'conan': {
         icon: '🕵️',
-        avatarImg: 'https://www.nicepng.com/png/full/689-6894004_topic-screen-la-fin-de-dtective-conan.png', // Bệ hạ có thể chèn link ảnh PNG vào đây sau
+        avatarImg: 'https://static.ybox.vn/2022/8/2/1660030852217-conan.png', // Bệ hạ có thể chèn link ảnh PNG vào đây sau
         name: 'Thám tử Conan',
         price: 3000,
         login: "Cậu đến đúng lúc lắm. Hiện trường bài học hôm nay vẫn còn nguyên dấu vết. Bắt tay vào thu thập manh mối trong kho bài học thôi!",
