@@ -41,6 +41,56 @@
             transform-origin: bottom center; /* Đóng đinh gốc lửa xuống đất */
             animation: true-neon-fire 0.25s ease-in-out infinite alternate; /* Cháy mượt mà không bị giật cục */
         }
+
+        /* 3. Khung Ngự Tiền Gia Sư lơ lửng */
+        .mentor-widget {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 9990; /* Ẩn dưới Đài Tỷ Võ (9999) */
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            pointer-events: none;
+        }
+        .mentor-avatar {
+            width: 65px;
+            height: 65px;
+            background: linear-gradient(135deg, #fff, #f0f0f0);
+            border: 3px solid #ffd700;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 38px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            pointer-events: auto;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .mentor-avatar:hover { transform: scale(1.15) rotate(-5deg); }
+        .mentor-bubble {
+            background: rgba(255, 255, 255, 0.95);
+            color: #1a237e;
+            padding: 12px 18px;
+            border-radius: 18px;
+            border-bottom-right-radius: 4px;
+            margin-bottom: 12px;
+            max-width: 260px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            font-weight: 900;
+            font-size: 14px;
+            line-height: 1.5;
+            opacity: 0;
+            transform: translateY(15px);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            pointer-events: auto;
+            border: 2px solid #e8eaf6;
+        }
+        .mentor-bubble.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -134,6 +184,35 @@
                     </div>
                 </div>
                 <div class="shop-grid" id="shopGrid">
+                    
+                    <div class="shop-item" style="border: 2px solid #2196f3; background: #e3f2fd;">
+                        <div class="item-icon">🕵️</div>
+                        <div class="item-title" style="color: #1565c0;">Thám tử Conan</div>
+                        <div class="item-desc">Hệ Logic. Giúp phân tích nhạy bén.</div>
+                        <div class="item-price" style="color: #1565c0; background: #bbdefb;">🪙 3000/tháng</div>
+                        <button class="btn-buy" style="background: linear-gradient(45deg, #2196f3, #1565c0);" onclick="openMentorContract('conan')">Chiêu Mộ</button>
+                    </div>
+                    <div class="shop-item" style="border: 2px solid #00bcd4; background: #e0f7fa;">
+                        <div class="item-icon">🐱</div>
+                        <div class="item-title" style="color: #00838f;">Mèo ú Doraemon</div>
+                        <div class="item-desc">Hệ Nuông chiều. Khích lệ tinh thần.</div>
+                        <div class="item-price" style="color: #00838f; background: #b2ebf2;">🪙 3000/tháng</div>
+                        <button class="btn-buy" style="background: linear-gradient(45deg, #00bcd4, #00838f);" onclick="openMentorContract('doraemon')">Chiêu Mộ</button>
+                    </div>
+                    <div class="shop-item" style="border: 2px solid #4caf50; background: #e8f5e9;">
+                        <div class="item-icon">🧑‍🎓</div>
+                        <div class="item-title" style="color: #2e7d32;">Học giả Dekisugi</div>
+                        <div class="item-desc">Hệ Chuẩn mực. Con nhà người ta.</div>
+                        <div class="item-price" style="color: #2e7d32; background: #c8e6c9;">🪙 3000/tháng</div>
+                        <button class="btn-buy" style="background: linear-gradient(45deg, #4caf50, #2e7d32);" onclick="openMentorContract('dekisugi')">Chiêu Mộ</button>
+                    </div>
+                    <div class="shop-item" style="border: 2px solid #ff9800; background: #fff3e0;">
+                        <div class="item-icon">🐢</div>
+                        <div class="item-title" style="color: #e65100;">Quy Lão Tiên Sinh</div>
+                        <div class="item-desc">Hệ Thực chiến. Huấn luyện khắc nghiệt.</div>
+                        <div class="item-price" style="color: #e65100; background: #ffe0b2;">🪙 3000/tháng</div>
+                        <button class="btn-buy" style="background: linear-gradient(45deg, #ff9800, #e65100);" onclick="openMentorContract('roshi')">Chiêu Mộ</button>
+                    </div>
                     <div class="shop-item" style="border: 2px solid #00bcd4; background: #e0f7fa;">
                         <div class="item-icon">✈️</div>
                         <div class="item-title" style="color: #0097a7;">Giấy Thông Hành</div>
@@ -274,6 +353,28 @@
         </main>
     </div>
 
+    <div class="modal" id="mentorContractModal">
+        <div class="modal-content name-modal-content" style="border: 3px solid #ffd700;">
+            <div id="contractAvatar" style="font-size: 50px; margin-bottom: 10px;">🕵️</div>
+            <h3 style="color: #1a237e; margin-bottom: 10px;">📜 KHẾ ƯỚC CHIÊU MỘ</h3>
+            <p id="contractDesc" style="font-size: 14px; color: #555; margin-bottom: 15px;"></p>
+            
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px;">Ngài muốn ký hợp đồng bao nhiêu tháng?</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="number" id="mentorMonths" value="1" min="1" max="12" style="flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 6px; text-align: center; font-weight: bold;">
+                    <span style="font-weight: bold; color: #555;">Tháng</span>
+                </div>
+                <div style="margin-top: 10px; font-size: 12px; color: #d32f2f; font-weight: bold;">
+                    Tổng chi phí: <span id="contractTotalGold">3000</span> 🪙
+                </div>
+            </div>
+
+            <button class="btn-save" style="width: 100%; padding: 12px; font-weight: bold;" onclick="confirmMentorContract()">ẤN DẤU KÝ KẾT</button>
+            <button class="btn-close" style="width: 100%; padding: 10px; margin-top: 10px;" onclick="document.getElementById('mentorContractModal').classList.remove('active')">Hủy bỏ</button>
+        </div>
+    </div>
+
     <div class="modal" id="migrationModal">
         <div class="modal-content name-modal-content">
             <h3 style="color: #0097a7; margin-bottom: 15px; font-size: 22px;">✈️ Cổng Phân Luồng Vũ Trụ</h3>
@@ -391,6 +492,11 @@
     </div>
 
     <div id="rewardAnim" class="reward-anim">🎉 +10 🪙 | +15 ⭐</div>
+
+    <div id="mentor-widget" class="mentor-widget" style="display: none;">
+        <div class="mentor-bubble" id="mentor-bubble"></div>
+        <div class="mentor-avatar" id="mentor-avatar" onclick="pokeMentor()">🕵️</div>
+    </div>
 
     <script src="script.js?v=4"></script>
 </body>
