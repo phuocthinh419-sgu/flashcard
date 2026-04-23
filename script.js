@@ -72,6 +72,9 @@ function checkAuth() {
                         if(!userData.lastWeekXp) userData.lastWeekXp = 0; if(!userData.highestWeeklyXp) userData.highestWeeklyXp = 0;
                         if(!userData.mastered_words) userData.mastered_words = 0; if(!userData.mastered_lessons) userData.mastered_lessons = [];
                         
+                        // Khởi tạo shieldCount nếu người dùng chỉ có hasShield (dữ liệu cũ)
+                        if(userData.shieldCount === undefined) userData.shieldCount = userData.hasShield ? 1 : 0;
+                        
                         if(userData.potionExpiry && userData.potionExpiry < Date.now()) userData.potionExpiry = null;
                         if(userData.potionX3Expiry && userData.potionX3Expiry < Date.now()) userData.potionX3Expiry = null;
                         if(userData.maskExpiry && userData.maskExpiry < Date.now()) userData.maskExpiry = null;
@@ -102,24 +105,35 @@ function checkAuth() {
                                     if(window.checkAndGrantStreakRewards) window.checkAndGrantStreakRewards(oldStreak, userData.streak);
                                 });
                             } else if (diffDays > 1) {
-                                if (userData.hasShield) { 
-                                    userData.hasShield = false; 
+                                let missedDays = diffDays - 1; // Tính số ngày thực sự vắng mặt
+                                
+                                if (userData.shieldCount >= missedDays) { 
+                                    // ĐỦ BÙA ĐỂ GÁNH
+                                    userData.shieldCount -= missedDays;
+                                    userData.hasShield = userData.shieldCount > 0; // Cập nhật lại cờ hiển thị
                                     userData.lastLogin = todayStr; 
-                                    db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr, hasShield: false }); 
-                                    alert("🛡️ May quá! Hệ thống đã dùng 1 Bùa Bảo Hộ để giữ lại chuỗi của bạn!"); 
+                                    db.collection('vocab_users').doc(user.uid).update({ lastLogin: todayStr, shieldCount: userData.shieldCount, hasShield: userData.hasShield }); 
+                                    alert(`🛡️ May quá! Hệ thống đã dùng ${missedDays} Bùa Bảo Hộ để lấp đầy ${missedDays} ngày vắng mặt của bạn! (Còn lại: ${userData.shieldCount} bùa)`); 
                                 } else { 
+                                    // KHÔNG ĐỦ BÙA -> TRỪNG PHẠT
                                     userData.xp = Math.max(0, userData.xp - Math.floor(userData.xp * 0.2));
                                     userData.gold = Math.max(0, userData.gold - Math.floor(userData.gold * 0.2));
+                                    
+                                    // Xóa sạch số bùa lẻ tẻ không đủ gánh (nếu có)
+                                    userData.shieldCount = 0;
+                                    userData.hasShield = false;
+
                                     if (diffDays <= 4) {
-                                        userData.timeMachine = { lostStreak: userData.streak, missedDays: diffDays - 1, lostTimestamp: Date.now(), status: 'available', attemptsToday: 0, lastAttemptDate: todayStr, daysRecovered: 0, currentBank: [] };
+                                        userData.timeMachine = { lostStreak: userData.streak, missedDays: missedDays, lostTimestamp: Date.now(), status: 'available', attemptsToday: 0, lastAttemptDate: todayStr, daysRecovered: 0, currentBank: [] };
                                     } else {
                                         userData.timeMachine = null; 
                                     }
                                     userData.streak = 1; userData.lastLogin = todayStr; 
-                                    db.collection('vocab_users').doc(user.uid).update({ streak: 1, lastLogin: todayStr, xp: userData.xp, gold: userData.gold, timeMachine: userData.timeMachine || null }).then(() => { 
+                                    
+                                    db.collection('vocab_users').doc(user.uid).update({ streak: 1, lastLogin: todayStr, xp: userData.xp, gold: userData.gold, shieldCount: 0, hasShield: false, timeMachine: userData.timeMachine || null }).then(() => { 
                                         let oldStreak = userData.timeMachine ? userData.timeMachine.lostStreak : "cũ";
-                                        console.error(`[HỆ THỐNG] Cảnh báo: Chuỗi ${oldStreak} ngày đã đứt do vắng mặt ${diffDays - 1} ngày. Đang thiết lập lại về 1.`);
-                                        document.getElementById('missedDaysCount').innerText = diffDays - 1;
+                                        console.error(`[HỆ THỐNG] Cảnh báo: Chuỗi ${oldStreak} ngày đã đứt do vắng mặt ${missedDays} ngày. Đang thiết lập lại về 1.`);
+                                        document.getElementById('missedDaysCount').innerText = missedDays;
                                         document.getElementById('streakBrokenModal').classList.add('active'); 
                                     });
                                 }
@@ -131,7 +145,7 @@ function checkAuth() {
                         
                         updateUI(); setupRealmListeners(); fetchLessonsFromFirebase(); 
                     } else { 
-                        userData = { role: trueRole, gold: 0, xp: 0, lifetime_xp: 0, realm: "", streak: 1, displayName: '', lastLogin: todayStr, hasShield: false, potionExpiry: null, potionX3Expiry: null, maskExpiry: null, magnifyingGlass: 0, vouchers: [], blindBoxCount: 0, lastBlindBoxDate: todayStr, streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: getCurrentWeekStr(), highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, timeMachine: null, mastered_words: 0, mastered_lessons: [] };
+                        userData = { role: trueRole, gold: 0, xp: 0, lifetime_xp: 0, realm: "", streak: 1, displayName: '', lastLogin: todayStr, hasShield: false, shieldCount: 0, potionExpiry: null, potionX3Expiry: null, maskExpiry: null, magnifyingGlass: 0, vouchers: [], blindBoxCount: 0, lastBlindBoxDate: todayStr, streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: getCurrentWeekStr(), highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, timeMachine: null, mastered_words: 0, mastered_lessons: [] };
                         
                         let obSelect = document.getElementById('onboardRealmSelect');
                         if (obSelect) {
@@ -431,7 +445,13 @@ function spinWheel() {
         else if (r < 0.50) { sliceIndex = 2; userData.xp += 150; msg = "⭐ Chúc mừng bạn đã tích lũy thêm 150 XP!"; }
         else if (r < 0.70) { sliceIndex = 3; userData.vouchers.push(30); msg = "🎟️ Bạn đã nhận được 1 Mã Giảm Giá 30%!"; }
         else if (r < 0.80) { sliceIndex = 4; userData.vouchers.push(50); msg = "🎟️ Rất may mắn! Bạn có 1 Mã Giảm Giá 50%!"; }
-        else if (r < 0.85) { sliceIndex = 5; userData.hasShield = true; msg = "🛡️ Chúc mừng! Bạn nhận được 1 Bùa Bảo Hộ!"; }
+        else if (r < 0.85) { 
+            // 🛡️ ĐÃ VÁ LỖI CỘNG DỒN BÙA TẠI ĐÂY
+            sliceIndex = 5; 
+            userData.shieldCount = (userData.shieldCount || (userData.hasShield ? 1 : 0)) + 1;
+            userData.hasShield = true; 
+            msg = "🛡️ Chúc mừng! Bạn nhận được 1 Bùa Bảo Hộ!"; 
+        }
         else if (r < 0.90) { sliceIndex = 6; userData.magnifyingGlass = (userData.magnifyingGlass||0) + 1; msg = "🔍 Vật phẩm hiếm: 1 Kính Lúp Thám Tử đã thuộc về bạn!"; }
         else { sliceIndex = 7; msg = "🥺 Tiếc quá! Vòng quay dừng lại ở ô không may mắn."; }
         
@@ -450,10 +470,16 @@ function spinWheel() {
             isSpinning = false;
             userData.vouchers.sort((a,b) => b - a); 
             
+            // 🛡️ CẬP NHẬT SHIELDCOUNT LÊN FIREBASE
             db.collection('vocab_users').doc(currentUser.uid).update({
-                gold: userData.gold, xp: userData.xp, vouchers: userData.vouchers,
-                hasShield: userData.hasShield, magnifyingGlass: userData.magnifyingGlass,
-                blindBoxCount: userData.blindBoxCount, lastBlindBoxDate: userData.lastBlindBoxDate
+                gold: userData.gold, 
+                xp: userData.xp, 
+                vouchers: userData.vouchers,
+                hasShield: userData.hasShield, 
+                shieldCount: userData.shieldCount || 0, // Lưu số lượng bùa
+                magnifyingGlass: userData.magnifyingGlass,
+                blindBoxCount: userData.blindBoxCount, 
+                lastBlindBoxDate: userData.lastBlindBoxDate
             }).then(() => { updateUI(); alert(msg); });
         }, 4400); 
     }
@@ -520,7 +546,13 @@ function buyItem(itemType, basePrice) {
         }
         
         if (itemType === 'rename') { let newName = prompt("Nhập tên hiển thị bạn mong muốn:"); if (!newName || newName.trim() === "") return alert("Quy trình hủy do thông tin tên không hợp lệ!"); updates.displayName = newName.trim(); }
-        if (itemType === 'shield') updates.hasShield = true; 
+        
+        // 🛡️ VÁ LỖI BÙA BẢO HỘ Ở ĐÂY
+        if (itemType === 'shield') {
+            updates.shieldCount = (userData.shieldCount || (userData.hasShield ? 1 : 0)) + 1;
+            updates.hasShield = true;
+        }
+        
         if (itemType === 'potion') updates.potionExpiry = Date.now() + 86400000; 
         if (itemType === 'potion_x3') updates.potionX3Expiry = Date.now() + 10800000; 
         if (itemType === 'mask') updates.maskExpiry = Date.now() + 86400000; 
@@ -545,7 +577,11 @@ function buyItem(itemType, basePrice) {
         
         db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
             userData.gold -= finalPrice; 
+            
+            // 🛡️ CẬP NHẬT LẠI BIẾN CỤC BỘ Ở ĐÂY
             if(updates.hasShield) userData.hasShield = true; 
+            if(updates.shieldCount !== undefined) userData.shieldCount = updates.shieldCount;
+            
             if(updates.potionExpiry) updates.potionExpiry = updates.potionExpiry; 
             if(updates.potionX3Expiry) userData.potionX3Expiry = updates.potionX3Expiry; 
             if(updates.maskExpiry) userData.maskExpiry = updates.maskExpiry; 
