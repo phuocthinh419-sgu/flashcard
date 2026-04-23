@@ -2555,7 +2555,7 @@ const mentorsData = {
     'conan': {
         icon: '🕵️',
         avatarImg: 'https://static.ybox.vn/2022/8/2/1660030852217-conan.png', 
-        name: 'Thám tử Conan',
+        name: 'Thám tử lừng danh Conan',
         price: 3000,
         login: "Cậu đến đúng lúc lắm. Hiện trường bài học hôm nay vẫn còn nguyên dấu vết. Bắt tay vào thu thập manh mối trong kho bài học thôi!",
         correct: "Sự thật luôn chỉ có một! Suy luận của cậu rất sắc bén!",
@@ -2564,7 +2564,7 @@ const mentorsData = {
     },
     'doraemon': {
         icon: '🐱',
-        avatarImg: 'https://img3.thuthuatphanmem.vn/uploads/2019/10/10/anh-doremon-vay-chao_033146925.png',
+        avatarImg: 'https://freepngimg.com/thumb/doraemon/35004-7-doraemon-transparent-image-thumb.png',
         name: 'Mèo máy Doraemon',
         price: 3000,
         login: "Xin chào! Cậu có mang bánh rán cho tớ không? Cùng học nào!",
@@ -2584,7 +2584,7 @@ const mentorsData = {
     },
     'roshi': {
         icon: '🐢',
-        avatarImg: 'https://wibu.com.vn/wp-content/uploads/2024/03/Muten-Roshi.png',
+        avatarImg: 'https://product.hstatic.net/1000387428/product/z4003368850646_fba5aee7d745a78a524d2e3b53bd224b-removebg-preview_cb45458aa2aa4d06a22bb54c5be3bf5a_master.png',
         name: 'Quy Lão Tiên Sinh',
         price: 3000,
         login: "Khà khà, nhìn cái mặt ngáp ngắn ngáp dài kìa, định vào đây cúng Vàng cho lão phu đi uống trà đấy à?",
