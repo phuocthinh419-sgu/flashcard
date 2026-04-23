@@ -2522,16 +2522,16 @@ function logoutApp() {
 const mentorsData = {
     'conan': {
         icon: '🕵️',
-        avatarImg: '', // Bệ hạ có thể chèn link ảnh PNG vào đây sau
+        avatarImg: 'https://image.uniqlo.com/UQ/ST3/jp/imagesother/detective-conan/23ss/img/character-conan.png?20230320', // Bệ hạ có thể chèn link ảnh PNG vào đây sau
         name: 'Thám tử Conan',
         price: 3000,
-        login: "Cậu đến đúng lúc lắm. Hiện trường bài học hôm nay vẫn còn nguyên dấu vết. Bắt tay vào thu thập manh thôi!",
+        login: "Cậu đến đúng lúc lắm. Hiện trường bài học hôm nay vẫn còn nguyên dấu vết. Bắt tay vào thu thập manh mối trong kho bài học thôi!",
         correct: "Sự thật luôn chỉ có một! Suy luận của cậu rất sắc bén!",
         broken: "Hung thủ giết chết điểm số chính là sự trì hoãn của cậu đấy!"
     },
     'doraemon': {
         icon: '🐱',
-        avatarImg: '',
+        avatarImg: 'https://img3.thuthuatphanmem.vn/uploads/2019/10/10/anh-doremon-vay-chao_033146925.png',
         name: 'Mèo máy Doraemon',
         price: 3000,
         login: "Xin chào! Cậu có mang bánh rán cho tớ không? Cùng học nào!",
@@ -2540,7 +2540,7 @@ const mentorsData = {
     },
     'dekisugi': {
         icon: '🧑‍🎓',
-        avatarImg: '',
+        avatarImg: 'https://wibu.com.vn/wp-content/uploads/2024/03/Dekisugi.png',
         name: 'Học giả Dekisugi',
         price: 3000,
         login: "Chào cậu! Hôm nay chúng ta cùng cố gắng ôn tập nhé. Tớ vừa đọc xong một cuốn sách rất hay.",
@@ -2549,7 +2549,7 @@ const mentorsData = {
     },
     'roshi': {
         icon: '🐢',
-        avatarImg: '',
+        avatarImg: 'https://wibu.com.vn/wp-content/uploads/2024/03/Muten-Roshi.png',
         name: 'Quy Lão Tiên Sinh',
         price: 3000,
         login: "Khà khà, đến rồi hả đồ đệ? Sẵn sàng mang mai rùa 40kg để luyện não chưa?",
