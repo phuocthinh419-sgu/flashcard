@@ -309,7 +309,20 @@ function syncStatsToCloud() { if (currentUser && db) { db.collection('vocab_user
 function applyTheme(themeName) { document.body.classList.remove('theme-aurora', 'theme-snow', 'theme-royal'); if (themeName && themeName !== 'theme_default') { document.body.classList.add(themeName); if(themeName === 'theme-snow' || themeName === 'theme-aurora' || themeName === 'theme-royal') { document.body.classList.remove('dark-mode'); document.getElementById('themeToggleBtn').innerText = '🌙'; localStorage.setItem('darkMode', 'false'); } } }
 
 function updateUI() {
-    document.getElementById('ui-gold').innerText = userData.gold; document.getElementById('ui-xp').innerText = userData.xp; document.getElementById('ui-lifetime-xp').innerText = userData.lifetime_xp || 0; document.getElementById('sidebarRealm').innerText = `🌍 Phủ: ${userData.realm || "---"}`; document.getElementById('ui-streak').innerText = userData.streak; document.getElementById('sidebarName').innerText = userData.displayName || "Khách"; document.getElementById('ui-glass-count').innerText = userData.magnifyingGlass || 0; if (document.getElementById('ui-streak-icon')) document.getElementById('ui-streak-icon').innerText = userData.streakIcon || '🔥';
+    document.getElementById('ui-gold').innerText = userData.gold; 
+    document.getElementById('ui-xp').innerText = userData.xp; 
+    document.getElementById('ui-lifetime-xp').innerText = userData.lifetime_xp || 0; 
+    document.getElementById('sidebarRealm').innerText = `🌍 Phủ: ${userData.realm || "---"}`; 
+    document.getElementById('ui-streak').innerText = userData.streak; 
+    document.getElementById('sidebarName').innerText = userData.displayName || "Khách"; 
+    document.getElementById('ui-glass-count').innerText = userData.magnifyingGlass || 0; 
+    
+    // 🛡️ ĐÃ THÊM LỆNH CẬP NHẬT SỐ LƯỢNG BÙA BẢO HỘ
+    if (document.getElementById('ui-shield-count')) {
+        document.getElementById('ui-shield-count').innerText = userData.shieldCount || (userData.hasShield ? 1 : 0);
+    }
+    
+    if (document.getElementById('ui-streak-icon')) document.getElementById('ui-streak-icon').innerText = userData.streakIcon || '🔥';
     if(document.getElementById('ui-mastered-words')) document.getElementById('ui-mastered-words').innerText = userData.mastered_words || 0;
     if(document.getElementById('ui-mastered-lessons')) document.getElementById('ui-mastered-lessons').innerText = (userData.mastered_lessons || []).length;
     
