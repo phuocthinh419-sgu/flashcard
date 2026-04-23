@@ -317,12 +317,27 @@ function updateUI() {
     document.getElementById('sidebarName').innerText = userData.displayName || "Khách"; 
     document.getElementById('ui-glass-count').innerText = userData.magnifyingGlass || 0; 
     
-    // 🛡️ ĐÃ THÊM LỆNH CẬP NHẬT SỐ LƯỢNG BÙA BẢO HỘ
+    // Cập nhật số lượng Bùa Bảo Hộ
     if (document.getElementById('ui-shield-count')) {
         document.getElementById('ui-shield-count').innerText = userData.shieldCount || (userData.hasShield ? 1 : 0);
     }
     
-    if (document.getElementById('ui-streak-icon')) document.getElementById('ui-streak-icon').innerText = userData.streakIcon || '🔥';
+    // --- BẮT ĐẦU: XỬ LÝ HIỆU ỨNG BIỂU TƯỢNG CHUỖI ---
+    let streakIconEl = document.getElementById('ui-streak-icon');
+    if (streakIconEl) {
+        let currentIcon = userData.streakIcon || '🔥';
+        streakIconEl.innerText = currentIcon;
+        streakIconEl.className = ''; // Tẩy sạch phép thuật cũ
+        
+        // Phân loại và ốp phép thuật mới
+        if (['❄️', '🌸', '⚽', '🏀'].includes(currentIcon)) {
+            streakIconEl.classList.add('icon-spin');
+        } else if (currentIcon === '🔥') {
+            streakIconEl.classList.add('icon-neon-fire');
+        }
+    }
+    // --- KẾT THÚC: XỬ LÝ HIỆU ỨNG ---
+
     if(document.getElementById('ui-mastered-words')) document.getElementById('ui-mastered-words').innerText = userData.mastered_words || 0;
     if(document.getElementById('ui-mastered-lessons')) document.getElementById('ui-mastered-lessons').innerText = (userData.mastered_lessons || []).length;
     
