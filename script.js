@@ -1936,7 +1936,6 @@ function triggerEval() {
 
         if (vocabArray.length === 0) return alert("Định dạng không hợp lệ!");
 
-        // Truyền dữ liệu siêu an toàn, không sợ trình duyệt nuốt code
         const jsonVocabStr = JSON.stringify(vocabArray);
 
         const template = `<!DOCTYPE html>
@@ -2034,9 +2033,7 @@ function triggerEval() {
             }
         }
 
-        // Bơm dữ liệu trực tiếp, hoàn toàn miễn nhiễm với lỗi ngoặc kép
         const vocabList = ${jsonVocabStr};
-        
         let currentIndex = 0;
         let quizOrder = [];
         let timerId = null;
@@ -2081,21 +2078,17 @@ function triggerEval() {
         function loadQuiz() {
             const item = vocabList[quizOrder[currentIndex]];
             document.getElementById('quiz-question').innerText = item.en;
-            
             let wrongOptions = [];
             for(let i = 0; i < vocabList.length; i++) {
                 if(vocabList[i].vi !== item.vi) wrongOptions.push(vocabList[i].vi);
             }
             wrongOptions.sort(function() { return Math.random() - 0.5; });
             wrongOptions = wrongOptions.slice(0, 3);
-            
             let options = [item.vi].concat(wrongOptions);
             options.sort(function() { return Math.random() - 0.5; });
-            
             const container = document.getElementById('quiz-options');
             container.innerHTML = '';
             container.classList.remove('disabled');
-            
             for(let i = 0; i < options.length; i++) {
                 let opt = options[i];
                 let btn = document.createElement('button');
@@ -2109,6 +2102,8 @@ function triggerEval() {
                         if(window.parent) window.parent.postMessage('CORRECT', '*'); 
                     } else { 
                         btn.classList.add('wrong'); 
+                        // 👇 MÁCH LẺO KHI SAI
+                        if(window.parent) window.parent.postMessage('WRONG', '*'); 
                         let allBtns = document.getElementsByClassName('quiz-btn');
                         for(let j=0; j<allBtns.length; j++) {
                             if(allBtns[j].innerText === item.vi) allBtns[j].classList.add('correct');
@@ -2123,6 +2118,8 @@ function triggerEval() {
                 container.appendChild(btn);
             }
             startTimer(15, 'timer-text', 'quiz-circle', function() {
+                // HẾT GIỜ CŨNG COI NHƯ SAI
+                if(window.parent) window.parent.postMessage('WRONG', '*');
                 let btns = document.getElementsByClassName('quiz-btn');
                 if(btns.length > 0) btns[0].click();
             });
@@ -2143,7 +2140,6 @@ function triggerEval() {
             document.getElementById('spell-question').innerText = item.vi;
             const container = document.getElementById('spell-inputs');
             container.innerHTML = '';
-            
             const words = item.en.trim().split(' ');
             for(let i=0; i<words.length; i++) {
                 let word = words[i];
@@ -2164,7 +2160,6 @@ function triggerEval() {
                 }
                 container.appendChild(div);
             }
-            
             let hidden = document.createElement('input');
             hidden.style.position = 'absolute';
             hidden.style.opacity = '0';
@@ -2176,10 +2171,8 @@ function triggerEval() {
             hidden.id = 'h-inp';
             container.appendChild(hidden);
             hidden.focus();
-            
             let inputs = document.querySelectorAll('.spell-char');
             hidden.oninput = function(e) {
-                // Tự động lọc bỏ cả khoảng trắng, dấu gạch và gạch chéo khi người dùng lỡ bấm trúng
                 let val = e.target.value.toUpperCase().replace(/[ \\-\\/]/g, '');
                 let charIdx = 0;
                 for(let k=0; k<inputs.length; k++) {
@@ -2190,7 +2183,6 @@ function triggerEval() {
                 }
             };
             hidden.onkeydown = function(e) { if(e.key === 'Enter') submitSpelling(); };
-            
             startTimer(30, 'spell-timer-text', 'spell-circle', submitSpelling);
         }
 
@@ -2199,10 +2191,8 @@ function triggerEval() {
             let inputs = document.querySelectorAll('.spell-char');
             let userVal = "";
             for(let i=0; i<inputs.length; i++) { userVal += inputs[i].value || ""; }
-            userVal = userVal.toUpperCase();
+            userVal = userVal.toUpperCase().replace(/\\s/g, '');
             
-            // Xóa MỌI khoảng trắng khỏi đáp án gốc để so sánh hoàn hảo với các ô input bị dính liền
-            // Việc này sẽ vá triệt để lỗi "Cinema / Movie Theater"
             let correctVal = vocabList[quizOrder[currentIndex]].en.toUpperCase().replace(/\\s/g, '');
             
             function formatWords(str) {
@@ -2213,13 +2203,12 @@ function triggerEval() {
                 return res.join('/');
             }
 
-            let userWords = formatWords(userVal);
-            let correctWords = formatWords(correctVal);
-            
-            if (userWords === correctWords) {
+            if (formatWords(userVal) === formatWords(correctVal)) {
                 for(let i=0; i<inputs.length; i++) inputs[i].style.background = '#d1fae5';
                 if(window.parent) window.parent.postMessage('SPELLING_CORRECT', '*');
             } else {
+                // 👇 MÁCH LẺO KHI GÕ SAI
+                if(window.parent) window.parent.postMessage('WRONG', '*');
                 for(let i=0; i<inputs.length; i++) {
                     inputs[i].style.background = '#fee2e2';
                     inputs[i].value = inputs[i].dataset.char;
@@ -2258,7 +2247,7 @@ function triggerEval() {
 
         document.getElementById('generatedCode').value = template;
         currentGeneratedVocab = vocabArray;
-        alert("Đúc mã thành công! Hãy lưu Bài học mới để trải nghiệm.");
+        alert("Đúc mã thành công! Đã khảm luật trừng phạt vào bài học mới.");
     } catch (e) {
         alert("Lỗi nghiêm trọng khi đúc mã: " + e.message);
     }
@@ -2270,17 +2259,13 @@ function openTimeMachineModal() {
     document.getElementById('modalFrame').srcdoc = tmTemplate; document.getElementById('previewModal').classList.add('active');
 }
 
-    window.addEventListener('message', function(e) {
+   window.addEventListener('message', function(e) {
+        // --- 1. XỬ LÝ KHI TRẢ LỜI ĐÚNG ---
         if (e.data === 'CORRECT' || e.data === 'SPELLING_CORRECT') { 
             if (currentUser && userData) { 
-                // 1. Tính toán hệ số Bình Tiên (Potion)
                 let potionMult = (userData.potionX3Expiry && userData.potionX3Expiry > Date.now()) ? 3 : ((userData.potionExpiry && userData.potionExpiry > Date.now()) ? 2 : 1);
-                
-                // 2. Tính toán hệ số Cuối Tuần (Thứ 7 = 6, Chủ Nhật = 0)
                 let today = new Date().getDay();
                 let weekendMult = (today === 0 || today === 6) ? 3 : 1;
-                
-                // 3. Hệ số tổng hợp (Nhân dược tính với thiên thời)
                 let finalMultiplier = potionMult * weekendMult;
 
                 let baseXP = (e.data === 'SPELLING_CORRECT') ? 25 : 15;
@@ -2313,7 +2298,7 @@ function openTimeMachineModal() {
 
                 syncStatsToCloud(); 
 
-                // 🧙‍♂️ Gọi Gia Sư khen ngợi (Nếu có thuê và còn hạn)
+                // 🧙‍♂️ Gọi Gia Sư khen ngợi
                 if (typeof showMentorDialogue === 'function') showMentorDialogue('correct');
                 
                 if (isRecordBroken) { 
@@ -2324,17 +2309,10 @@ function openTimeMachineModal() {
                 } else { 
                     let anim = document.getElementById('rewardAnim'); 
                     let msgPrefix = "🎉";
-                    
-                    // 📢 Báo cáo Thánh ân tùy theo hệ số
-                    if (weekendMult === 3 && potionMult > 1) {
-                        msgPrefix = `🔥 SIÊU CẤP CUỐI TUẦN (x${finalMultiplier})!`;
-                    } else if (weekendMult === 3) {
-                        msgPrefix = `🌞 THÁNH ÂN CUỐI TUẦN (x3)!`;
-                    } else if (potionMult === 3) {
-                        msgPrefix = `🏺 ĐANG X3!`;
-                    } else if (potionMult === 2) {
-                        msgPrefix = `🧪 ĐANG X2!`;
-                    }
+                    if (weekendMult === 3 && potionMult > 1) msgPrefix = `🔥 SIÊU CẤP CUỐI TUẦN (x${finalMultiplier})!`;
+                    else if (weekendMult === 3) msgPrefix = `🌞 THÁNH ÂN CUỐI TUẦN (x3)!`;
+                    else if (potionMult === 3) msgPrefix = `🏺 ĐANG X3!`;
+                    else if (potionMult === 2) msgPrefix = `🧪 ĐANG X2!`;
 
                     anim.innerText = `${msgPrefix} +${goldGained} 🪙 | +${xpGained} ⭐`; 
                     anim.classList.add('show'); 
@@ -2342,6 +2320,34 @@ function openTimeMachineModal() {
                 }
             } 
         }
+        
+        // --- 2. XỬ LÝ KHI TRẢ LỜI SAI (VÁ THEO Ý BỆ HẠ) ---
+        else if (e.data === 'WRONG' || e.data === 'INCORRECT') {
+            if (currentUser && userData && userData.selectedMentor) {
+                
+                // 🐢 Thiết quân luật của Quy Lão Kame
+                if (userData.selectedMentor === 'roshi') {
+                    userData.gold = Math.max(0, (userData.gold || 0) - 2); 
+                    
+                    // Hiệu ứng trừ tiền trực quan cho Bệ hạ
+                    let anim = document.getElementById('rewardAnim');
+                    anim.innerText = `💢 Quy Lão phạt: -2 🪙`;
+                    anim.style.color = "#ff1744"; // Đổi sang màu đỏ cảnh báo
+                    anim.classList.add('show');
+                    setTimeout(() => { 
+                        anim.classList.remove('show');
+                        anim.style.color = ""; // Trả lại màu mặc định
+                    }, 2000);
+
+                    syncStatsToCloud(); // Lưu ngay lập tức vào sổ nam tào
+                }
+
+                // Gọi Gia sư hiện ra khiển trách/nhắc nhở
+                if (typeof showMentorDialogue === 'function') showMentorDialogue('wrong');
+            }
+        }
+
+        // --- 3. CÁC TÍN HIỆU HỆ THỐNG KHÁC ---
         else if (e.data === 'REQ_GLASS') { if (userData.magnifyingGlass > 0) { userData.magnifyingGlass--; syncStatsToCloud(); document.getElementById('modalFrame').contentWindow.postMessage('APPROVE_GLASS', '*'); } else { alert("Số lượng Kính Lúp hiện tại là 0!"); } }
         else if (e.data === 'TM_NEXT_DAY') { userData.timeMachine.daysRecovered++; let allVocab = []; allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab)); userData.timeMachine.currentBank = allVocab.sort(() => Math.random() - 0.5).slice(0, Math.min(30, allVocab.length)); db.collection('vocab_users').doc(currentUser.uid).update({ timeMachine: userData.timeMachine }).then(() => { openTimeMachineModal(); }); }
         else if (e.data === 'TM_RESULT_PASS') { closeModal(); let oldS = userData.streak; userData.streak = userData.timeMachine.lostStreak + userData.timeMachine.missedDays; userData.timeMachine = null; db.collection('vocab_users').doc(currentUser.uid).update({ streak: userData.streak, timeMachine: null }).then(() => { updateUI(); alert(`🎉 KỲ TÍCH! Chuỗi đã phục hồi lên mốc ${userData.streak}!`); triggerConfetti(); if(window.checkAndGrantStreakRewards) window.checkAndGrantStreakRewards(oldS, userData.streak); }); }
@@ -2528,6 +2534,7 @@ const mentorsData = {
         login: "Cậu đến đúng lúc lắm. Hiện trường bài học hôm nay vẫn còn nguyên dấu vết. Bắt tay vào thu thập manh mối trong kho bài học thôi!",
         correct: "Sự thật luôn chỉ có một! Suy luận của cậu rất sắc bén!",
         broken: "Hung thủ giết chết điểm số chính là sự trì hoãn của cậu đấy!"
+        wrong: "Sai rồi! Manh mối rõ ràng như vậy mà cậu lại bỏ sót sao? Nhìn kỹ lại đi!",
     },
     'doraemon': {
         icon: '🐱',
@@ -2537,6 +2544,7 @@ const mentorsData = {
         login: "Xin chào! Cậu có mang bánh rán cho tớ không? Cùng học nào!",
         correct: "Giỏi quá! Cậu xứng đáng được tặng một chiếc bánh rán!",
         broken: "Cậu lại lười biếng rồi! Có cần tớ lôi Cỗ Máy Thời Gian ra cứu chuỗi không hả?"
+        wrong: "Ui da, sai mất rồi! Đừng nản chí, cậu hãy xem kĩ lại từ vựng đi!",
     },
     'dekisugi': {
         icon: '🧑‍🎓',
@@ -2546,6 +2554,7 @@ const mentorsData = {
         login: "Chào cậu! Hôm nay chúng ta cùng cố gắng ôn tập nhé. Tớ vừa đọc xong một cuốn sách rất hay.",
         correct: "Tuyệt vời! Cậu làm tốt lắm. Cứ giữ vững phong độ này nhé!",
         broken: "Tớ thấy cậu vắng mặt hơi lâu. Việc học giống như xây gạch, phải kiên trì mỗi ngày mới vững chắc được."
+        wrong: "Ồ, câu này hơi lắt léo một chút. Cậu nên xem lại kiến thức phần này nhé.",
     },
     'roshi': {
         icon: '🐢',
@@ -2555,6 +2564,7 @@ const mentorsData = {
         login: "Khà khà, đến rồi hả đồ đệ? Sẵn sàng mang mai rùa 40kg để luyện não chưa?",
         correct: "Khá lắm khá lắm! Cứ thế này chẳng mấy chốc con sẽ lĩnh hội được võ công ngôn ngữ!",
         broken: "Mới lười có vài hôm mà võ công đã lụt nghề rồi sao? Mau xốc lại tinh thần, tiếp tục tu luyện!"
+        wrong: "Dở quá! Võ công lạt nhẽo thế này à? Phạt trừ 2 Vàng để nhớ đời nhé!",
     }
 };
 
