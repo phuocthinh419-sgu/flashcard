@@ -719,24 +719,6 @@ function surrenderMatch() {
     
     if(confirm("Bạn có chắc chắn muốn rút lui khỏi trận này? Hệ thống sẽ xử thua!")) {
         window.isSpectating = false;
-        window.checkAndGrantStreakRewards = function(oldS, newS) {
-    if (oldS >= newS) return;
-    let granted = false;
-    for(let s = oldS + 1; s <= newS; s++) {
-        let mod = s % 100; let reward = 0;
-        if (mod === 15) reward = 20; else if (mod === 30) reward = 35; else if (mod === 60) reward = 50; else if (mod === 0 && s >= 100) reward = 100;
-        if (reward > 0) {
-            if(!userData.vouchers) userData.vouchers = [];
-            userData.vouchers.push(reward);
-            granted = true;
-            alert(`🔥 QUÀ TẶNG CHUỖI ${s} NGÀY!\nHệ thống ban tặng 1 Mã giảm giá ${reward}% vào Cửa Hàng!`);
-        }
-    }
-    if (granted) {
-        userData.vouchers.sort((a,b) => b - a);
-        if(currentUser && db) db.collection('vocab_users').doc(currentUser.uid).update({ vouchers: userData.vouchers }).then(() => updateUI());
-    }
-};
         let myName = userData.displayName;
         rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
             let m = snap.val();
@@ -2390,6 +2372,36 @@ function clearNotice() {
         alert("🔇 Đã tắt loa phát thanh!");
     });
 }
+
+// ĐÀI BAN THƯỞNG CHUỖI NGÀY
+window.checkAndGrantStreakRewards = function(oldS, newS) {
+    if (oldS >= newS) return;
+    let granted = false;
+    
+    for (let s = oldS + 1; s <= newS; s++) {
+        let reward = 0;
+        
+        // Thiết lập Thánh ý:
+        if (s === 30) reward = 15;
+        else if (s === 50) reward = 30;
+        else if (s === 100) reward = 50;
+        else if (s > 100 && (s - 100) % 30 === 0) reward = 75; // 130, 160, 190...
+
+        if (reward > 0) {
+            if (!userData.vouchers) userData.vouchers = [];
+            userData.vouchers.push(reward);
+            granted = true;
+            alert(`🔥 QUÀ TẶNG CHUỖI ${s} NGÀY!\nHệ thống ban tặng 1 Mã giảm giá ${reward}% vào Cửa Hàng!`);
+        }
+    }
+    
+    if (granted) {
+        userData.vouchers.sort((a,b) => b - a); // Ưu tiên dùng Voucher xịn trước
+        if (currentUser && db) {
+            db.collection('vocab_users').doc(currentUser.uid).update({ vouchers: userData.vouchers }).then(() => updateUI());
+        }
+    }
+};
 
 function logoutApp() {
     if(auth) {
