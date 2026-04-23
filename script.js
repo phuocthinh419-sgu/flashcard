@@ -2312,6 +2312,9 @@ function openTimeMachineModal() {
                 }
 
                 syncStatsToCloud(); 
+
+                // 🧙‍♂️ Gọi Gia Sư khen ngợi (Nếu có thuê và còn hạn)
+                if (typeof showMentorDialogue === 'function') showMentorDialogue('correct');
                 
                 if (isRecordBroken) { 
                     document.getElementById('recordCurrentXp').innerText = userData.weeklyXp + " XP"; 
@@ -2511,3 +2514,150 @@ function logoutApp() {
         }).catch(err => alert("Lỗi: " + err.message));
     }
 }
+
+// =========================================================
+// 🧙‍♂️ HỆ THỐNG NGỰ TIỀN GIA SƯ (MENTOR SYSTEM)
+// =========================================================
+
+const mentorsData = {
+    'conan': {
+        icon: '🕵️',
+        avatarImg: '', // Bệ hạ có thể chèn link ảnh PNG vào đây sau
+        name: 'Thám tử Conan',
+        price: 3000,
+        login: "Cậu đến đúng lúc lắm. Hiện trường bài học hôm nay vẫn còn nguyên dấu vết. Bắt tay vào thu thập manh thôi!",
+        correct: "Sự thật luôn chỉ có một! Suy luận của cậu rất sắc bén!",
+        broken: "Hung thủ giết chết điểm số chính là sự trì hoãn của cậu đấy!"
+    },
+    'doraemon': {
+        icon: '🐱',
+        avatarImg: '',
+        name: 'Mèo máy Doraemon',
+        price: 3000,
+        login: "Xin chào! Cậu có mang bánh rán cho tớ không? Cùng học nào!",
+        correct: "Giỏi quá! Cậu xứng đáng được tặng một chiếc bánh rán!",
+        broken: "Cậu lại lười biếng rồi! Có cần tớ lôi Cỗ Máy Thời Gian ra cứu chuỗi không hả?"
+    },
+    'dekisugi': {
+        icon: '🧑‍🎓',
+        avatarImg: '',
+        name: 'Học giả Dekisugi',
+        price: 3000,
+        login: "Chào cậu! Hôm nay chúng ta cùng cố gắng ôn tập nhé. Tớ vừa đọc xong một cuốn sách rất hay.",
+        correct: "Tuyệt vời! Cậu làm tốt lắm. Cứ giữ vững phong độ này nhé!",
+        broken: "Tớ thấy cậu vắng mặt hơi lâu. Việc học giống như xây gạch, phải kiên trì mỗi ngày mới vững chắc được."
+    },
+    'roshi': {
+        icon: '🐢',
+        avatarImg: '',
+        name: 'Quy Lão Tiên Sinh',
+        price: 3000,
+        login: "Khà khà, đến rồi hả đồ đệ? Sẵn sàng mang mai rùa 40kg để luyện não chưa?",
+        correct: "Khá lắm khá lắm! Cứ thế này chẳng mấy chốc con sẽ lĩnh hội được võ công ngôn ngữ!",
+        broken: "Mới lười có vài hôm mà võ công đã lụt nghề rồi sao? Mau xốc lại tinh thần, tiếp tục tu luyện!"
+    }
+};
+
+let tempMentorId = null;
+let mentorTimeout = null;
+
+// 1. Mở khế ước chiêu mộ
+window.openMentorContract = function(mentorId) {
+    tempMentorId = mentorId;
+    const mentor = mentorsData[mentorId];
+    
+    let avatarHtml = mentor.icon;
+    if (mentor.avatarImg) avatarHtml = `<img src="${mentor.avatarImg}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+    
+    document.getElementById('contractAvatar').innerHTML = avatarHtml;
+    document.getElementById('contractDesc').innerText = `Chiêu mộ ${mentor.name} làm Ngự Tiền Gia Sư. Lương tháng: ${mentor.price} Vàng.`;
+    document.getElementById('mentorMonths').value = 1;
+    updateContractTotal();
+    document.getElementById('mentorContractModal').classList.add('active');
+    
+    document.getElementById('mentorMonths').oninput = updateContractTotal;
+};
+
+// 2. Tính tiền tự động
+window.updateContractTotal = function() {
+    let months = parseInt(document.getElementById('mentorMonths').value) || 1;
+    if (months < 1) { months = 1; document.getElementById('mentorMonths').value = 1; }
+    if (months > 12) { months = 12; document.getElementById('mentorMonths').value = 12; }
+    let total = months * mentorsData[tempMentorId].price;
+    document.getElementById('contractTotalGold').innerText = total.toLocaleString();
+};
+
+// 3. Đóng dấu ký kết
+window.confirmMentorContract = async function() {
+    let months = parseInt(document.getElementById('mentorMonths').value) || 1;
+    let totalCost = months * mentorsData[tempMentorId].price;
+
+    if (!userData.gold || userData.gold < totalCost) {
+        alert("Báo cáo Bệ hạ: Ngân khố không đủ Vàng để trả lương cho Gia sư này. Hãy đi cày thêm!");
+        return;
+    }
+
+    // Tính hạn sử dụng hợp đồng
+    let now = Date.now();
+    let currentExpiry = userData.mentorExpiry || now;
+    if (currentExpiry < now) currentExpiry = now; 
+    let newExpiry = currentExpiry + (months * 30 * 24 * 60 * 60 * 1000);
+
+    // Trừ Vàng & Lưu Data
+    userData.gold -= totalCost;
+    userData.mentorExpiry = newExpiry;
+    userData.selectedMentor = tempMentorId;
+
+    await syncStatsToCloud();
+    document.getElementById('mentorContractModal').classList.remove('active');
+    updateUI();
+    alert(`🎉 Tấu tiệp! Bệ hạ đã chiêu mộ thành công ${mentorsData[tempMentorId].name} trong ${months} tháng.`);
+    showMentorDialogue('login');
+};
+
+// 4. Triệu hồi Gia Sư ra nói chuyện
+window.showMentorDialogue = function(action) {
+    const widget = document.getElementById('mentor-widget');
+    if (!widget || !userData || !userData.selectedMentor) return;
+
+    // Kẻ nào hết hạn hợp đồng thì lập tức đuổi việc
+    let now = Date.now();
+    if (!userData.mentorExpiry || userData.mentorExpiry < now) {
+        widget.style.display = 'none';
+        return; 
+    }
+
+    // Đang lên Lôi đài (PvP) thì phải ẩn Gia sư đi để bảo đảm công bằng
+    let pvpModal = document.getElementById('pvpModal');
+    if (pvpModal && pvpModal.classList.contains('active')) {
+        widget.style.display = 'none';
+        return;
+    }
+
+    widget.style.display = 'flex';
+    let mentor = mentorsData[userData.selectedMentor];
+    
+    const avatarEl = document.getElementById('mentor-avatar');
+    if (mentor.avatarImg) {
+        avatarEl.innerHTML = `<img src="${mentor.avatarImg}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+    } else {
+        avatarEl.innerText = mentor.icon;
+    }
+    
+    const bubble = document.getElementById('mentor-bubble');
+    bubble.innerText = mentor[action];
+    bubble.classList.add('show');
+    
+    clearTimeout(mentorTimeout);
+    mentorTimeout = setTimeout(() => { bubble.classList.remove('show'); }, 6000); // 6 giây sau tự tắt bong bóng
+};
+
+// Bấm vào đầu Gia sư để chào hỏi
+window.pokeMentor = function() {
+    showMentorDialogue('login');
+};
+
+// Tự động chào hỏi khi Load trang (Chờ 2 giây để load xong Data)
+setTimeout(() => {
+    if(currentUser && userData) showMentorDialogue('login');
+}, 2000);
