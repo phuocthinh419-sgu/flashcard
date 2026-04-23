@@ -2258,13 +2258,25 @@ function openTimeMachineModal() {
     window.addEventListener('message', function(e) {
         if (e.data === 'CORRECT' || e.data === 'SPELLING_CORRECT') { 
             if (currentUser && userData) { 
-                let multiplier = (userData.potionX3Expiry && userData.potionX3Expiry > Date.now()) ? 3 : ((userData.potionExpiry && userData.potionExpiry > Date.now()) ? 2 : 1);
+                // 1. Tính toán hệ số Bình Tiên (Potion)
+                let potionMult = (userData.potionX3Expiry && userData.potionX3Expiry > Date.now()) ? 3 : ((userData.potionExpiry && userData.potionExpiry > Date.now()) ? 2 : 1);
                 
+                // 2. Tính toán hệ số Cuối Tuần (Thứ 7 = 6, Chủ Nhật = 0)
+                let today = new Date().getDay();
+                let weekendMult = (today === 0 || today === 6) ? 3 : 1;
+                
+                // 3. Hệ số tổng hợp (Nhân dược tính với thiên thời)
+                let finalMultiplier = potionMult * weekendMult;
+
                 let baseXP = (e.data === 'SPELLING_CORRECT') ? 25 : 15;
                 let baseGold = (e.data === 'SPELLING_CORRECT') ? 25 : 10;
 
-                let xpGained = baseXP * multiplier; let goldGained = baseGold * multiplier; 
-                userData.xp = (userData.xp || 0) + xpGained; userData.gold = (userData.gold || 0) + goldGained; userData.weeklyXp = (userData.weeklyXp || 0) + xpGained;
+                let xpGained = baseXP * finalMultiplier; 
+                let goldGained = baseGold * finalMultiplier; 
+                
+                userData.xp = (userData.xp || 0) + xpGained; 
+                userData.gold = (userData.gold || 0) + goldGained; 
+                userData.weeklyXp = (userData.weeklyXp || 0) + xpGained;
                 
                 let oldHighest = userData.highestWeeklyXp || 0; let isRecordBroken = false;
                 if (oldHighest > 0 && userData.weeklyXp > oldHighest) { userData.highestWeeklyXp = userData.weeklyXp; if (!userData.hasBrokenRecordThisWeek) { userData.hasBrokenRecordThisWeek = true; isRecordBroken = true; } } else if (oldHighest === 0 && userData.weeklyXp > 0) { userData.highestWeeklyXp = userData.weeklyXp; }
@@ -2285,7 +2297,31 @@ function openTimeMachineModal() {
                 }
 
                 syncStatsToCloud(); 
-                if (isRecordBroken) { document.getElementById('recordCurrentXp').innerText = userData.weeklyXp + " XP"; document.getElementById('recordOldXp').innerText = oldHighest; document.getElementById('recordModal').classList.add('active'); triggerConfetti(); } else { let anim = document.getElementById('rewardAnim'); let prefix = multiplier === 3 ? `🏺 ĐANG X3!` : (multiplier === 2 ? `🧪 ĐANG X2!` : `🎉`); anim.innerText = `${prefix} +${goldGained} 🪙 | +${xpGained} ⭐`; anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 2000); }
+                
+                if (isRecordBroken) { 
+                    document.getElementById('recordCurrentXp').innerText = userData.weeklyXp + " XP"; 
+                    document.getElementById('recordOldXp').innerText = oldHighest; 
+                    document.getElementById('recordModal').classList.add('active'); 
+                    triggerConfetti(); 
+                } else { 
+                    let anim = document.getElementById('rewardAnim'); 
+                    let msgPrefix = "🎉";
+                    
+                    // 📢 Báo cáo Thánh ân tùy theo hệ số
+                    if (weekendMult === 3 && potionMult > 1) {
+                        msgPrefix = `🔥 SIÊU CẤP CUỐI TUẦN (x${finalMultiplier})!`;
+                    } else if (weekendMult === 3) {
+                        msgPrefix = `🌞 THÁNH ÂN CUỐI TUẦN (x3)!`;
+                    } else if (potionMult === 3) {
+                        msgPrefix = `🏺 ĐANG X3!`;
+                    } else if (potionMult === 2) {
+                        msgPrefix = `🧪 ĐANG X2!`;
+                    }
+
+                    anim.innerText = `${msgPrefix} +${goldGained} 🪙 | +${xpGained} ⭐`; 
+                    anim.classList.add('show'); 
+                    setTimeout(() => anim.classList.remove('show'), 2000); 
+                }
             } 
         }
         else if (e.data === 'REQ_GLASS') { if (userData.magnifyingGlass > 0) { userData.magnifyingGlass--; syncStatsToCloud(); document.getElementById('modalFrame').contentWindow.postMessage('APPROVE_GLASS', '*'); } else { alert("Số lượng Kính Lúp hiện tại là 0!"); } }
