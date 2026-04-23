@@ -27,18 +27,19 @@
             animation: spin-clockwise 4s linear infinite; /* Xoay đều đặn trong 4 giây */
         }
 
-        /* 2. Lửa Tím Neon (Bẻ màu emoji + Hiệu ứng bập bùng như thật) */
-        @keyframes neon-flicker {
-            0% { transform: scale(1) skewX(2deg); filter: hue-rotate(260deg) saturate(250%) drop-shadow(0 0 5px #d500f9); }
-            25% { transform: scale(1.1) translateY(-2px) skewX(-2deg); filter: hue-rotate(280deg) saturate(300%) drop-shadow(0 0 10px #ea80fc); }
-            50% { transform: scale(0.9) translateY(1px) skewX(1deg); filter: hue-rotate(250deg) saturate(200%) drop-shadow(0 0 3px #aa00ff); }
-            75% { transform: scale(1.05) translateY(-1px) skewX(-1deg); filter: hue-rotate(270deg) saturate(250%) drop-shadow(0 0 8px #d500f9); }
-            100% { transform: scale(1) skewX(0deg); filter: hue-rotate(260deg) saturate(300%) drop-shadow(0 0 12px #e040fb); }
+        /* 2. Lửa Tím Neon Chân Thật (Gốc đứng im, ngọn bập bùng, tỏa sáng) */
+        @keyframes true-neon-fire {
+            0%   { filter: hue-rotate(260deg) saturate(300%) drop-shadow(0 0 2px #d500f9) drop-shadow(0 -2px 4px #aa00ff); transform: skewX(0deg) scaleY(1); }
+            20%  { filter: hue-rotate(265deg) saturate(300%) drop-shadow(0 0 4px #e040fb) drop-shadow(0 -5px 8px #d500f9); transform: skewX(1deg) scaleY(1.05); }
+            40%  { filter: hue-rotate(255deg) saturate(300%) drop-shadow(0 0 3px #d500f9) drop-shadow(0 -3px 6px #aa00ff); transform: skewX(-1deg) scaleY(0.95); }
+            60%  { filter: hue-rotate(270deg) saturate(300%) drop-shadow(0 0 5px #ea80fc) drop-shadow(0 -7px 12px #d500f9); transform: skewX(2deg) scaleY(1.08); }
+            80%  { filter: hue-rotate(260deg) saturate(300%) drop-shadow(0 0 2px #aa00ff) drop-shadow(0 -2px 5px #8e24aa); transform: skewX(-2deg) scaleY(0.98); }
+            100% { filter: hue-rotate(265deg) saturate(300%) drop-shadow(0 0 6px #d500f9) drop-shadow(0 -6px 15px #aa00ff); transform: skewX(0deg) scaleY(1.04); }
         }
         .icon-neon-fire {
             display: inline-block;
-            transform-origin: bottom center; /* Lửa cháy từ dưới gốc lên */
-            animation: neon-flicker 0.15s infinite alternate; /* Nhấp nháy tốc độ cao */
+            transform-origin: bottom center; /* Đóng đinh gốc lửa xuống đất */
+            animation: true-neon-fire 0.25s ease-in-out infinite alternate; /* Cháy mượt mà không bị giật cục */
         }
     </style>
 </head>
