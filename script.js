@@ -2528,13 +2528,13 @@ function logoutApp() {
 const mentorsData = {
     'conan': {
         icon: '🕵️',
-        avatarImg: 'https://static.ybox.vn/2022/8/2/1660030852217-conan.png', // Bệ hạ có thể chèn link ảnh PNG vào đây sau
+        avatarImg: 'https://static.ybox.vn/2022/8/2/1660030852217-conan.png', 
         name: 'Thám tử Conan',
         price: 3000,
         login: "Cậu đến đúng lúc lắm. Hiện trường bài học hôm nay vẫn còn nguyên dấu vết. Bắt tay vào thu thập manh mối trong kho bài học thôi!",
         correct: "Sự thật luôn chỉ có một! Suy luận của cậu rất sắc bén!",
-        broken: "Hung thủ giết chết điểm số chính là sự trì hoãn của cậu đấy!"
-        wrong: "Sai rồi! Manh mối rõ ràng như vậy mà cậu lại bỏ sót sao? Nhìn kỹ lại đi!",
+        broken: "Hung thủ giết chết điểm số chính là sự trì hoãn của cậu đấy!", // Đã thêm dấu phẩy
+        wrong: "Sai rồi! Manh mối rõ ràng như vậy mà cậu lại bỏ sót sao? Nhìn kỹ lại đi!"
     },
     'doraemon': {
         icon: '🐱',
@@ -2543,8 +2543,8 @@ const mentorsData = {
         price: 3000,
         login: "Xin chào! Cậu có mang bánh rán cho tớ không? Cùng học nào!",
         correct: "Giỏi quá! Cậu xứng đáng được tặng một chiếc bánh rán!",
-        broken: "Cậu lại lười biếng rồi! Có cần tớ lôi Cỗ Máy Thời Gian ra cứu chuỗi không hả?"
-        wrong: "Ui da, sai mất rồi! Đừng nản chí, cậu hãy xem kĩ lại từ vựng đi!",
+        broken: "Cậu lại lười biếng rồi! Có cần tớ lôi Cỗ Máy Thời Gian ra cứu chuỗi không hả?", // Đã thêm dấu phẩy
+        wrong: "Ui da, sai mất rồi! Đừng nản chí, cậu hãy xem kĩ lại từ vựng đi!"
     },
     'dekisugi': {
         icon: '🧑‍🎓',
@@ -2553,8 +2553,8 @@ const mentorsData = {
         price: 3000,
         login: "Chào cậu! Hôm nay chúng ta cùng cố gắng ôn tập nhé. Tớ vừa đọc xong một cuốn sách rất hay.",
         correct: "Tuyệt vời! Cậu làm tốt lắm. Cứ giữ vững phong độ này nhé!",
-        broken: "Tớ thấy cậu vắng mặt hơi lâu. Việc học giống như xây gạch, phải kiên trì mỗi ngày mới vững chắc được."
-        wrong: "Ồ, câu này hơi lắt léo một chút. Cậu nên xem lại kiến thức phần này nhé.",
+        broken: "Tớ thấy cậu vắng mặt hơi lâu. Việc học giống như xây gạch, phải kiên trì mỗi ngày mới vững chắc được.", // Đã thêm dấu phẩy
+        wrong: "Ồ, câu này hơi lắt léo một chút. Cậu nên xem lại kiến thức phần này nhé."
     },
     'roshi': {
         icon: '🐢',
@@ -2563,8 +2563,8 @@ const mentorsData = {
         price: 3000,
         login: "Khà khà, đến rồi hả đồ đệ? Sẵn sàng mang mai rùa 40kg để luyện não chưa?",
         correct: "Khá lắm khá lắm! Cứ thế này chẳng mấy chốc con sẽ lĩnh hội được võ công ngôn ngữ!",
-        broken: "Mới lười có vài hôm mà võ công đã lụt nghề rồi sao? Mau xốc lại tinh thần, tiếp tục tu luyện!"
-        wrong: "Dở quá! Võ công lạt nhẽo thế này à? Phạt trừ 2 Vàng để nhớ đời nhé!",
+        broken: "Mới lười có vài hôm mà võ công đã lụt nghề rồi sao? Mau xốc lại tinh thần, tiếp tục tu luyện!", // Đã thêm dấu phẩy
+        wrong: "Dở quá! Võ công lạt nhẽo thế này à? Phạt trừ 2 Vàng để nhớ đời nhé!"
     }
 };
 
