@@ -2102,8 +2102,8 @@ function triggerEval() {
                         if(window.parent) window.parent.postMessage('CORRECT', '*'); 
                     } else { 
                         btn.classList.add('wrong'); 
-                        // 👇 MÁCH LẺO KHI SAI
-                        if(window.parent) window.parent.postMessage('WRONG', '*'); 
+                        // 👇 MÁCH LẺO KHI SAI TRẮC NGHIỆM
+                        if(window.parent) window.parent.postMessage(JSON.stringify({status: 'WRONG', en: item.en, vi: item.vi}), '*'); 
                         let allBtns = document.getElementsByClassName('quiz-btn');
                         for(let j=0; j<allBtns.length; j++) {
                             if(allBtns[j].innerText === item.vi) allBtns[j].classList.add('correct');
@@ -2118,10 +2118,21 @@ function triggerEval() {
                 container.appendChild(btn);
             }
             startTimer(15, 'timer-text', 'quiz-circle', function() {
-                // HẾT GIỜ CŨNG COI NHƯ SAI
-                if(window.parent) window.parent.postMessage('WRONG', '*');
+                // 👇 HẾT GIỜ TRẮC NGHIỆM
+                if(window.parent) window.parent.postMessage(JSON.stringify({status: 'WRONG', en: item.en, vi: item.vi}), '*');
                 let btns = document.getElementsByClassName('quiz-btn');
-                if(btns.length > 0) btns[0].click();
+                if(btns.length > 0) {
+                    container.classList.add('disabled');
+                    btns[0].classList.add('wrong');
+                    for(let j=0; j<btns.length; j++) {
+                        if(btns[j].innerText === item.vi) btns[j].classList.add('correct');
+                    }
+                    setTimeout(function() { 
+                        currentIndex++; 
+                        if (currentIndex < vocabList.length) loadQuiz(); 
+                        else finish("quiz-section", "Hoàn thành Trắc nghiệm!"); 
+                    }, 1500);
+                }
             });
         }
 
@@ -2193,7 +2204,8 @@ function triggerEval() {
             for(let i=0; i<inputs.length; i++) { userVal += inputs[i].value || ""; }
             userVal = userVal.toUpperCase().replace(/\\s/g, '');
             
-            let correctVal = vocabList[quizOrder[currentIndex]].en.toUpperCase().replace(/\\s/g, '');
+            let currentItem = vocabList[quizOrder[currentIndex]];
+            let correctVal = currentItem.en.toUpperCase().replace(/\\s/g, '');
             
             function formatWords(str) {
                 let arr = str.split('/');
@@ -2207,8 +2219,8 @@ function triggerEval() {
                 for(let i=0; i<inputs.length; i++) inputs[i].style.background = '#d1fae5';
                 if(window.parent) window.parent.postMessage('SPELLING_CORRECT', '*');
             } else {
-                // 👇 MÁCH LẺO KHI GÕ SAI
-                if(window.parent) window.parent.postMessage('WRONG', '*');
+                // 👇 MÁCH LẺO KHI GÕ SAI (HOẶC HẾT GIỜ)
+                if(window.parent) window.parent.postMessage(JSON.stringify({status: 'WRONG', en: currentItem.en, vi: currentItem.vi}), '*');
                 for(let i=0; i<inputs.length; i++) {
                     inputs[i].style.background = '#fee2e2';
                     inputs[i].value = inputs[i].dataset.char;
@@ -2260,6 +2272,22 @@ function openTimeMachineModal() {
 }
 
    window.addEventListener('message', function(e) {
+        let isWrong = false;
+        let vocabContext = null;
+
+        // Phân tích thông điệp (Bản nâng cấp có mớm lời)
+        if (typeof e.data === 'string' && e.data.startsWith('{')) {
+            try {
+                let parsed = JSON.parse(e.data);
+                if (parsed.status === 'WRONG') {
+                    isWrong = true;
+                    vocabContext = { en: parsed.en, vi: parsed.vi };
+                }
+            } catch(err) {}
+        } else if (e.data === 'WRONG' || e.data === 'INCORRECT') {
+            isWrong = true;
+        }
+
         // --- 1. XỬ LÝ KHI TRẢ LỜI ĐÚNG ---
         if (e.data === 'CORRECT' || e.data === 'SPELLING_CORRECT') { 
             if (currentUser && userData) { 
@@ -2298,7 +2326,6 @@ function openTimeMachineModal() {
 
                 syncStatsToCloud(); 
 
-                // 🧙‍♂️ Gọi Gia Sư khen ngợi
                 if (typeof showMentorDialogue === 'function') showMentorDialogue('correct');
                 
                 if (isRecordBroken) { 
@@ -2321,29 +2348,28 @@ function openTimeMachineModal() {
             } 
         }
         
-        // --- 2. XỬ LÝ KHI TRẢ LỜI SAI (VÁ THEO Ý BỆ HẠ) ---
-        else if (e.data === 'WRONG' || e.data === 'INCORRECT') {
+        // --- 2. XỬ LÝ KHI TRẢ LỜI SAI ---
+        else if (isWrong) {
             if (currentUser && userData && userData.selectedMentor) {
                 
                 // 🐢 Thiết quân luật của Quy Lão Kame
                 if (userData.selectedMentor === 'roshi') {
                     userData.gold = Math.max(0, (userData.gold || 0) - 2); 
                     
-                    // Hiệu ứng trừ tiền trực quan cho Bệ hạ
                     let anim = document.getElementById('rewardAnim');
                     anim.innerText = `💢 Quy Lão phạt: -2 🪙`;
-                    anim.style.color = "#ff1744"; // Đổi sang màu đỏ cảnh báo
+                    anim.style.color = "#ff1744"; 
                     anim.classList.add('show');
                     setTimeout(() => { 
                         anim.classList.remove('show');
-                        anim.style.color = ""; // Trả lại màu mặc định
+                        anim.style.color = ""; 
                     }, 2000);
 
-                    syncStatsToCloud(); // Lưu ngay lập tức vào sổ nam tào
+                    syncStatsToCloud(); 
                 }
 
-                // Gọi Gia sư hiện ra khiển trách/nhắc nhở
-                if (typeof showMentorDialogue === 'function') showMentorDialogue('wrong');
+                // Gọi Gia sư hiện ra và truyền từ vựng bị sai vào miệng họ
+                if (typeof showMentorDialogue === 'function') showMentorDialogue('wrong', vocabContext);
             }
         }
 
@@ -2561,10 +2587,10 @@ const mentorsData = {
         avatarImg: 'https://wibu.com.vn/wp-content/uploads/2024/03/Muten-Roshi.png',
         name: 'Quy Lão Tiên Sinh',
         price: 3000,
-        login: "Khà khà, đến rồi hả đồ đệ? Sẵn sàng mang mai rùa 40kg để luyện não chưa?",
-        correct: "Khá lắm khá lắm! Cứ thế này chẳng mấy chốc con sẽ lĩnh hội được võ công ngôn ngữ!",
-        broken: "Mới lười có vài hôm mà võ công đã lụt nghề rồi sao? Mau xốc lại tinh thần, tiếp tục tu luyện!", // Đã thêm dấu phẩy
-        wrong: "Dở quá! Võ công lạt nhẽo thế này à? Phạt trừ 2 Vàng để nhớ đời nhé!"
+        login: "Khà khà, nhìn cái mặt ngáp ngắn ngáp dài kìa, định vào đây cúng Vàng cho lão phu đi uống trà đấy à?",
+        correct: "Ồ, câu này mà cũng làm được cơ đấy! Đúng là rùa mù vớ được cá rán! Chắc lại ăn may chứ gì?",
+        broken: "Đứt chuỗi rồi à? Khà khà, ý chí tu luyện của đồ đệ còn ngắn hơn cả chiều cao của lão phu nữa!",
+        wrong: "Ngu dốt! Làm bài mà cứ như ném phi tiêu thế à? Lão phu xin nhẹ 2 Vàng đi mua tạp chí nhé!"
     }
 };
 
@@ -2625,19 +2651,17 @@ window.confirmMentorContract = async function() {
     showMentorDialogue('login');
 };
 
-// 4. Triệu hồi Gia Sư ra nói chuyện
-window.showMentorDialogue = function(action) {
+// 4. Triệu hồi Gia Sư ra nói chuyện (Đã nâng cấp để biết giải thích bài)
+window.showMentorDialogue = function(action, extraData = null) {
     const widget = document.getElementById('mentor-widget');
     if (!widget || !userData || !userData.selectedMentor) return;
 
-    // Kẻ nào hết hạn hợp đồng thì lập tức đuổi việc
     let now = Date.now();
     if (!userData.mentorExpiry || userData.mentorExpiry < now) {
         widget.style.display = 'none';
         return; 
     }
 
-    // Đang lên Lôi đài (PvP) thì phải ẩn Gia sư đi để bảo đảm công bằng
     let pvpModal = document.getElementById('pvpModal');
     if (pvpModal && pvpModal.classList.contains('active')) {
         widget.style.display = 'none';
@@ -2654,12 +2678,27 @@ window.showMentorDialogue = function(action) {
         avatarEl.innerText = mentor.icon;
     }
     
+    let textToSpeak = mentor[action];
+
+    // 🌟 PHÁP THUẬT GIẢI THÍCH BÀI HỌC KHI LÀM SAI
+    if (action === 'wrong' && extraData && extraData.en) {
+        if (userData.selectedMentor === 'conan') {
+            textToSpeak = `Sai rồi! Sự thật chỉ có một: "${extraData.en}" có nghĩa là "${extraData.vi}". Nhìn kỹ manh mối này nhé!`;
+        } else if (userData.selectedMentor === 'doraemon') {
+            textToSpeak = `Ui da sai rồi! Từ điển tương lai ghi "${extraData.en}" nghĩa là "${extraData.vi}" đó nha!`;
+        } else if (userData.selectedMentor === 'dekisugi') {
+            textToSpeak = `Tiếc quá! "${extraData.en}" phải mang nghĩa là "${extraData.vi}". Cậu note lại vào vở cho nhớ nhé!`;
+        } else if (userData.selectedMentor === 'roshi') {
+            textToSpeak = `Trật lất! "${extraData.en}" nghĩa là "${extraData.vi}"! Phạt trừ 2 Vàng, chép phạt 10 lần cho ta!`;
+        }
+    }
+
     const bubble = document.getElementById('mentor-bubble');
-    bubble.innerText = mentor[action];
+    bubble.innerText = textToSpeak;
     bubble.classList.add('show');
     
     clearTimeout(mentorTimeout);
-    mentorTimeout = setTimeout(() => { bubble.classList.remove('show'); }, 6000); // 6 giây sau tự tắt bong bóng
+    mentorTimeout = setTimeout(() => { bubble.classList.remove('show'); }, 7000); // Kéo dài thời gian hiển thị lên 7 giây để học trò kịp đọc
 };
 
 // Bấm vào đầu Gia sư để chào hỏi
