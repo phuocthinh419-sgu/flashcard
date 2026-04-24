@@ -606,11 +606,25 @@ function buyItem(itemType, basePrice) {
     let finalPrice = basePrice;
     if (bestVoucher > 0) { finalPrice = Math.floor(basePrice * (100 - bestVoucher) / 100); }
     
+    // 🌟 NỘI TẠI GIA SƯ: Doraemon giảm giá tiếp 15%
+    let hasDoraemonBuff = false;
+    if (userData.selectedMentor === 'doraemon' && userData.mentorExpiry && userData.mentorExpiry > Date.now()) {
+        finalPrice = Math.floor(finalPrice * 0.85); // Giảm 15% trên giá cuối
+        hasDoraemonBuff = true;
+    }
+    
     if (userData.gold < finalPrice) return alert(`Giao dịch thất bại! Bạn cần thanh toán ${finalPrice} 🪙.`);
     
     let itemName = itemType === 'glass' ? `${quantity} Kính Lúp` : 'vật phẩm này';
     let confirmMsg = `Xác nhận thanh toán ${finalPrice} Vàng cho ${itemName}?`;
-    if (bestVoucher > 0) confirmMsg = `🎟️ Hệ thống đang tự áp dụng ưu đãi Giảm ${bestVoucher}% từ kho!\nSố dư yêu cầu giảm từ ${basePrice} xuống còn ${finalPrice} Vàng. Mua ngay?`;
+    
+    if (bestVoucher > 0 && hasDoraemonBuff) {
+        confirmMsg = `🎟️ Đã áp dụng Voucher Giảm ${bestVoucher}% và Nội tại Doraemon Giảm 15%!\nGiá giảm sốc từ ${basePrice} xuống còn ${finalPrice} Vàng. Mua ngay?`;
+    } else if (bestVoucher > 0) {
+        confirmMsg = `🎟️ Hệ thống đang tự áp dụng ưu đãi Giảm ${bestVoucher}% từ kho!\nSố dư yêu cầu giảm từ ${basePrice} xuống còn ${finalPrice} Vàng. Mua ngay?`;
+    } else if (hasDoraemonBuff) {
+        confirmMsg = `🐱 Doraemon đã thương lượng giảm 15% cho bạn!\nGiá giảm từ ${basePrice} xuống còn ${finalPrice} Vàng. Mua ngay?`;
+    }
     
     if(confirm(confirmMsg)) {
         let updates = { gold: userData.gold - finalPrice };
@@ -2321,7 +2335,7 @@ function openTimeMachineModal() {
         let isWrong = false;
         let vocabContext = null;
 
-        // Phân tích thông điệp (Bản nâng cấp có mớm lời)
+        // Phân tích thông điệp mớm lời từ Lò đúc
         if (typeof e.data === 'string' && e.data.startsWith('{')) {
             try {
                 let parsed = JSON.parse(e.data);
@@ -2342,8 +2356,12 @@ function openTimeMachineModal() {
                 let weekendMult = (today === 0 || today === 6) ? 3 : 1;
                 let finalMultiplier = potionMult * weekendMult;
 
+                // 🌟 NỘI TẠI GIA SƯ: Buff Vàng & XP gốc
                 let baseXP = (e.data === 'SPELLING_CORRECT') ? 25 : 15;
                 let baseGold = (e.data === 'SPELLING_CORRECT') ? 25 : 10;
+
+                if (userData.selectedMentor === 'dekisugi') baseXP += 10; // Dekisugi +10 XP gốc
+                if (userData.selectedMentor === 'roshi') baseGold += 5;   // Quy Lão +5 Vàng gốc
 
                 let xpGained = baseXP * finalMultiplier; 
                 let goldGained = baseGold * finalMultiplier; 
@@ -2355,6 +2373,13 @@ function openTimeMachineModal() {
                 let oldHighest = userData.highestWeeklyXp || 0; let isRecordBroken = false;
                 if (oldHighest > 0 && userData.weeklyXp > oldHighest) { userData.highestWeeklyXp = userData.weeklyXp; if (!userData.hasBrokenRecordThisWeek) { userData.hasBrokenRecordThisWeek = true; isRecordBroken = true; } } else if (oldHighest === 0 && userData.weeklyXp > 0) { userData.highestWeeklyXp = userData.weeklyXp; }
                 
+                // 🌟 NỘI TẠI GIA SƯ: Rớt đồ ngẫu nhiên khi ĐÚNG
+                let itemDropped = "";
+                if (userData.selectedMentor === 'conan' && Math.random() < 0.05) { // 5% rớt Kính lúp
+                    userData.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
+                    itemDropped = " 🔍+1";
+                }
+
                 if (window.currentLessonContext) {
                     window.currentLessonCorrectCount = (window.currentLessonCorrectCount || 0) + 1;
                     if (window.currentLessonCorrectCount === window.currentLessonTotal) {
@@ -2362,8 +2387,35 @@ function openTimeMachineModal() {
                         if (!userData.mastered_lessons.includes(window.currentLessonContext)) {
                             userData.mastered_lessons.push(window.currentLessonContext);
                             userData.mastered_words = (userData.mastered_words || 0) + window.currentLessonTotal;
+                            
+                            // 🌟 NỘI TẠI GIA SƯ: Quà to khi MASTERED 100%
+                            let masterBonus = "";
+                            if (userData.selectedMentor === 'conan') {
+                                userData.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
+                                
+                                // Buff thêm 10% Vàng & XP tổng bài học
+                                let bonusXP = Math.round(window.currentLessonTotal * 2);
+                                let bonusGold = Math.round(window.currentLessonTotal * 1.5);
+                                userData.xp += bonusXP;
+                                userData.weeklyXp += bonusXP;
+                                userData.gold += bonusGold;
+                                
+                                masterBonus = `\n🕵️ Conan truy quét thêm được ${bonusGold}🪙, ${bonusXP}⭐ (10% Bonus) và 1 Kính Lúp!`;
+                            } else if (userData.selectedMentor === 'doraemon') {
+                                if (Math.random() < 0.5) {
+                                    userData.shieldCount = (userData.shieldCount || 0) + 1; userData.hasShield = true;
+                                    masterBonus = "\n🐱 Doraemon tặng bạn 1 Bùa Bảo Hộ!";
+                                } else {
+                                    userData.vouchers.push(30);
+                                    masterBonus = "\n🐱 Doraemon tặng bạn Voucher Giảm 30%!";
+                                }
+                            } else if (userData.selectedMentor === 'dekisugi') {
+                                userData.gold += 50;
+                                masterBonus = "\n🧑‍🎓 Dekisugi thưởng nóng 50 Vàng vì điểm 10!";
+                            }
+
                             setTimeout(() => {
-                                alert(`🎓 CHÚC MỪNG! Bạn đã hoàn thành xuất sắc 100% bài [${window.currentLessonContext}].\nCộng thêm ${window.currentLessonTotal} từ vào Quỹ Thành Thạo!`);
+                                alert(`🎓 CHÚC MỪNG! Hoàn thành xuất sắc 100% bài [${window.currentLessonContext}].\nCộng ${window.currentLessonTotal} từ vào Quỹ Thành Thạo!${masterBonus}`);
                                 if (typeof renderAchievements === 'function') renderAchievements();
                             }, 1000);
                         }
@@ -2387,7 +2439,7 @@ function openTimeMachineModal() {
                     else if (potionMult === 3) msgPrefix = `🏺 ĐANG X3!`;
                     else if (potionMult === 2) msgPrefix = `🧪 ĐANG X2!`;
 
-                    anim.innerText = `${msgPrefix} +${goldGained} 🪙 | +${xpGained} ⭐`; 
+                    anim.innerText = `${msgPrefix} +${goldGained} 🪙 | +${xpGained} ⭐${itemDropped}`; 
                     anim.classList.add('show'); 
                     setTimeout(() => anim.classList.remove('show'), 2000); 
                 }
@@ -2397,24 +2449,17 @@ function openTimeMachineModal() {
         // --- 2. XỬ LÝ KHI TRẢ LỜI SAI ---
         else if (isWrong) {
             if (currentUser && userData && userData.selectedMentor) {
-                
-                // 🐢 Thiết quân luật của Quy Lão Kame
                 if (userData.selectedMentor === 'roshi') {
                     userData.gold = Math.max(0, (userData.gold || 0) - 2); 
-                    
                     let anim = document.getElementById('rewardAnim');
                     anim.innerText = `💢 Quy Lão phạt: -2 🪙`;
                     anim.style.color = "#ff1744"; 
                     anim.classList.add('show');
                     setTimeout(() => { 
-                        anim.classList.remove('show');
-                        anim.style.color = ""; 
+                        anim.classList.remove('show'); anim.style.color = ""; 
                     }, 2000);
-
                     syncStatsToCloud(); 
                 }
-
-                // Gọi Gia sư hiện ra và truyền từ vựng bị sai vào miệng họ
                 if (typeof showMentorDialogue === 'function') showMentorDialogue('wrong', vocabContext);
             }
         }
