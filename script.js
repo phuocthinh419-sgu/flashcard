@@ -2066,6 +2066,11 @@ function triggerEval() {
                 <button onclick="speakWord(document.getElementById('quiz-question').innerText);">🔊</button>
             </div>
         </div>
+        
+        <div style="display: flex; justify-content: center; margin-bottom: 15px;">
+            <button id="btn-use-glass" onclick="requestGlass()" style="padding: 6px 16px; border-radius: 20px; background: #e0f2fe; color: #0284c7; font-weight: bold; border: 1px solid #bae6fd; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">🔍 Dùng Kính Lúp</button>
+        </div>
+
         <div id="quiz-options" class="w-full"></div>
     </div>
 
@@ -2098,6 +2103,25 @@ function triggerEval() {
         let quizOrder = [];
         let timerId = null;
         let timeLeft = 0;
+
+        // BẮT TÍN HIỆU PHÊ CHUẨN KÍNH LÚP TỪ HỆ THỐNG
+        window.addEventListener('message', function(e) {
+            if (e.data === 'APPROVE_GLASS') {
+                let btns = Array.from(document.getElementsByClassName('quiz-btn'));
+                let currentItem = vocabList[quizOrder[currentIndex]];
+                let wrongBtns = btns.filter(b => b.innerText !== currentItem.vi && b.style.opacity !== '0');
+                
+                wrongBtns.sort(() => Math.random() - 0.5); // Đảo lộn để chọn 2 nút sai ngẫu nhiên
+                if(wrongBtns.length > 0) { wrongBtns[0].style.opacity = '0'; wrongBtns[0].style.pointerEvents = 'none'; }
+                if(wrongBtns.length > 1) { wrongBtns[1].style.opacity = '0'; wrongBtns[1].style.pointerEvents = 'none'; }
+                
+                document.getElementById('btn-use-glass').style.display = 'none'; // Ẩn nút sau khi đã xài
+            }
+        });
+
+        function requestGlass() {
+            if(window.parent) window.parent.postMessage('REQ_GLASS', '*');
+        }
 
         function loadCard(idx) {
             document.getElementById('flashcard').classList.remove('flipped');
@@ -2136,6 +2160,9 @@ function triggerEval() {
         }
 
         function loadQuiz() {
+            // Hiện lại nút kính lúp cho câu hỏi mới
+            document.getElementById('btn-use-glass').style.display = 'inline-block';
+
             const item = vocabList[quizOrder[currentIndex]];
             document.getElementById('quiz-question').innerText = item.en;
             let wrongOptions = [];
@@ -2157,12 +2184,13 @@ function triggerEval() {
                 btn.onclick = function() {
                     clearInterval(timerId);
                     container.classList.add('disabled');
+                    document.getElementById('btn-use-glass').style.display = 'none'; // Chọn rồi thì ẩn Kính lúp
+
                     if (opt === item.vi) { 
                         btn.classList.add('correct'); 
                         if(window.parent) window.parent.postMessage('CORRECT', '*'); 
                     } else { 
                         btn.classList.add('wrong'); 
-                        // 👇 MÁCH LẺO KHI SAI TRẮC NGHIỆM
                         if(window.parent) window.parent.postMessage(JSON.stringify({status: 'WRONG', en: item.en, vi: item.vi}), '*'); 
                         let allBtns = document.getElementsByClassName('quiz-btn');
                         for(let j=0; j<allBtns.length; j++) {
@@ -2178,11 +2206,11 @@ function triggerEval() {
                 container.appendChild(btn);
             }
             startTimer(15, 'timer-text', 'quiz-circle', function() {
-                // 👇 HẾT GIỜ TRẮC NGHIỆM
                 if(window.parent) window.parent.postMessage(JSON.stringify({status: 'WRONG', en: item.en, vi: item.vi}), '*');
                 let btns = document.getElementsByClassName('quiz-btn');
                 if(btns.length > 0) {
                     container.classList.add('disabled');
+                    document.getElementById('btn-use-glass').style.display = 'none';
                     btns[0].classList.add('wrong');
                     for(let j=0; j<btns.length; j++) {
                         if(btns[j].innerText === item.vi) btns[j].classList.add('correct');
@@ -2279,7 +2307,6 @@ function triggerEval() {
                 for(let i=0; i<inputs.length; i++) inputs[i].style.background = '#d1fae5';
                 if(window.parent) window.parent.postMessage('SPELLING_CORRECT', '*');
             } else {
-                // 👇 MÁCH LẺO KHI GÕ SAI (HOẶC HẾT GIỜ)
                 if(window.parent) window.parent.postMessage(JSON.stringify({status: 'WRONG', en: currentItem.en, vi: currentItem.vi}), '*');
                 for(let i=0; i<inputs.length; i++) {
                     inputs[i].style.background = '#fee2e2';
@@ -2319,7 +2346,7 @@ function triggerEval() {
 
         document.getElementById('generatedCode').value = template;
         currentGeneratedVocab = vocabArray;
-        alert("Đúc mã thành công! Đã khảm luật trừng phạt vào bài học mới.");
+        alert("Đúc mã thành công! Nút Kính Lúp và Đặc quyền đã được khảm vào hệ thống.");
     } catch (e) {
         alert("Lỗi nghiêm trọng khi đúc mã: " + e.message);
     }
@@ -2348,7 +2375,7 @@ function openTimeMachineModal() {
             isWrong = true;
         }
 
-        // --- 1. XỬ LÝ KHI TRẢ LỜI ĐÚNG ---
+       // --- 1. XỬ LÝ KHI TRẢ LỜI ĐÚNG ---
         if (e.data === 'CORRECT' || e.data === 'SPELLING_CORRECT') { 
             if (currentUser && userData) { 
                 let potionMult = (userData.potionX3Expiry && userData.potionX3Expiry > Date.now()) ? 3 : ((userData.potionExpiry && userData.potionExpiry > Date.now()) ? 2 : 1);
@@ -2360,8 +2387,15 @@ function openTimeMachineModal() {
                 let baseXP = (e.data === 'SPELLING_CORRECT') ? 25 : 15;
                 let baseGold = (e.data === 'SPELLING_CORRECT') ? 25 : 10;
 
-                if (userData.selectedMentor === 'dekisugi') baseXP += 10; // Dekisugi +10 XP gốc
-                if (userData.selectedMentor === 'roshi') baseGold += 5;   // Quy Lão +5 Vàng gốc
+                let mentorNote = ""; // Ghi chú hiển thị buff
+                if (userData.selectedMentor === 'dekisugi') { 
+                    baseXP += 10; 
+                    mentorNote = " (🧑‍🎓+10XP)"; 
+                }
+                if (userData.selectedMentor === 'roshi') { 
+                    baseGold += 5; 
+                    mentorNote = " (🐢+5🪙)"; 
+                }
 
                 let xpGained = baseXP * finalMultiplier; 
                 let goldGained = baseGold * finalMultiplier; 
@@ -2377,7 +2411,7 @@ function openTimeMachineModal() {
                 let itemDropped = "";
                 if (userData.selectedMentor === 'conan' && Math.random() < 0.05) { // 5% rớt Kính lúp
                     userData.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
-                    itemDropped = " 🔍+1";
+                    itemDropped = " | 🕵️ 🔍+1"; // Báo hiệu Conan rớt đồ
                 }
 
                 if (window.currentLessonContext) {
@@ -2392,14 +2426,11 @@ function openTimeMachineModal() {
                             let masterBonus = "";
                             if (userData.selectedMentor === 'conan') {
                                 userData.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
-                                
-                                // Buff thêm 10% Vàng & XP tổng bài học
                                 let bonusXP = Math.round(window.currentLessonTotal * 2);
                                 let bonusGold = Math.round(window.currentLessonTotal * 1.5);
                                 userData.xp += bonusXP;
                                 userData.weeklyXp += bonusXP;
                                 userData.gold += bonusGold;
-                                
                                 masterBonus = `\n🕵️ Conan truy quét thêm được ${bonusGold}🪙, ${bonusXP}⭐ (10% Bonus) và 1 Kính Lúp!`;
                             } else if (userData.selectedMentor === 'doraemon') {
                                 if (Math.random() < 0.5) {
@@ -2439,7 +2470,8 @@ function openTimeMachineModal() {
                     else if (potionMult === 3) msgPrefix = `🏺 ĐANG X3!`;
                     else if (potionMult === 2) msgPrefix = `🧪 ĐANG X2!`;
 
-                    anim.innerText = `${msgPrefix} +${goldGained} 🪙 | +${xpGained} ⭐${itemDropped}`; 
+                    // 👇 Đưa thông báo Nội tại vào dòng chữ nảy lên
+                    anim.innerText = `${msgPrefix} +${goldGained} 🪙 | +${xpGained} ⭐${mentorNote}${itemDropped}`; 
                     anim.classList.add('show'); 
                     setTimeout(() => anim.classList.remove('show'), 2000); 
                 }
@@ -2646,21 +2678,23 @@ const mentorsData = {
     'conan': {
         icon: '🕵️',
         avatarImg: 'https://static.ybox.vn/2022/8/2/1660030852217-conan.png', 
-        name: 'Thám tử lừng danh Conan',
+        name: 'Thám tử Conan',
         price: 3000,
+        buffDesc: "5% rớt Kính lúp mỗi câu đúng. Vượt ải 100% rớt Kính lúp & thưởng +10% Vàng/XP tổng bài.", // 👈 Thêm dòng này
         login: "Cậu đến đúng lúc lắm. Hiện trường bài học hôm nay vẫn còn nguyên dấu vết. Bắt tay vào thu thập manh mối trong kho bài học thôi!",
         correct: "Sự thật luôn chỉ có một! Suy luận của cậu rất sắc bén!",
-        broken: "Hung thủ giết chết điểm số chính là sự trì hoãn của cậu đấy!", // Đã thêm dấu phẩy
+        broken: "Hung thủ giết chết điểm số chính là sự trì hoãn của cậu đấy!",
         wrong: "Sai rồi! Manh mối rõ ràng như vậy mà cậu lại bỏ sót sao? Nhìn kỹ lại đi!"
     },
     'doraemon': {
         icon: '🐱',
-        avatarImg: 'https://freepngimg.com/thumb/doraemon/35004-7-doraemon-transparent-image-thumb.png',
+        avatarImg: 'https://img3.thuthuatphanmem.vn/uploads/2019/10/10/anh-doremon-vay-chao_033146925.png',
         name: 'Mèo máy Doraemon',
         price: 3000,
+        buffDesc: "Giảm 15% Cửa hàng. Vượt ải 100% có 50% tỉ lệ rơi Bùa Bảo Hộ hoặc Voucher 30%.", // 👈 Thêm dòng này
         login: "Xin chào! Cậu có mang bánh rán cho tớ không? Cùng học nào!",
         correct: "Giỏi quá! Cậu xứng đáng được tặng một chiếc bánh rán!",
-        broken: "Cậu lại lười biếng rồi! Có cần tớ lôi Cỗ Máy Thời Gian ra cứu chuỗi không hả?", // Đã thêm dấu phẩy
+        broken: "Cậu lại lười biếng rồi! Có cần tớ lôi Cỗ Máy Thời Gian ra cứu chuỗi không hả?",
         wrong: "Ui da, sai mất rồi! Đừng nản chí, cậu hãy xem kĩ lại từ vựng đi!"
     },
     'dekisugi': {
@@ -2668,16 +2702,18 @@ const mentorsData = {
         avatarImg: 'https://wibu.com.vn/wp-content/uploads/2024/03/Dekisugi.png',
         name: 'Học giả Dekisugi',
         price: 3000,
+        buffDesc: "Cộng +10 XP gốc mỗi câu đúng. Vượt ải 100% được thưởng nóng 50 Vàng.", // 👈 Thêm dòng này
         login: "Chào cậu! Hôm nay chúng ta cùng cố gắng ôn tập nhé. Tớ vừa đọc xong một cuốn sách rất hay.",
         correct: "Tuyệt vời! Cậu làm tốt lắm. Cứ giữ vững phong độ này nhé!",
-        broken: "Tớ thấy cậu vắng mặt hơi lâu. Việc học giống như xây gạch, phải kiên trì mỗi ngày mới vững chắc được.", // Đã thêm dấu phẩy
+        broken: "Tớ thấy cậu vắng mặt hơi lâu. Việc học giống như xây gạch, phải kiên trì mỗi ngày mới vững chắc được.",
         wrong: "Ồ, câu này hơi lắt léo một chút. Cậu nên xem lại kiến thức phần này nhé."
     },
     'roshi': {
         icon: '🐢',
-        avatarImg: 'https://product.hstatic.net/1000387428/product/z4003368850646_fba5aee7d745a78a524d2e3b53bd224b-removebg-preview_cb45458aa2aa4d06a22bb54c5be3bf5a_master.png',
+        avatarImg: 'https://wibu.com.vn/wp-content/uploads/2024/03/Muten-Roshi.png',
         name: 'Quy Lão Tiên Sinh',
         price: 3000,
+        buffDesc: "Cộng +5 Vàng gốc mỗi câu đúng. Sai một câu bị phạt trừ 2 Vàng.", // 👈 Thêm dòng này
         login: "Khà khà, nhìn cái mặt ngáp ngắn ngáp dài kìa, định vào đây cúng Vàng cho lão phu đi uống trà đấy à?",
         correct: "Ồ, câu này mà cũng làm được cơ đấy! Đúng là rùa mù vớ được cá rán! Chắc lại ăn may chứ gì?",
         broken: "Đứt chuỗi rồi à? Khà khà, ý chí tu luyện của đồ đệ còn ngắn hơn cả chiều cao của lão phu nữa!",
@@ -2697,7 +2733,10 @@ window.openMentorContract = function(mentorId) {
     if (mentor.avatarImg) avatarHtml = `<img src="${mentor.avatarImg}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
     
     document.getElementById('contractAvatar').innerHTML = avatarHtml;
-    document.getElementById('contractDesc').innerText = `Chiêu mộ ${mentor.name} làm Ngự Tiền Gia Sư. Lương tháng: ${mentor.price} Vàng.`;
+    
+    // 👇 HIỂN THỊ NỘI TẠI Ở ĐÂY
+    document.getElementById('contractDesc').innerHTML = `Chiêu mộ <b>${mentor.name}</b> làm Ngự Tiền Gia Sư.<br>Lương tháng: <b style="color:#ff1744">${mentor.price} Vàng</b>.<br><br><span style="color:#2e7d32; font-weight:bold;">✨ Nội tại:</span> <span style="color:#555;">${mentor.buffDesc}</span>`;
+    
     document.getElementById('mentorMonths').value = 1;
     updateContractTotal();
     document.getElementById('mentorContractModal').classList.add('active');
