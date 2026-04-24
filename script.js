@@ -304,7 +304,36 @@ function saveDisplayName() {
     }); 
 }
 
-function syncStatsToCloud() { if (currentUser && db) { db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, xp: userData.xp, lifetime_xp: userData.lifetime_xp || 0, realm: userData.realm, streak: userData.streak, displayName: userData.displayName, magnifyingGlass: userData.magnifyingGlass || 0, vouchers: userData.vouchers || [], streakIcon: userData.streakIcon || '🔥', theme: userData.theme || 'theme_default', purchasedItems: userData.purchasedItems || [], weeklyXp: userData.weeklyXp || 0, lastWeekXp: userData.lastWeekXp || 0, currentWeekStr: userData.currentWeekStr, highestWeeklyXp: userData.highestWeeklyXp || 0, hasBrokenRecordThisWeek: userData.hasBrokenRecordThisWeek || false, potionX3Expiry: userData.potionX3Expiry || null, timeMachine: userData.timeMachine || null, mastered_words: userData.mastered_words || 0, mastered_lessons: userData.mastered_lessons || [] }); updateUI(); } }
+function syncStatsToCloud() { 
+    if (currentUser && db) { 
+        db.collection('vocab_users').doc(currentUser.uid).update({ 
+            gold: userData.gold, 
+            xp: userData.xp, 
+            lifetime_xp: userData.lifetime_xp || 0, 
+            realm: userData.realm, 
+            streak: userData.streak, 
+            displayName: userData.displayName, 
+            magnifyingGlass: userData.magnifyingGlass || 0, 
+            vouchers: userData.vouchers || [], 
+            streakIcon: userData.streakIcon || '🔥', 
+            theme: userData.theme || 'theme_default', 
+            purchasedItems: userData.purchasedItems || [], 
+            weeklyXp: userData.weeklyXp || 0, 
+            lastWeekXp: userData.lastWeekXp || 0, 
+            currentWeekStr: userData.currentWeekStr, 
+            highestWeeklyXp: userData.highestWeeklyXp || 0, 
+            hasBrokenRecordThisWeek: userData.hasBrokenRecordThisWeek || false, 
+            potionX3Expiry: userData.potionX3Expiry || null, 
+            timeMachine: userData.timeMachine || null, 
+            mastered_words: userData.mastered_words || 0, 
+            mastered_lessons: userData.mastered_lessons || [],
+            // 👇 THÊM 2 DÒNG NÀY ĐỂ LƯU KHẾ ƯỚC LÊN FIREBASE 👇
+            selectedMentor: userData.selectedMentor || null,
+            mentorExpiry: userData.mentorExpiry || null
+        }); 
+        updateUI(); 
+    } 
+}
 
 function applyTheme(themeName) { document.body.classList.remove('theme-aurora', 'theme-snow', 'theme-royal'); if (themeName && themeName !== 'theme_default') { document.body.classList.add(themeName); if(themeName === 'theme-snow' || themeName === 'theme-aurora' || themeName === 'theme-royal') { document.body.classList.remove('dark-mode'); document.getElementById('themeToggleBtn').innerText = '🌙'; localStorage.setItem('darkMode', 'false'); } } }
 
@@ -338,6 +367,23 @@ function updateUI() {
     }
     // --- KẾT THÚC: XỬ LÝ HIỆU ỨNG ---
 
+    // --- BẮT ĐẦU: HIỂN THỊ HẠN HỢP ĐỒNG GIA SƯ ---
+    let mentorExpiryEl = document.getElementById('ui-mentor-expiry');
+    if (mentorExpiryEl) {
+        if (userData.selectedMentor && userData.mentorExpiry && userData.mentorExpiry > Date.now()) {
+            let d = new Date(userData.mentorExpiry);
+            let dateStr = d.getDate().toString().padStart(2, '0') + '/' + (d.getMonth() + 1).toString().padStart(2, '0') + '/' + d.getFullYear();
+            // Nếu có mentorsData thì lấy tên, không thì ghi Cố vấn
+            let mentorName = (typeof mentorsData !== 'undefined' && mentorsData[userData.selectedMentor]) ? mentorsData[userData.selectedMentor].name : "Cố vấn";
+            mentorExpiryEl.innerText = mentorName + " (" + dateStr + ")";
+            mentorExpiryEl.style.color = "#00c853"; // Chữ xanh = Còn hạn
+        } else {
+            mentorExpiryEl.innerText = "Chưa ký kết / Hết hạn";
+            mentorExpiryEl.style.color = "#d32f2f"; // Chữ đỏ = Yêu cầu nạp Vàng
+        }
+    }
+    // --- KẾT THÚC: HIỂN THỊ HẠN HỢP ĐỒNG GIA SƯ ---
+    
     if(document.getElementById('ui-mastered-words')) document.getElementById('ui-mastered-words').innerText = userData.mastered_words || 0;
     if(document.getElementById('ui-mastered-lessons')) document.getElementById('ui-mastered-lessons').innerText = (userData.mastered_lessons || []).length;
     
