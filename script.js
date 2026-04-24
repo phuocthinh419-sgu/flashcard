@@ -2500,7 +2500,7 @@ function openTimeMachineModal() {
                         masterBonus = "\n🧑‍🎓 Dekisugi thưởng nóng 50 Vàng vì điểm 10!";
                     }
 
-                    let finalAlertMsg = `🎓 PERFECT! Bệ hạ đã càn quét 100% bài học không trật 1 ly!`;
+                    let finalAlertMsg = `🎓 PERFECT! Bạn đã càn quét 100% bài học không sai 1 ly!`;
                     if (isFirstTimeMaster) finalAlertMsg += `\nCộng ${window.currentLessonTotal} từ vào Quỹ Thành Thạo!`;
                     if (masterBonus !== "") finalAlertMsg += masterBonus;
 
