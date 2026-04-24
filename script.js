@@ -1680,6 +1680,7 @@ function setupRealmListeners() {
     function viewCard(base64, lessonName, totalVocab) { 
         window.currentLessonContext = lessonName;
         window.currentLessonCorrectCount = 0;
+        window.currentLessonWrongCount = 0; // 👈 Pháp khí đếm câu sai
         window.currentLessonTotal = totalVocab || 0;
         document.getElementById('modalFrame').srcdoc = decodeURIComponent(escape(atob(base64))); 
         document.getElementById('previewModal').classList.add('active'); 
@@ -2375,27 +2376,48 @@ function openTimeMachineModal() {
             isWrong = true;
         }
 
-       // --- 1. XỬ LÝ KHI TRẢ LỜI ĐÚNG ---
-        if (e.data === 'CORRECT' || e.data === 'SPELLING_CORRECT') { 
+        // --- 1. XỬ LÝ LỖI SAI ---
+        if (isWrong) {
+            // Tăng bộ đếm câu sai
+            if (window.currentLessonContext) {
+                window.currentLessonWrongCount = (window.currentLessonWrongCount || 0) + 1;
+            }
+
+            if (currentUser && userData && userData.selectedMentor) {
+                // 🐢 Quy Lão phạt 2 Vàng
+                if (userData.selectedMentor === 'roshi') {
+                    userData.gold = Math.max(0, (userData.gold || 0) - 2); 
+                    let anim = document.getElementById('rewardAnim');
+                    anim.innerText = `💢 Quy Lão phạt: -2 🪙`;
+                    anim.style.color = "#ff1744"; 
+                    anim.classList.add('show');
+                    setTimeout(() => { anim.classList.remove('show'); anim.style.color = ""; }, 2000);
+                    syncStatsToCloud(); 
+                }
+                if (typeof showMentorDialogue === 'function') showMentorDialogue('wrong', vocabContext);
+            }
+        }
+
+        // --- 2. XỬ LÝ TRẢ LỜI ĐÚNG ---
+        else if (e.data === 'CORRECT' || e.data === 'SPELLING_CORRECT') { 
+            // Tăng bộ đếm câu đúng
+            if (window.currentLessonContext) {
+                window.currentLessonCorrectCount = (window.currentLessonCorrectCount || 0) + 1;
+            }
+
             if (currentUser && userData) { 
                 let potionMult = (userData.potionX3Expiry && userData.potionX3Expiry > Date.now()) ? 3 : ((userData.potionExpiry && userData.potionExpiry > Date.now()) ? 2 : 1);
                 let today = new Date().getDay();
                 let weekendMult = (today === 0 || today === 6) ? 3 : 1;
                 let finalMultiplier = potionMult * weekendMult;
 
-                // 🌟 NỘI TẠI GIA SƯ: Buff Vàng & XP gốc
                 let baseXP = (e.data === 'SPELLING_CORRECT') ? 25 : 15;
                 let baseGold = (e.data === 'SPELLING_CORRECT') ? 25 : 10;
 
-                let mentorNote = ""; // Ghi chú hiển thị buff
-                if (userData.selectedMentor === 'dekisugi') { 
-                    baseXP += 10; 
-                    mentorNote = " (🧑‍🎓+10XP)"; 
-                }
-                if (userData.selectedMentor === 'roshi') { 
-                    baseGold += 5; 
-                    mentorNote = " (🐢+5🪙)"; 
-                }
+                // 🌟 NỘI TẠI GIA SƯ: Buff Vàng & XP gốc
+                let mentorNote = ""; 
+                if (userData.selectedMentor === 'dekisugi') { baseXP += 10; mentorNote = " (🧑‍🎓+10XP)"; }
+                if (userData.selectedMentor === 'roshi') { baseGold += 5; mentorNote = " (🐢+5🪙)"; }
 
                 let xpGained = baseXP * finalMultiplier; 
                 let goldGained = baseGold * finalMultiplier; 
@@ -2407,54 +2429,14 @@ function openTimeMachineModal() {
                 let oldHighest = userData.highestWeeklyXp || 0; let isRecordBroken = false;
                 if (oldHighest > 0 && userData.weeklyXp > oldHighest) { userData.highestWeeklyXp = userData.weeklyXp; if (!userData.hasBrokenRecordThisWeek) { userData.hasBrokenRecordThisWeek = true; isRecordBroken = true; } } else if (oldHighest === 0 && userData.weeklyXp > 0) { userData.highestWeeklyXp = userData.weeklyXp; }
                 
-                // 🌟 NỘI TẠI GIA SƯ: Rớt đồ ngẫu nhiên khi ĐÚNG
+                // 🌟 NỘI TẠI GIA SƯ: Rớt Kính lúp (5%)
                 let itemDropped = "";
-                if (userData.selectedMentor === 'conan' && Math.random() < 0.05) { // 5% rớt Kính lúp
+                if (userData.selectedMentor === 'conan' && Math.random() < 0.05) { 
                     userData.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
-                    itemDropped = " | 🕵️ 🔍+1"; // Báo hiệu Conan rớt đồ
-                }
-
-                if (window.currentLessonContext) {
-                    window.currentLessonCorrectCount = (window.currentLessonCorrectCount || 0) + 1;
-                    if (window.currentLessonCorrectCount === window.currentLessonTotal) {
-                        if (!userData.mastered_lessons) userData.mastered_lessons = [];
-                        if (!userData.mastered_lessons.includes(window.currentLessonContext)) {
-                            userData.mastered_lessons.push(window.currentLessonContext);
-                            userData.mastered_words = (userData.mastered_words || 0) + window.currentLessonTotal;
-                            
-                            // 🌟 NỘI TẠI GIA SƯ: Quà to khi MASTERED 100%
-                            let masterBonus = "";
-                            if (userData.selectedMentor === 'conan') {
-                                userData.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
-                                let bonusXP = Math.round(window.currentLessonTotal * 2);
-                                let bonusGold = Math.round(window.currentLessonTotal * 1.5);
-                                userData.xp += bonusXP;
-                                userData.weeklyXp += bonusXP;
-                                userData.gold += bonusGold;
-                                masterBonus = `\n🕵️ Conan truy quét thêm được ${bonusGold}🪙, ${bonusXP}⭐ (10% Bonus) và 1 Kính Lúp!`;
-                            } else if (userData.selectedMentor === 'doraemon') {
-                                if (Math.random() < 0.5) {
-                                    userData.shieldCount = (userData.shieldCount || 0) + 1; userData.hasShield = true;
-                                    masterBonus = "\n🐱 Doraemon tặng bạn 1 Bùa Bảo Hộ!";
-                                } else {
-                                    userData.vouchers.push(30);
-                                    masterBonus = "\n🐱 Doraemon tặng bạn Voucher Giảm 30%!";
-                                }
-                            } else if (userData.selectedMentor === 'dekisugi') {
-                                userData.gold += 50;
-                                masterBonus = "\n🧑‍🎓 Dekisugi thưởng nóng 50 Vàng vì điểm 10!";
-                            }
-
-                            setTimeout(() => {
-                                alert(`🎓 CHÚC MỪNG! Hoàn thành xuất sắc 100% bài [${window.currentLessonContext}].\nCộng ${window.currentLessonTotal} từ vào Quỹ Thành Thạo!${masterBonus}`);
-                                if (typeof renderAchievements === 'function') renderAchievements();
-                            }, 1000);
-                        }
-                    }
+                    itemDropped = " | 🕵️ 🔍+1"; 
                 }
 
                 syncStatsToCloud(); 
-
                 if (typeof showMentorDialogue === 'function') showMentorDialogue('correct');
                 
                 if (isRecordBroken) { 
@@ -2470,33 +2452,73 @@ function openTimeMachineModal() {
                     else if (potionMult === 3) msgPrefix = `🏺 ĐANG X3!`;
                     else if (potionMult === 2) msgPrefix = `🧪 ĐANG X2!`;
 
-                    // 👇 Đưa thông báo Nội tại vào dòng chữ nảy lên
                     anim.innerText = `${msgPrefix} +${goldGained} 🪙 | +${xpGained} ⭐${mentorNote}${itemDropped}`; 
                     anim.classList.add('show'); 
                     setTimeout(() => anim.classList.remove('show'), 2000); 
                 }
             } 
         }
-        
-        // --- 2. XỬ LÝ KHI TRẢ LỜI SAI ---
-        else if (isWrong) {
-            if (currentUser && userData && userData.selectedMentor) {
-                if (userData.selectedMentor === 'roshi') {
-                    userData.gold = Math.max(0, (userData.gold || 0) - 2); 
-                    let anim = document.getElementById('rewardAnim');
-                    anim.innerText = `💢 Quy Lão phạt: -2 🪙`;
-                    anim.style.color = "#ff1744"; 
-                    anim.classList.add('show');
-                    setTimeout(() => { 
-                        anim.classList.remove('show'); anim.style.color = ""; 
-                    }, 2000);
-                    syncStatsToCloud(); 
+
+        // --- 3. KIỂM TRA CHỐT SỔ (PERFECT RUN) ---
+        if (window.currentLessonContext && window.currentLessonTotal > 0 && (e.data === 'CORRECT' || e.data === 'SPELLING_CORRECT' || isWrong)) {
+            // Tổng số câu đã làm = Câu đúng + Câu sai
+            let totalAnswered = (window.currentLessonCorrectCount || 0) + (window.currentLessonWrongCount || 0);
+            
+            // Nếu đã trả lời hết số từ trong bài (Tức là kết thúc 1 vòng Trắc nghiệm hoặc Gõ chính tả)
+            if (totalAnswered === window.currentLessonTotal) {
+                let isPerfect = (window.currentLessonWrongCount === 0);
+                
+                if (isPerfect) {
+                    let isFirstTimeMaster = false;
+                    if (!userData.mastered_lessons) userData.mastered_lessons = [];
+                    if (!userData.mastered_lessons.includes(window.currentLessonContext)) {
+                        userData.mastered_lessons.push(window.currentLessonContext);
+                        userData.mastered_words = (userData.mastered_words || 0) + window.currentLessonTotal;
+                        isFirstTimeMaster = true;
+                    }
+
+                    // 🌟 Quà Gia Sư (Cứ đánh Perfect là có quà)
+                    let masterBonus = "";
+                    if (userData.selectedMentor === 'conan') {
+                        userData.magnifyingGlass = (userData.magnifyingGlass || 0) + 1;
+                        let bonusXP = Math.round(window.currentLessonTotal * 2);
+                        let bonusGold = Math.round(window.currentLessonTotal * 1.5);
+                        userData.xp += bonusXP;
+                        userData.weeklyXp += bonusXP;
+                        userData.gold += bonusGold;
+                        masterBonus = `\n🕵️ Conan truy quét thêm được ${bonusGold}🪙, ${bonusXP}⭐ (10% Bonus) và 1 Kính Lúp!`;
+                    } else if (userData.selectedMentor === 'doraemon') {
+                        if (Math.random() < 0.5) {
+                            userData.shieldCount = (userData.shieldCount || 0) + 1; userData.hasShield = true;
+                            masterBonus = "\n🐱 Doraemon tặng bạn 1 Bùa Bảo Hộ!";
+                        } else {
+                            userData.vouchers.push(30);
+                            masterBonus = "\n🐱 Doraemon tặng bạn Voucher Giảm 30%!";
+                        }
+                    } else if (userData.selectedMentor === 'dekisugi') {
+                        userData.gold += 50;
+                        masterBonus = "\n🧑‍🎓 Dekisugi thưởng nóng 50 Vàng vì điểm 10!";
+                    }
+
+                    let finalAlertMsg = `🎓 PERFECT! Bệ hạ đã càn quét 100% bài học không trật 1 ly!`;
+                    if (isFirstTimeMaster) finalAlertMsg += `\nCộng ${window.currentLessonTotal} từ vào Quỹ Thành Thạo!`;
+                    if (masterBonus !== "") finalAlertMsg += masterBonus;
+
+                    setTimeout(() => {
+                        alert(finalAlertMsg);
+                        if (isFirstTimeMaster && typeof renderAchievements === 'function') renderAchievements();
+                    }, 800);
+                    
+                    if (currentUser && db) syncStatsToCloud();
                 }
-                if (typeof showMentorDialogue === 'function') showMentorDialogue('wrong', vocabContext);
+
+                // Reset lại bộ đếm để sẵn sàng cho vòng chơi tiếp theo (Ví dụ Bệ hạ chuyển từ Trắc nghiệm sang Gõ chính tả)
+                window.currentLessonCorrectCount = 0;
+                window.currentLessonWrongCount = 0;
             }
         }
 
-        // --- 3. CÁC TÍN HIỆU HỆ THỐNG KHÁC ---
+        // --- 4. CÁC TÍN HIỆU HỆ THỐNG KHÁC ---
         else if (e.data === 'REQ_GLASS') { if (userData.magnifyingGlass > 0) { userData.magnifyingGlass--; syncStatsToCloud(); document.getElementById('modalFrame').contentWindow.postMessage('APPROVE_GLASS', '*'); } else { alert("Số lượng Kính Lúp hiện tại là 0!"); } }
         else if (e.data === 'TM_NEXT_DAY') { userData.timeMachine.daysRecovered++; let allVocab = []; allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab)); userData.timeMachine.currentBank = allVocab.sort(() => Math.random() - 0.5).slice(0, Math.min(30, allVocab.length)); db.collection('vocab_users').doc(currentUser.uid).update({ timeMachine: userData.timeMachine }).then(() => { openTimeMachineModal(); }); }
         else if (e.data === 'TM_RESULT_PASS') { closeModal(); let oldS = userData.streak; userData.streak = userData.timeMachine.lostStreak + userData.timeMachine.missedDays; userData.timeMachine = null; db.collection('vocab_users').doc(currentUser.uid).update({ streak: userData.streak, timeMachine: null }).then(() => { updateUI(); alert(`🎉 KỲ TÍCH! Chuỗi đã phục hồi lên mốc ${userData.streak}!`); triggerConfetti(); if(window.checkAndGrantStreakRewards) window.checkAndGrantStreakRewards(oldS, userData.streak); }); }
