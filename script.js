@@ -185,7 +185,8 @@ function fallbackInit() { availableRealms = ['Khởi Nguyên']; currentRealm = '
 function transferToAdmin(amount, itemName) {
     let buyerName = (currentUser && currentUser.displayName) ? currentUser.displayName : "Người dùng ẩn danh";
 
-    db.collection('vocab_users').doc(ADMIN_UID).update({
+    // Đổi update() thành set() với { merge: true } để chống lỗi
+    db.collection('vocab_users').doc(ADMIN_UID).set({
         gold: firebase.firestore.FieldValue.increment(amount),
         lastTransaction: {
             amount: amount,
@@ -193,7 +194,7 @@ function transferToAdmin(amount, itemName) {
             buyer: buyerName,
             time: Date.now()
         }
-    }).catch(err => {
+    }, { merge: true }).catch(err => {
         console.error("Lỗi cập nhật số dư Admin: ", err);
     });
 }
