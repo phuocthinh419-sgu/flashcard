@@ -4,6 +4,7 @@ let currentRealm = "";
 let currentLeagueView = 'c1'; 
 let currentC1Data = null; let currentC2Data = null; let currentFullBracketData = null; let defendingChampion = ""; 
 
+const ADMIN_UID = "PKi9FfQacTW7gNkjBiYqQLBtZ4t1";
 const firebaseConfig = {
     apiKey: "AIzaSyAmDqBfe4JRBKDGVwqVS0yI9_P2O2WIzxI",
     authDomain: "academic-planner-v100.firebaseapp.com",
@@ -56,8 +57,19 @@ function checkAuth() {
     if(auth) {
         auth.onAuthStateChanged(user => {
             if (user) {
-                currentUser = user; const todayStr = new Date().toLocaleDateString('en-GB'); 
-                const isEmperor = (user.email === "phuocthinh419@gmail.com"); const trueRole = isEmperor ? 'teacher' : 'student';
+                currentUser = user; 
+
+                // ==========================================
+                // BƯỚC 4.1: KÍCH HOẠT TRẠM GÁC NGỰ KHỐ TẠI ĐÂY
+                // ==========================================
+                if (typeof startAdminNotification === 'function') {
+                    startAdminNotification(user.uid);
+                }
+                // ==========================================
+
+                const todayStr = new Date().toLocaleDateString('en-GB'); 
+                const isEmperor = (user.email === "phuocthinh419@gmail.com"); 
+                const trueRole = isEmperor ? 'teacher' : 'student';
 
                 db.collection('vocab_users').doc(user.uid).get().then(doc => {
                     if (doc.exists) {
@@ -169,6 +181,70 @@ function checkAuth() {
 }
 
 function fallbackInit() { availableRealms = ['Khởi Nguyên']; currentRealm = 'Khởi Nguyên'; updateUI(); checkAuth(); }
+
+function transferToAdmin(amount, itemName) {
+    let buyerName = (currentUser && currentUser.displayName) ? currentUser.displayName : "Người dùng ẩn danh";
+
+    db.collection('vocab_users').doc(ADMIN_UID).update({
+        gold: firebase.firestore.FieldValue.increment(amount),
+        lastTransaction: {
+            amount: amount,
+            item: itemName,
+            buyer: buyerName,
+            time: Date.now()
+        }
+    }).catch(err => {
+        console.error("Lỗi cập nhật số dư Admin: ", err);
+    });
+}
+
+function startAdminNotification(userUid) {
+    if (userUid !== ADMIN_UID) return; // Bỏ qua nếu không phải Admin
+
+    db.collection('vocab_users').doc(ADMIN_UID).onSnapshot((doc) => {
+        const data = doc.data();
+        if (data && data.lastTransaction) {
+            const tx = data.lastTransaction;
+            // Chỉ hiện thông báo cho giao dịch mới trong vòng 5 giây
+            if (Date.now() - tx.time < 5000) {
+                showBankNotification(tx.amount, tx.item, tx.buyer, data.gold);
+            }
+        }
+    });
+}
+
+function showBankNotification(amount, item, buyer, total) {
+    const toast = document.createElement('div');
+    toast.style = `
+        position: fixed; top: 20px; right: 20px; width: 320px;
+        background: rgba(33, 33, 33, 0.95); border-left: 5px solid #4caf50;
+        color: white; padding: 15px; border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 9999;
+        font-family: Arial, sans-serif; animation: slideIn 0.5s ease-out; backdrop-filter: blur(5px);
+    `;
+    
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+    `;
+    document.head.appendChild(style);
+
+    toast.innerHTML = `
+        <div style="font-weight: bold; color: #4caf50; margin-bottom: 8px; font-size: 14px;">🏦 BIẾN ĐỘNG SỐ DƯ</div>
+        <div style="font-size: 16px; margin-bottom: 5px;">Số tiền: <span style="color: #4caf50; font-weight: bold;">+${amount} Vàng</span></div>
+        <div style="font-size: 13px; color: #ccc;">Người dùng: <b style="color: #fff;">${buyer}</b></div>
+        <div style="font-size: 13px; color: #ccc;">Giao dịch: <i style="color: #ffb300;">${item}</i></div>
+        <div style="font-size: 12px; color: #888; text-align: right; margin-top: 10px; border-top: 1px solid #444; padding-top: 5px;">Số dư cuối: ${total} Vàng</div>
+    `;
+
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = "slideOut 0.5s ease-in forwards";
+        setTimeout(() => toast.remove(), 500);
+    }, 5000);
+}
 
 function createNewRealm() {
     let name = document.getElementById('newRealmInput').value.trim();
@@ -507,7 +583,17 @@ function spinWheel() {
     
     if(confirm("Thanh toán 150 Vàng để kích hoạt Vòng Quay?")) {
         isSpinning = true;
-        userData.gold -= 150; userData.blindBoxCount = (userData.blindBoxCount || 0) + 1;
+        userData.gold -= 150; 
+        
+        // ==================================================
+        // BƯỚC 4.2 (b): CHUYỂN TIỀN VÉ GACHA VỀ NGỰ KHỐ
+        // ==================================================
+        if (typeof transferToAdmin === 'function') {
+            transferToAdmin(150, "Vé Vòng Quay Blind Box");
+        }
+        // ==================================================
+        
+        userData.blindBoxCount = (userData.blindBoxCount || 0) + 1;
         document.getElementById('ui-wheel-left').innerText = 3 - userData.blindBoxCount;
         updateUI();
         
@@ -665,6 +751,24 @@ function buyItem(itemType, basePrice) {
         
         db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
             userData.gold -= finalPrice; 
+
+            // ==================================================
+            // BƯỚC 4.2 (a): CHUYỂN VÀNG MUA ĐỒ VỀ NGỰ KHỐ
+            // ==================================================
+            let actualItemName = itemType;
+            if (itemType === 'glass') actualItemName = `${quantity} Kính Lúp`;
+            else if (itemType === 'rename') actualItemName = "Thẻ Đổi Tên";
+            else if (itemType === 'shield') actualItemName = "Bùa Bảo Hộ";
+            else if (itemType === 'potion') actualItemName = "Bình XP x2";
+            else if (itemType === 'potion_x3') actualItemName = "Bình XP x3";
+            else if (itemType === 'mask') actualItemName = "Mặt Nạ Ẩn Danh";
+            else if (itemType.startsWith('streak_')) actualItemName = `Hiệu ứng Chuỗi: ${itemType.split('_')[1]}`;
+            else if (itemType.startsWith('theme_')) actualItemName = `Chủ đề Phủ: ${itemType.split('_')[1]}`;
+            
+            if (typeof transferToAdmin === 'function') {
+                transferToAdmin(finalPrice, `Cửa hàng: ${actualItemName}`);
+            }
+            // ==================================================
             
             // 🛡️ CẬP NHẬT LẠI BIẾN CỤC BỘ Ở ĐÂY
             if(updates.hasShield) userData.hasShield = true; 
@@ -1975,8 +2079,53 @@ function triggerEval() {
         });
     }
 
-    function buyTimeMachine() { let todayStr = new Date().toLocaleDateString('en-GB'); if (userData.timeMachine && userData.timeMachine.status === 'in_progress') { openTimeMachineModal(); return; } if (userData.timeMachine && userData.timeMachine.lastAttemptDate !== todayStr) { userData.timeMachine.attemptsToday = 0; userData.timeMachine.lastAttemptDate = todayStr; } if (userData.timeMachine && userData.timeMachine.attemptsToday >= 3) return alert("Hết lượt hôm nay!"); let cost = userData.timeMachine.missedDays * 10000; if (userData.gold < cost) return alert("Không đủ Vàng!"); if (!confirm(`XÁC NHẬN GIAO DỊCH:\nTiêu tốn ${cost} Vàng để thực hiện thử thách.\nCần vượt qua ${userData.timeMachine.missedDays} Giai đoạn. Chấp nhận?`)) return; let allVocab = []; allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab)); if (allVocab.length < 30) return alert("Kho dữ liệu chưa đủ 30 từ."); let bank = allVocab.sort(() => Math.random() - 0.5).slice(0, Math.min(30, allVocab.length)); userData.gold -= cost; userData.timeMachine.attemptsToday++; userData.timeMachine.status = 'in_progress'; userData.timeMachine.daysRecovered = 0; userData.timeMachine.currentBank = bank; db.collection('vocab_users').doc(currentUser.uid).update({ gold: userData.gold, timeMachine: userData.timeMachine }).then(() => { updateUI(); openTimeMachineModal(); }); }
-  function generateCode() {
+function buyTimeMachine() { 
+    let todayStr = new Date().toLocaleDateString('en-GB'); 
+    if (userData.timeMachine && userData.timeMachine.status === 'in_progress') { 
+        openTimeMachineModal(); 
+        return; 
+    } 
+    if (userData.timeMachine && userData.timeMachine.lastAttemptDate !== todayStr) { 
+        userData.timeMachine.attemptsToday = 0; 
+        userData.timeMachine.lastAttemptDate = todayStr; 
+    } 
+    if (userData.timeMachine && userData.timeMachine.attemptsToday >= 3) return alert("Hết lượt hôm nay!"); 
+    
+    let cost = userData.timeMachine.missedDays * 10000; 
+    if (userData.gold < cost) return alert("Không đủ Vàng!"); 
+    if (!confirm(`XÁC NHẬN GIAO DỊCH:\nTiêu tốn ${cost} Vàng để thực hiện thử thách.\nCần vượt qua ${userData.timeMachine.missedDays} Giai đoạn. Chấp nhận?`)) return; 
+    
+    let allVocab = []; 
+    allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab)); 
+    if (allVocab.length < 30) return alert("Kho dữ liệu chưa đủ 30 từ."); 
+    
+    let bank = allVocab.sort(() => Math.random() - 0.5).slice(0, Math.min(30, allVocab.length)); 
+    
+    userData.gold -= cost; 
+
+    // ==================================================
+    // BƯỚC 4.2 (d): THU THUẾ TỪ CỖ MÁY THỜI GIAN
+    // ==================================================
+    if (typeof transferToAdmin === 'function') {
+        transferToAdmin(cost, `Kích hoạt Cỗ Máy Thời Gian (${userData.timeMachine.missedDays} ngày)`);
+    }
+    // ==================================================
+
+    userData.timeMachine.attemptsToday++; 
+    userData.timeMachine.status = 'in_progress'; 
+    userData.timeMachine.daysRecovered = 0; 
+    userData.timeMachine.currentBank = bank; 
+    
+    db.collection('vocab_users').doc(currentUser.uid).update({ 
+        gold: userData.gold, 
+        timeMachine: userData.timeMachine 
+    }).then(() => { 
+        updateUI(); 
+        openTimeMachineModal(); 
+    }); 
+}  
+
+function generateCode() {
     try {
         const raw = document.getElementById('rawInput').value.trim();
         if (!raw) return alert("Yêu cầu nhập nội dung từ khóa!");
@@ -2793,13 +2942,22 @@ window.confirmMentorContract = async function() {
 
     // Trừ Vàng & Lưu Data
     userData.gold -= totalCost;
+
+    // ==================================================
+    // BƯỚC 4.2 (c): CHUYỂN TIỀN THUÊ GIA SƯ VỀ NGỰ KHỐ
+    // ==================================================
+    if (typeof transferToAdmin === 'function') {
+        transferToAdmin(totalCost, `Thuê Gia sư: ${mentorsData[tempMentorId].name} (${months} tháng)`);
+    }
+    // ==================================================
+
     userData.mentorExpiry = newExpiry;
     userData.selectedMentor = tempMentorId;
 
     await syncStatsToCloud();
     document.getElementById('mentorContractModal').classList.remove('active');
     updateUI();
-    alert(`🎉 Tấu tiệp! Bệ hạ đã chiêu mộ thành công ${mentorsData[tempMentorId].name} trong ${months} tháng.`);
+    alert(`🎉 Chúc mừng! Bạn đã chiêu mộ thành công ${mentorsData[tempMentorId].name} trong ${months} tháng.`);
     showMentorDialogue('login');
 };
 
