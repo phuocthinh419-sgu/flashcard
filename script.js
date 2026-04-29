@@ -199,6 +199,11 @@ function transferToAdmin(amount, itemName) {
     });
 }
 
+// ==========================================
+// THÊM DÒNG NÀY ĐỂ TRẠM GÁC KHÔNG BỊ CHẬP MẠCH
+let lastSeenTxTime = 0; 
+// ==========================================
+
 function startAdminNotification(userUid) {
     if (userUid !== ADMIN_UID) return; // Bỏ qua nếu không phải Admin
 
