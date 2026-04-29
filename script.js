@@ -204,11 +204,38 @@ function startAdminNotification(userUid) {
 
     db.collection('vocab_users').doc(ADMIN_UID).onSnapshot((doc) => {
         const data = doc.data();
-        if (data && data.lastTransaction) {
-            const tx = data.lastTransaction;
-            // Chỉ hiện thông báo cho giao dịch mới trong vòng 5 giây
-            if (Date.now() - tx.time < 5000) {
-                showBankNotification(tx.amount, tx.item, tx.buyer, data.gold);
+        if (data) {
+            // 1. ÉP GIAO DIỆN NHẢY SỐ VÀNG TRỰC TIẾP CHO BỆ HẠ
+            if (userData && currentUser && currentUser.uid === ADMIN_UID) {
+                userData.gold = data.gold || 0;
+                
+                // Gọi thẳng cỗ máy cập nhật UI gốc của hệ thống để đồng bộ
+                if (typeof updateUI === 'function') updateUI(); 
+                
+                let uiGold = document.getElementById('ui-gold');
+                if (uiGold) {
+                    uiGold.style.transition = "all 0.3s ease";
+                    uiGold.style.textShadow = "0 0 15px #ffd700";
+                    uiGold.style.color = "#ffd700"; // Chớp sáng vàng rực rỡ
+                    setTimeout(() => {
+                        uiGold.style.textShadow = "none";
+                        uiGold.style.color = ""; // Trả về màu gốc
+                    }, 1000);
+                }
+            }
+
+            // 2. KÍCH HOẠT THÔNG BÁO (Bỏ qua lỗi lệch múi giờ thiết bị)
+            if (data.lastTransaction) {
+                const tx = data.lastTransaction;
+                
+                // Nếu thời gian giao dịch khác với lần cuối nhìn thấy -> Có biến động mới!
+                if (tx.time !== lastSeenTxTime) {
+                    // Không hiện thông báo ở khoảnh khắc vừa F5 tải trang
+                    if (lastSeenTxTime !== 0) { 
+                        showBankNotification(tx.amount, tx.item, tx.buyer, data.gold);
+                    }
+                    lastSeenTxTime = tx.time; // Cập nhật lại cờ tướng
+                }
             }
         }
     });
