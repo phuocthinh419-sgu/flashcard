@@ -136,7 +136,7 @@ function checkAuth() {
                         }
                         updateUI(); setupRealmListeners(); fetchLessonsFromFirebase(); switchTab('library');
                     } else { 
-                        userData = { role: trueRole, gold: 0, xp: 0, lifetime_xp: 0, realm: "", streak: 1, displayName: '', lastLogin: todayStr, shield_100: 0, shield_80: 0, glass_100: 0, glass_80: 0, time_100: 0, time_80: 0, torch_100: 0, torch_80: 0, potionExpiry: null, potionX3Expiry: null, maskExpiry: null, vouchers: [], blindBoxCount: 0, lastBlindBoxDate: todayStr, streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: getCurrentWeekStr(), highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, timeMachine: null, mastered_words: 0, mastered_lessons: [], selectedMentor: null, mentorExpiry: null };
+                        userData = { role: trueRole, gold: 0, xp: 0, lifetime_xp: 0, realm: availableRealms[0] || "Khởi Nguyên", streak: 1, displayName: '', lastLogin: todayStr, shield_100: 0, shield_80: 0, glass_100: 0, glass_80: 0, time_100: 0, time_80: 0, torch_100: 0, torch_80: 0, potionExpiry: null, potionX3Expiry: null, maskExpiry: null, vouchers: [], blindBoxCount: 0, lastBlindBoxDate: todayStr, streakIcon: '🔥', theme: 'theme_default', purchasedItems: [], weeklyXp: 0, lastWeekXp: 0, currentWeekStr: getCurrentWeekStr(), highestWeeklyXp: 0, hasBrokenRecordThisWeek: false, timeMachine: null, mastered_words: 0, mastered_lessons: [], selectedMentor: null, mentorExpiry: null };
                         let obSelect = document.getElementById('onboardRealmSelect');
                         if (obSelect) { obSelect.innerHTML = ''; availableRealms.forEach(r => { obSelect.innerHTML += `<option value="${r}">${r}</option>`; }); }
                         document.getElementById('nameModal').classList.add('active'); 
@@ -381,6 +381,10 @@ function buyItem(itemType, basePrice) {
     if (hasDoraemonBuff) finalPrice = Math.floor(finalPrice * 0.85);
 
     if (isMarket) finalPrice = Math.floor(finalPrice * 1.05); 
+    
+    // Sửa lỗi: Cập nhật biến userData.gold nếu nó bị undefined do lỗi đồng bộ
+    if (userData.gold === undefined || isNaN(userData.gold)) userData.gold = 0;
+
     if (userData.gold < finalPrice) return alert(`Giao dịch thất bại! Bạn cần thanh toán ${finalPrice} 🪙.`);
     
     let confirmMsg = `Xác nhận thanh toán ${finalPrice} Vàng?`;
@@ -426,6 +430,9 @@ function buyItem(itemType, basePrice) {
             if (itemType.startsWith('rename')) fetchLeaderboard(); 
             let anim = document.getElementById('rewardAnim'); anim.innerText = `🛒 Giao dịch thành công! -${finalPrice} 🪙${extraMsg}`; 
             anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 3500);
+        }).catch(err => {
+            alert("Lỗi mạng khi giao dịch! Firebase đã từ chối cập nhật cho tài khoản này.");
+            console.error(err);
         });
     }
 }
@@ -1705,4 +1712,109 @@ function adminSpectateCurrentMatch() {
             window.isSpectating = false;
         }
     });
+}
+
+// =========================================================
+// 🏆 VÁ LỖI LOGIC XẾP CẶP ĐẤU (BRACKET) CHUẨN XÁC 100%
+// =========================================================
+
+function createBracketObject(players) { 
+    let N = players.length; let targetSize = 4; 
+    if (N > 4 && N <= 8) targetSize = 8; 
+    if (N > 8 && N <= 16) targetSize = 16; 
+    
+    let bracket = { final: { p1: "---", p2: "---", winner: "" }, third_place: { p1: "---", p2: "---", winner: "" }, super_cup: { p1: "---", p2: "---", winner: "" }, promotion_playoff: { p1: "---", p2: "---", winner: "" } }; 
+    
+    // Thuật toán chia rẽ hạt giống: Nửa đầu mảng vào Nhánh Trái, nửa sau vào Nhánh Phải
+    let leftLayout = targetSize === 16 ? [1, 16, 8, 9, 4, 13, 5, 12] : targetSize === 8 ? [1, 8, 4, 5] : [1, 4];
+    let rightLayout = targetSize === 16 ? [2, 15, 7, 10, 3, 14, 6, 11] : targetSize === 8 ? [2, 7, 3, 6] : [2, 3];
+    
+    let leftMatches = []; let rightMatches = [];
+    
+    for (let i = 0; i < leftLayout.length; i += 2) { 
+        let pA = leftLayout[i] <= N ? players[leftLayout[i] - 1] : "BYE (Đặc cách)"; 
+        let pB = leftLayout[i+1] <= N ? players[leftLayout[i+1] - 1] : "BYE (Đặc cách)"; 
+        leftMatches.push({ p1: pA, p2: pB, winner: "" }); 
+    }
+    
+    for (let i = 0; i < rightLayout.length; i += 2) { 
+        let pA = rightLayout[i] <= N ? players[rightLayout[i] - 1] : "BYE (Đặc cách)"; 
+        let pB = rightLayout[i+1] <= N ? players[rightLayout[i+1] - 1] : "BYE (Đặc cách)"; 
+        rightMatches.push({ p1: pA, p2: pB, winner: "" }); 
+    }
+
+    if (targetSize === 16) { 
+        bracket.r16l = leftMatches; 
+        bracket.r16r = rightMatches; 
+        bracket.qfl = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; 
+        bracket.qfr = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; 
+        bracket.sfl = { p1: "---", p2: "---", winner: "" }; bracket.sfr = { p1: "---", p2: "---", winner: "" }; 
+    } else if (targetSize === 8) { 
+        bracket.qfl = leftMatches; bracket.qfr = rightMatches; 
+        bracket.sfl = { p1: "---", p2: "---", winner: "" }; bracket.sfr = { p1: "---", p2: "---", winner: "" }; 
+    } else if (targetSize === 4) { 
+        bracket.sfl = leftMatches[0]; bracket.sfr = rightMatches[0]; 
+    } 
+    return bracket; 
+}
+
+async function executeBlindDraw() { 
+    if(!confirm(`Xác nhận bốc thăm phân nhánh cho [${currentRealm}]?`)) return; 
+    
+    // 1. Lấy thông tin Đương Kim Vô Địch từ Lịch sử
+    const histSnap = await rtdb.ref(`tournament_status/${currentRealm}/history`).once('value'); 
+    const history = histSnap.val() || {}; 
+    let currentDefendingChampion = history.c1_champ || ""; 
+    
+    // 2. Lấy toàn bộ thần dân trong Phủ
+    const snapshot = await db.collection('vocab_users').where('realm', '==', currentRealm).get(); 
+    let allPlayers = []; 
+    snapshot.forEach(doc => allPlayers.push(doc.data())); 
+    
+    // 3. Xếp hạng dựa trên sức mạnh (XP)
+    allPlayers.sort((a,b) => (b.xp || 0) - (a.xp || 0)); 
+    
+    // 4. Lọc người đủ tiêu chuẩn (Chuỗi >= 3 HOẶC là ĐKVĐ)
+    let qualifiedPlayers = []; 
+    allPlayers.forEach(d => { 
+        let dName = d.displayName || "Ẩn danh";
+        let dStreak = d.streak || 1;
+        let isChampion = (dName === currentDefendingChampion && currentDefendingChampion !== "");
+        
+        if(d.role !== 'teacher' && (dStreak >= 3 || isChampion)) { 
+            qualifiedPlayers.push(dName); 
+        } 
+    }); 
+    
+    let N = qualifiedPlayers.length; 
+    if (N < 4) return alert("Cần tối thiểu 4 thần dân duy trì chuỗi 3 ngày (hoặc ĐKVĐ) để mở giải."); 
+    
+    // 5. Thuật toán chia số lượng C1 và C2 theo Bảng xếp hạng
+    let c1Size = 0, c2Size = 0; 
+    if (N >= 4 && N < 8) { 
+        c1Size = 4; c2Size = 0; 
+    } else if (N >= 8) { 
+        let max_pow = Math.pow(2, Math.floor(Math.log2(N))); 
+        c1Size = (N - max_pow < 4 && max_pow > 4) ? max_pow / 2 : max_pow; 
+        let c2PoolSize = N - c1Size; 
+        c2Size = (c2PoolSize >= 4) ? Math.pow(2, Math.floor(Math.log2(c2PoolSize))) : 0; 
+    } 
+    
+    // 6. Phân bổ hạt giống (Seeds) theo đúng Top XP
+    let c1Players = qualifiedPlayers.slice(0, c1Size);
+    let c2Players = qualifiedPlayers.slice(c1Size, c1Size + c2Size);
+    
+    // 7. Tạo sơ đồ và đưa lên Cửu Trùng Đài (Firebase)
+    let updates = {};
+    updates[`tournament_status/${currentRealm}/c1_bracket`] = createBracketObject(c1Players);
+    
+    if(c2Size > 0) {
+        updates[`tournament_status/${currentRealm}/c2_bracket`] = createBracketObject(c2Players);
+    } else {
+        updates[`tournament_status/${currentRealm}/c2_bracket`] = null; // Xóa C2 nếu không đủ mâm
+    }
+    
+    rtdb.ref().update(updates).then(() => {
+        alert(`🎲 Càn khôn đã định!\nĐã xếp ${c1Size} Dũng sĩ vào C1${c2Size > 0 ? ` và ${c2Size} Dũng sĩ vào C2` : ''}.`);
+    }); 
 }
