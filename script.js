@@ -309,7 +309,8 @@ function updateUI() {
 function syncStatsToCloud() { 
     if (currentUser && db) { 
         db.collection('vocab_users').doc(currentUser.uid).update({ 
-            gold: userData.gold || 0, xp: userData.xp || 0, lifetime_xp: userData.lifetime_xp || 0, realm: userData.realm || "", streak: userData.streak || 1, displayName: userData.displayName || "", glass_100: userData.glass_100 || 0, glass_80: userData.glass_80 || 0, shield_100: userData.shield_100 || 0, shield_80: userData.shield_80 || 0, time_100: userData.time_100 || 0, time_80: userData.time_80 || 0, torch_100: userData.torch_100 || 0, torch_80: userData.torch_80 || 0, vouchers: userData.vouchers || [], streakIcon: userData.streakIcon || '🔥', theme: userData.theme || 'theme_default', purchasedItems: userData.purchasedItems || [], weeklyXp: userData.weeklyXp || 0, lastWeekXp: userData.lastWeekXp || 0, currentWeekStr: userData.currentWeekStr || "", highestWeeklyXp: userData.highestWeeklyXp || 0, hasBrokenRecordThisWeek: userData.hasBrokenRecordThisWeek || false, potionX3Expiry: userData.potionX3Expiry || null, potionExpiry: userData.potionExpiry || null, maskExpiry: userData.maskExpiry || null, timeMachine: userData.timeMachine || null, mastered_words: userData.mastered_words || 0, mastered_lessons: userData.mastered_lessons || [], selectedMentor: userData.selectedMentor || null, mentorExpiry: userData.mentorExpiry || null, blindBoxCount: userData.blindBoxCount || 0, lastBlindBoxDate: userData.lastBlindBoxDate || ""
+            gold: userData.gold || 0, xp: userData.xp || 0, lifetime_xp: userData.lifetime_xp || 0, realm: userData.realm || "", streak: userData.streak || 1, displayName: userData.displayName || "", glass_100: userData.glass_100 || 0, glass_80: userData.glass_80 || 0, shield_100: userData.shield_100 || 0, shield_80: userData.shield_80 || 0, time_100: userData.time_100 || 0, time_80: userData.time_80 || 0, torch_100: userData.torch_100 || 0, torch_80: userData.torch_80 || 0, vouchers: userData.vouchers || [], streakIcon: userData.streakIcon || '🔥', theme: userData.theme || 'theme_default', purchasedItems: userData.purchasedItems || [], weeklyXp: userData.weeklyXp || 0, lastWeekXp: userData.lastWeekXp || 0, currentWeekStr: userData.currentWeekStr || "", highestWeeklyXp: userData.highestWeeklyXp || 0, hasBrokenRecordThisWeek: userData.hasBrokenRecordThisWeek || false, potionX3Expiry: userData.potionX3Expiry || null, potionExpiry: userData.potionExpiry || null, maskExpiry: userData.maskExpiry || null, timeMachine: userData.timeMachine || null, mastered_words: userData.mastered_words || 0, mastered_lessons: userData.mastered_lessons || [], selectedMentor: userData.selectedMentor || null, mentorExpiry: userData.mentorExpiry || null, blindBoxCount: userData.blindBoxCount || 0, lastBlindBoxDate: userData.lastBlindBoxDate || "",
+            neonNameExpiry: userData.neonNameExpiry || null // Thêm lệnh lưu trữ hạn dùng của Dạ Quang
         }).then(() => updateUI()).catch(e => console.error("Lỗi đồng bộ:", e));
     } 
 }
@@ -366,37 +367,40 @@ function buyItem(itemType, basePrice) {
     let finalPrice = basePrice;
     let quantity = 1;
 
-    // 2. Logic tính giá Kính Lúp (Dựa trên bản gốc của Bệ hạ)
+    // 2. Logic tính giá Kính Lúp
     if (itemType === 'glass_100') {
-        let qStr = prompt("🔍 Nhập số lượng Kính Lúp bạn muốn mua:\n(🔥 ƯU ĐÃI: Mua từ 3 kính trở lên, giá giảm chỉ còn 150 🪙 / kính)", "1");
+        let qStr = prompt("🔍 Nhập số lượng Kính Lúp ngài muốn mua:\n(🔥 ƯU ĐÃI: Mua từ 3 kính trở lên, giá giảm chỉ còn 150 🪙 / kính)", "1");
         if (qStr === null) return; quantity = parseInt(qStr);
         if (isNaN(quantity) || quantity <= 0) return alert("Số lượng không hợp lệ!");
         finalPrice = (quantity >= 3 ? 150 : 200) * quantity;
     }
 
-    // 3. Áp dụng Voucher và Buff Doraemon (Dựa trên bản gốc của Bệ hạ)
+    // 3. Áp dụng Voucher và Buff Doraemon
     if(userData.vouchers && userData.vouchers.length > 0) finalPrice = Math.floor(finalPrice * (100 - userData.vouchers[0]) / 100);
     if (userData.selectedMentor === 'doraemon' && userData.mentorExpiry > Date.now()) finalPrice = Math.floor(finalPrice * 0.85);
     if (isMarket) finalPrice = Math.floor(finalPrice * 1.05);
 
     if (userData.gold < finalPrice) return alert(`Ngân khố không đủ! Cần ${finalPrice} 🪙.`);
 
-    // 🌟 BỔ SUNG: XỬ LÝ NHẬP TÊN TRƯỚC KHI TRỪ TIỀN
+    // 4. XỬ LÝ NHẬP TÊN TRƯỚC KHI TRỪ TIỀN
     let newDisplayName = null;
     if (itemType.startsWith('rename_')) {
-        newDisplayName = prompt("📜 Nhập tên mới của bạn tại đây:");
+        newDisplayName = prompt("📜 Kính mời Bệ hạ hạ chỉ danh xưng mới:");
         if (!newDisplayName || newDisplayName.trim() === "") return alert("Giao dịch hủy: Danh xưng không thể để trống!");
         newDisplayName = newDisplayName.trim();
     }
 
-    // 4. Xác nhận giao dịch
+    // 5. Xác nhận giao dịch
     if (confirm(`Xác nhận thanh toán ${finalPrice} Vàng cho vật phẩm này?`)) {
         let updates = { gold: userData.gold - finalPrice };
         
-        // Gán tên mới nếu mua thẻ đổi tên
+        // Gán tên mới và cấp hiệu ứng Neon nếu mua Thẻ Chính Hãng
         if (newDisplayName) updates.displayName = newDisplayName;
+        if (itemType === 'rename_100') {
+            updates.neonNameExpiry = Date.now() + (7 * 24 * 60 * 60 * 1000); // Tỏa sáng trong 7 ngày
+        }
 
-        // Cấp pháp bảo (Shield, Glass, Time, Torch)
+        // Cấp pháp bảo
         if (itemType === 'shield_100') updates.shield_100 = (userData.shield_100 || 0) + 3;
         if (itemType === 'shield_80') updates.shield_80 = (userData.shield_80 || 0) + 1;
         if (itemType === 'glass_100') updates.glass_100 = (userData.glass_100 || 0) + quantity;
@@ -406,29 +410,27 @@ function buyItem(itemType, basePrice) {
         if (itemType === 'torch_100') updates.torch_100 = (userData.torch_100 || 0) + 1;
         if (itemType === 'torch_80') updates.torch_80 = (userData.torch_80 || 0) + 1;
 
-        // 🌟 BỔ SUNG: Logic cho Bình Tiên và Mặt Nạ
-        if (itemType.startsWith('potion_100')) updates.potionExpiry = Date.now() + 86400000; // 24h
-        if (itemType.startsWith('potion_80')) updates.potionExpiry = Date.now() + 43200000;  // 12h
-        if (itemType.startsWith('potion_x3_100')) updates.potionX3Expiry = Date.now() + 21600000; // 6h
-        if (itemType.startsWith('potion_x3_80')) updates.potionX3Expiry = Date.now() + 10800000;  // 3h
-        if (itemType.startsWith('mask_100')) updates.maskExpiry = Date.now() + 86400000; // 24h
-        if (itemType.startsWith('mask_80')) updates.maskExpiry = Date.now() + 43200000;  // 12h
+        // Logic cho Bình Tiên và Mặt Nạ
+        if (itemType.startsWith('potion_100')) updates.potionExpiry = Date.now() + 86400000;
+        if (itemType.startsWith('potion_80')) updates.potionExpiry = Date.now() + 43200000;
+        if (itemType.startsWith('potion_x3_100')) updates.potionX3Expiry = Date.now() + 21600000;
+        if (itemType.startsWith('potion_x3_80')) updates.potionX3Expiry = Date.now() + 10800000;
+        if (itemType.startsWith('mask_100')) updates.maskExpiry = Date.now() + 86400000;
+        if (itemType.startsWith('mask_80')) updates.maskExpiry = Date.now() + 43200000;
 
-        // Lưu danh sách đồ trang trí nếu mua mới
+        // Lưu danh sách đồ trang trí
         if (['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow', 'theme_royal'].includes(itemType)) {
             if (!userData.purchasedItems) userData.purchasedItems = [];
             userData.purchasedItems.push(itemType);
             updates.purchasedItems = userData.purchasedItems;
         }
 
-        // 5. Cập nhật Firebase hồ sơ cá nhân
+        // Cập nhật Firebase
         db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
-            // Báo cáo sưu thuế về cho Admin
             try { transferToAdmin(finalPrice, `Cửa hàng: ${itemType}`); } catch(e) {}
-            
             Object.assign(userData, updates);
             updateUI();
-            if (newDisplayName) fetchLeaderboard(); // Làm mới BXH nếu đổi tên
+            if (newDisplayName) fetchLeaderboard(); 
             
             let anim = document.getElementById('rewardAnim');
             anim.innerText = `🛒 Giao dịch thành công! -${finalPrice} 🪙`;
