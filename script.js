@@ -1108,3 +1108,236 @@ window.addEventListener('DOMContentLoaded', () => {
 setInterval(() => { if (currentRealm && currentFullBracketData) { if (typeof renderBracket === 'function') { renderBracket(); } } }, 10000);
 function publishNotice() { let text = document.getElementById('adminNoticeInput').value; if(!text) return alert("Bệ hạ chưa nhập thánh ý!"); rtdb.ref(`tournament_status/${currentRealm}/global_notice`).set(text).then(() => { alert("📢 Đã truyền loa thành công ra toàn cõi!"); document.getElementById('adminNoticeInput').value = ""; }); }
 function clearNotice() { if(!confirm("Bệ hạ muốn thu hồi Thánh chỉ và tắt bảng LED?")) return; rtdb.ref(`tournament_status/${currentRealm}/global_notice`).set("").then(() => { alert("🔇 Đã tắt loa phát thanh!"); }); }
+
+// =========================================================
+// 🚑 BẢN VÁ PHỤC HỒI DỮ LIỆU THỐNG KÊ & GIA SƯ
+// =========================================================
+
+function renderAchievements() {
+    const container = document.getElementById('achieveGrid');
+    if (!container) return;
+    const mw = userData.mastered_words || 0;
+    
+    const badges = [
+        { id: 'a1', title: 'Tân Binh (Rookie)', target: 30, icon: '🐣', color: '#9e9e9e' },
+        { id: 'a2', title: 'Nhặt Đồ (Looter)', target: 50, icon: '🎒', color: '#8d6e63' },
+        { id: 'a3', title: 'Thợ Săn Từ (Hunter)', target: 100, icon: '🏹', color: '#4caf50' },
+        { id: 'a4', title: 'Chuyên Gia (Pro)', target: 150, icon: '🎓', color: '#03a9f4' },
+        { id: 'a5', title: 'Học Giả (Elite)', target: 300, icon: '📖', color: '#3f51b5' },
+        { id: 'a6', title: 'Huyền Thoại (Legendary)', target: 500, icon: '👑', color: '#ff9800' },
+        { id: 'a7', title: 'Cỗ Máy Học (Cyborg)', target: 1000, icon: '🤖', color: '#e91e63' },
+        { id: 'a8', title: 'Bậc Thầy (Mastermind)', target: 2500, icon: '🧠', color: '#9c27b0' },
+        { id: 'a9', title: 'Siêu Việt (Transcendent)', target: 5000, icon: '🌌', color: 'linear-gradient(45deg, #00f2fe, #4facfe)' },
+        { id: 'a10', title: 'Vị Thần (God of Vocab)', target: 10000, icon: '⚡', color: 'linear-gradient(45deg, #f12711, #f5af19)' }
+    ];
+    
+    let html = '';
+    badges.forEach((b, index) => {
+        let isUnlocked = mw >= b.target;
+        let progress = Math.min((mw / b.target) * 100, 100);
+        let classState = isUnlocked ? 'unlocked' : 'locked';
+        
+        let isHidden = false;
+        if (index >= 6) { 
+            let prevBadge = badges[index - 1];
+            if (mw < prevBadge.target * 0.8) isHidden = true;
+        }
+
+        let displayTitle = isHidden ? '??? (Bí ẩn)' : b.title;
+        let displayIcon = isHidden ? '🔒' : b.icon;
+        let iconColor = isUnlocked ? '' : 'style="opacity: 0.4; filter: grayscale(100%);"';
+        
+        let titleStyle = '';
+        let barBg = '#4caf50'; 
+        let cardBorder = '#333';
+        
+        if (!isHidden) {
+            if (b.color.includes('gradient')) {
+                titleStyle = `background: ${b.color}; -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900;`;
+                barBg = b.color;
+                cardBorder = isUnlocked ? '#f5af19' : '#333';
+            } else {
+                titleStyle = `color: ${b.color}; font-weight: 800;`;
+                barBg = b.color;
+                cardBorder = isUnlocked ? b.color : '#333';
+            }
+        } else {
+            titleStyle = `color: #666; font-weight: bold; font-style: italic;`;
+            barBg = '#555';
+        }
+
+        html += `
+            <div class="achieve-card ${classState}" style="border-color: ${cardBorder}; transition: all 0.3s ease;">
+                <div class="achieve-icon" ${iconColor} style="font-size: 32px; margin-bottom: 8px;">${displayIcon}</div>
+                <div class="achieve-info">
+                    <div class="achieve-title" style="${titleStyle}">${displayTitle}</div>
+                    <div class="achieve-desc" style="font-size: 11px; color: #aaa; margin-bottom: 6px;">
+                        ${isHidden ? 'Đạt 80% mốc trước để giải mã' : 'Thành thạo ' + b.target + ' từ vựng'}
+                    </div>
+                    <div class="achieve-progress-bg" style="background: rgba(255,255,255,0.1); border-radius: 10px; height: 6px; overflow: hidden; margin-bottom: 4px;">
+                        <div class="achieve-progress-fill" style="width: ${progress}%; background: ${barBg}; height: 100%; transition: width 1s ease-out;"></div>
+                    </div>
+                    <div class="achieve-progress-text" style="font-size: 11px; text-align: right; color: #ccc;">${mw}/${b.target}</div>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+const mentorsData = {
+    'conan': {
+        icon: '🕵️',
+        avatarImg: 'https://static.ybox.vn/2022/8/2/1660030852217-conan.png', 
+        name: 'Thám tử Conan',
+        price: 3000,
+        buffDesc: "5% rớt Kính lúp mỗi câu đúng. Vượt ải 100% rớt Kính lúp & thưởng +10% Vàng/XP tổng bài.",
+        login: "Cậu đến đúng lúc lắm. Hiện trường bài học hôm nay vẫn còn nguyên dấu vết. Bắt tay vào thu thập manh mối trong kho bài học thôi!",
+        correct: "Sự thật luôn chỉ có một! Suy luận của cậu rất sắc bén!",
+        broken: "Hung thủ giết chết điểm số chính là sự trì hoãn của cậu đấy!",
+        wrong: "Sai rồi! Manh mối rõ ràng như vậy mà cậu lại bỏ sót sao? Nhìn kỹ lại đi!"
+    },
+    'doraemon': {
+        icon: '🐱',
+        avatarImg: 'https://img3.thuthuatphanmem.vn/uploads/2019/10/10/anh-doremon-vay-chao_033146925.png',
+        name: 'Mèo máy Doraemon',
+        price: 3000,
+        buffDesc: "Giảm 15% Cửa hàng. Vượt ải 100% có 50% tỉ lệ rơi Bùa Bảo Hộ hoặc Voucher 30%.",
+        login: "Xin chào! Cậu có mang bánh rán cho tớ không? Cùng học nào!",
+        correct: "Giỏi quá! Cậu xứng đáng được tặng một chiếc bánh rán!",
+        broken: "Cậu lại lười biếng rồi! Có cần tớ lôi Cỗ Máy Thời Gian ra cứu chuỗi không hả?",
+        wrong: "Ui da, sai mất rồi! Đừng nản chí, cậu hãy xem kĩ lại từ vựng đi!"
+    },
+    'dekisugi': {
+        icon: '🧑‍🎓',
+        avatarImg: 'https://wibu.com.vn/wp-content/uploads/2024/03/Dekisugi.png',
+        name: 'Học giả Dekisugi',
+        price: 3000,
+        buffDesc: "Cộng +10 XP gốc mỗi câu đúng. Vượt ải 100% được thưởng nóng 50 Vàng.",
+        login: "Chào cậu! Hôm nay chúng ta cùng cố gắng ôn tập nhé. Tớ vừa đọc xong một cuốn sách rất hay.",
+        correct: "Tuyệt vời! Cậu làm tốt lắm. Cứ giữ vững phong độ này nhé!",
+        broken: "Tớ thấy cậu vắng mặt hơi lâu. Việc học giống như xây gạch, phải kiên trì mỗi ngày mới vững chắc được.",
+        wrong: "Ồ, câu này hơi lắt léo một chút. Cậu nên xem lại kiến thức phần này nhé."
+    },
+    'roshi': {
+        icon: '🐢',
+        avatarImg: 'https://wibu.com.vn/wp-content/uploads/2024/03/Muten-Roshi.png',
+        name: 'Quy Lão Tiên Sinh',
+        price: 3000,
+        buffDesc: "Cộng +5 Vàng gốc mỗi câu đúng. Sai một câu bị phạt trừ 2 Vàng.",
+        login: "Khà khà, nhìn cái mặt ngáp ngắn ngáp dài kìa, định vào đây cúng Vàng cho lão phu đi uống trà đấy à?",
+        correct: "Ồ, câu này mà cũng làm được cơ đấy! Đúng là rùa mù vớ được cá rán! Chắc lại ăn may chứ gì?",
+        broken: "Đứt chuỗi rồi à? Khà khà, ý chí tu luyện của đồ đệ còn ngắn hơn cả chiều cao của lão phu nữa!",
+        wrong: "Ngu dốt! Làm bài mà cứ như ném phi tiêu thế à? Lão phu xin nhẹ 2 Vàng đi mua tạp chí nhé!"
+    }
+};
+
+let tempMentorId = null;
+let mentorTimeout = null;
+
+window.openMentorContract = function(mentorId) {
+    tempMentorId = mentorId;
+    const mentor = mentorsData[mentorId];
+    let avatarHtml = mentor.icon;
+    if (mentor.avatarImg) avatarHtml = `<img src="${mentor.avatarImg}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+    document.getElementById('contractAvatar').innerHTML = avatarHtml;
+    document.getElementById('contractDesc').innerHTML = `Chiêu mộ <b>${mentor.name}</b> làm Ngự Tiền Gia Sư.<br>Lương tháng: <b style="color:#ff1744">${mentor.price} Vàng</b>.<br><br><span style="color:#2e7d32; font-weight:bold;">✨ Nội tại:</span> <span style="color:#555;">${mentor.buffDesc}</span>`;
+    document.getElementById('mentorMonths').value = 1;
+    updateContractTotal();
+    document.getElementById('mentorContractModal').classList.add('active');
+    document.getElementById('mentorMonths').oninput = updateContractTotal;
+};
+
+window.updateContractTotal = function() {
+    let months = parseInt(document.getElementById('mentorMonths').value) || 1;
+    if (months < 1) { months = 1; document.getElementById('mentorMonths').value = 1; }
+    if (months > 12) { months = 12; document.getElementById('mentorMonths').value = 12; }
+    let total = months * mentorsData[tempMentorId].price;
+    document.getElementById('contractTotalGold').innerText = total.toLocaleString();
+};
+
+window.confirmMentorContract = async function() {
+    let months = parseInt(document.getElementById('mentorMonths').value) || 1;
+    let totalCost = months * mentorsData[tempMentorId].price;
+    if (!userData.gold || userData.gold < totalCost) { alert("Báo cáo Bệ hạ: Ngân khố không đủ Vàng để trả lương cho Gia sư này. Hãy đi cày thêm!"); return; }
+    let now = Date.now();
+    let currentExpiry = userData.mentorExpiry || now;
+    if (currentExpiry < now) currentExpiry = now; 
+    let newExpiry = currentExpiry + (months * 30 * 24 * 60 * 60 * 1000);
+    userData.gold -= totalCost;
+    if (typeof transferToAdmin === 'function') { transferToAdmin(totalCost, `Thuê Gia sư: ${mentorsData[tempMentorId].name} (${months} tháng)`); }
+    userData.mentorExpiry = newExpiry;
+    userData.selectedMentor = tempMentorId;
+    if (currentUser && db) { db.collection('vocab_users').doc(currentUser.uid).update(userData); }
+    document.getElementById('mentorContractModal').classList.remove('active');
+    updateUI();
+    alert(`🎉 Chúc mừng! Bạn đã chiêu mộ thành công ${mentorsData[tempMentorId].name} trong ${months} tháng.`);
+    showMentorDialogue('login');
+};
+
+window.showMentorDialogue = function(action, extraData = null) {
+    const widget = document.getElementById('mentor-widget');
+    if (!widget || !userData || !userData.selectedMentor) return;
+    let now = Date.now();
+    if (!userData.mentorExpiry || userData.mentorExpiry < now) { widget.style.display = 'none'; return; }
+    let pvpModal = document.getElementById('pvpModal');
+    if (pvpModal && pvpModal.classList.contains('active')) { widget.style.display = 'none'; return; }
+    widget.style.display = 'flex';
+    let mentor = mentorsData[userData.selectedMentor];
+    const avatarEl = document.getElementById('mentor-avatar');
+    if (mentor.avatarImg) { avatarEl.innerHTML = `<img src="${mentor.avatarImg}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`; } else { avatarEl.innerText = mentor.icon; }
+    let textToSpeak = mentor[action];
+    if (action === 'wrong' && extraData && extraData.en) {
+        if (userData.selectedMentor === 'conan') { textToSpeak = `Sai rồi! Sự thật chỉ có một: "${extraData.en}" có nghĩa là "${extraData.vi}". Nhìn kỹ manh mối này nhé!`; } 
+        else if (userData.selectedMentor === 'doraemon') { textToSpeak = `Ui da sai rồi! Từ điển tương lai ghi "${extraData.en}" nghĩa là "${extraData.vi}" đó nha!`; } 
+        else if (userData.selectedMentor === 'dekisugi') { textToSpeak = `Tiếc quá! "${extraData.en}" phải mang nghĩa là "${extraData.vi}". Cậu note lại vào vở cho nhớ nhé!`; } 
+        else if (userData.selectedMentor === 'roshi') { textToSpeak = `Trật lất! "${extraData.en}" nghĩa là "${extraData.vi}"! Phạt trừ 2 Vàng, chép phạt 10 lần cho ta!`; }
+    }
+    const bubble = document.getElementById('mentor-bubble');
+    bubble.innerText = textToSpeak; bubble.classList.add('show');
+    clearTimeout(mentorTimeout); mentorTimeout = setTimeout(() => { bubble.classList.remove('show'); }, 7000); 
+};
+
+window.pokeMentor = function() { showMentorDialogue('login'); };
+setTimeout(() => { if(currentUser && userData) showMentorDialogue('login'); }, 2000);
+
+// Khôi phục lại hàm lưu trữ an toàn (Đảm bảo không bị mất dữ liệu Cloud khi mạng yếu)
+function syncStatsToCloud() { 
+    if (currentUser && db) { 
+        db.collection('vocab_users').doc(currentUser.uid).update({ 
+            gold: userData.gold || 0, 
+            xp: userData.xp || 0, 
+            lifetime_xp: userData.lifetime_xp || 0, 
+            realm: userData.realm || "", 
+            streak: userData.streak || 1, 
+            displayName: userData.displayName || "", 
+            magnifyingGlass: userData.magnifyingGlass || 0, 
+            glass_100: userData.glass_100 || 0,
+            glass_80: userData.glass_80 || 0,
+            shield_100: userData.shield_100 || 0,
+            shield_80: userData.shield_80 || 0,
+            time_100: userData.time_100 || 0,
+            time_80: userData.time_80 || 0,
+            torch_100: userData.torch_100 || 0,
+            torch_80: userData.torch_80 || 0,
+            vouchers: userData.vouchers || [], 
+            streakIcon: userData.streakIcon || '🔥', 
+            theme: userData.theme || 'theme_default', 
+            purchasedItems: userData.purchasedItems || [], 
+            weeklyXp: userData.weeklyXp || 0, 
+            lastWeekXp: userData.lastWeekXp || 0, 
+            currentWeekStr: userData.currentWeekStr || "", 
+            highestWeeklyXp: userData.highestWeeklyXp || 0, 
+            hasBrokenRecordThisWeek: userData.hasBrokenRecordThisWeek || false, 
+            potionX3Expiry: userData.potionX3Expiry || null, 
+            timeMachine: userData.timeMachine || null, 
+            mastered_words: userData.mastered_words || 0, 
+            mastered_lessons: userData.mastered_lessons || [],
+            selectedMentor: userData.selectedMentor || null,
+            mentorExpiry: userData.mentorExpiry || null
+        }).then(() => updateUI()).catch(e => console.error("Lỗi đồng bộ:", e));
+    } 
+}
+
+// Bơm xung điện để các tab tự động thức tỉnh
+setTimeout(() => { updateUI(); fetchLeaderboard(); }, 500);
