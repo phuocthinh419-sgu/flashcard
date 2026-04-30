@@ -209,7 +209,7 @@ window.updateContractTotal = function() {
 
 window.confirmMentorContract = async function() {
     let months = parseInt(document.getElementById('mentorMonths').value) || 1; let totalCost = months * mentorsData[tempMentorId].price;
-    if (!userData.gold || userData.gold < totalCost) return alert("Báo cáo Bệ hạ: Ngân khố không đủ Vàng để trả lương cho Gia sư này."); 
+    if (!userData.gold || userData.gold < totalCost) return alert("Thông báo: Tài khoản không đủ Vàng để trả lương cho Gia sư này."); 
     let now = Date.now(); let currentExpiry = userData.mentorExpiry || now; if (currentExpiry < now) currentExpiry = now; 
     userData.gold -= totalCost; if (typeof transferToAdmin === 'function') transferToAdmin(totalCost, `Thuê Gia sư: ${mentorsData[tempMentorId].name} (${months} tháng)`);
     userData.mentorExpiry = currentExpiry + (months * 30 * 24 * 60 * 60 * 1000); userData.selectedMentor = tempMentorId;
@@ -345,62 +345,48 @@ function applyTheme(themeName) { document.body.classList.remove('theme-aurora', 
 
 function buyItem(itemType, basePrice) { 
     if (!currentUser) return alert("Hệ thống yêu cầu phải đăng nhập mới sử dụng tính năng giao dịch!"); 
+    
+    // Kiểm tra và áp dụng ngay nếu là đồ trang trí đã sở hữu
     if (['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow', 'theme_royal'].includes(itemType)) {
         if (userData.purchasedItems && userData.purchasedItems.includes(itemType)) {
             let updates = {};
             if (itemType.startsWith('streak_')) updates.streakIcon = itemType === 'streak_snow' ? '❄️' : itemType === 'streak_peach' ? '🌸' : itemType === 'streak_soccer' ? '⚽' : itemType === 'streak_basket' ? '🏀' : '🎓';
             else if (itemType.startsWith('theme_')) updates.theme = itemType.replace('_', '-');
-            userData.streakIcon = updates.streakIcon || userData.streakIcon; userData.theme = updates.theme || userData.theme;
-            if(updates.theme) applyTheme(userData.theme);
-            db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => { updateUI(); alert("Áp dụng thành công vật phẩm đã sở hữu!"); });
+            db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => { 
+                Object.assign(userData, updates);
+                updateUI(); 
+                alert("Áp dụng thành công vật phẩm đã sở hữu!"); 
+            });
             return;
         }
-    } else if (itemType === 'theme_default' || itemType === 'streak_fire') {
-         let updates = {};
-         if (itemType === 'theme_default') { updates.theme = 'theme_default'; userData.theme = updates.theme; applyTheme(userData.theme); }
-         if (itemType === 'streak_fire') { updates.streakIcon = '🔥'; userData.streakIcon = updates.streakIcon; }
-         db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => { updateUI(); alert("Giao diện đã quay về trạng thái gốc!"); });
-         return;
     }
-    
-    let isStore = itemType.endsWith('_100'); let isMarket = itemType.endsWith('_80');
-    let quantity = 1; let finalPrice = basePrice;
-    
+
+    let isStore = itemType.endsWith('_100');
+    let isMarket = itemType.endsWith('_80');
+    let finalPrice = basePrice;
+    let quantity = 1;
+
+    // Logic tính giá Kính Lúp
     if (itemType === 'glass_100') {
-        let qStr = prompt("🔍 Nhập số lượng Kính Lúp ngài muốn mua:\n(🔥 ƯU ĐÃI: Mua từ 3 kính trở lên, giá giảm chỉ còn 150 🪙 / kính)", "1");
+        let qStr = prompt("🔍 Nhập số lượng Kính Lúp bạn muốn mua:\n(🔥 ƯU ĐÃI: Mua từ 3 kính trở lên, giá giảm chỉ còn 150 🪙 / kính)", "1");
         if (qStr === null) return; quantity = parseInt(qStr);
         if (isNaN(quantity) || quantity <= 0) return alert("Số lượng không hợp lệ!");
         finalPrice = (quantity >= 3 ? 150 : 200) * quantity;
     }
 
-    let bestVoucher = 0; let vIndex = -1;
-    if(userData.vouchers && userData.vouchers.length > 0) { bestVoucher = userData.vouchers[0]; vIndex = 0; }
-    if (bestVoucher > 0) finalPrice = Math.floor(finalPrice * (100 - bestVoucher) / 100);
-    
-    let hasDoraemonBuff = (userData.selectedMentor === 'doraemon' && userData.mentorExpiry && userData.mentorExpiry > Date.now());
-    if (hasDoraemonBuff) finalPrice = Math.floor(finalPrice * 0.85);
+    // Áp dụng Voucher và Buff Doraemon
+    if(userData.vouchers && userData.vouchers.length > 0) finalPrice = Math.floor(finalPrice * (100 - userData.vouchers[0]) / 100);
+    if (userData.selectedMentor === 'doraemon' && userData.mentorExpiry > Date.now()) finalPrice = Math.floor(finalPrice * 0.85);
+    if (isMarket) finalPrice = Math.floor(finalPrice * 1.05);
 
-    if (isMarket) finalPrice = Math.floor(finalPrice * 1.05); 
-    
-    // Sửa lỗi: Cập nhật biến userData.gold nếu nó bị undefined do lỗi đồng bộ
-    if (userData.gold === undefined || isNaN(userData.gold)) userData.gold = 0;
+    if (userData.gold < finalPrice) return alert(`Ngân khố không đủ! Cần ${finalPrice} 🪙.`);
 
-    if (userData.gold < finalPrice) return alert(`Giao dịch thất bại! Bạn cần thanh toán ${finalPrice} 🪙.`);
-    
-    let confirmMsg = `Xác nhận thanh toán ${finalPrice} Vàng?`;
-    if(isMarket) confirmMsg = `Thanh toán ${finalPrice} Vàng (đã bao gồm 5% thuế phí Chợ đen)?`;
-    
-    if(confirm(confirmMsg)) {
+    if (confirm(`Xác nhận thanh toán ${finalPrice} Vàng?`)) {
         let updates = { gold: userData.gold - finalPrice };
-        if (vIndex > -1) { userData.vouchers.splice(vIndex, 1); updates.vouchers = userData.vouchers; }
-        if (itemType === 'rename_100' || itemType === 'rename_80') { 
-            let newName = prompt("Nhập tên hiển thị bạn mong muốn:"); 
-            if (!newName || newName.trim() === "") return alert("Quy trình hủy do thông tin tên không hợp lệ!"); 
-            updates.displayName = newName.trim(); 
-        }
         
-        if (itemType === 'shield_100') updates.shield_100 = (userData.shield_100 || 0) + 3; 
-        if (itemType === 'shield_80') updates.shield_80 = (userData.shield_80 || 0) + 1;  
+        // Cấp pháp bảo tương ứng
+        if (itemType === 'shield_100') updates.shield_100 = (userData.shield_100 || 0) + 3;
+        if (itemType === 'shield_80') updates.shield_80 = (userData.shield_80 || 0) + 1;
         if (itemType === 'glass_100') updates.glass_100 = (userData.glass_100 || 0) + quantity;
         if (itemType === 'glass_80') updates.glass_80 = (userData.glass_80 || 0) + 1;
         if (itemType === 'time_100') updates.time_100 = (userData.time_100 || 0) + 1;
@@ -408,31 +394,19 @@ function buyItem(itemType, basePrice) {
         if (itemType === 'torch_100') updates.torch_100 = (userData.torch_100 || 0) + 1;
         if (itemType === 'torch_80') updates.torch_80 = (userData.torch_80 || 0) + 1;
 
-        if (itemType.startsWith('potion_')) updates.potionExpiry = Date.now() + (isStore ? 86400000 : 43200000); 
-        if (itemType.startsWith('potion_x3_')) updates.potionX3Expiry = Date.now() + (isStore ? 21600000 : 10800000); 
-        if (itemType.startsWith('mask_')) updates.maskExpiry = Date.now() + (isStore ? 86400000 : 43200000); 
-        
-        if (['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow', 'theme_royal'].includes(itemType)) {
-            if (!userData.purchasedItems) userData.purchasedItems = [];
-            userData.purchasedItems.push(itemType); updates.purchasedItems = userData.purchasedItems;
-        }
-
-        let extraMsg = "";
-        if (isStore) {
-            let xpBonus = Math.floor((userData.xp || 0) * 0.05); updates.xp = (userData.xp || 0) + xpBonus;
-            if(!userData.vouchers) userData.vouchers = []; userData.vouchers.push(45); userData.vouchers.sort((a,b) => b - a); updates.vouchers = userData.vouchers;
-            extraMsg = `\n✨ Đặc quyền Chính hãng: Nhận thêm ${xpBonus} XP và 1 Voucher Giảm 45%!`;
-        }
-        
+        // Lưu cập nhật vào Firebase hồ sơ cá nhân trước (Luôn thành công nếu Rules đúng)
         db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
-            if (typeof transferToAdmin === 'function') transferToAdmin(finalPrice, `Cửa hàng: ${itemType}`);
-            Object.assign(userData, updates); updateUI(); 
-            if (itemType.startsWith('rename')) fetchLeaderboard(); 
-            let anim = document.getElementById('rewardAnim'); anim.innerText = `🛒 Giao dịch thành công! -${finalPrice} 🪙${extraMsg}`; 
-            anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 3500);
+            // Sau khi trừ tiền thành công mới báo về cho Admin (Chạy ngầm, không chặn giao dịch)
+            try { transferToAdmin(finalPrice, `Cửa hàng: ${itemType}`); } catch(e) {}
+            
+            Object.assign(userData, updates);
+            updateUI();
+            let anim = document.getElementById('rewardAnim');
+            anim.innerText = `🛒 Giao dịch thành công! -${finalPrice} 🪙`;
+            anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 3000);
         }).catch(err => {
-            alert("Lỗi mạng khi giao dịch! Firebase đã từ chối cập nhật cho tài khoản này.");
-            console.error(err);
+            alert("Firebase từ chối! Bạn hãy vui lòng kiểm tra lại 'Rules' trong Console.");
+            console.error("Lỗi giao dịch:", err);
         });
     }
 }
