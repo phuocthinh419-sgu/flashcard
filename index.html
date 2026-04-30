@@ -1,678 +1,504 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VocabForge | Gamification - Multiverse</title>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <meta name="theme-color" content="#1a237e">
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VocabForge | Gamification - Multiverse</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="theme-color" content="#1a237e">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    <link rel="stylesheet" href="style.css?v=43">
+    <link rel="stylesheet" href="style.css?v=42">
 
-    <style>
-        /* 1. Vòng xoay vĩnh cửu cho Hoa Tuyết, Hoa Đào, Bóng đá, Bóng rổ */
-        @keyframes spin-clockwise {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        .icon-spin {
-            display: inline-block;
-            animation: spin-clockwise 4s linear infinite; /* Xoay đều đặn trong 4 giây */
-        }
+    <style>
+        /* 1. Vòng xoay vĩnh cửu cho Hoa Tuyết, Hoa Đào, Bóng đá, Bóng rổ */
+        @keyframes spin-clockwise {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .icon-spin {
+            display: inline-block;
+            animation: spin-clockwise 4s linear infinite; /* Xoay đều đặn trong 4 giây */
+        }
 
-        /* 2. Lửa Tím Neon Chân Thật (Gốc đứng im, ngọn bập bùng, tỏa sáng) */
-        @keyframes true-neon-fire {
-            0%   { filter: hue-rotate(260deg) saturate(300%) drop-shadow(0 0 2px #d500f9) drop-shadow(0 -2px 4px #aa00ff); transform: skewX(0deg) scaleY(1); }
-            20%  { filter: hue-rotate(265deg) saturate(300%) drop-shadow(0 0 4px #e040fb) drop-shadow(0 -5px 8px #d500f9); transform: skewX(1deg) scaleY(1.05); }
-            40%  { filter: hue-rotate(255deg) saturate(300%) drop-shadow(0 0 3px #d500f9) drop-shadow(0 -3px 6px #aa00ff); transform: skewX(-1deg) scaleY(0.95); }
-            60%  { filter: hue-rotate(270deg) saturate(300%) drop-shadow(0 0 5px #ea80fc) drop-shadow(0 -7px 12px #d500f9); transform: skewX(2deg) scaleY(1.08); }
-            80%  { filter: hue-rotate(260deg) saturate(300%) drop-shadow(0 0 2px #aa00ff) drop-shadow(0 -2px 5px #8e24aa); transform: skewX(-2deg) scaleY(0.98); }
-            100% { filter: hue-rotate(265deg) saturate(300%) drop-shadow(0 0 6px #d500f9) drop-shadow(0 -6px 15px #aa00ff); transform: skewX(0deg) scaleY(1.04); }
-        }
-        .icon-neon-fire {
-            display: inline-block;
-            transform-origin: bottom center; /* Đóng đinh gốc lửa xuống đất */
-            animation: true-neon-fire 0.25s ease-in-out infinite alternate; /* Cháy mượt mà không bị giật cục */
-        }
+        /* 2. Lửa Tím Neon Chân Thật (Gốc đứng im, ngọn bập bùng, tỏa sáng) */
+        @keyframes true-neon-fire {
+            0%   { filter: hue-rotate(260deg) saturate(300%) drop-shadow(0 0 2px #d500f9) drop-shadow(0 -2px 4px #aa00ff); transform: skewX(0deg) scaleY(1); }
+            20%  { filter: hue-rotate(265deg) saturate(300%) drop-shadow(0 0 4px #e040fb) drop-shadow(0 -5px 8px #d500f9); transform: skewX(1deg) scaleY(1.05); }
+            40%  { filter: hue-rotate(255deg) saturate(300%) drop-shadow(0 0 3px #d500f9) drop-shadow(0 -3px 6px #aa00ff); transform: skewX(-1deg) scaleY(0.95); }
+            60%  { filter: hue-rotate(270deg) saturate(300%) drop-shadow(0 0 5px #ea80fc) drop-shadow(0 -7px 12px #d500f9); transform: skewX(2deg) scaleY(1.08); }
+            80%  { filter: hue-rotate(260deg) saturate(300%) drop-shadow(0 0 2px #aa00ff) drop-shadow(0 -2px 5px #8e24aa); transform: skewX(-2deg) scaleY(0.98); }
+            100% { filter: hue-rotate(265deg) saturate(300%) drop-shadow(0 0 6px #d500f9) drop-shadow(0 -6px 15px #aa00ff); transform: skewX(0deg) scaleY(1.04); }
+        }
+        .icon-neon-fire {
+            display: inline-block;
+            transform-origin: bottom center; /* Đóng đinh gốc lửa xuống đất */
+            animation: true-neon-fire 0.25s ease-in-out infinite alternate; /* Cháy mượt mà không bị giật cục */
+        }
 
-        /* 3. Khung Ngự Tiền Gia Sư lơ lửng */
-        .mentor-widget {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            z-index: 9990; /* Ẩn dưới Đài Tỷ Võ (9999) */
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            pointer-events: none;
-        }
-        .mentor-avatar {
-            width: 65px;
-            height: 65px;
-            background: linear-gradient(135deg, #fff, #f0f0f0);
-            border: 3px solid #ffd700;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 38px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            pointer-events: auto;
-            cursor: pointer;
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .mentor-avatar:hover { transform: scale(1.15) rotate(-5deg); }
-        .mentor-bubble {
-            background: rgba(255, 255, 255, 0.95);
-            color: #1a237e;
-            padding: 12px 18px;
-            border-radius: 18px;
-            border-bottom-right-radius: 4px;
-            margin-bottom: 12px;
-            max-width: 260px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-            font-weight: 900;
-            font-size: 14px;
-            line-height: 1.5;
-            opacity: 0;
-            transform: translateY(15px);
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            pointer-events: auto;
-            border: 2px solid #e8eaf6;
-        }
-        .mentor-bubble.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* 4. Hiệu ứng cho Dropdown Menu Cửa Hàng */
-        .sidebar .has-dropdown .nav-link {
-            padding: 12px 15px;
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            margin-bottom: 5px;
-            transition: all 0.3s;
-        }
-        .sidebar .has-dropdown .nav-link:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        .sidebar .dropdown-menu {
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-        }
-        .sidebar .sub-item {
-            opacity: 0.8;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        .sidebar .sub-item:hover, .sidebar .sub-item.active {
-            opacity: 1;
-            transform: translateX(5px);
-            font-weight: bold;
-        }
-    </style>
+        /* 3. Khung Ngự Tiền Gia Sư lơ lửng */
+        .mentor-widget {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 9990; /* Ẩn dưới Đài Tỷ Võ (9999) */
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            pointer-events: none;
+        }
+        .mentor-avatar {
+            width: 65px;
+            height: 65px;
+            background: linear-gradient(135deg, #fff, #f0f0f0);
+            border: 3px solid #ffd700;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 38px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            pointer-events: auto;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .mentor-avatar:hover { transform: scale(1.15) rotate(-5deg); }
+        .mentor-bubble {
+            background: rgba(255, 255, 255, 0.95);
+            color: #1a237e;
+            padding: 12px 18px;
+            border-radius: 18px;
+            border-bottom-right-radius: 4px;
+            margin-bottom: 12px;
+            max-width: 260px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            font-weight: 900;
+            font-size: 14px;
+            line-height: 1.5;
+            opacity: 0;
+            transform: translateY(15px);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            pointer-events: auto;
+            border: 2px solid #e8eaf6;
+        }
+        .mentor-bubble.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
 </head>
 <body>
-    <div id="sidebarOverlay" class="overlay" onclick="toggleSidebar()"></div>
-    <aside class="sidebar" id="sidebar">
-        <div class="brand">🎓 VocabForge</div>
-        <div class="user-profile">
-            <div class="user-avatar" id="sidebarAvatar">👤</div>
-            <div class="user-name" id="sidebarName">Khách vãng lai</div>
-            <div class="user-badge badge-student" id="sidebarRole">👨‍🎓 Học Sinh</div>
-            <div class="user-badge badge-realm" id="sidebarRealm">🌍 Phủ: Đang tải...</div>
-            
-            <!-- ĐÃ VÁ: TÚI ĐỒ PHÂN LOẠI HIỆU NĂNG -->
-            <div style="font-size: 11px; color: #666; margin-top: 5px;">🔍 Kính lúp (100%): <span id="ui-glass-100" style="font-weight:bold; color:#ffd700;">0</span> | (80%): <span id="ui-glass-80" style="font-weight:bold; color:#9e9e9e;">0</span></div>
-            <div style="font-size: 11px; color: #666; margin-top: 5px;">🛡️ Bùa bảo hộ (100%): <span id="ui-shield-100" style="font-weight:bold; color:#ffd700;">0</span> | (80%): <span id="ui-shield-80" style="font-weight:bold; color:#9e9e9e;">0</span></div>
-            <div style="font-size: 11px; color: #666; margin-top: 5px;">⏳ Đồng hồ (100%): <span id="ui-time-100" style="font-weight:bold; color:#ffd700;">0</span> | (80%): <span id="ui-time-80" style="font-weight:bold; color:#9e9e9e;">0</span></div>
-            <div style="font-size: 11px; color: #666; margin-top: 5px;">🔥 Ngọn đuốc (100%): <span id="ui-torch-100" style="font-weight:bold; color:#ffd700;">0</span> | (80%): <span id="ui-torch-80" style="font-weight:bold; color:#9e9e9e;">0</span></div>
-            
-            <div style="font-size: 12px; color: #666; margin-top: 5px;">📜 Khế Ước: <span id="ui-mentor-expiry" style="font-weight:bold; color:#d32f2f;">Chưa ký</span></div>
-            <div style="font-size: 13px; color: #555; margin-top: 15px; text-align: left; padding-top: 15px; border-top: 1px dashed #ccc;">
-                <div style="margin-bottom: 8px;">📈 Tiến độ tuần: <span id="ui-weekly-progress" style="font-weight:bold;">---</span></div>
-                <div style="margin-bottom: 8px;">⚡ XP Tuần này: <span id="ui-weekly-xp" style="font-weight:bold; color:var(--secondary);">0</span></div>
-                <div style="margin-bottom: 8px;">🏆 Kỷ lục Tuần: <span id="ui-highest-xp" style="font-weight:bold; color:#fbc02d;">0</span></div>
-                <div>🌌 XP Trọn đời: <span id="ui-lifetime-xp" style="font-weight:bold; color:var(--danger);">0</span></div>
-            </div>
-        </div>
-        <div class="nav-item" id="nav-creator" onclick="switchTab('creator')" style="display:none">⚡ Ngự Thư Phòng (Admin)</div>
-        <div class="nav-item nav-arena" id="nav-arena" onclick="switchTab('arena')" style="display:none">⚔️ Đài Tỷ Võ</div>
-        <div class="nav-item active" id="nav-library" onclick="switchTab('library')">☁️ Kho Bài Học</div>
-        <div class="nav-item" id="nav-stats" onclick="switchTab('stats')">📊 Thống Kê</div>
-        
-        <!-- HỆ THỐNG MENU CỬA HÀNG KÉP -->
-        <div style="display: flex; flex-direction: column; width: 100%;">
-            <div class="nav-item" id="nav-shop-main" onclick="toggleStoreMenu()" style="display: flex; justify-content: space-between; align-items: center;">
-                <div>🛒 Cửa Hàng</div>
-                <div id="store-arrow" style="font-size: 10px; transition: transform 0.3s; margin-left: auto;">▼</div>
-            </div>
-            
-            <div id="store-dropdown" style="display: none; flex-direction: column; gap: 5px; padding-left: 20px; margin-top: 5px; margin-bottom: 5px;">
-                <div class="nav-item" id="nav-shop" onclick="switchTab('shop')" style="border-left: 2px solid #ffd700; border-radius: 0 8px 8px 0; padding: 10px; font-size: 14px;">
-                    ✨ Cung Đình
-                </div>
-                <div class="nav-item" id="nav-market" onclick="switchTab('market')" style="border-left: 2px solid #9e9e9e; border-radius: 0 8px 8px 0; padding: 10px; font-size: 14px;">
-                    📦 Chợ Đen
-                </div>
-            </div>
-        </div>
+    <div id="sidebarOverlay" class="overlay" onclick="toggleSidebar()"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="brand">🎓 VocabForge</div>
+        <div class="user-profile">
+            <div class="user-avatar" id="sidebarAvatar">👤</div>
+            <div class="user-name" id="sidebarName">Khách vãng lai</div>
+            <div class="user-badge badge-student" id="sidebarRole">👨‍🎓 Học Sinh</div>
+            <div class="user-badge badge-realm" id="sidebarRealm">🌍 Phủ: Đang tải...</div>
+            <div style="font-size: 12px; color: #666; margin-top: 5px;">🔍 Kính Lúp: <span id="ui-glass-count" style="font-weight:bold; color:var(--primary);">0</span></div>
+            <div style="font-size: 12px; color: #666; margin-top: 5px;">🛡️ Bùa Bảo Hộ: <span id="ui-shield-count" style="font-weight:bold; color:var(--primary);">0</span></div>
+            <div style="font-size: 12px; color: #666; margin-top: 5px;">📜 Khế Ước: <span id="ui-mentor-expiry" style="font-weight:bold; color:#d32f2f;">Chưa ký</span></div>
+            <div style="font-size: 13px; color: #555; margin-top: 15px; text-align: left; padding-top: 15px; border-top: 1px dashed #ccc;">
+                <div style="margin-bottom: 8px;">📈 Tiến độ tuần: <span id="ui-weekly-progress" style="font-weight:bold;">---</span></div>
+                <div style="margin-bottom: 8px;">⚡ XP Tuần này: <span id="ui-weekly-xp" style="font-weight:bold; color:var(--secondary);">0</span></div>
+                <div style="margin-bottom: 8px;">🏆 Kỷ lục Tuần: <span id="ui-highest-xp" style="font-weight:bold; color:#fbc02d;">0</span></div>
+                <div>🌌 XP Trọn đời: <span id="ui-lifetime-xp" style="font-weight:bold; color:var(--danger);">0</span></div>
+            </div>
+        </div>
+        <div class="nav-item" id="nav-creator" onclick="switchTab('creator')" style="display:none">⚡ Ngự Thư Phòng (Admin)</div>
+        <div class="nav-item nav-arena" id="nav-arena" onclick="switchTab('arena')" style="display:none">⚔️ Đài Tỷ Võ</div>
+        <div class="nav-item active" id="nav-library" onclick="switchTab('library')">☁️ Kho Bài Học</div>
+        <div class="nav-item" id="nav-stats" onclick="switchTab('stats')">📊 Thống Kê</div>
+        <div class="nav-item" id="nav-shop" onclick="switchTab('shop')">🛒 Cửa Hàng</div>
+        <div class="nav-item" id="nav-leaderboard" onclick="switchTab('leaderboard')">🏆 Xếp Hạng</div>
+        <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">⚙️ Cài Đặt</div>
+    </aside>
 
-        <div class="nav-item" id="nav-leaderboard" onclick="switchTab('leaderboard')">🏆 Xếp Hạng</div>
-        <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">⚙️ Cài Đặt</div>
-    </aside>
+    <div class="main-wrapper">
+        <div class="top-stats-bar">
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <button id="themeToggleBtn" onclick="toggleDarkMode()" style="background: none; border: none; font-size: 20px; cursor: pointer; margin-right: auto; padding-left: 10px;">🌙</button>
+            <div class="stats-wrapper">
+                <div class="stat-box stat-streak"><span id="ui-streak-icon">🔥</span> <span id="ui-streak">0</span></div>
+                <div class="stat-box stat-xp">⭐ <span id="ui-xp">0</span></div>
+                <div class="stat-box stat-gold">🪙 <span id="ui-gold">0</span></div>
+            </div>
+        </div>
 
-    <div class="main-wrapper">
-        <div class="top-stats-bar">
-            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-            <button id="themeToggleBtn" onclick="toggleDarkMode()" style="background: none; border: none; font-size: 20px; cursor: pointer; margin-right: auto; padding-left: 10px;">🌙</button>
-            <div class="stats-wrapper">
-                <div class="stat-box stat-streak"><span id="ui-streak-icon">🔥</span> <span id="ui-streak">0</span></div>
-                <div class="stat-box stat-xp">⭐ <span id="ui-xp">0</span></div>
-                <div class="stat-box stat-gold">🪙 <span id="ui-gold">0</span></div>
-            </div>
-        </div>
+        <div id="adminNoticeBoard">
+            <div class="sweep-light"></div>
+            <div id="noticeContent">Đang tải thông báo...</div>
+        </div>
+        
+        <main class="main-content">
+            <div id="view-library" class="view-section active">
+                <div class="header"><h1>☁️ Kho Bài Học</h1></div>
+                <div class="library-grid" id="libraryContainer"></div>
+            </div>
 
-        <div id="adminNoticeBoard">
-            <div class="sweep-light"></div>
-            <div id="noticeContent">Đang tải thông báo...</div>
-        </div>
-        
-        <main class="main-content">
-            <div id="view-library" class="view-section active">
-                <div class="header"><h1>☁️ Kho Bài Học</h1></div>
-                <div class="library-grid" id="libraryContainer"></div>
-            </div>
+            <div id="view-stats" class="view-section">
+                <div class="header"><h1>📊 Thống Kê & Thành Tựu</h1><p>Nơi phô diễn sự uyên bác và công sức tu luyện của bạn.</p></div>
+                <div class="stats-overview-card">
+                    <div class="stats-divider">
+                        <div class="stats-label">Tổng Số Từ Đã Thành Thạo</div>
+                        <div class="stats-value-1"><span id="ui-mastered-words">0</span> 🎓</div>
+                    </div>
+                    <div class="stats-nodivider">
+                        <div class="stats-label">Bài Học Đã Vượt Ải (100%)</div>
+                        <div class="stats-value-2"><span id="ui-mastered-lessons">0</span> 📚</div>
+                    </div>
+                </div>
+                <h3 style="color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px;">🏆 Bảo Các Thành Tựu</h3>
+                <div class="achieve-grid" id="achieveGrid"></div>
+            </div>
 
-            <div id="view-stats" class="view-section">
-                <div class="header"><h1>📊 Thống Kê & Thành Tựu</h1><p>Nơi phô diễn sự uyên bác và công sức tu luyện của bạn.</p></div>
-                <div class="stats-overview-card">
-                    <div class="stats-divider">
-                        <div class="stats-label">Tổng Số Từ Đã Thành Thạo</div>
-                        <div class="stats-value-1"><span id="ui-mastered-words">0</span> 🎓</div>
-                    </div>
-                    <div class="stats-nodivider">
-                        <div class="stats-label">Bài Học Đã Vượt Ải (100%)</div>
-                        <div class="stats-value-2"><span id="ui-mastered-lessons">0</span> 📚</div>
-                    </div>
-                </div>
-                <h3 style="color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px;">🏆 Bảo Các Thành Tựu</h3>
-                <div class="achieve-grid" id="achieveGrid"></div>
-            </div>
+            <div id="view-arena" class="view-section">
+                <div class="header"><h1 style="color: var(--danger);">⚔️ Đài Tỷ Võ</h1><p>Trung tâm quản lý giải đấu.</p></div>
+                <div class="arena-container">
+                    <div class="arena-panel">
+                        <div class="arena-title">1. Ngự Thiện Phòng (Tuyển chọn đề thi)</div>
+                        <div class="syllabus-list" id="syllabusChecklist"><p>Đang tải giáo trình...</p></div>
+                        <button class="btn-save" style="width: 100%;" onclick="saveSyllabusSelection()">💾 Khóa đề thi</button>
+                    </div>
+                    <div class="arena-panel">
+                        <div class="arena-title">2. Lò Bát Quái (Điều hành Nhánh)</div>
+                        <button class="btn-danger" style="width: 100%; padding: 15px; font-size: 18px; font-weight: 900;" onclick="executeBlindDraw()">🎲 BỐC THĂM NHÁNH ĐẤU</button>
+                        <button class="btn-run" style="width: 100%; padding: 15px; font-size: 18px; font-weight: 900; margin-top: 10px;" onclick="advanceTournament()">⏭️ TỔNG KẾT & VÀO VÒNG TRONG</button>
+                        <button class="btn-save" style="width: 100%; padding: 15px; font-size: 18px; font-weight: 900; margin-top: 10px; background: #ff9800;" onclick="archiveSeason()">🏆 LƯU DANH SỬ SÁCH & KẾT THÚC</button>
+                    </div>
+                </div>
+            </div>
 
-            <div id="view-arena" class="view-section">
-                <div class="header"><h1 style="color: var(--danger);">⚔️ Đài Tỷ Võ</h1><p>Trung tâm quản lý giải đấu.</p></div>
-                <div class="arena-container">
-                    <div class="arena-panel">
-                        <div class="arena-title">1. Ngự Thiện Phòng (Tuyển chọn đề thi)</div>
-                        <div class="syllabus-list" id="syllabusChecklist"><p>Đang tải giáo trình...</p></div>
-                        <button class="btn-save" style="width: 100%;" onclick="saveSyllabusSelection()">💾 Khóa đề thi</button>
-                    </div>
-                    <div class="arena-panel">
-                        <div class="arena-title">2. Lò Bát Quái (Điều hành Nhánh)</div>
-                        <button class="btn-danger" style="width: 100%; padding: 15px; font-size: 18px; font-weight: 900;" onclick="executeBlindDraw()">🎲 BỐC THĂM NHÁNH ĐẤU</button>
-                        <button class="btn-run" style="width: 100%; padding: 15px; font-size: 18px; font-weight: 900; margin-top: 10px;" onclick="advanceTournament()">⏭️ TỔNG KẾT & VÀO VÒNG TRONG</button>
-                        <button class="btn-save" style="width: 100%; padding: 15px; font-size: 18px; font-weight: 900; margin-top: 10px; background: #ff9800;" onclick="archiveSeason()">🏆 LƯU DANH SỬ SÁCH & KẾT THÚC</button>
-                    </div>
-                </div>
-            </div>
+            <div id="view-shop" class="view-section">
+                <div class="header">
+                    <h1>🛒 Cửa Hàng</h1><p>Đổi vật phẩm bằng Vàng.</p>
+                    <div style="background: #fff9c4; padding: 10px; border-radius: 8px; font-weight: bold; margin-top: 10px; color: #f57f17; display: flex; justify-content: space-between; align-items: center;">
+                        <span>🎟️ Kho Voucher: <span id="ui-vouchers">Trống</span></span>
+                        <span style="font-size: 12px; font-style: italic;">(Hệ thống sẽ tự động áp dụng mã ưu đãi tốt nhất)</span>
+                    </div>
+                </div>
+                <div class="shop-grid" id="shopGrid">
+                    
+                    <div class="shop-item" style="border: 2px solid #2196f3; background: #e3f2fd;">
+                        <div class="item-icon">🕵️</div>
+                        <div class="item-title" style="color: #1565c0;">Thám tử Conan</div>
+                        <div class="item-desc">Hệ Logic. Giúp phân tích nhạy bén.</div>
+                        <div class="item-price" style="color: #1565c0; background: #bbdefb;">🪙 3000/tháng</div>
+                        <button class="btn-buy" style="background: linear-gradient(45deg, #2196f3, #1565c0);" onclick="openMentorContract('conan')">Chiêu Mộ</button>
+                    </div>
+                    <div class="shop-item" style="border: 2px solid #00bcd4; background: #e0f7fa;">
+                        <div class="item-icon">🐱</div>
+                        <div class="item-title" style="color: #00838f;">Mèo ú Doraemon</div>
+                        <div class="item-desc">Hệ Nuông chiều. Khích lệ tinh thần.</div>
+                        <div class="item-price" style="color: #00838f; background: #b2ebf2;">🪙 3000/tháng</div>
+                        <button class="btn-buy" style="background: linear-gradient(45deg, #00bcd4, #00838f);" onclick="openMentorContract('doraemon')">Chiêu Mộ</button>
+                    </div>
+                    <div class="shop-item" style="border: 2px solid #4caf50; background: #e8f5e9;">
+                        <div class="item-icon">🧑‍🎓</div>
+                        <div class="item-title" style="color: #2e7d32;">Học giả Dekisugi</div>
+                        <div class="item-desc">Hệ Chuẩn mực. Con nhà người ta.</div>
+                        <div class="item-price" style="color: #2e7d32; background: #c8e6c9;">🪙 3000/tháng</div>
+                        <button class="btn-buy" style="background: linear-gradient(45deg, #4caf50, #2e7d32);" onclick="openMentorContract('dekisugi')">Chiêu Mộ</button>
+                    </div>
+                    <div class="shop-item" style="border: 2px solid #ff9800; background: #fff3e0;">
+                        <div class="item-icon">🐢</div>
+                        <div class="item-title" style="color: #e65100;">Quy Lão Tiên Sinh</div>
+                        <div class="item-desc">Hệ Thực chiến. Huấn luyện khắc nghiệt.</div>
+                        <div class="item-price" style="color: #e65100; background: #ffe0b2;">🪙 3000/tháng</div>
+                        <button class="btn-buy" style="background: linear-gradient(45deg, #ff9800, #e65100);" onclick="openMentorContract('roshi')">Chiêu Mộ</button>
+                    </div>
+                    <div class="shop-item" style="border: 2px solid #00bcd4; background: #e0f7fa;">
+                        <div class="item-icon">✈️</div>
+                        <div class="item-title" style="color: #0097a7;">Giấy Thông Hành</div>
+                        <div class="item-desc">Di cư sang Phủ (Giáo trình) khác. Giữ nguyên Vàng & Vật phẩm.</div>
+                        <div class="item-price" style="color: #0097a7; background: #b2ebf2;">🪙 100000</div>
+                        <button class="btn-buy" style="background: linear-gradient(45deg, #00bcd4, #0097a7);" onclick="openMigrationModal()">Di Cư</button>
+                    </div>
 
-            <!-- ============================================== -->
-            <!-- VIEW: CỬA HÀNG CHÍNH HÃNG (STORE 100%) -->
-            <!-- ============================================== -->
-            <div id="view-shop" class="view-section">
-                <div class="header">
-                    <h1>✨ Cung Đình (Chính Hãng)</h1><p>Hàng hiệu cao cấp, đi kèm 5% XP & Voucher 45%.</p>
-                    <div style="background: #fff9c4; padding: 10px; border-radius: 8px; font-weight: bold; margin-top: 10px; color: #f57f17; display: flex; justify-content: space-between; align-items: center;">
-                        <span>🎟️ Kho Voucher: <span id="ui-vouchers">Trống</span></span>
-                        <span style="font-size: 12px; font-style: italic;">(Áp dụng tự động)</span>
-                    </div>
-                </div>
-                <div class="shop-grid" id="shopGrid">
-                    
-                    <div class="shop-item" style="border: 2px solid #2196f3; background: #e3f2fd;">
-                        <div class="item-icon">🕵️</div>
-                        <div class="item-title" style="color: #1565c0;">Thám tử Conan</div>
-                        <div class="item-desc">Hệ Logic. Giúp phân tích nhạy bén.</div>
-                        <div class="item-price" style="color: #1565c0; background: #bbdefb;">🪙 3000/tháng</div>
-                        <button class="btn-buy" style="background: linear-gradient(45deg, #2196f3, #1565c0);" onclick="openMentorContract('conan')">Chiêu Mộ</button>
-                    </div>
-                    <div class="shop-item" style="border: 2px solid #00bcd4; background: #e0f7fa;">
-                        <div class="item-icon">🐱</div>
-                        <div class="item-title" style="color: #00838f;">Mèo ú Doraemon</div>
-                        <div class="item-desc">Hệ Nuông chiều. Khích lệ tinh thần.</div>
-                        <div class="item-price" style="color: #00838f; background: #b2ebf2;">🪙 3000/tháng</div>
-                        <button class="btn-buy" style="background: linear-gradient(45deg, #00bcd4, #00838f);" onclick="openMentorContract('doraemon')">Chiêu Mộ</button>
-                    </div>
-                    <div class="shop-item" style="border: 2px solid #4caf50; background: #e8f5e9;">
-                        <div class="item-icon">🧑‍🎓</div>
-                        <div class="item-title" style="color: #2e7d32;">Học giả Dekisugi</div>
-                        <div class="item-desc">Hệ Chuẩn mực. Con nhà người ta.</div>
-                        <div class="item-price" style="color: #2e7d32; background: #c8e6c9;">🪙 3000/tháng</div>
-                        <button class="btn-buy" style="background: linear-gradient(45deg, #4caf50, #2e7d32);" onclick="openMentorContract('dekisugi')">Chiêu Mộ</button>
-                    </div>
-                    <div class="shop-item" style="border: 2px solid #ff9800; background: #fff3e0;">
-                        <div class="item-icon">🐢</div>
-                        <div class="item-title" style="color: #e65100;">Quy Lão Tiên Sinh</div>
-                        <div class="item-desc">Hệ Thực chiến. Huấn luyện khắc nghiệt.</div>
-                        <div class="item-price" style="color: #e65100; background: #ffe0b2;">🪙 3000/tháng</div>
-                        <button class="btn-buy" style="background: linear-gradient(45deg, #ff9800, #e65100);" onclick="openMentorContract('roshi')">Chiêu Mộ</button>
-                    </div>
-                    <div class="shop-item" style="border: 2px solid #00bcd4; background: #e0f7fa;">
-                        <div class="item-icon">✈️</div>
-                        <div class="item-title" style="color: #0097a7;">Giấy Thông Hành</div>
-                        <div class="item-desc">Di cư sang Phủ (Giáo trình) khác. Giữ nguyên Vàng & Vật phẩm.</div>
-                        <div class="item-price" style="color: #0097a7; background: #b2ebf2;">🪙 100000</div>
-                        <button class="btn-buy" style="background: linear-gradient(45deg, #00bcd4, #0097a7);" onclick="openMigrationModal()">Di Cư</button>
-                    </div>
+                    <div class="shop-item" id="shop-time-machine" style="display: none; border: 2px solid #9c27b0; background: #f3e5f5;">
+                        <div class="item-icon">⏳</div>
+                        <div class="item-title" style="color: #6a1b9a;">Máy Du Hành</div>
+                        <div class="item-desc">Khôi phục chuỗi đã mất. Phải vượt qua thử thách khốc liệt!</div>
+                        <div class="item-price" id="price-time-machine" style="color: #6a1b9a; background: #e1bee7;">🪙 ---</div>
+                        <button class="btn-buy" id="btn-time-machine" style="background: linear-gradient(45deg, #9c27b0, #ab47bc);" onclick="buyTimeMachine()">Kích Hoạt</button>
+                    </div>
+                    
+                    <div class="shop-item" style="border: 2px solid #ff9800; background: #fff8e1;">
+                        <div class="item-icon">🎡</div>
+                        <div class="item-title" style="color: #f57f17;">Vòng Quay Nhân Phẩm</div>
+                        <div class="item-desc">Đánh cược vận may! Có thể trúng mánh hoặc mất trắng.</div>
+                        <div class="item-price" style="color: #f57f17; background: #ffecb3;">🪙 150</div>
+                        <button class="btn-buy" style="background: linear-gradient(45deg, #ff9800, #f57f17);" onclick="openWheelModal()">Quay Ngay</button>
+                    </div>
 
-                    <div class="shop-item" id="shop-time-machine" style="display: none; border: 2px solid #9c27b0; background: #f3e5f5;">
-                        <div class="item-icon">⏳</div>
-                        <div class="item-title" style="color: #6a1b9a;">Máy Du Hành</div>
-                        <div class="item-desc">Khôi phục chuỗi đã mất. Phải vượt qua thử thách khốc liệt!</div>
-                        <div class="item-price" id="price-time-machine" style="color: #6a1b9a; background: #e1bee7;">🪙 ---</div>
-                        <button class="btn-buy" id="btn-time-machine" style="background: linear-gradient(45deg, #9c27b0, #ab47bc);" onclick="buyTimeMachine()">Kích Hoạt</button>
-                    </div>
-                    
-                    <div class="shop-item" style="border: 2px solid #ff9800; background: #fff8e1;">
-                        <div class="item-icon">🎡</div>
-                        <div class="item-title" style="color: #f57f17;">Vòng Quay Nhân Phẩm</div>
-                        <div class="item-desc">Đánh cược vận may! Có thể trúng mánh hoặc mất trắng.</div>
-                        <div class="item-price" style="color: #f57f17; background: #ffecb3;">🪙 150</div>
-                        <button class="btn-buy" style="background: linear-gradient(45deg, #ff9800, #f57f17);" onclick="openWheelModal()">Quay Ngay</button>
-                    </div>
+                    <div class="shop-item"><div class="item-icon">🪪</div><div class="item-title">Thẻ Đổi Tên</div><div class="item-desc">Thay đổi tên hiển thị của bạn. Có hiệu lực ngay.</div><div class="item-price">🪙 1000</div><button class="btn-buy" onclick="buyItem('rename', 1000)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🧪</div><div class="item-title">Bình Tiên XP x2</div><div class="item-desc">Nhân đôi điểm kinh nghiệm và Vàng nhận được trong 24 giờ.</div><div class="item-price">🪙 150</div><button class="btn-buy" onclick="buyItem('potion', 150)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🧪</div><div class="item-title">Bình Tiên XP x3</div><div class="item-desc">Nhân ba XP và Vàng. Giới hạn 3 giờ.</div><div class="item-price">🪙 1500</div><button class="btn-buy" onclick="buyItem('potion_x3', 1500)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🎭</div><div class="item-title">Mặt Nạ Hắc Ám</div><div class="item-desc">Ẩn tên và điểm số trên BXH. Tác dụng 24 giờ.</div><div class="item-price">🪙 250</div><button class="btn-buy" onclick="buyItem('mask', 250)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🔍</div><div class="item-title">Kính Lúp Thám Tử</div><div class="item-desc">Loại bỏ 2 đáp án sai trong lúc làm bài (Dùng 1 lần/kính).</div><div class="item-price">🪙 200</div><button class="btn-buy" onclick="buyItem('glass', 200)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🛡️</div><div class="item-title">Bùa Bảo Hộ</div><div class="item-desc">Bảo vệ chuỗi ngày học nếu bạn lỡ quên đăng nhập 1 ngày.</div><div class="item-price">🪙 8000</div><button class="btn-buy" onclick="buyItem('shield', 8000)">Đổi Ngay</button></div>
+                    
+                    <div class="shop-item"><div class="item-icon">❄️</div><div class="item-title">Đá Hoa Tuyết</div><div class="item-desc">Đổi biểu tượng Streak.</div><div class="item-price" id="price-streak_snow">🪙 5000</div><button class="btn-buy" id="btn-streak_snow" onclick="buyItem('streak_snow', 5000)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🌸</div><div class="item-title">Đá Hoa Đào</div><div class="item-desc">Đổi biểu tượng Streak.</div><div class="item-price" id="price-streak_peach">🪙 5000</div><button class="btn-buy" id="btn-streak_peach" onclick="buyItem('streak_peach', 5000)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">⚽</div><div class="item-title">Đá Túc Cầu</div><div class="item-desc">Đổi biểu tượng Streak.</div><div class="item-price" id="price-streak_soccer">🪙 5000</div><button class="btn-buy" id="btn-streak_soccer" onclick="buyItem('streak_soccer', 5000)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🏀</div><div class="item-title">Đá Bóng Rổ</div><div class="item-desc">Đổi biểu tượng Streak.</div><div class="item-price" id="price-streak_basket">🪙 5000</div><button class="btn-buy" id="btn-streak_basket" onclick="buyItem('streak_basket', 5000)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🎓</div><div class="item-title">Đá Học Giả</div><div class="item-desc">Đổi biểu tượng Streak.</div><div class="item-price" id="price-streak_cap">🪙 5000</div><button class="btn-buy" id="btn-streak_cap" onclick="buyItem('streak_cap', 5000)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🔥</div><div class="item-title">Lửa Nguyên Thủy</div><div class="item-desc">Khôi phục biểu tượng Streak gốc.</div><div class="item-price">Đã sở hữu</div><button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('streak_fire', 0)">Dùng Ngay</button></div>
 
-                    <!-- PHÁP BẢO CHÍNH HÃNG (CÓ BADGE) -->
-                    <div class="shop-item"><div class="item-icon">🪪</div><div class="item-title">Thẻ Đổi Tên <span style="font-size:10px; background:#fff9c4; color:#f57f17; padding:2px 5px; border-radius:4px; border:1px solid #f57f17;">✨ 100% Gốc</span></div><div class="item-desc">Thay đổi tên. Có hiệu ứng Neon Gold 7 ngày.</div><div class="item-price">🪙 5000</div><button class="btn-buy" onclick="buyItem('rename_100', 5000)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🧪</div><div class="item-title">Bình Tiên x2 <span style="font-size:10px; background:#fff9c4; color:#f57f17; padding:2px 5px; border-radius:4px; border:1px solid #f57f17;">✨ 100% Gốc</span></div><div class="item-desc">Nhân đôi điểm XP trong 24 giờ.</div><div class="item-price">🪙 150</div><button class="btn-buy" onclick="buyItem('potion_100', 150)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🧪</div><div class="item-title">Bình Tiên x3 <span style="font-size:10px; background:#fff9c4; color:#f57f17; padding:2px 5px; border-radius:4px; border:1px solid #f57f17;">✨ 100% Gốc</span></div><div class="item-desc">Nhân ba XP trong 6 giờ.</div><div class="item-price">🪙 1500</div><button class="btn-buy" onclick="buyItem('potion_x3_100', 1500)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🎭</div><div class="item-title">Mặt Nạ Ẩn Danh <span style="font-size:10px; background:#fff9c4; color:#f57f17; padding:2px 5px; border-radius:4px; border:1px solid #f57f17;">✨ 100% Gốc</span></div><div class="item-desc">Ẩn danh hoàn toàn trên BXH trong 24 giờ.</div><div class="item-price">🪙 250</div><button class="btn-buy" onclick="buyItem('mask_100', 250)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🔍</div><div class="item-title">Kính Lúp <span style="font-size:10px; background:#fff9c4; color:#f57f17; padding:2px 5px; border-radius:4px; border:1px solid #f57f17;">✨ 100% Gốc</span></div><div class="item-desc">Loại bỏ 2 đáp án sai.</div><div class="item-price">🪙 200</div><button class="btn-buy" onclick="buyItem('glass_100', 200)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🛡️</div><div class="item-title">Bùa Bảo Hộ <span style="font-size:10px; background:#fff9c4; color:#f57f17; padding:2px 5px; border-radius:4px; border:1px solid #f57f17;">✨ 100% Gốc</span></div><div class="item-desc">Bảo vệ chuỗi trong 3 ngày vắng mặt.</div><div class="item-price">🪙 8000</div><button class="btn-buy" onclick="buyItem('shield_100', 8000)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">⏳</div><div class="item-title">Đồng Hồ <span style="font-size:10px; background:#fff9c4; color:#f57f17; padding:2px 5px; border-radius:4px; border:1px solid #f57f17;">✨ 100% Gốc</span></div><div class="item-desc">Đóng băng 30s thời gian làm bài.</div><div class="item-price">🪙 300</div><button class="btn-buy" onclick="buyItem('time_100', 300)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🔥</div><div class="item-title">Ngọn Đuốc <span style="font-size:10px; background:#fff9c4; color:#f57f17; padding:2px 5px; border-radius:4px; border:1px solid #f57f17;">✨ 100% Gốc</span></div><div class="item-desc">Mở khóa 2 chữ cái (Dành cho gõ chính tả).</div><div class="item-price">🪙 250</div><button class="btn-buy" onclick="buyItem('torch_100', 250)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">💻</div><div class="item-title">Cực Quang Vũ Trụ</div><div class="item-desc">Đổi Giao diện nền.</div><div class="item-price" id="price-theme_aurora">🪙 15000</div><button class="btn-buy" id="btn-theme_aurora" onclick="buyItem('theme_aurora', 15000)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">💻</div><div class="item-title">Giao diện Tuyết Dạ</div><div class="item-desc">Đổi Giao diện nền.</div><div class="item-price" id="price-theme_snow">🪙 15000</div><button class="btn-buy" id="btn-theme_snow" onclick="buyItem('theme_snow', 15000)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">👑</div><div class="item-title">Giao diện Hoàng Gia</div><div class="item-desc">Đổi Giao diện nền.</div><div class="item-price" id="price-theme_royal">🪙 20000</div><button class="btn-buy" id="btn-theme_royal" onclick="buyItem('theme_royal', 20000)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">💻</div><div class="item-title">Giao diện Mặc Định</div><div class="item-desc">Khôi phục giao diện gốc.</div><div class="item-price">Đã sở hữu</div><button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('theme_default', 0)">Dùng Ngay</button></div>
+                </div>
+            </div>
 
-                    <!-- GIAO DIỆN & CỘT MỐC (KHÔNG ĐỔI) -->
-                    <div class="shop-item"><div class="item-icon">❄️</div><div class="item-title">Đá Hoa Tuyết</div><div class="item-desc">Đổi biểu tượng Streak.</div><div class="item-price" id="price-streak_snow">🪙 5000</div><button class="btn-buy" id="btn-streak_snow" onclick="buyItem('streak_snow', 5000)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🌸</div><div class="item-title">Đá Hoa Đào</div><div class="item-desc">Đổi biểu tượng Streak.</div><div class="item-price" id="price-streak_peach">🪙 5000</div><button class="btn-buy" id="btn-streak_peach" onclick="buyItem('streak_peach', 5000)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">⚽</div><div class="item-title">Đá Túc Cầu</div><div class="item-desc">Đổi biểu tượng Streak.</div><div class="item-price" id="price-streak_soccer">🪙 5000</div><button class="btn-buy" id="btn-streak_soccer" onclick="buyItem('streak_soccer', 5000)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🏀</div><div class="item-title">Đá Bóng Rổ</div><div class="item-desc">Đổi biểu tượng Streak.</div><div class="item-price" id="price-streak_basket">🪙 5000</div><button class="btn-buy" id="btn-streak_basket" onclick="buyItem('streak_basket', 5000)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🎓</div><div class="item-title">Đá Học Giả</div><div class="item-desc">Đổi biểu tượng Streak.</div><div class="item-price" id="price-streak_cap">🪙 5000</div><button class="btn-buy" id="btn-streak_cap" onclick="buyItem('streak_cap', 5000)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🔥</div><div class="item-title">Lửa Nguyên Thủy</div><div class="item-desc">Khôi phục biểu tượng Streak gốc.</div><div class="item-price">Đã sở hữu</div><button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('streak_fire', 0)">Dùng Ngay</button></div>
+            <div id="view-leaderboard" class="view-section">
+                <div class="header" style="text-align: center;"><h1>🏆 Bảng Xếp Hạng</h1></div>
+                <button class="btn-hof" onclick="openHOFModal()">🌟 ĐẠI SẢNH DANH VỌNG 🌟</button>
+                <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;">
+                    <button id="btn-tab-c1" onclick="switchLeagueTab('c1')" style="padding: 10px 20px; font-weight: 900; background: #ffd700; color: #000; border-radius: 8px; border: 2px solid #fff; box-shadow: 0 0 10px #ffd700;">🏆 C1 ELITE</button>
+                    <button id="btn-tab-c2" onclick="switchLeagueTab('c2')" style="padding: 10px 20px; font-weight: bold; background: #555; color: #ccc; border-radius: 8px; border: 2px solid #888;">🥈 C2 TWO</button>
+                </div>
+                <div class="bracket-board" id="bracketBoard" style="display: block;">
+                    <h2 id="leagueTitle" style="color: #ffd700; margin-bottom: 10px;">🏆 MES CHAMPIONS LEAGUE ELITE 🏆</h2>
+                    <p id="bracketStatus" style="margin-bottom: 20px; color: #ccc;">Đang diễn ra</p>
+                    <div class="full-bracket" id="bracketMatches"></div>
+                </div>
+                <div class="lb-container" id="leaderboardData"></div>
+            </div>
 
-                    <div class="shop-item"><div class="item-icon">💻</div><div class="item-title">Cực Quang Vũ Trụ</div><div class="item-desc">Đổi Giao diện nền.</div><div class="item-price" id="price-theme_aurora">🪙 15000</div><button class="btn-buy" id="btn-theme_aurora" onclick="buyItem('theme_aurora', 15000)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">💻</div><div class="item-title">Giao diện Tuyết Dạ</div><div class="item-desc">Đổi Giao diện nền.</div><div class="item-price" id="price-theme_snow">🪙 15000</div><button class="btn-buy" id="btn-theme_snow" onclick="buyItem('theme_snow', 15000)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">👑</div><div class="item-title">Giao diện Hoàng Gia</div><div class="item-desc">Đổi Giao diện nền.</div><div class="item-price" id="price-theme_royal">🪙 20000</div><button class="btn-buy" id="btn-theme_royal" onclick="buyItem('theme_royal', 20000)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">💻</div><div class="item-title">Giao diện Mặc Định</div><div class="item-desc">Khôi phục giao diện gốc.</div><div class="item-price">Đã sở hữu</div><button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('theme_default', 0)">Dùng Ngay</button></div>
-                </div>
-            </div>
+            <div id="view-creator" class="view-section">
+                <div class="header"><h1>⚡ Ngự Thư Phòng (Quản trị Dữ liệu)</h1></div>
+                <div class="workspace">
+                    <div class="panel">
+                        <div class="panel-header" style="background: #e8eaf6;"><span>1. Lò Đúc (Tạo Mã HTML)</span><button class="btn-run" onclick="generateCode()">Đúc Mã ▶</button></div>
+                        <div style="padding: 15px; font-size: 13px; color: #555; border-bottom: 1px dashed #ccc;">Nhập danh sách theo mẫu: <br><i>word | Nghĩa | /pronunciation/ | Type</i></div>
+                        <textarea id="rawInput" placeholder="Ví dụ:&#10;fall | Ngã | /fɔːl/ | Verb"></textarea>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header" style="background: #e0f2f1;"><span>2. Nhập Kho Firebase</span><button class="btn-save" onclick="saveLessonToFirebase()">Lưu Bài 💾</button></div>
+                        <div style="padding: 20px; display: flex; flex-direction: column; gap: 15px; flex: 1;">
+                            <div class="form-group"><label>Tên Bài Học (Ví dụ: Unit 1)</label><input type="text" id="adminLessonName" placeholder="Nhập tên bài học..."></div>
+                            <div class="form-group"><label>Chọn Phủ (Vũ trụ lưu trữ)</label><select id="adminRealmSelect"></select></div>
+                            <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
+                                <label>Mã HTML Đã Đúc (Hệ thống tự điền)</label>
+                                <textarea id="generatedCode" readonly style="background:#f5f5f5; font-size: 12px; border: 1px solid #ccc; flex: 1; min-height: 100px;"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header" style="background: #fff3e0;"><span>3. Quản Lý Đa Vũ Trụ</span></div>
+                        <div style="padding: 20px;">
+                            <div style="background: #fff8e1; border: 1px solid #ffe0b2; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                                <h4 style="color: #f57c00; margin-bottom: 10px;">🌌 Khai Tông Lập Phái (Tạo Phủ)</h4>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="text" id="newRealmInput" placeholder="Ví dụ: Luyện Đề 2026..." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+                                    <button class="btn-run" style="background: #f57c00;" onclick="createNewRealm()">Tạo Mới</button>
+                                </div>
+                            </div>
+                            <div style="background: #ffebee; border: 1px solid #ffcdd2; padding: 15px; border-radius: 8px;">
+                                <h4 style="color: #c62828; margin-bottom: 10px;">🚀 Dời Đô Từ Google Sheets</h4>
+                                <p style="font-size: 12px; color: #555; margin-bottom: 10px;">Hút toàn bộ bài học từ link GG Sheets cũ đưa vào một Phủ trên Firebase. Thao tác này chỉ nên làm 1 lần!</p>
+                                <div style="display: flex; gap: 10px; flex-direction: column;">
+                                    <select id="syncRealmSelect" style="padding: 10px; border: 1px solid #ccc; border-radius: 6px;"></select>
+                                    <button class="btn-danger" onclick="syncFromSheetsToFirebase()">Hút Dữ Liệu Sheets 📥</button>
+                                    <button class="btn-save" style="margin-top: 10px; background: #00897b;" onclick="fixOldUsersRealm()">Nhập Hộ Khẩu Thần Dân Cũ 👨‍👩‍👧‍👦</button>
+                                </div>
+                            </div>
+                            <hr style="margin: 15px 0; border: 0; border-top: 1px dashed #ffcdd2;">
+                            <h4 style="color: #b71c1c; margin-bottom: 10px;">🔥 Thiêu Rụi Lãnh Thổ (Xóa vĩnh viễn)</h4>
+                            <p style="font-size: 12px; color: #555; margin-bottom: 10px;">Xóa sạch Phủ, Bài học và giải đấu. Thần dân sẽ tự động tị nạn về Khởi Nguyên.</p>
+                            <div style="display: flex; gap: 10px;">
+                                <select id="deleteRealmSelect" style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px;"></select>
+                                <button class="btn-danger" onclick="deleteRealm()">Hủy Diệt</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <!-- ============================================== -->
-            <!-- VIEW: CỬA HÀNG THANH LÝ (MARKET 80%) -->
-            <!-- ============================================== -->
-            <div id="view-market" class="view-section" style="display: none;">
-                <div class="header">
-                    <h1 style="color: #616161;">📦 Chợ Đen (Thanh Lý)</h1>
-                    <p style="color: #9e9e9e;">Hàng xách tay giá rẻ. Khi mua chịu thêm <b style="color:#d32f2f;">5% phí</b>. Không có XP Bonus.</p>
-                </div>
-                <div class="shop-grid" id="marketGrid">
-                    <!-- KHU VỰC THU MUA CỦA HỆ THỐNG -->
-                    <div style="grid-column: 1 / -1; background: #fff3e0; border: 2px dashed #ff9800; border-radius: 8px; padding: 15px; text-align: center; margin-bottom: 10px;">
-                        <h3 style="color: #e65100; margin-bottom: 5px;">🏦 Ngự Tiền Thu Mua Phủ</h3>
-                        <p style="font-size: 13px; color: #555;">Hệ thống nhận thu mua pháp bảo <b style="color:#f57f17;">(Hiệu năng 100%)</b> không dùng đến của Bệ hạ và hoàn lại <b>80% Vàng</b> ngay lập tức.</p>
-                        <div style="margin-top: 10px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;" id="pawnshopContainer">
-                            <!-- Nút bán đồ sẽ đổ vào đây bằng JS -->
-                            <span style="font-size: 12px; color: #888; font-style: italic;">Túi đồ của bạn hiện chưa có pháp bảo 100% nào để bán.</span>
-                        </div>
-                    </div>
-
-                    <!-- DANH SÁCH HÀNG THANH LÝ (80%) MÀ HỌC SINH CÓ THỂ MUA -->
-                    <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
-                        <div class="item-icon" style="filter: grayscale(100%);">🪪</div>
-                        <div class="item-title" style="color: #616161;">Thẻ Đổi Tên <span style="font-size:10px; background:#e0e0e0; color:#424242; padding:2px 5px; border-radius:4px; border:1px solid #9e9e9e;">📦 80% Cũ</span></div>
-                        <div class="item-desc">Đổi tên cơ bản. KHÔNG CÓ hiệu ứng Neon Gold.</div>
-                        <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
-                            <span style="text-decoration: line-through; opacity: 0.5;">5000</span>
-                            <span>🪙 4000</span>
-                        </div>
-                        <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
-                        <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('rename_80', 4000)">Mua Lại</button>
-                    </div>
-
-                    <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
-                        <div class="item-icon" style="filter: grayscale(100%);">🧪</div>
-                        <div class="item-title" style="color: #616161;">Bình Tiên x2 <span style="font-size:10px; background:#e0e0e0; color:#424242; padding:2px 5px; border-radius:4px; border:1px solid #9e9e9e;">📦 80% Cũ</span></div>
-                        <div class="item-desc">Chỉ nhân đôi XP trong <b>12 giờ</b>. Bị pha loãng.</div>
-                        <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
-                            <span style="text-decoration: line-through; opacity: 0.5;">150</span>
-                            <span>🪙 120</span>
-                        </div>
-                        <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
-                        <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('potion_80', 120)">Mua Lại</button>
-                    </div>
-
-                    <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
-                        <div class="item-icon" style="filter: grayscale(100%);">🧪</div>
-                        <div class="item-title" style="color: #616161;">Bình Tiên x3 <span style="font-size:10px; background:#e0e0e0; color:#424242; padding:2px 5px; border-radius:4px; border:1px solid #9e9e9e;">📦 80% Cũ</span></div>
-                        <div class="item-desc">Chỉ nhân ba XP trong <b>3 giờ</b>. Bị pha loãng.</div>
-                        <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
-                            <span style="text-decoration: line-through; opacity: 0.5;">1500</span>
-                            <span>🪙 1200</span>
-                        </div>
-                        <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
-                        <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('potion_x3_80', 1200)">Mua Lại</button>
-                    </div>
-
-                    <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
-                        <div class="item-icon" style="filter: grayscale(100%);">🎭</div>
-                        <div class="item-title" style="color: #616161;">Mặt Nạ Rách <span style="font-size:10px; background:#e0e0e0; color:#424242; padding:2px 5px; border-radius:4px; border:1px solid #9e9e9e;">📦 80% Cũ</span></div>
-                        <div class="item-desc">Chỉ ẩn danh trên BXH trong <b>12 giờ</b>.</div>
-                        <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
-                            <span style="text-decoration: line-through; opacity: 0.5;">250</span>
-                            <span>🪙 200</span>
-                        </div>
-                        <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
-                        <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('mask_80', 200)">Mua Lại</button>
-                    </div>
-
-                    <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
-                        <div class="item-icon" style="filter: grayscale(100%);">🔍</div>
-                        <div class="item-title" style="color: #616161;">Kính Lúp Bụi <span style="font-size:10px; background:#e0e0e0; color:#424242; padding:2px 5px; border-radius:4px; border:1px solid #9e9e9e;">📦 80% Cũ</span></div>
-                        <div class="item-desc">Chỉ loại bỏ được <b>1 đáp án sai</b>.</div>
-                        <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
-                            <span style="text-decoration: line-through; opacity: 0.5;">200</span>
-                            <span>🪙 160</span>
-                        </div>
-                        <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
-                        <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('glass_80', 160)">Mua Lại</button>
-                    </div>
-
-                    <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
-                        <div class="item-icon" style="filter: grayscale(100%);">🛡️</div>
-                        <div class="item-title" style="color: #616161;">Bùa Cũ Mòn <span style="font-size:10px; background:#e0e0e0; color:#424242; padding:2px 5px; border-radius:4px; border:1px solid #9e9e9e;">📦 80% Cũ</span></div>
-                        <div class="item-desc">Chỉ bảo vệ chuỗi trong <b>1 ngày</b> vắng mặt.</div>
-                        <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
-                            <span style="text-decoration: line-through; opacity: 0.5;">8000</span>
-                            <span>🪙 6400</span>
-                        </div>
-                        <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
-                        <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('shield_80', 6400)">Mua Lại</button>
-                    </div>
-
-                    <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
-                        <div class="item-icon" style="filter: grayscale(100%);">⏳</div>
-                        <div class="item-title" style="color: #616161;">Đồng Hồ Vỡ <span style="font-size:10px; background:#e0e0e0; color:#424242; padding:2px 5px; border-radius:4px; border:1px solid #9e9e9e;">📦 80% Cũ</span></div>
-                        <div class="item-desc">Đóng băng <b>15s</b> thời gian làm bài.</div>
-                        <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
-                            <span style="text-decoration: line-through; opacity: 0.5;">300</span>
-                            <span>🪙 240</span>
-                        </div>
-                        <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
-                        <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('time_80', 240)">Mua Lại</button>
-                    </div>
-
-                    <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
-                        <div class="item-icon" style="filter: grayscale(100%);">🔥</div>
-                        <div class="item-title" style="color: #616161;">Ngọn Đuốc Yếu <span style="font-size:10px; background:#e0e0e0; color:#424242; padding:2px 5px; border-radius:4px; border:1px solid #9e9e9e;">📦 80% Cũ</span></div>
-                        <div class="item-desc">Chỉ mở khóa được <b>1 chữ cái</b> đầu tiên.</div>
-                        <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
-                            <span style="text-decoration: line-through; opacity: 0.5;">250</span>
-                            <span>🪙 200</span>
-                        </div>
-                        <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
-                        <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('torch_80', 200)">Mua Lại</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-leaderboard" class="view-section">
-                <div class="header" style="text-align: center;"><h1>🏆 Bảng Xếp Hạng</h1></div>
-                <button class="btn-hof" onclick="openHOFModal()">🌟 ĐẠI SẢNH DANH VỌNG 🌟</button>
-                <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;">
-                    <button id="btn-tab-c1" onclick="switchLeagueTab('c1')" style="padding: 10px 20px; font-weight: 900; background: #ffd700; color: #000; border-radius: 8px; border: 2px solid #fff; box-shadow: 0 0 10px #ffd700;">🏆 C1 ELITE</button>
-                    <button id="btn-tab-c2" onclick="switchLeagueTab('c2')" style="padding: 10px 20px; font-weight: bold; background: #555; color: #ccc; border-radius: 8px; border: 2px solid #888;">🥈 C2 TWO</button>
-                </div>
-                <div class="bracket-board" id="bracketBoard" style="display: block;">
-                    <h2 id="leagueTitle" style="color: #ffd700; margin-bottom: 10px;">🏆 MES CHAMPIONS LEAGUE ELITE 🏆</h2>
-                    <p id="bracketStatus" style="margin-bottom: 20px; color: #ccc;">Đang diễn ra</p>
-                    <div class="full-bracket" id="bracketMatches"></div>
-                </div>
-                <div class="lb-container" id="leaderboardData"></div>
-            </div>
-
-            <div id="view-creator" class="view-section">
-                <div class="header"><h1>⚡ Ngự Thư Phòng (Quản trị Dữ liệu)</h1></div>
-                <div class="workspace">
-                    <div class="panel">
-                        <div class="panel-header" style="background: #e8eaf6;"><span>1. Lò Đúc (Tạo Mã HTML)</span><button class="btn-run" onclick="generateCode()">Đúc Mã ▶</button></div>
-                        <div style="padding: 15px; font-size: 13px; color: #555; border-bottom: 1px dashed #ccc;">Nhập danh sách theo mẫu: <br><i>word | Nghĩa | /pronunciation/ | Type</i></div>
-                        <textarea id="rawInput" placeholder="Ví dụ:&#10;fall | Ngã | /fɔːl/ | Verb"></textarea>
-                    </div>
-                    <div class="panel">
-                        <div class="panel-header" style="background: #e0f2f1;"><span>2. Nhập Kho Firebase</span><button class="btn-save" onclick="saveLessonToFirebase()">Lưu Bài 💾</button></div>
-                        <div style="padding: 20px; display: flex; flex-direction: column; gap: 15px; flex: 1;">
-                            <div class="form-group"><label>Tên Bài Học (Ví dụ: Unit 1)</label><input type="text" id="adminLessonName" placeholder="Nhập tên bài học..."></div>
-                            <div class="form-group"><label>Chọn Phủ (Vũ trụ lưu trữ)</label><select id="adminRealmSelect"></select></div>
-                            <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
-                                <label>Mã HTML Đã Đúc (Hệ thống tự điền)</label>
-                                <textarea id="generatedCode" readonly style="background:#f5f5f5; font-size: 12px; border: 1px solid #ccc; flex: 1; min-height: 100px;"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel">
-                        <div class="panel-header" style="background: #fff3e0;"><span>3. Quản Lý Đa Vũ Trụ</span></div>
-                        <div style="padding: 20px;">
-                            <div style="background: #fff8e1; border: 1px solid #ffe0b2; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                                <h4 style="color: #f57c00; margin-bottom: 10px;">🌌 Khai Tông Lập Phái (Tạo Phủ)</h4>
-                                <div style="display: flex; gap: 10px;">
-                                    <input type="text" id="newRealmInput" placeholder="Ví dụ: Luyện Đề 2026..." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
-                                    <button class="btn-run" style="background: #f57c00;" onclick="createNewRealm()">Tạo Mới</button>
-                                </div>
-                            </div>
-                            <div style="background: #ffebee; border: 1px solid #ffcdd2; padding: 15px; border-radius: 8px;">
-                                <h4 style="color: #c62828; margin-bottom: 10px;">🚀 Dời Đô Từ Google Sheets</h4>
-                                <p style="font-size: 12px; color: #555; margin-bottom: 10px;">Hút toàn bộ bài học từ link GG Sheets cũ đưa vào một Phủ trên Firebase. Thao tác này chỉ nên làm 1 lần!</p>
-                                <div style="display: flex; gap: 10px; flex-direction: column;">
-                                    <select id="syncRealmSelect" style="padding: 10px; border: 1px solid #ccc; border-radius: 6px;"></select>
-                                    <button class="btn-danger" onclick="syncFromSheetsToFirebase()">Hút Dữ Liệu Sheets 📥</button>
-                                    <button class="btn-save" style="margin-top: 10px; background: #00897b;" onclick="fixOldUsersRealm()">Nhập Hộ Khẩu Thần Dân Cũ 👨‍👩‍👧‍👦</button>
-                                </div>
-                            </div>
-                            <hr style="margin: 15px 0; border: 0; border-top: 1px dashed #ffcdd2;">
-                            <h4 style="color: #b71c1c; margin-bottom: 10px;">🔥 Thiêu Rụi Lãnh Thổ (Xóa vĩnh viễn)</h4>
-                            <p style="font-size: 12px; color: #555; margin-bottom: 10px;">Xóa sạch Phủ, Bài học và giải đấu. Thần dân sẽ tự động tị nạn về Khởi Nguyên.</p>
-                            <div style="display: flex; gap: 10px;">
-                                <select id="deleteRealmSelect" style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px;"></select>
-                                <button class="btn-danger" onclick="deleteRealm()">Hủy Diệt</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-settings" class="view-section">
-                <div class="header"><h1>⚙️ Cài Đặt Hệ Thống</h1></div>
-                <div class="settings-card">
-                    <h3>🔐 Đăng Nhập</h3>
-                    <div class="form-group" style="margin-bottom: 10px;"><input type="email" id="loginEmail" placeholder="Email (VD: hocvien@vocab.com)"></div>
-                    <div class="form-group" style="margin-bottom: 15px;"><input type="password" id="loginPass" placeholder="Mật khẩu"></div>
-                    <div style="display: flex; gap: 10px; margin-bottom: 15px;"><button class="btn-run" style="flex: 1; padding: 12px; font-size: 16px;" onclick="loginWithEmail()">🔑 Đăng Nhập</button><button class="btn-save" style="flex: 1; padding: 12px; font-size: 16px;" onclick="registerWithEmail()">📝 Đăng Ký</button></div>
-                    <div style="text-align: center; margin-bottom: 15px; color: #888; font-weight: bold;">HOẶC</div>
-                   <div id="authSection">
-    <button class="btn-google" onclick="loginWithGoogle()">🌐 Đăng nhập bằng Google</button>
-    <button class="btn-danger" style="width: 100%; margin-top: 15px; padding: 12px; font-weight: bold; border-radius: 8px;" onclick="logoutApp()">🚪 ĐĂNG XUẤT (GỠ KẸT TÀI KHOẢN)</button>
+            <div id="view-settings" class="view-section">
+                <div class="header"><h1>⚙️ Cài Đặt Hệ Thống</h1></div>
+                <div class="settings-card">
+                    <h3>🔐 Đăng Nhập</h3>
+                    <div class="form-group" style="margin-bottom: 10px;"><input type="email" id="loginEmail" placeholder="Email (VD: hocvien@vocab.com)"></div>
+                    <div class="form-group" style="margin-bottom: 15px;"><input type="password" id="loginPass" placeholder="Mật khẩu"></div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;"><button class="btn-run" style="flex: 1; padding: 12px; font-size: 16px;" onclick="loginWithEmail()">🔑 Đăng Nhập</button><button class="btn-save" style="flex: 1; padding: 12px; font-size: 16px;" onclick="registerWithEmail()">📝 Đăng Ký</button></div>
+                    <div style="text-align: center; margin-bottom: 15px; color: #888; font-weight: bold;">HOẶC</div>
+                   <div id="authSection">
+    <button class="btn-google" onclick="loginWithGoogle()">🌐 Đăng nhập bằng Google</button>
+    <button class="btn-danger" style="width: 100%; margin-top: 15px; padding: 12px; font-weight: bold; border-radius: 8px;" onclick="logoutApp()">🚪 ĐĂNG XUẤT (GỠ KẸT TÀI KHOẢN)</button>
 </div>
-                </div>
-                <div class="settings-card">
-                    <h3>👑 Quyền Quản Trị Hệ Thống</h3>
-                    <div style="text-align: left; font-size: 14px; line-height: 1.6; color: #555; margin-bottom: 10px;">Tài khoản được đăng ký trong hệ thống sẽ tự động cấp quyền Quản trị.</div>
-                    
-                    <div id="adminNoticeControl" style="display: none; margin-top: 20px; padding: 15px; border: 1px dashed #ffd700; border-radius: 8px; background: rgba(0,0,0,0.2);">
-                        <h3 style="color: #ffd700; margin-bottom: 10px; font-weight: bold;">📢 TRUYỀN THÁNH CHỈ (LOA KÊNH THẾ GIỚI)</h3>
-                        <input type="text" id="adminNoticeInput" placeholder="Nhập thông báo để hiện lên Bảng LED..." style="width: 100%; padding: 10px; color: #fff; background: rgba(255,255,255,0.1); border: 1px solid #ffd700; border-radius: 4px; margin-bottom: 10px;">
-                        <div style="display: flex; gap: 10px;">
-                            <button onclick="publishNotice()" style="background: #ff1744; color: #fff; padding: 8px 15px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; flex: 1;">Phát Loa Ngay</button>
-                            <button onclick="clearNotice()" style="background: #555; color: #fff; padding: 8px 15px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; flex: 1;">Tắt Loa</button>
-                        </div>
-                    </div>
-                    </div>
-            </div>
-        </main>
-    </div>
+                </div>
+                <div class="settings-card">
+                    <h3>👑 Quyền Quản Trị Hệ Thống</h3>
+                    <div style="text-align: left; font-size: 14px; line-height: 1.6; color: #555; margin-bottom: 10px;">Tài khoản được đăng ký trong hệ thống sẽ tự động cấp quyền Quản trị.</div>
+                    
+                    <div id="adminNoticeControl" style="display: none; margin-top: 20px; padding: 15px; border: 1px dashed #ffd700; border-radius: 8px; background: rgba(0,0,0,0.2);">
+                        <h3 style="color: #ffd700; margin-bottom: 10px; font-weight: bold;">📢 TRUYỀN THÁNH CHỈ (LOA KÊNH THẾ GIỚI)</h3>
+                        <input type="text" id="adminNoticeInput" placeholder="Nhập thông báo để hiện lên Bảng LED..." style="width: 100%; padding: 10px; color: #fff; background: rgba(255,255,255,0.1); border: 1px solid #ffd700; border-radius: 4px; margin-bottom: 10px;">
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="publishNotice()" style="background: #ff1744; color: #fff; padding: 8px 15px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; flex: 1;">Phát Loa Ngay</button>
+                            <button onclick="clearNotice()" style="background: #555; color: #fff; padding: 8px 15px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; flex: 1;">Tắt Loa</button>
+                        </div>
+                    </div>
+                    </div>
+            </div>
+        </main>
+    </div>
 
-    <div class="modal" id="mentorContractModal">
-        <div class="modal-content name-modal-content" style="border: 3px solid #ffd700;">
-            <div id="contractAvatar" style="font-size: 50px; margin-bottom: 10px;">🕵️</div>
-            <h3 style="color: #1a237e; margin-bottom: 10px;">📜 KHẾ ƯỚC CHIÊU MỘ</h3>
-            <p id="contractDesc" style="font-size: 14px; color: #555; margin-bottom: 15px;"></p>
-            
-            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px;">Ngài muốn ký hợp đồng bao nhiêu tháng?</label>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <input type="number" id="mentorMonths" value="1" min="1" max="12" style="flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 6px; text-align: center; font-weight: bold;">
-                    <span style="font-weight: bold; color: #555;">Tháng</span>
-                </div>
-                <div style="margin-top: 10px; font-size: 12px; color: #d32f2f; font-weight: bold;">
-                    Tổng chi phí: <span id="contractTotalGold">3000</span> 🪙
-                </div>
-            </div>
+    <div class="modal" id="mentorContractModal">
+        <div class="modal-content name-modal-content" style="border: 3px solid #ffd700;">
+            <div id="contractAvatar" style="font-size: 50px; margin-bottom: 10px;">🕵️</div>
+            <h3 style="color: #1a237e; margin-bottom: 10px;">📜 KHẾ ƯỚC CHIÊU MỘ</h3>
+            <p id="contractDesc" style="font-size: 14px; color: #555; margin-bottom: 15px;"></p>
+            
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px;">Ngài muốn ký hợp đồng bao nhiêu tháng?</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="number" id="mentorMonths" value="1" min="1" max="12" style="flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 6px; text-align: center; font-weight: bold;">
+                    <span style="font-weight: bold; color: #555;">Tháng</span>
+                </div>
+                <div style="margin-top: 10px; font-size: 12px; color: #d32f2f; font-weight: bold;">
+                    Tổng chi phí: <span id="contractTotalGold">3000</span> 🪙
+                </div>
+            </div>
 
-            <button class="btn-save" style="width: 100%; padding: 12px; font-weight: bold;" onclick="confirmMentorContract()">ẤN DẤU KÝ KẾT</button>
-            <button class="btn-close" style="width: 100%; padding: 10px; margin-top: 10px;" onclick="document.getElementById('mentorContractModal').classList.remove('active')">Hủy bỏ</button>
-        </div>
-    </div>
+            <button class="btn-save" style="width: 100%; padding: 12px; font-weight: bold;" onclick="confirmMentorContract()">ẤN DẤU KÝ KẾT</button>
+            <button class="btn-close" style="width: 100%; padding: 10px; margin-top: 10px;" onclick="document.getElementById('mentorContractModal').classList.remove('active')">Hủy bỏ</button>
+        </div>
+    </div>
 
-    <div class="modal" id="migrationModal">
-        <div class="modal-content name-modal-content">
-            <h3 style="color: #0097a7; margin-bottom: 15px; font-size: 22px;">✈️ Cổng Phân Luồng Vũ Trụ</h3>
-            <p style="color: #555; margin-bottom: 20px;">Bạn đang ở phủ: <b id="currentRealmDisplay">---</b>. Chọn phủ muốn đến:</p>
-            <select id="realmSelect" style="width: 100%; padding: 12px; border: 2px solid #00bcd4; border-radius: 8px; margin-bottom: 15px; font-size: 16px;"></select>
-            <p style="font-size: 12px; color: red; text-align: left; margin-bottom: 15px;">⚠️ Lưu ý: Phí di cư là 100.000 Vàng. Điểm XP hiện tại sẽ được lưu vào "XP Trọn Đời" và XP đua top của bạn tại phủ mới sẽ bắt đầu từ 0.</p>
-            <button class="btn-save" style="width: 100%; padding: 12px;" onclick="confirmMigration()">Xác nhận Di Cư (100.000 🪙)</button>
-            <button class="btn-close" style="width: 100%; padding: 12px; margin-top: 10px;" onclick="document.getElementById('migrationModal').classList.remove('active')">Hủy bỏ</button>
-        </div>
-    </div>
-    <div class="modal" id="hofModal"><div class="modal-content hof-modal-content" style="max-width: 500px; padding: 30px;"><h2 style="font-size: 28px; margin-bottom: 10px; text-shadow: 0 2px 5px rgba(255,215,0,0.5);">🏛️ ĐẠI SẢNH DANH VỌNG</h2><p style="color: #ccc; margin-bottom: 25px; font-style: italic;">Nơi ghi nhận những người chiến thắng giải đấu qua các mùa.</p><div id="hofList" style="max-height: 400px; overflow-y: auto; text-align: left; padding: 10px;"></div><button class="btn-close" style="width: 100%; padding: 12px; margin-top: 25px; background: rgba(255,255,255,0.2); color: white; border: 1px solid #ffd700;" onclick="document.getElementById('hofModal').classList.remove('active')">Đóng Lại</button></div></div>
-    <div class="modal" id="wheelModal"><div class="modal-content name-modal-content" style="background: linear-gradient(135deg, #1a237e 0%, #311b92 100%); color: white; border: 4px solid #ffd700; height: auto;"><h3 style="color: #ffd700; margin-bottom: 10px; font-size: 24px; text-transform: uppercase;">🎡 Vòng Quay Nhân Phẩm</h3><p style="color: #ccc; margin-bottom: 10px;">Mỗi lượt 150 Vàng. Hôm nay còn <span id="ui-wheel-left" style="color: #00e676; font-weight: bold; font-size: 18px;">3</span> lượt.</p><div class="wheel-container"><div class="wheel-pointer"></div><div class="wheel" id="spinningWheel"><div class="wheel-text wt-0">😭 Xui Quá</div><div class="wheel-text wt-1">🪙 +50 Vàng</div><div class="wheel-text wt-2">⭐ +150 XP</div><div class="wheel-text wt-3">🎟️ Giảm 30%</div><div class="wheel-text wt-4">🎟️ Giảm 50%</div><div class="wheel-text wt-5">🛡️ Bùa Bảo Hộ</div><div class="wheel-text wt-6">🔍 Kính Lúp</div><div class="wheel-text wt-7">😭 Xui Quá</div></div></div><button class="btn-buy" id="btnSpin" style="font-size: 18px; padding: 15px; margin-top: 10px; font-weight: 900; box-shadow: 0 4px 15px rgba(251,192,45,0.5);" onclick="spinWheel()">QUAY NGAY (150 🪙)</button><button class="btn-close" style="width: 100%; padding: 10px; margin-top: 15px; background: rgba(255,255,255,0.2); color: white;" onclick="document.getElementById('wheelModal').classList.remove('active')">Đóng</button></div></div>
-    <div class="modal" id="antiCheatModal"><div class="modal-content name-modal-content" style="border: 3px solid var(--danger);"><h3 style="color: var(--danger); margin-bottom: 15px; font-size: 20px;">⚠️ LƯU Ý TRƯỚC KHI THI ĐẤU</h3><div style="text-align: left; font-size: 14px; line-height: 1.6; color: #555; margin-bottom: 25px;"><b>1.</b> Trạng thái thiết bị của bạn sẽ được theo dõi.<br><br><b>2.</b> Kể từ lúc nhấn nút bắt đầu, <b>nghiêm cấm thao tác chuyển trang, thu nhỏ cửa sổ, hoặc mở ứng dụng khác</b>.<br><br><b>3.</b> Vi phạm sẽ bị xử thua ngay!</div><button class="btn-danger" style="width: 100%; padding: 15px; font-size: 16px; font-weight: bold;" onclick="confirmJoinMatch()">TÔI ĐÃ HIỂU VÀ SẴN SÀNG</button><button class="btn-close" style="width: 100%; padding: 10px; margin-top: 10px;" onclick="document.getElementById('antiCheatModal').classList.remove('active')">Trở về</button></div></div>
-    <div class="modal" id="scheduleModal"><div class="modal-content name-modal-content"><h3 style="color: var(--danger); margin-bottom: 15px; font-size: 22px;">⏰ Cài Đặt Lịch Thi</h3><input type="datetime-local" id="scheduleInput" style="width: 100%; padding: 12px; border: 2px solid var(--secondary); border-radius: 8px; margin-bottom: 15px; font-size: 16px;"><button class="btn-save" style="width: 100%; padding: 12px;" onclick="saveSchedule()">Lưu Lịch</button><button class="btn-close" style="width: 100%; padding: 12px; margin-top: 10px;" onclick="document.getElementById('scheduleModal').classList.remove('active')">Hủy bỏ</button></div></div>
-    
-    <div class="modal" id="nameModal">
-        <div class="modal-content name-modal-content" style="border: 3px solid var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-            <div style="font-size: 40px; margin-bottom: 10px; text-align: center;">👋</div>
-            <h3 style="color: var(--primary); margin-bottom: 10px; font-size: 24px; text-align: center; text-transform: uppercase; font-weight: 900;">CHÀO MỪNG BẠN MỚI</h3>
-            <p style="color: #555; margin-bottom: 20px; text-align: center; font-size: 14px;">Vui lòng thiết lập thông tin để bắt đầu học nhé!</p>
-            
-            <div style="text-align: left; font-weight: bold; color: var(--primary); margin-bottom: 5px;">1. Tên hiển thị của bạn:</div>
-            <input type="text" id="displayNameInput" placeholder="Ví dụ: Nguyễn Văn A..." style="width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 8px; margin-bottom: 15px; font-size: 16px; transition: 0.3s;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#ccc'">
-            
-            <div style="text-align: left; font-weight: bold; color: var(--primary); margin-bottom: 5px;">2. Chọn Khóa học (Ngôn ngữ):</div>
-            <select id="onboardRealmSelect" style="width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 8px; margin-bottom: 25px; font-size: 16px; background: #f8f9fa; transition: 0.3s;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#ccc'"></select>
-            
-            <button class="btn-save" style="width: 100%; padding: 15px; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;" onclick="saveDisplayName()">BẮT ĐẦU NGAY ▶</button>
-        </div>
-    </div>
-    
-    <div class="modal" id="previewModal"><div class="modal-content" style="background:white; width:100%; max-width:900px; height:85vh; border-radius:12px; overflow:hidden; display:flex; flex-direction:column;"><div style="padding:15px; background:#fafafa; display:flex; justify-content:space-between; border-bottom:1px solid #eee;"><h3>Hệ Thống Huấn Luyện</h3><button onclick="closeModal()" style="color:#333; background:#ccc; padding:5px 15px; font-weight:bold; border-radius:4px;">Đóng X</button></div><iframe id="modalFrame" style="flex:1; border:none;"></iframe></div></div>
-    <div class="modal" id="recordModal"><div class="modal-content name-modal-content" style="background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%); color: white; border: 4px solid #fff; text-align: center;"><div style="font-size: 50px; margin-bottom: 10px;">🎉</div><h2 style="font-size: 28px; font-weight: 900; margin-bottom: 10px; text-transform: uppercase;">Kỷ Lục Mới!</h2><p style="font-size: 16px; margin-bottom: 20px; opacity: 0.9;">Bạn đã vượt qua giới hạn của chính mình!</p><div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 20px;"><div style="font-size: 14px; opacity: 0.8; margin-bottom: 5px;">Tuần này</div><div style="font-size: 32px; font-weight: 900; color: #ffd700;" id="recordCurrentXp">0 XP</div><div style="font-size: 12px; margin-top: 5px; opacity: 0.7;">Kỷ lục cũ: <span id="recordOldXp">0</span> XP</div></div><button class="btn-save" style="width: 100%; padding: 12px; font-size: 16px; background: white; color: #ff5722;" onclick="document.getElementById('recordModal').classList.remove('active')">Tuyệt Vời!</button></div></div>
-   
- <div class="modal" id="pvpModal">
-        <button id="adminForceEndBtn" onclick="forceEndMatch()" style="display: none; position: fixed; top: 15px; left: 15px; background: #d50000; color: white; border: 2px solid #ff1744; padding: 10px 15px; border-radius: 8px; font-weight: 900; z-index: 99999; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">🛑 HỦY TRẬN (ADMIN)</button>
-        <button onclick="surrenderMatch()" style="position: fixed; top: 15px; right: 15px; background: #555; color: white; border: 2px solid #888; padding: 10px 15px; border-radius: 8px; font-weight: bold; z-index: 99999; cursor: pointer;">🚩 THOÁT / BỎ CUỘC</button>
-        
-        <div class="battle-arena" style="position: relative; width: 100%; max-width: 800px; height: 100%; max-height: 90vh; overflow-y: auto; background: transparent; padding-top: 60px; display: flex; flex-direction: column;">
-            
-            <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 20px; padding: 0 10px; box-sizing: border-box;">
-                
-                <div style="display: flex; flex-direction: column; width: 100%; max-width: 600px; margin-bottom: 20px; font-family: 'Segoe UI', sans-serif; border-radius: 8px; overflow: hidden; border: 2px solid #d500f9; box-shadow: 0 0 15px rgba(213, 0, 249, 0.5); margin-left: auto; margin-right: auto;">
-                    
-                    <div id="pvpLeagueNameDisplay" style="background: #fff; color: #4a148c; text-align: center; padding: 8px 10px; font-size: clamp(14px, 4vw, 18px); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #d500f9;">
-                        🏆 ĐANG TẢI GIẢI ĐẤU...
-                    </div>
+    <div class="modal" id="migrationModal">
+        <div class="modal-content name-modal-content">
+            <h3 style="color: #0097a7; margin-bottom: 15px; font-size: 22px;">✈️ Cổng Phân Luồng Vũ Trụ</h3>
+            <p style="color: #555; margin-bottom: 20px;">Bạn đang ở phủ: <b id="currentRealmDisplay">---</b>. Chọn phủ muốn đến:</p>
+            <select id="realmSelect" style="width: 100%; padding: 12px; border: 2px solid #00bcd4; border-radius: 8px; margin-bottom: 15px; font-size: 16px;"></select>
+            <p style="font-size: 12px; color: red; text-align: left; margin-bottom: 15px;">⚠️ Lưu ý: Phí di cư là 100.000 Vàng. Điểm XP hiện tại sẽ được lưu vào "XP Trọn Đời" và XP đua top của bạn tại phủ mới sẽ bắt đầu từ 0.</p>
+            <button class="btn-save" style="width: 100%; padding: 12px;" onclick="confirmMigration()">Xác nhận Di Cư (100.000 🪙)</button>
+            <button class="btn-close" style="width: 100%; padding: 12px; margin-top: 10px;" onclick="document.getElementById('migrationModal').classList.remove('active')">Hủy bỏ</button>
+        </div>
+    </div>
+    <div class="modal" id="hofModal"><div class="modal-content hof-modal-content" style="max-width: 500px; padding: 30px;"><h2 style="font-size: 28px; margin-bottom: 10px; text-shadow: 0 2px 5px rgba(255,215,0,0.5);">🏛️ ĐẠI SẢNH DANH VỌNG</h2><p style="color: #ccc; margin-bottom: 25px; font-style: italic;">Nơi ghi nhận những người chiến thắng giải đấu qua các mùa.</p><div id="hofList" style="max-height: 400px; overflow-y: auto; text-align: left; padding: 10px;"></div><button class="btn-close" style="width: 100%; padding: 12px; margin-top: 25px; background: rgba(255,255,255,0.2); color: white; border: 1px solid #ffd700;" onclick="document.getElementById('hofModal').classList.remove('active')">Đóng Lại</button></div></div>
+    <div class="modal" id="wheelModal"><div class="modal-content name-modal-content" style="background: linear-gradient(135deg, #1a237e 0%, #311b92 100%); color: white; border: 4px solid #ffd700; height: auto;"><h3 style="color: #ffd700; margin-bottom: 10px; font-size: 24px; text-transform: uppercase;">🎡 Vòng Quay Nhân Phẩm</h3><p style="color: #ccc; margin-bottom: 10px;">Mỗi lượt 150 Vàng. Hôm nay còn <span id="ui-wheel-left" style="color: #00e676; font-weight: bold; font-size: 18px;">3</span> lượt.</p><div class="wheel-container"><div class="wheel-pointer"></div><div class="wheel" id="spinningWheel"><div class="wheel-text wt-0">😭 Xui Quá</div><div class="wheel-text wt-1">🪙 +50 Vàng</div><div class="wheel-text wt-2">⭐ +150 XP</div><div class="wheel-text wt-3">🎟️ Giảm 30%</div><div class="wheel-text wt-4">🎟️ Giảm 50%</div><div class="wheel-text wt-5">🛡️ Bùa Bảo Hộ</div><div class="wheel-text wt-6">🔍 Kính Lúp</div><div class="wheel-text wt-7">😭 Xui Quá</div></div></div><button class="btn-buy" id="btnSpin" style="font-size: 18px; padding: 15px; margin-top: 10px; font-weight: 900; box-shadow: 0 4px 15px rgba(251,192,45,0.5);" onclick="spinWheel()">QUAY NGAY (150 🪙)</button><button class="btn-close" style="width: 100%; padding: 10px; margin-top: 15px; background: rgba(255,255,255,0.2); color: white;" onclick="document.getElementById('wheelModal').classList.remove('active')">Đóng</button></div></div>
+    <div class="modal" id="antiCheatModal"><div class="modal-content name-modal-content" style="border: 3px solid var(--danger);"><h3 style="color: var(--danger); margin-bottom: 15px; font-size: 20px;">⚠️ LƯU Ý TRƯỚC KHI THI ĐẤU</h3><div style="text-align: left; font-size: 14px; line-height: 1.6; color: #555; margin-bottom: 25px;"><b>1.</b> Trạng thái thiết bị của bạn sẽ được theo dõi.<br><br><b>2.</b> Kể từ lúc nhấn nút bắt đầu, <b>nghiêm cấm thao tác chuyển trang, thu nhỏ cửa sổ, hoặc mở ứng dụng khác</b>.<br><br><b>3.</b> Vi phạm sẽ bị xử thua ngay!</div><button class="btn-danger" style="width: 100%; padding: 15px; font-size: 16px; font-weight: bold;" onclick="confirmJoinMatch()">TÔI ĐÃ HIỂU VÀ SẴN SÀNG</button><button class="btn-close" style="width: 100%; padding: 10px; margin-top: 10px;" onclick="document.getElementById('antiCheatModal').classList.remove('active')">Trở về</button></div></div>
+    <div class="modal" id="scheduleModal"><div class="modal-content name-modal-content"><h3 style="color: var(--danger); margin-bottom: 15px; font-size: 22px;">⏰ Cài Đặt Lịch Thi</h3><input type="datetime-local" id="scheduleInput" style="width: 100%; padding: 12px; border: 2px solid var(--secondary); border-radius: 8px; margin-bottom: 15px; font-size: 16px;"><button class="btn-save" style="width: 100%; padding: 12px;" onclick="saveSchedule()">Lưu Lịch</button><button class="btn-close" style="width: 100%; padding: 12px; margin-top: 10px;" onclick="document.getElementById('scheduleModal').classList.remove('active')">Hủy bỏ</button></div></div>
+    
+    <div class="modal" id="nameModal">
+        <div class="modal-content name-modal-content" style="border: 3px solid var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div style="font-size: 40px; margin-bottom: 10px; text-align: center;">👋</div>
+            <h3 style="color: var(--primary); margin-bottom: 10px; font-size: 24px; text-align: center; text-transform: uppercase; font-weight: 900;">CHÀO MỪNG BẠN MỚI</h3>
+            <p style="color: #555; margin-bottom: 20px; text-align: center; font-size: 14px;">Vui lòng thiết lập thông tin để bắt đầu học nhé!</p>
+            
+            <div style="text-align: left; font-weight: bold; color: var(--primary); margin-bottom: 5px;">1. Tên hiển thị của bạn:</div>
+            <input type="text" id="displayNameInput" placeholder="Ví dụ: Nguyễn Văn A..." style="width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 8px; margin-bottom: 15px; font-size: 16px; transition: 0.3s;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#ccc'">
+            
+            <div style="text-align: left; font-weight: bold; color: var(--primary); margin-bottom: 5px;">2. Chọn Khóa học (Ngôn ngữ):</div>
+            <select id="onboardRealmSelect" style="width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 8px; margin-bottom: 25px; font-size: 16px; background: #f8f9fa; transition: 0.3s;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#ccc'"></select>
+            
+            <button class="btn-save" style="width: 100%; padding: 15px; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;" onclick="saveDisplayName()">BẮT ĐẦU NGAY ▶</button>
+        </div>
+    </div>
+    
+    <div class="modal" id="previewModal"><div class="modal-content" style="background:white; width:100%; max-width:900px; height:85vh; border-radius:12px; overflow:hidden; display:flex; flex-direction:column;"><div style="padding:15px; background:#fafafa; display:flex; justify-content:space-between; border-bottom:1px solid #eee;"><h3>Hệ Thống Huấn Luyện</h3><button onclick="closeModal()" style="color:#333; background:#ccc; padding:5px 15px; font-weight:bold; border-radius:4px;">Đóng X</button></div><iframe id="modalFrame" style="flex:1; border:none;"></iframe></div></div>
+    <div class="modal" id="recordModal"><div class="modal-content name-modal-content" style="background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%); color: white; border: 4px solid #fff; text-align: center;"><div style="font-size: 50px; margin-bottom: 10px;">🎉</div><h2 style="font-size: 28px; font-weight: 900; margin-bottom: 10px; text-transform: uppercase;">Kỷ Lục Mới!</h2><p style="font-size: 16px; margin-bottom: 20px; opacity: 0.9;">Bạn đã vượt qua giới hạn của chính mình!</p><div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 20px;"><div style="font-size: 14px; opacity: 0.8; margin-bottom: 5px;">Tuần này</div><div style="font-size: 32px; font-weight: 900; color: #ffd700;" id="recordCurrentXp">0 XP</div><div style="font-size: 12px; margin-top: 5px; opacity: 0.7;">Kỷ lục cũ: <span id="recordOldXp">0</span> XP</div></div><button class="btn-save" style="width: 100%; padding: 12px; font-size: 16px; background: white; color: #ff5722;" onclick="document.getElementById('recordModal').classList.remove('active')">Tuyệt Vời!</button></div></div>
+   
+ <div class="modal" id="pvpModal">
+        <button id="adminForceEndBtn" onclick="forceEndMatch()" style="display: none; position: fixed; top: 15px; left: 15px; background: #d50000; color: white; border: 2px solid #ff1744; padding: 10px 15px; border-radius: 8px; font-weight: 900; z-index: 99999; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">🛑 HỦY TRẬN (ADMIN)</button>
+        <button onclick="surrenderMatch()" style="position: fixed; top: 15px; right: 15px; background: #555; color: white; border: 2px solid #888; padding: 10px 15px; border-radius: 8px; font-weight: bold; z-index: 99999; cursor: pointer;">🚩 THOÁT / BỎ CUỘC</button>
+        
+        <div class="battle-arena" style="position: relative; width: 100%; max-width: 800px; height: 100%; max-height: 90vh; overflow-y: auto; background: transparent; padding-top: 60px; display: flex; flex-direction: column;">
+            
+            <div style="display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 20px; padding: 0 10px; box-sizing: border-box;">
+                
+                <div style="display: flex; flex-direction: column; width: 100%; max-width: 600px; margin-bottom: 20px; font-family: 'Segoe UI', sans-serif; border-radius: 8px; overflow: hidden; border: 2px solid #d500f9; box-shadow: 0 0 15px rgba(213, 0, 249, 0.5); margin-left: auto; margin-right: auto;">
+                    
+                    <div id="pvpLeagueNameDisplay" style="background: #fff; color: #4a148c; text-align: center; padding: 8px 10px; font-size: clamp(14px, 4vw, 18px); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #d500f9;">
+                        🏆 ĐANG TẢI GIẢI ĐẤU...
+                    </div>
 
-                    <div style="display: flex; align-items: stretch; height: clamp(60px, 15vw, 75px); background: #11052C; position: relative;">
-                        
-                        <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 0 10px; overflow: hidden;" id="pvpP1NameDisplay">
-                            <span id="pvpP1Name" class="abbr-name" style="color: #fff; font-weight: 900; font-size: clamp(18px, 6vw, 28px); text-shadow: 0 0 10px #d500f9, 0 0 20px #d500f9; white-space: nowrap;">P1</span>
-                        </div>
-                        
-                        <div id="pvpP1Correct" style="display: flex; align-items: center; justify-content: center; min-width: clamp(50px, 12vw, 70px); font-size: clamp(28px, 8vw, 42px); font-weight: 900; color: #fff; text-shadow: 0 0 12px #00e5ff, 0 0 24px #00e5ff; background: rgba(0, 0, 0, 0.4); border-left: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05);">
-                            0
-                        </div>
-                        
-                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 clamp(10px, 3vw, 20px); min-width: clamp(70px, 18vw, 100px);">
-                            <div style="font-size: clamp(18px, 5vw, 24px); line-height: 1; margin-bottom: 5px; filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.8));">🏆</div>
-                            <div style="background: #00e5ff; color: #000; font-size: clamp(10px, 2.5vw, 13px); font-weight: 900; padding: 3px 12px; border-radius: 15px; white-space: nowrap; box-shadow: 0 0 15px #00e5ff;">
-                                SET <span id="pvpP1Set">0</span> - <span id="pvpP2Set">0</span>
-                            </div>
-                        </div>
-                        
-                        <div id="pvpP2Correct" style="display: flex; align-items: center; justify-content: center; min-width: clamp(50px, 12vw, 70px); font-size: clamp(28px, 8vw, 42px); font-weight: 900; color: #fff; text-shadow: 0 0 12px #00e5ff, 0 0 24px #00e5ff; background: rgba(0, 0, 0, 0.4); border-left: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05);">
-                            0
-                        </div>
-                        
-                        <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 0 10px; overflow: hidden;" id="pvpP2NameDisplay">
-                            <span id="pvpP2Name" class="abbr-name" style="color: #fff; font-weight: 900; font-size: clamp(18px, 6vw, 28px); text-shadow: 0 0 10px #d500f9, 0 0 20px #d500f9; white-space: nowrap;">P2</span>
-                        </div>
-                        
-                    </div>
-                </div>
-                </div>
+                    <div style="display: flex; align-items: stretch; height: clamp(60px, 15vw, 75px); background: #11052C; position: relative;">
+                        
+                        <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 0 10px; overflow: hidden;" id="pvpP1NameDisplay">
+                            <span id="pvpP1Name" class="abbr-name" style="color: #fff; font-weight: 900; font-size: clamp(18px, 6vw, 28px); text-shadow: 0 0 10px #d500f9, 0 0 20px #d500f9; white-space: nowrap;">P1</span>
+                        </div>
+                        
+                        <div id="pvpP1Correct" style="display: flex; align-items: center; justify-content: center; min-width: clamp(50px, 12vw, 70px); font-size: clamp(28px, 8vw, 42px); font-weight: 900; color: #fff; text-shadow: 0 0 12px #00e5ff, 0 0 24px #00e5ff; background: rgba(0, 0, 0, 0.4); border-left: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05);">
+                            0
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 clamp(10px, 3vw, 20px); min-width: clamp(70px, 18vw, 100px);">
+                            <div style="font-size: clamp(18px, 5vw, 24px); line-height: 1; margin-bottom: 5px; filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.8));">🏆</div>
+                            <div style="background: #00e5ff; color: #000; font-size: clamp(10px, 2.5vw, 13px); font-weight: 900; padding: 3px 12px; border-radius: 15px; white-space: nowrap; box-shadow: 0 0 15px #00e5ff;">
+                                SET <span id="pvpP1Set">0</span> - <span id="pvpP2Set">0</span>
+                            </div>
+                        </div>
+                        
+                        <div id="pvpP2Correct" style="display: flex; align-items: center; justify-content: center; min-width: clamp(50px, 12vw, 70px); font-size: clamp(28px, 8vw, 42px); font-weight: 900; color: #fff; text-shadow: 0 0 12px #00e5ff, 0 0 24px #00e5ff; background: rgba(0, 0, 0, 0.4); border-left: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05);">
+                            0
+                        </div>
+                        
+                        <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 0 10px; overflow: hidden;" id="pvpP2NameDisplay">
+                            <span id="pvpP2Name" class="abbr-name" style="color: #fff; font-weight: 900; font-size: clamp(18px, 6vw, 28px); text-shadow: 0 0 10px #d500f9, 0 0 20px #d500f9; white-space: nowrap;">P2</span>
+                        </div>
+                        
+                    </div>
+                </div>
+                </div>
 
-            <div style="text-align:center; color:#ccc; margin-bottom:20px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; flex-shrink: 0;">
-                CÂU HỎI: <span id="pvpQIndex" style="color:#ffd700; font-size: 18px;">1</span> / 30 
-                <div id="pvpTimerBanner" style="font-size: 24px; color: #ff1744; margin-top: 5px;">⏳ 15s</div>
-            </div>
+            <div style="text-align:center; color:#ccc; margin-bottom:20px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; flex-shrink: 0;">
+                CÂU HỎI: <span id="pvpQIndex" style="color:#ffd700; font-size: 18px;">1</span> / 30 
+                <div id="pvpTimerBanner" style="font-size: 24px; color: #ff1744; margin-top: 5px;">⏳ 15s</div>
+            </div>
 
-            <div class="battle-body" style="position: relative; flex: 1; display: flex; flex-direction: column;">
-                
-                <div class="lock-overlay" id="lockOverlay">
-                    <div class="lock-text" id="lockMsg">ĐÃ CHỐT ĐÁP ÁN!</div>
-                    <div class="bot-thinking" id="botStatusMsg">Đang đợi đối thủ...</div>
-                </div>
+            <div class="battle-body" style="position: relative; flex: 1; display: flex; flex-direction: column;">
+                
+                <div class="lock-overlay" id="lockOverlay">
+                    <div class="lock-text" id="lockMsg">ĐÃ CHỐT ĐÁP ÁN!</div>
+                    <div class="bot-thinking" id="botStatusMsg">Đang đợi đối thủ...</div>
+                </div>
 
-                <div id="pvpWaitMsg" style="font-size:24px; font-weight:bold; color:#ffd700; text-align:center; display:none; margin-bottom:15px;">Đang thiết lập...</div>
-                
-                <div class="battle-question" id="pvpQuestion" style="display:none; font-size: 28px; font-weight: bold; color: yellow; text-align: center; margin-bottom: 30px;">READY?</div>
-                
-                <div class="battle-options" id="pvpOptions" style="display:none; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%;">
-                    <button class="btn-ans" onclick="submitPvPAnswer(0)" id="pvpOpt0" style="padding: 15px; font-size: 18px;">-</button>
-                    <button class="btn-ans" onclick="submitPvPAnswer(1)" id="pvpOpt1" style="padding: 15px; font-size: 18px;">-</button>
-                    <button class="btn-ans" onclick="submitPvPAnswer(2)" id="pvpOpt2" style="padding: 15px; font-size: 18px;">-</button>
-                    <button class="btn-ans" onclick="submitPvPAnswer(3)" id="pvpOpt3" style="padding: 15px; font-size: 18px;">-</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="modal" id="streakBrokenModal">
-        <div class="modal-content name-modal-content" style="border: 4px solid var(--danger);">
-            <div style="font-size: 50px; margin-bottom: 10px;">💔</div>
-            <h3 style="color: var(--danger); margin-bottom: 15px; font-size: 24px;">CHUỖI ĐÃ GIÁN ĐOẠN!</h3>
-            <p style="color: #555; margin-bottom: 15px;">Bạn đã vắng bóng <b><span id="missedDaysCount"></span></b> ngày. Chuỗi tu luyện cũ đã đứt và bị thiết lập lại về 1.</p>
-            <div style="background: #ffebee; padding: 10px; border-radius: 8px; margin-bottom: 20px; color: #c62828; font-weight: bold; font-size: 14px;">
-                ⚠️ Hình phạt: Mất 20% Vàng & XP
-            </div>
-            <p style="font-size: 13px; color: #888; margin-bottom: 15px; font-style: italic;">(Hãy ghé thăm Cửa Hàng để xem Máy Du Hành có thể cứu vãn tình thế không)</p>
-            <button class="btn-danger" style="width: 100%; padding: 12px; font-weight: bold; font-size: 16px;" onclick="document.getElementById('streakBrokenModal').classList.remove('active')">KHỞI ĐỘNG LẠI TỪ ĐẦU</button>
-        </div>
-    </div>
+                <div id="pvpWaitMsg" style="font-size:24px; font-weight:bold; color:#ffd700; text-align:center; display:none; margin-bottom:15px;">Đang thiết lập...</div>
+                
+                <div class="battle-question" id="pvpQuestion" style="display:none; font-size: 28px; font-weight: bold; color: yellow; text-align: center; margin-bottom: 30px;">READY?</div>
+                
+                <div class="battle-options" id="pvpOptions" style="display:none; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%;">
+                    <button class="btn-ans" onclick="submitPvPAnswer(0)" id="pvpOpt0" style="padding: 15px; font-size: 18px;">-</button>
+                    <button class="btn-ans" onclick="submitPvPAnswer(1)" id="pvpOpt1" style="padding: 15px; font-size: 18px;">-</button>
+                    <button class="btn-ans" onclick="submitPvPAnswer(2)" id="pvpOpt2" style="padding: 15px; font-size: 18px;">-</button>
+                    <button class="btn-ans" onclick="submitPvPAnswer(3)" id="pvpOpt3" style="padding: 15px; font-size: 18px;">-</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="streakBrokenModal">
+        <div class="modal-content name-modal-content" style="border: 4px solid var(--danger);">
+            <div style="font-size: 50px; margin-bottom: 10px;">💔</div>
+            <h3 style="color: var(--danger); margin-bottom: 15px; font-size: 24px;">CHUỖI ĐÃ GIÁN ĐOẠN!</h3>
+            <p style="color: #555; margin-bottom: 15px;">Bạn đã vắng bóng <b><span id="missedDaysCount"></span></b> ngày. Chuỗi tu luyện cũ đã đứt và bị thiết lập lại về 1.</p>
+            <div style="background: #ffebee; padding: 10px; border-radius: 8px; margin-bottom: 20px; color: #c62828; font-weight: bold; font-size: 14px;">
+                ⚠️ Hình phạt: Mất 20% Vàng & XP
+            </div>
+            <p style="font-size: 13px; color: #888; margin-bottom: 15px; font-style: italic;">(Hãy ghé thăm Cửa Hàng để xem Máy Du Hành có thể cứu vãn tình thế không)</p>
+            <button class="btn-danger" style="width: 100%; padding: 12px; font-weight: bold; font-size: 16px;" onclick="document.getElementById('streakBrokenModal').classList.remove('active')">KHỞI ĐỘNG LẠI TỪ ĐẦU</button>
+        </div>
+    </div>
 
-    <div id="rewardAnim" class="reward-anim">🎉 +10 🪙 | +15 ⭐</div>
+    <div id="rewardAnim" class="reward-anim">🎉 +10 🪙 | +15 ⭐</div>
 
-    <div id="mentor-widget" class="mentor-widget" style="display: none;">
-        <div class="mentor-bubble" id="mentor-bubble"></div>
-        <div class="mentor-avatar" id="mentor-avatar" onclick="pokeMentor()">🕵️</div>
-    </div>
+    <div id="mentor-widget" class="mentor-widget" style="display: none;">
+        <div class="mentor-bubble" id="mentor-bubble"></div>
+        <div class="mentor-avatar" id="mentor-avatar" onclick="pokeMentor()">🕵️</div>
+    </div>
 
-    <script src="script.js?v=4"></script>
+    <script src="script.js?v=4"></script>
 </body>
 </html>
