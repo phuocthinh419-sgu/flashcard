@@ -230,7 +230,7 @@ function showBankNotification(amount, item, buyer, total) {
 }
 
 // =========================================================
-// 🔄 CẬP NHẬT GIAO DIỆN CHÍNH
+// 🔄 CẬP NHẬT GIAO DIỆN CHÍNH (ĐÃ DỌN SẠCH CODE RÁC)
 // =========================================================
 function updateUI() {
     document.getElementById('ui-gold').innerText = userData.gold || 0; 
@@ -240,6 +240,7 @@ function updateUI() {
     document.getElementById('ui-streak').innerText = userData.streak || 0; 
     document.getElementById('sidebarName').innerText = userData.displayName || "Khách"; 
     
+    // Giao diện đã đổi sang hàng 100% và 80%, tuyệt đối không gọi đồ cũ
     if(document.getElementById('ui-glass-100')) document.getElementById('ui-glass-100').innerText = userData.glass_100 || 0;
     if(document.getElementById('ui-glass-80')) document.getElementById('ui-glass-80').innerText = userData.glass_80 || 0;
     if(document.getElementById('ui-shield-100')) document.getElementById('ui-shield-100').innerText = userData.shield_100 || 0;
@@ -309,7 +310,7 @@ function updateUI() {
     if (typeof renderBracket === 'function') renderBracket();
     if (typeof renderAchievements === 'function') renderAchievements();
     
-    loadMarketItems(); // Load Thu mua Chợ Đen
+    if (typeof loadMarketItems === 'function') loadMarketItems(); 
 }
 
 // =========================================================
