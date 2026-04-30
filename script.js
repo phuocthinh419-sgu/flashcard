@@ -384,7 +384,7 @@ function buyItem(itemType, basePrice) {
     // 🌟 BỔ SUNG: XỬ LÝ NHẬP TÊN TRƯỚC KHI TRỪ TIỀN
     let newDisplayName = null;
     if (itemType.startsWith('rename_')) {
-        newDisplayName = prompt("📜 Kính mời Bệ hạ hạ chỉ danh xưng mới:");
+        newDisplayName = prompt("📜 Nhập tên mới của bạn tại đây:");
         if (!newDisplayName || newDisplayName.trim() === "") return alert("Giao dịch hủy: Danh xưng không thể để trống!");
         newDisplayName = newDisplayName.trim();
     }
