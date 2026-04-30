@@ -346,7 +346,7 @@ function applyTheme(themeName) { document.body.classList.remove('theme-aurora', 
 function buyItem(itemType, basePrice) { 
     if (!currentUser) return alert("Hệ thống yêu cầu phải đăng nhập mới sử dụng tính năng giao dịch!"); 
     
-    // Kiểm tra và áp dụng ngay nếu là đồ trang trí đã sở hữu
+    // 1. Kiểm tra và áp dụng ngay nếu là đồ trang trí đã sở hữu
     if (['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow', 'theme_royal'].includes(itemType)) {
         if (userData.purchasedItems && userData.purchasedItems.includes(itemType)) {
             let updates = {};
@@ -366,7 +366,7 @@ function buyItem(itemType, basePrice) {
     let finalPrice = basePrice;
     let quantity = 1;
 
-    // Logic tính giá Kính Lúp
+    // 2. Logic tính giá Kính Lúp (Dựa trên bản gốc của Bệ hạ)
     if (itemType === 'glass_100') {
         let qStr = prompt("🔍 Nhập số lượng Kính Lúp bạn muốn mua:\n(🔥 ƯU ĐÃI: Mua từ 3 kính trở lên, giá giảm chỉ còn 150 🪙 / kính)", "1");
         if (qStr === null) return; quantity = parseInt(qStr);
@@ -374,17 +374,29 @@ function buyItem(itemType, basePrice) {
         finalPrice = (quantity >= 3 ? 150 : 200) * quantity;
     }
 
-    // Áp dụng Voucher và Buff Doraemon
+    // 3. Áp dụng Voucher và Buff Doraemon (Dựa trên bản gốc của Bệ hạ)
     if(userData.vouchers && userData.vouchers.length > 0) finalPrice = Math.floor(finalPrice * (100 - userData.vouchers[0]) / 100);
     if (userData.selectedMentor === 'doraemon' && userData.mentorExpiry > Date.now()) finalPrice = Math.floor(finalPrice * 0.85);
     if (isMarket) finalPrice = Math.floor(finalPrice * 1.05);
 
     if (userData.gold < finalPrice) return alert(`Ngân khố không đủ! Cần ${finalPrice} 🪙.`);
 
-    if (confirm(`Xác nhận thanh toán ${finalPrice} Vàng?`)) {
+    // 🌟 BỔ SUNG: XỬ LÝ NHẬP TÊN TRƯỚC KHI TRỪ TIỀN
+    let newDisplayName = null;
+    if (itemType.startsWith('rename_')) {
+        newDisplayName = prompt("📜 Kính mời Bệ hạ hạ chỉ danh xưng mới:");
+        if (!newDisplayName || newDisplayName.trim() === "") return alert("Giao dịch hủy: Danh xưng không thể để trống!");
+        newDisplayName = newDisplayName.trim();
+    }
+
+    // 4. Xác nhận giao dịch
+    if (confirm(`Xác nhận thanh toán ${finalPrice} Vàng cho vật phẩm này?`)) {
         let updates = { gold: userData.gold - finalPrice };
         
-        // Cấp pháp bảo tương ứng
+        // Gán tên mới nếu mua thẻ đổi tên
+        if (newDisplayName) updates.displayName = newDisplayName;
+
+        // Cấp pháp bảo (Shield, Glass, Time, Torch)
         if (itemType === 'shield_100') updates.shield_100 = (userData.shield_100 || 0) + 3;
         if (itemType === 'shield_80') updates.shield_80 = (userData.shield_80 || 0) + 1;
         if (itemType === 'glass_100') updates.glass_100 = (userData.glass_100 || 0) + quantity;
@@ -394,18 +406,35 @@ function buyItem(itemType, basePrice) {
         if (itemType === 'torch_100') updates.torch_100 = (userData.torch_100 || 0) + 1;
         if (itemType === 'torch_80') updates.torch_80 = (userData.torch_80 || 0) + 1;
 
-        // Lưu cập nhật vào Firebase hồ sơ cá nhân trước (Luôn thành công nếu Rules đúng)
+        // 🌟 BỔ SUNG: Logic cho Bình Tiên và Mặt Nạ
+        if (itemType.startsWith('potion_100')) updates.potionExpiry = Date.now() + 86400000; // 24h
+        if (itemType.startsWith('potion_80')) updates.potionExpiry = Date.now() + 43200000;  // 12h
+        if (itemType.startsWith('potion_x3_100')) updates.potionX3Expiry = Date.now() + 21600000; // 6h
+        if (itemType.startsWith('potion_x3_80')) updates.potionX3Expiry = Date.now() + 10800000;  // 3h
+        if (itemType.startsWith('mask_100')) updates.maskExpiry = Date.now() + 86400000; // 24h
+        if (itemType.startsWith('mask_80')) updates.maskExpiry = Date.now() + 43200000;  // 12h
+
+        // Lưu danh sách đồ trang trí nếu mua mới
+        if (['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow', 'theme_royal'].includes(itemType)) {
+            if (!userData.purchasedItems) userData.purchasedItems = [];
+            userData.purchasedItems.push(itemType);
+            updates.purchasedItems = userData.purchasedItems;
+        }
+
+        // 5. Cập nhật Firebase hồ sơ cá nhân
         db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
-            // Sau khi trừ tiền thành công mới báo về cho Admin (Chạy ngầm, không chặn giao dịch)
+            // Báo cáo sưu thuế về cho Admin
             try { transferToAdmin(finalPrice, `Cửa hàng: ${itemType}`); } catch(e) {}
             
             Object.assign(userData, updates);
             updateUI();
+            if (newDisplayName) fetchLeaderboard(); // Làm mới BXH nếu đổi tên
+            
             let anim = document.getElementById('rewardAnim');
             anim.innerText = `🛒 Giao dịch thành công! -${finalPrice} 🪙`;
             anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 3000);
         }).catch(err => {
-            alert("Firebase từ chối! Bạn hãy vui lòng kiểm tra lại 'Rules' trong Console.");
+            alert("Firebase từ chối! Bệ hạ vui lòng kiểm tra lại 'Rules' (Đạo luật cống nạp).");
             console.error("Lỗi giao dịch:", err);
         });
     }
