@@ -986,20 +986,69 @@ function createBracketObject(players) {
     return bracket; 
 }
 
+// =========================================================
+// 🎲 THUẬT TOÁN BỐC THĂM VÀ CHIA MÂM C1 / C2 CHUẨN XÁC
+// =========================================================
+
 async function executeBlindDraw() { 
     if(!confirm(`Xác nhận bốc thăm phân nhánh cho [${currentRealm}]?`)) return; 
+    
+    // 1. Lấy thông tin Đương Kim Vô Địch từ Lịch sử
     const histSnap = await rtdb.ref(`tournament_status/${currentRealm}/history`).once('value'); 
     const history = histSnap.val() || {}; 
+    let currentDefendingChampion = history.c1_champ || ""; 
+    
+    // 2. Lấy toàn bộ thần dân trong Phủ
     const snapshot = await db.collection('vocab_users').where('realm', '==', currentRealm).get(); 
-    let allPlayers = []; snapshot.forEach(doc => allPlayers.push(doc.data())); 
+    let allPlayers = []; 
+    snapshot.forEach(doc => allPlayers.push(doc.data())); 
+    
+    // 3. Xếp hạng dựa trên sức mạnh (XP)
     allPlayers.sort((a,b) => (b.xp || 0) - (a.xp || 0)); 
+    
+    // 4. Lọc người đủ tiêu chuẩn (Chuỗi >= 3 HOẶC là ĐKVĐ)
     let qualifiedPlayers = []; 
     allPlayers.forEach(d => { 
-        if(d.role !== 'teacher' && ((d.streak || 1) >= 3)) { qualifiedPlayers.push(d.displayName || "Ẩn danh"); } 
+        let dName = d.displayName || "Ẩn danh";
+        let dStreak = d.streak || 1;
+        let isChampion = (dName === currentDefendingChampion && currentDefendingChampion !== "");
+        
+        if(d.role !== 'teacher' && (dStreak >= 3 || isChampion)) { 
+            qualifiedPlayers.push(dName); 
+        } 
     }); 
-    let N = qualifiedPlayers.length; if (N < 4) return alert("Cần tối thiểu 4 thần dân duy trì chuỗi 3 ngày."); 
-    let c1Bracket = createBracketObject(qualifiedPlayers); 
-    rtdb.ref(`tournament_status/${currentRealm}/c1_bracket`).set(c1Bracket).then(() => alert("🎲 Bốc thăm hoàn tất!")); 
+    
+    let N = qualifiedPlayers.length; 
+    if (N < 4) return alert("Cần tối thiểu 4 thần dân duy trì chuỗi 3 ngày (hoặc ĐKVĐ) để mở giải."); 
+    
+    // 5. Thuật toán chia số lượng C1 và C2 theo Bảng xếp hạng
+    let c1Size = 0, c2Size = 0; 
+    if (N >= 4 && N < 8) { 
+        c1Size = 4; c2Size = 0; 
+    } else if (N >= 8) { 
+        let max_pow = Math.pow(2, Math.floor(Math.log2(N))); 
+        c1Size = (N - max_pow < 4 && max_pow > 4) ? max_pow / 2 : max_pow; 
+        let c2PoolSize = N - c1Size; 
+        c2Size = (c2PoolSize >= 4) ? Math.pow(2, Math.floor(Math.log2(c2PoolSize))) : 0; 
+    } 
+    
+    // 6. Phân bổ hạt giống (Seeds) theo đúng Top XP
+    let c1Players = qualifiedPlayers.slice(0, c1Size);
+    let c2Players = qualifiedPlayers.slice(c1Size, c1Size + c2Size);
+    
+    // 7. Tạo sơ đồ và đưa lên Cửu Trùng Đài (Firebase)
+    let updates = {};
+    updates[`tournament_status/${currentRealm}/c1_bracket`] = createBracketObject(c1Players);
+    
+    if(c2Size > 0) {
+        updates[`tournament_status/${currentRealm}/c2_bracket`] = createBracketObject(c2Players);
+    } else {
+        updates[`tournament_status/${currentRealm}/c2_bracket`] = null; // Xóa C2 nếu không đủ mâm
+    }
+    
+    rtdb.ref().update(updates).then(() => {
+        alert(`🎲 Càn khôn đã định!\nĐã xếp ${c1Size} Dũng sĩ vào C1${c2Size > 0 ? ` và ${c2Size} Dũng sĩ vào C2` : ''}.`);
+    }); 
 }
 
 async function advanceTournament() { 
@@ -1656,69 +1705,4 @@ function adminSpectateCurrentMatch() {
             window.isSpectating = false;
         }
     });
-}
-
-// =========================================================
-// 🎲 THUẬT TOÁN BỐC THĂM VÀ CHIA MÂM C1 / C2 CHUẨN XÁC
-// =========================================================
-
-async function executeBlindDraw() { 
-    if(!confirm(`Xác nhận bốc thăm phân nhánh cho [${currentRealm}]?`)) return; 
-    
-    // 1. Lấy thông tin Đương Kim Vô Địch từ Lịch sử
-    const histSnap = await rtdb.ref(`tournament_status/${currentRealm}/history`).once('value'); 
-    const history = histSnap.val() || {}; 
-    let currentDefendingChampion = history.c1_champ || ""; 
-    
-    // 2. Lấy toàn bộ thần dân trong Phủ
-    const snapshot = await db.collection('vocab_users').where('realm', '==', currentRealm).get(); 
-    let allPlayers = []; 
-    snapshot.forEach(doc => allPlayers.push(doc.data())); 
-    
-    // 3. Xếp hạng dựa trên sức mạnh (XP)
-    allPlayers.sort((a,b) => (b.xp || 0) - (a.xp || 0)); 
-    
-    // 4. Lọc người đủ tiêu chuẩn (Chuỗi >= 3 HOẶC là ĐKVĐ)
-    let qualifiedPlayers = []; 
-    allPlayers.forEach(d => { 
-        let dName = d.displayName || "Ẩn danh";
-        let dStreak = d.streak || 1;
-        let isChampion = (dName === currentDefendingChampion && currentDefendingChampion !== "");
-        
-        if(d.role !== 'teacher' && (dStreak >= 3 || isChampion)) { 
-            qualifiedPlayers.push(dName); 
-        } 
-    }); 
-    
-    let N = qualifiedPlayers.length; 
-    if (N < 4) return alert("Cần tối thiểu 4 thần dân duy trì chuỗi 3 ngày (hoặc ĐKVĐ) để mở giải."); 
-    
-    // 5. Thuật toán chia số lượng C1 và C2 theo Bảng xếp hạng
-    let c1Size = 0, c2Size = 0; 
-    if (N >= 4 && N < 8) { 
-        c1Size = 4; c2Size = 0; 
-    } else if (N >= 8) { 
-        let max_pow = Math.pow(2, Math.floor(Math.log2(N))); 
-        c1Size = (N - max_pow < 4 && max_pow > 4) ? max_pow / 2 : max_pow; 
-        let c2PoolSize = N - c1Size; 
-        c2Size = (c2PoolSize >= 4) ? Math.pow(2, Math.floor(Math.log2(c2PoolSize))) : 0; 
-    } 
-    
-    // 6. Phân bổ hạt giống (Seeds) theo đúng Top XP
-    let c1Players = qualifiedPlayers.slice(0, c1Size);
-    let c2Players = qualifiedPlayers.slice(c1Size, c1Size + c2Size);
-    
-    // 7. Tạo sơ đồ và đưa lên Cửu Trùng Đài (Firebase)
-    let updates = {};
-    updates[`tournament_status/${currentRealm}/c1_bracket`] = createBracketObject(c1Players);
-    
-    if(c2Size > 0) {
-        updates[`tournament_status/${currentRealm}/c2_bracket`] = createBracketObject(c2Players);
-    } else {
-        updates[`tournament_status/${currentRealm}/c2_bracket`] = null; // Xóa C2 nếu không đủ mâm
-    }
-    
-    rtdb.ref().update(updates).then(() => {
-        alert(`🎲 Càn khôn đã định!\nĐã xếp ${c1Size} Dũng sĩ vào C1${c2Size > 0 ? ` và ${c2Size} Dũng sĩ vào C2` : ''}.`);
-    }); 
 }
