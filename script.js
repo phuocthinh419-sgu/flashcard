@@ -1464,3 +1464,53 @@ window.checkAndGrantStreakRewards = function(oldS, newS) {
         if (currentUser && db) { db.collection('vocab_users').doc(currentUser.uid).update({ vouchers: userData.vouchers }).then(() => updateUI()); }
     }
 };
+
+// =========================================================
+// ✈️ HỆ THỐNG DI CƯ (GIẤY THÔNG HÀNH) - BẢN VÁ BỔ SUNG
+// =========================================================
+
+function openMigrationModal() { 
+    if(availableRealms.length <= 1) return alert("Hệ thống hiện tại chỉ mới có 1 Lãnh Thổ duy nhất.");
+    if(userData.role !== 'teacher' && userData.gold < 100000) return alert("Bạn không đủ 100.000 Vàng để mua Giấy Thông Hành!"); 
+    
+    document.getElementById('currentRealmDisplay').innerText = currentRealm; 
+    let select = document.getElementById('realmSelect'); 
+    select.innerHTML = ''; 
+    availableRealms.forEach(phu => { 
+        if(phu !== currentRealm) select.innerHTML += `<option value="${phu}">${phu}</option>`; 
+    }); 
+    document.getElementById('migrationModal').classList.add('active'); 
+}
+
+function confirmMigration() { 
+    let newRealm = document.getElementById('realmSelect').value; 
+    if(!newRealm) return; 
+    if(userData.role !== 'teacher') {
+        if(userData.gold < 100000) return alert("Không đủ vàng!"); 
+        userData.gold -= 100000; 
+        if (typeof transferToAdmin === 'function') {
+            transferToAdmin(100000, `Mua Giấy Thông Hành sang Phủ: ${newRealm}`);
+        }
+    }
+    
+    // Gửi gắm XP vào Trọn đời và thiết lập lại các chỉ số đua top
+    userData.lifetime_xp = (userData.lifetime_xp || 0) + userData.xp; 
+    userData.xp = 0; 
+    userData.weeklyXp = 0; 
+    userData.lastWeekXp = 0; 
+    userData.highestWeeklyXp = 0; 
+    userData.realm = newRealm; 
+    
+    db.collection('vocab_users').doc(currentUser.uid).update({ 
+        gold: userData.gold, 
+        lifetime_xp: userData.lifetime_xp, 
+        xp: 0, 
+        weeklyXp: 0, 
+        lastWeekXp: 0, 
+        highestWeeklyXp: 0, 
+        realm: newRealm 
+    }).then(() => { 
+        alert(`✈️ Đã di cư thành công sang Phủ [${newRealm}]!`); 
+        window.location.reload(); 
+    }); 
+}
