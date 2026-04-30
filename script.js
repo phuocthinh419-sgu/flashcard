@@ -1570,25 +1570,36 @@ function logoutApp() {
     }
 }
 
-// 7. ĐÀI BAN THƯỞNG CHUỖI NGÀY
+// 7. ĐÀI BAN THƯỞNG CHUỖI NGÀY (BẢN VÁ TỐI ƯU ĐỒNG BỘ)
 window.checkAndGrantStreakRewards = function(oldS, newS) {
     if (oldS >= newS) return;
     let granted = false;
+    let newVouchers = userData.vouchers ? [...userData.vouchers] : []; // Tạo mảng dự phòng
+    
     for (let s = oldS + 1; s <= newS; s++) {
         let reward = 0;
         if (s === 30) reward = 15;
         else if (s === 50) reward = 30;
         else if (s === 100) reward = 50;
         else if (s > 100 && (s - 100) % 30 === 0) reward = 75; 
+        
         if (reward > 0) {
-            if (!userData.vouchers) userData.vouchers = [];
-            userData.vouchers.push(reward); granted = true;
+            newVouchers.push(reward); 
+            granted = true;
             alert(`🔥 QUÀ TẶNG CHUỖI ${s} NGÀY!\nHệ thống ban tặng 1 Mã giảm giá ${reward}% vào Cửa Hàng!`);
         }
     }
+    
     if (granted) {
-        userData.vouchers.sort((a,b) => b - a); 
-        if (currentUser && db) { db.collection('vocab_users').doc(currentUser.uid).update({ vouchers: userData.vouchers }).then(() => updateUI()); }
+        newVouchers.sort((a,b) => b - a); 
+        userData.vouchers = newVouchers; // Cập nhật vào bộ nhớ ngay lập tức
+        
+        // Gọi thẳng hàm đồng bộ lớn của toàn hệ thống để mọi thứ nhất quán
+        if (typeof syncStatsToCloud === 'function') {
+            syncStatsToCloud();
+        } else if (currentUser && db) { 
+            db.collection('vocab_users').doc(currentUser.uid).update({ vouchers: userData.vouchers }).then(() => updateUI()); 
+        }
     }
 };
 
