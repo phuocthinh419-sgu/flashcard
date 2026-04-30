@@ -243,7 +243,14 @@ function updateUI() {
     document.getElementById('ui-lifetime-xp').innerText = userData.lifetime_xp || 0; 
     document.getElementById('sidebarRealm').innerText = `🌍 Phủ: ${userData.realm || "---"}`; 
     document.getElementById('ui-streak').innerText = userData.streak || 0; 
-    document.getElementById('sidebarName').innerText = userData.displayName || "Khách"; 
+    
+    // BẬT DẠ QUANG CHO CỘT BÊN TRÁI AVATAR
+    let sidebarNameEl = document.getElementById('sidebarName');
+    if (userData.neonNameExpiry && userData.neonNameExpiry > Date.now()) {
+        sidebarNameEl.innerHTML = `<span style="color: #ffd700; text-shadow: 0 0 5px #ffd700, 0 0 10px #ff9800, 0 0 15px #ff1744; font-weight: 900;">${userData.displayName || "Khách"}</span>`;
+    } else {
+        sidebarNameEl.innerText = userData.displayName || "Khách";
+    }
     
     if(document.getElementById('ui-glass-100')) document.getElementById('ui-glass-100').innerText = userData.glass_100 || 0;
     if(document.getElementById('ui-glass-80')) document.getElementById('ui-glass-80').innerText = userData.glass_80 || 0;
@@ -972,8 +979,21 @@ function fetchLeaderboard() {
         if (N >= 4 && N < 8) { c1Size = 4; c2Size = 0; } else if (N >= 8) { let max_pow = Math.pow(2, Math.floor(Math.log2(N))); c1Size = (N - max_pow < 4 && max_pow > 4) ? max_pow / 2 : max_pow; let c2PoolSize = N - c1Size; c2Size = (c2PoolSize >= 4) ? Math.pow(2, Math.floor(Math.log2(c2PoolSize))) : 0; } 
         let qualifiedHtml = ''; let unqualifiedHtml = ''; let rank = 1; 
         qualified.forEach((data, index) => { 
-            let dName = data.displayName || 'Ẩn danh'; let dXp = data.xp; let isChampion = (dName === defendingChampion && defendingChampion !== ""); let isMaskActive = data.maskExpiry && data.maskExpiry > Date.now(); let displayDName = dName; 
-            if (isMaskActive) { if (userData.role === 'teacher') displayDName = displayDName + " 🎭(Ẩn)"; else { displayDName = "???"; dXp = "???"; } } 
+            let dName = data.displayName || 'Ẩn danh'; let dXp = data.xp; let isChampion = (dName === defendingChampion && defendingChampion !== ""); 
+            
+            let isMaskActive = data.maskExpiry && data.maskExpiry > Date.now(); 
+            // BẬT MẮT THẦN DẠ QUANG Ở ĐÂY
+            let isNeonActive = data.neonNameExpiry && data.neonNameExpiry > Date.now(); 
+            
+            let displayDName = dName; 
+            if (isMaskActive) { 
+                if (userData.role === 'teacher') displayDName = displayDName + " 🎭(Ẩn)"; 
+                else { displayDName = "???"; dXp = "???"; } 
+            } else if (isNeonActive) {
+                // ÁP DỤNG HIỆU ỨNG NEON GOLD LẤP LÁNH
+                displayDName = `<span style="color: #ffd700; text-shadow: 0 0 5px #ffd700, 0 0 10px #ff9800, 0 0 15px #ff1744; font-weight: 900; letter-spacing: 1px;">${dName}</span>`;
+            }
+            
             let champBadge = isChampion ? ' <span style="color:#ffd700; font-size: 12px; margin-left:5px; padding: 2px 6px; background: rgba(255,215,0,0.2); border-radius: 8px;">👑 ĐKVĐ</span>' : ''; let leagueBadge = ''; 
             if (N >= 4) { if (index < c1Size) leagueBadge = '<span style="color:#000; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #ffd700; border-radius: 4px; font-weight: 900; display: inline-block; vertical-align: middle;">🏆 C1</span>'; else if (index < c1Size + c2Size) leagueBadge = '<span style="color:#fff; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #9e9e9e; border-radius: 4px; font-weight: bold; display: inline-block; vertical-align: middle;">🥈 C2</span>'; else leagueBadge = '<span style="color:#fff; font-size: 10px; margin-left:8px; padding: 2px 6px; background: #d32f2f; border-radius: 4px; font-weight: bold; display: inline-block; vertical-align: middle;">⚠️ NGUY HIỂM</span>'; } else leagueBadge = '<span style="color:#888; font-size: 10px; margin-left:8px; font-style:italic; display: inline-block; vertical-align: middle;">(Đang thu thập)</span>'; 
             let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '.'; let rankClass = rank <= 3 ? `lb-rank-${rank}` : ''; 
