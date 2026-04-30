@@ -91,6 +91,33 @@
             opacity: 1;
             transform: translateY(0);
         }
+
+        /* 4. Hiệu ứng cho Dropdown Menu Cửa Hàng (BỆ HẠ VỪA YÊU CẦU THÊM VÀO ĐÂY) */
+        .sidebar .has-dropdown .nav-link {
+            padding: 12px 15px;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+        }
+        .sidebar .has-dropdown .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar .dropdown-menu {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .sidebar .sub-item {
+            opacity: 0.8;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .sidebar .sub-item:hover, .sidebar .sub-item.active {
+            opacity: 1;
+            transform: translateX(5px);
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -116,7 +143,28 @@
         <div class="nav-item nav-arena" id="nav-arena" onclick="switchTab('arena')" style="display:none">⚔️ Đài Tỷ Võ</div>
         <div class="nav-item active" id="nav-library" onclick="switchTab('library')">☁️ Kho Bài Học</div>
         <div class="nav-item" id="nav-stats" onclick="switchTab('stats')">📊 Thống Kê</div>
-        <div class="nav-item" id="nav-shop" onclick="switchTab('shop')">🛒 Cửa Hàng</div>
+        
+        <!-- ĐÃ VÁ: HỆ THỐNG MENU CỬA HÀNG KÉP -->
+        <div class="nav-item has-dropdown" id="nav-shop-group">
+            <div class="nav-link" id="store-toggle" onclick="toggleStoreMenu()" style="display: flex; justify-content: space-between; align-items: center; width: 100%; cursor: pointer;">
+                <span>🛒 Cửa Hàng</span>
+                <span id="store-arrow" style="font-size: 12px; transition: transform 0.3s;">▼</span>
+            </div>
+            <ul class="dropdown-menu" id="store-dropdown" style="display: none; list-style: none; padding-left: 20px; margin-top: 5px; margin-bottom: 5px;">
+                <li style="margin-bottom: 5px;">
+                    <div class="nav-item sub-item" id="nav-shop-official" onclick="switchTab('shop')" style="padding: 8px 10px; font-size: 14px; border-left: 2px solid #ffd700; background: rgba(255, 215, 0, 0.1);">
+                        ✨ Hàng Chính Hãng
+                    </div>
+                </li>
+                <li>
+                    <div class="nav-item sub-item" id="nav-shop-market" onclick="switchTab('market')" style="padding: 8px 10px; font-size: 14px; border-left: 2px solid #9e9e9e; background: rgba(158, 158, 158, 0.1);">
+                        📦 Hàng Thanh Lý
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <!-- KẾT THÚC VÁ -->
+
         <div class="nav-item" id="nav-leaderboard" onclick="switchTab('leaderboard')">🏆 Xếp Hạng</div>
         <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">⚙️ Cài Đặt</div>
     </aside>
@@ -176,12 +224,13 @@
                 </div>
             </div>
 
+            <!-- VIEW: CỬA HÀNG CHÍNH HÃNG -->
             <div id="view-shop" class="view-section">
                 <div class="header">
-                    <h1>🛒 Cửa Hàng</h1><p>Đổi vật phẩm bằng Vàng.</p>
+                    <h1>✨ Cung Đình (Chính Hãng)</h1><p>Hàng hiệu cao cấp, đi kèm 5% XP & Voucher 45%.</p>
                     <div style="background: #fff9c4; padding: 10px; border-radius: 8px; font-weight: bold; margin-top: 10px; color: #f57f17; display: flex; justify-content: space-between; align-items: center;">
                         <span>🎟️ Kho Voucher: <span id="ui-vouchers">Trống</span></span>
-                        <span style="font-size: 12px; font-style: italic;">(Hệ thống sẽ tự động áp dụng mã ưu đãi tốt nhất)</span>
+                        <span style="font-size: 12px; font-style: italic;">(Áp dụng tự động)</span>
                     </div>
                 </div>
                 <div class="shop-grid" id="shopGrid">
@@ -238,12 +287,12 @@
                         <button class="btn-buy" style="background: linear-gradient(45deg, #ff9800, #f57f17);" onclick="openWheelModal()">Quay Ngay</button>
                     </div>
 
-                    <div class="shop-item"><div class="item-icon">🪪</div><div class="item-title">Thẻ Đổi Tên</div><div class="item-desc">Thay đổi tên hiển thị của bạn. Có hiệu lực ngay.</div><div class="item-price">🪙 1000</div><button class="btn-buy" onclick="buyItem('rename', 1000)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🧪</div><div class="item-title">Bình Tiên XP x2</div><div class="item-desc">Nhân đôi điểm kinh nghiệm và Vàng nhận được trong 24 giờ.</div><div class="item-price">🪙 150</div><button class="btn-buy" onclick="buyItem('potion', 150)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🧪</div><div class="item-title">Bình Tiên XP x3</div><div class="item-desc">Nhân ba XP và Vàng. Giới hạn 3 giờ.</div><div class="item-price">🪙 1500</div><button class="btn-buy" onclick="buyItem('potion_x3', 1500)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🎭</div><div class="item-title">Mặt Nạ Hắc Ám</div><div class="item-desc">Ẩn tên và điểm số trên BXH. Tác dụng 24 giờ.</div><div class="item-price">🪙 250</div><button class="btn-buy" onclick="buyItem('mask', 250)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🔍</div><div class="item-title">Kính Lúp Thám Tử</div><div class="item-desc">Loại bỏ 2 đáp án sai trong lúc làm bài (Dùng 1 lần/kính).</div><div class="item-price">🪙 200</div><button class="btn-buy" onclick="buyItem('glass', 200)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🛡️</div><div class="item-title">Bùa Bảo Hộ</div><div class="item-desc">Bảo vệ chuỗi ngày học nếu bạn lỡ quên đăng nhập 1 ngày.</div><div class="item-price">🪙 8000</div><button class="btn-buy" onclick="buyItem('shield', 8000)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🪪</div><div class="item-title">Thẻ Đổi Tên</div><div class="item-desc">Thay đổi tên hiển thị của bạn. Có hiệu ứng Neon Gold 7 ngày.</div><div class="item-price">🪙 5000</div><button class="btn-buy" onclick="buyItem('rename', 5000)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🧪</div><div class="item-title">Bình Tiên XP x2</div><div class="item-desc">Nhân đôi điểm XP trong 24 giờ.</div><div class="item-price">🪙 150</div><button class="btn-buy" onclick="buyItem('potion', 150)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🧪</div><div class="item-title">Bình Tiên XP x3</div><div class="item-desc">Nhân ba XP trong 6 giờ.</div><div class="item-price">🪙 1500</div><button class="btn-buy" onclick="buyItem('potion_x3', 1500)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🎭</div><div class="item-title">Mặt Nạ Hắc Ám</div><div class="item-desc">Ẩn danh hoàn toàn trên BXH. Tác dụng 24 giờ.</div><div class="item-price">🪙 250</div><button class="btn-buy" onclick="buyItem('mask', 250)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🔍</div><div class="item-title">Kính Lúp 50/50</div><div class="item-desc">Loại bỏ 2 đáp án sai.</div><div class="item-price">🪙 200</div><button class="btn-buy" onclick="buyItem('glass', 200)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🛡️</div><div class="item-title">Bùa Bảo Hộ</div><div class="item-desc">Bảo vệ chuỗi ngày học trong 3 ngày vắng mặt.</div><div class="item-price">🪙 8000</div><button class="btn-buy" onclick="buyItem('shield', 8000)">Đổi Ngay</button></div>
                     
                     <div class="shop-item"><div class="item-icon">❄️</div><div class="item-title">Đá Hoa Tuyết</div><div class="item-desc">Đổi biểu tượng Streak.</div><div class="item-price" id="price-streak_snow">🪙 5000</div><button class="btn-buy" id="btn-streak_snow" onclick="buyItem('streak_snow', 5000)">Đổi Ngay</button></div>
                     <div class="shop-item"><div class="item-icon">🌸</div><div class="item-title">Đá Hoa Đào</div><div class="item-desc">Đổi biểu tượng Streak.</div><div class="item-price" id="price-streak_peach">🪙 5000</div><button class="btn-buy" id="btn-streak_peach" onclick="buyItem('streak_peach', 5000)">Đổi Ngay</button></div>
@@ -256,6 +305,20 @@
                     <div class="shop-item"><div class="item-icon">💻</div><div class="item-title">Giao diện Tuyết Dạ</div><div class="item-desc">Đổi Giao diện nền.</div><div class="item-price" id="price-theme_snow">🪙 15000</div><button class="btn-buy" id="btn-theme_snow" onclick="buyItem('theme_snow', 15000)">Đổi Ngay</button></div>
                     <div class="shop-item"><div class="item-icon">👑</div><div class="item-title">Giao diện Hoàng Gia</div><div class="item-desc">Đổi Giao diện nền.</div><div class="item-price" id="price-theme_royal">🪙 20000</div><button class="btn-buy" id="btn-theme_royal" onclick="buyItem('theme_royal', 20000)">Đổi Ngay</button></div>
                     <div class="shop-item"><div class="item-icon">💻</div><div class="item-title">Giao diện Mặc Định</div><div class="item-desc">Khôi phục giao diện gốc.</div><div class="item-price">Đã sở hữu</div><button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('theme_default', 0)">Dùng Ngay</button></div>
+                </div>
+            </div>
+
+            <!-- VIEW: CỬA HÀNG THANH LÝ (MỚI THÊM) -->
+            <div id="view-market" class="view-section" style="display: none;">
+                <div class="header">
+                    <h1 style="color: #616161;">📦 Chợ Đen (Thanh Lý)</h1>
+                    <p style="color: #9e9e9e;">Hàng xách tay, mua rẻ hơn 20% nhưng chịu phí 5% giao dịch. Không có XP Bonus.</p>
+                </div>
+                <div class="shop-grid" id="marketGrid">
+                    <!-- Khu vực này sẽ được đổ dữ liệu bằng JavaScript sau -->
+                    <div style="grid-column: 1 / -1; text-align: center; color: #888; padding: 20px; font-style: italic;">
+                        Đang xây dựng sạp hàng... Bệ hạ chờ thợ rèn viết JS đổ vào nhé!
+                    </div>
                 </div>
             </div>
 
