@@ -3053,3 +3053,106 @@ window.pokeMentor = function() {
 setTimeout(() => {
     if(currentUser && userData) showMentorDialogue('login');
 }, 2000);
+
+// =========================================================
+// 🛒 HỆ THỐNG CỬA HÀNG KÉP (STORE & MARKET)
+// =========================================================
+
+// Hàm điều khiển menu xổ xuống của Sidebar
+function toggleStoreMenu() {
+    const dropdown = document.getElementById('store-dropdown');
+    const arrow = document.getElementById('store-arrow');
+    const toggleBtn = document.getElementById('store-toggle');
+    
+    // Nếu đang đóng thì mở ra
+    if (dropdown.style.display === 'none') {
+        dropdown.style.display = 'block';
+        arrow.style.transform = 'rotate(-180deg)'; // Xoay mũi tên lên
+        toggleBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+    } 
+    // Nếu đang mở thì đóng lại
+    else {
+        dropdown.style.display = 'none';
+        arrow.style.transform = 'rotate(0deg)'; // Xoay mũi tên xuống
+        toggleBtn.style.background = 'transparent';
+    }
+}
+
+// =========================================================
+// 🛑 VÁ LẠI HÀM SWITCH TAB ĐỂ NHẬN DIỆN CỬA HÀNG KÉP
+// Bệ hạ lưu ý: Hàm này sẽ đè lên hàm switchTab cũ trong file!
+// =========================================================
+function switchTab(tabId) { 
+    try {
+        // Tẩy hết các tab đang hiển thị
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active')); 
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); 
+        
+        // Hiện view tương ứng
+        const viewEl = document.getElementById('view-' + tabId);
+        if (viewEl) viewEl.classList.add('active'); 
+        
+        // Bôi đậm nút bên Sidebar
+        // Nếu là nút thường (Kho, Thống kê...)
+        const navBtn = document.getElementById('nav-' + tabId); 
+        if(navBtn) navBtn.classList.add('active'); 
+        
+        // NẾU BẤM VÀO CỬA HÀNG HOẶC CHỢ ĐEN
+        if (tabId === 'shop' || tabId === 'market') {
+            // Giữ cho chữ "Cửa hàng" Mẹ được bôi đậm
+            document.getElementById('nav-shop-group').classList.add('active');
+            
+            // Nếu Sidebar đang đóng trên Mobile thì mở ra
+            let dropdown = document.getElementById('store-dropdown');
+            let arrow = document.getElementById('store-arrow');
+            if (dropdown.style.display === 'none') {
+                dropdown.style.display = 'block';
+                arrow.style.transform = 'rotate(-180deg)';
+            }
+        }
+
+        // Tự động đóng Sidebar trên Mobile
+        if (window.innerWidth <= 768) toggleSidebar(); 
+        
+        // Gọi dữ liệu tùy Tab
+        if (tabId === 'library') fetchLessonsFromFirebase(); 
+        if (tabId === 'leaderboard') fetchLeaderboard(); 
+        if (tabId === 'market') loadMarketItems(); // Tự động load Chợ đen khi vào
+        
+    } catch (error) { console.error("Lỗi khi chuyển tab:", error); }
+}
+
+// =========================================================
+// 📦 TẠO KHUNG ĐỔ DỮ LIỆU CHỢ ĐEN (SẼ VIẾT LOGIC TIẾP THEO)
+// =========================================================
+function loadMarketItems() {
+    const marketGrid = document.getElementById('marketGrid');
+    
+    // Đổ thử vài món đồ mô phỏng theo Đại Sắc Lệnh (Tiền nào của nấy)
+    // Giá rẻ hơn 20% nhưng chất lượng giảm.
+    marketGrid.innerHTML = `
+        <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
+            <div class="item-icon" style="filter: grayscale(100%);">🔍</div>
+            <div class="item-title" style="color: #616161;">Kính Lúp Bụi <span style="font-size:10px; background:#e0e0e0; padding:2px 5px; border-radius:4px;">📦 Xách Tay</span></div>
+            <div class="item-desc">Chỉ xóa được <b>1 đáp án sai</b> (25/75). Không có Bonus XP.</div>
+            <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
+                <span style="text-decoration: line-through; opacity: 0.5;">200</span>
+                <span>🪙 160</span>
+            </div>
+            <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
+            <button class="btn-buy" style="background: #9e9e9e;" onclick="alert('Đang viết mã xử lý mua hàng...')">Mua Lại</button>
+        </div>
+
+        <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
+            <div class="item-icon" style="filter: grayscale(100%);">🛡️</div>
+            <div class="item-title" style="color: #616161;">Bùa Cũ Mòn <span style="font-size:10px; background:#e0e0e0; padding:2px 5px; border-radius:4px;">📦 Xách Tay</span></div>
+            <div class="item-desc">Chỉ bảo vệ được <b>1 ngày</b> vắng mặt. Không có Voucher tặng kèm.</div>
+            <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
+                <span style="text-decoration: line-through; opacity: 0.5;">8000</span>
+                <span>🪙 6400</span>
+            </div>
+            <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
+            <button class="btn-buy" style="background: #9e9e9e;" onclick="alert('Đang viết mã xử lý mua hàng...')">Mua Lại</button>
+        </div>
+    `;
+}
