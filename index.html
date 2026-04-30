@@ -92,32 +92,6 @@
             transform: translateY(0);
         }
 
-        /* 4. Hiệu ứng cho Dropdown Menu Cửa Hàng (BỆ HẠ VỪA YÊU CẦU THÊM VÀO ĐÂY) */
-        .sidebar .has-dropdown .nav-link {
-            padding: 12px 15px;
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            margin-bottom: 5px;
-            transition: all 0.3s;
-        }
-        .sidebar .has-dropdown .nav-link:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        .sidebar .dropdown-menu {
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-        }
-        .sidebar .sub-item {
-            opacity: 0.8;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        .sidebar .sub-item:hover, .sidebar .sub-item.active {
-            opacity: 1;
-            transform: translateX(5px);
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
@@ -144,24 +118,23 @@
         <div class="nav-item active" id="nav-library" onclick="switchTab('library')">☁️ Kho Bài Học</div>
         <div class="nav-item" id="nav-stats" onclick="switchTab('stats')">📊 Thống Kê</div>
         
-        <!-- ĐÃ VÁ: HỆ THỐNG MENU CỬA HÀNG KÉP -->
-        <div class="nav-item has-dropdown" id="nav-shop-group">
-            <div class="nav-link" id="store-toggle" onclick="toggleStoreMenu()" style="display: flex; justify-content: space-between; align-items: center; width: 100%; cursor: pointer;">
-                <span>🛒 Cửa Hàng</span>
-                <span id="store-arrow" style="font-size: 12px; transition: transform 0.3s;">▼</span>
+        <!-- ĐÃ VÁ LẠI: HỆ THỐNG MENU CỬA HÀNG KÉP (XỔ DỌC CHUẨN) -->
+        <div style="display: flex; flex-direction: column; width: 100%;">
+            <!-- Nút Cửa Hàng Mẹ -->
+            <div class="nav-item" id="nav-shop-main" onclick="toggleStoreMenu()" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>🛒 Cửa Hàng</div>
+                <div id="store-arrow" style="font-size: 10px; transition: transform 0.3s; margin-left: auto;">▼</div>
             </div>
-            <ul class="dropdown-menu" id="store-dropdown" style="display: none; list-style: none; padding-left: 20px; margin-top: 5px; margin-bottom: 5px;">
-                <li style="margin-bottom: 5px;">
-                    <div class="nav-item sub-item" id="nav-shop-official" onclick="switchTab('shop')" style="padding: 8px 10px; font-size: 14px; border-left: 2px solid #ffd700; background: rgba(255, 215, 0, 0.1);">
-                        ✨ Hàng Chính Hãng
-                    </div>
-                </li>
-                <li>
-                    <div class="nav-item sub-item" id="nav-shop-market" onclick="switchTab('market')" style="padding: 8px 10px; font-size: 14px; border-left: 2px solid #9e9e9e; background: rgba(158, 158, 158, 0.1);">
-                        📦 Hàng Thanh Lý
-                    </div>
-                </li>
-            </ul>
+            
+            <!-- Danh sách con xổ dọc -->
+            <div id="store-dropdown" style="display: none; flex-direction: column; gap: 5px; padding-left: 20px; margin-top: 5px; margin-bottom: 5px;">
+                <div class="nav-item" id="nav-shop" onclick="switchTab('shop')" style="border-left: 2px solid #ffd700; border-radius: 0 8px 8px 0; padding: 10px; font-size: 14px;">
+                    ✨ Cung Đình
+                </div>
+                <div class="nav-item" id="nav-market" onclick="switchTab('market')" style="border-left: 2px solid #9e9e9e; border-radius: 0 8px 8px 0; padding: 10px; font-size: 14px;">
+                    📦 Chợ Đen
+                </div>
+            </div>
         </div>
         <!-- KẾT THÚC VÁ -->
 
