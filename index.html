@@ -92,6 +92,32 @@
             transform: translateY(0);
         }
 
+        /* 4. Hiệu ứng cho Dropdown Menu Cửa Hàng */
+        .sidebar .has-dropdown .nav-link {
+            padding: 12px 15px;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+        }
+        .sidebar .has-dropdown .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar .dropdown-menu {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .sidebar .sub-item {
+            opacity: 0.8;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .sidebar .sub-item:hover, .sidebar .sub-item.active {
+            opacity: 1;
+            transform: translateX(5px);
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -103,8 +129,13 @@
             <div class="user-name" id="sidebarName">Khách vãng lai</div>
             <div class="user-badge badge-student" id="sidebarRole">👨‍🎓 Học Sinh</div>
             <div class="user-badge badge-realm" id="sidebarRealm">🌍 Phủ: Đang tải...</div>
-            <div style="font-size: 12px; color: #666; margin-top: 5px;">🔍 Kính Lúp: <span id="ui-glass-count" style="font-weight:bold; color:var(--primary);">0</span></div>
-            <div style="font-size: 12px; color: #666; margin-top: 5px;">🛡️ Bùa Bảo Hộ: <span id="ui-shield-count" style="font-weight:bold; color:var(--primary);">0</span></div>
+            
+            <!-- ĐÃ VÁ: TÚI ĐỒ PHÂN LOẠI HIỆU NĂNG -->
+            <div style="font-size: 11px; color: #666; margin-top: 5px;">🔍 Kính lúp (100%): <span id="ui-glass-100" style="font-weight:bold; color:#ffd700;">0</span> | (80%): <span id="ui-glass-80" style="font-weight:bold; color:#9e9e9e;">0</span></div>
+            <div style="font-size: 11px; color: #666; margin-top: 5px;">🛡️ Bùa bảo hộ (100%): <span id="ui-shield-100" style="font-weight:bold; color:#ffd700;">0</span> | (80%): <span id="ui-shield-80" style="font-weight:bold; color:#9e9e9e;">0</span></div>
+            <div style="font-size: 11px; color: #666; margin-top: 5px;">⏳ Đồng hồ (100%): <span id="ui-time-100" style="font-weight:bold; color:#ffd700;">0</span> | (80%): <span id="ui-time-80" style="font-weight:bold; color:#9e9e9e;">0</span></div>
+            <div style="font-size: 11px; color: #666; margin-top: 5px;">🔥 Ngọn đuốc (100%): <span id="ui-torch-100" style="font-weight:bold; color:#ffd700;">0</span> | (80%): <span id="ui-torch-80" style="font-weight:bold; color:#9e9e9e;">0</span></div>
+            
             <div style="font-size: 12px; color: #666; margin-top: 5px;">📜 Khế Ước: <span id="ui-mentor-expiry" style="font-weight:bold; color:#d32f2f;">Chưa ký</span></div>
             <div style="font-size: 13px; color: #555; margin-top: 15px; text-align: left; padding-top: 15px; border-top: 1px dashed #ccc;">
                 <div style="margin-bottom: 8px;">📈 Tiến độ tuần: <span id="ui-weekly-progress" style="font-weight:bold;">---</span></div>
@@ -118,25 +149,22 @@
         <div class="nav-item active" id="nav-library" onclick="switchTab('library')">☁️ Kho Bài Học</div>
         <div class="nav-item" id="nav-stats" onclick="switchTab('stats')">📊 Thống Kê</div>
         
-        <!-- ĐÃ VÁ LẠI: HỆ THỐNG MENU CỬA HÀNG KÉP (XỔ DỌC CHUẨN) -->
+        <!-- HỆ THỐNG MENU CỬA HÀNG KÉP -->
         <div style="display: flex; flex-direction: column; width: 100%;">
-            <!-- Nút Cửa Hàng Mẹ -->
             <div class="nav-item" id="nav-shop-main" onclick="toggleStoreMenu()" style="display: flex; justify-content: space-between; align-items: center;">
                 <div>🛒 Cửa Hàng</div>
                 <div id="store-arrow" style="font-size: 10px; transition: transform 0.3s; margin-left: auto;">▼</div>
             </div>
             
-            <!-- Danh sách con xổ dọc -->
             <div id="store-dropdown" style="display: none; flex-direction: column; gap: 5px; padding-left: 20px; margin-top: 5px; margin-bottom: 5px;">
                 <div class="nav-item" id="nav-shop" onclick="switchTab('shop')" style="border-left: 2px solid #ffd700; border-radius: 0 8px 8px 0; padding: 10px; font-size: 14px;">
-                    ✨ Hàng Chính Hãng
+                    ✨ Cung Đình
                 </div>
                 <div class="nav-item" id="nav-market" onclick="switchTab('market')" style="border-left: 2px solid #9e9e9e; border-radius: 0 8px 8px 0; padding: 10px; font-size: 14px;">
-                    📦 Hàng Thanh Lý
+                    📦 Chợ Đen
                 </div>
             </div>
         </div>
-        <!-- KẾT THÚC VÁ -->
 
         <div class="nav-item" id="nav-leaderboard" onclick="switchTab('leaderboard')">🏆 Xếp Hạng</div>
         <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">⚙️ Cài Đặt</div>
@@ -197,7 +225,9 @@
                 </div>
             </div>
 
-            <!-- VIEW: CỬA HÀNG CHÍNH HÃNG -->
+            <!-- ============================================== -->
+            <!-- VIEW: CỬA HÀNG CHÍNH HÃNG (STORE 100%) -->
+            <!-- ============================================== -->
             <div id="view-shop" class="view-section">
                 <div class="header">
                     <h1>✨ Cung Đình (Chính Hãng)</h1><p>Hàng hiệu cao cấp, đi kèm 5% XP & Voucher 45%.</p>
@@ -260,13 +290,17 @@
                         <button class="btn-buy" style="background: linear-gradient(45deg, #ff9800, #f57f17);" onclick="openWheelModal()">Quay Ngay</button>
                     </div>
 
-                    <div class="shop-item"><div class="item-icon">🪪</div><div class="item-title">Thẻ Đổi Tên</div><div class="item-desc">Thay đổi tên hiển thị của bạn. Có hiệu ứng Neon Gold 7 ngày.</div><div class="item-price">🪙 5000</div><button class="btn-buy" onclick="buyItem('rename', 5000)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🧪</div><div class="item-title">Bình Tiên XP x2</div><div class="item-desc">Nhân đôi điểm XP trong 24 giờ.</div><div class="item-price">🪙 150</div><button class="btn-buy" onclick="buyItem('potion', 150)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🧪</div><div class="item-title">Bình Tiên XP x3</div><div class="item-desc">Nhân ba XP trong 6 giờ.</div><div class="item-price">🪙 1500</div><button class="btn-buy" onclick="buyItem('potion_x3', 1500)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🎭</div><div class="item-title">Mặt Nạ Hắc Ám</div><div class="item-desc">Ẩn danh hoàn toàn trên BXH. Tác dụng 24 giờ.</div><div class="item-price">🪙 250</div><button class="btn-buy" onclick="buyItem('mask', 250)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🔍</div><div class="item-title">Kính Lúp 50/50</div><div class="item-desc">Loại bỏ 2 đáp án sai.</div><div class="item-price">🪙 200</div><button class="btn-buy" onclick="buyItem('glass', 200)">Đổi Ngay</button></div>
-                    <div class="shop-item"><div class="item-icon">🛡️</div><div class="item-title">Bùa Bảo Hộ</div><div class="item-desc">Bảo vệ chuỗi ngày học trong 3 ngày vắng mặt.</div><div class="item-price">🪙 8000</div><button class="btn-buy" onclick="buyItem('shield', 8000)">Đổi Ngay</button></div>
-                    
+                    <!-- PHÁP BẢO CHÍNH HÃNG (CÓ BADGE) -->
+                    <div class="shop-item"><div class="item-icon">🪪</div><div class="item-title">Thẻ Đổi Tên <span style="font-size:10px; background:#fff9c4; color:#f57f17; padding:2px 5px; border-radius:4px; border:1px solid #f57f17;">✨ 100% Gốc</span></div><div class="item-desc">Thay đổi tên. Có hiệu ứng Neon Gold 7 ngày.</div><div class="item-price">🪙 5000</div><button class="btn-buy" onclick="buyItem('rename_100', 5000)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🧪</div><div class="item-title">Bình Tiên x2 <span style="font-size:10px; background:#fff9c4; color:#f57f17; padding:2px 5px; border-radius:4px; border:1px solid #f57f17;">✨ 100% Gốc</span></div><div class="item-desc">Nhân đôi điểm XP trong 24 giờ.</div><div class="item-price">🪙 150</div><button class="btn-buy" onclick="buyItem('potion_100', 150)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🧪</div><div class="item-title">Bình Tiên x3 <span style="font-size:10px; background:#fff9c4; color:#f57f17; padding:2px 5px; border-radius:4px; border:1px solid #f57f17;">✨ 100% Gốc</span></div><div class="item-desc">Nhân ba XP trong 6 giờ.</div><div class="item-price">🪙 1500</div><button class="btn-buy" onclick="buyItem('potion_x3_100', 1500)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🎭</div><div class="item-title">Mặt Nạ Ẩn Danh <span style="font-size:10px; background:#fff9c4; color:#f57f17; padding:2px 5px; border-radius:4px; border:1px solid #f57f17;">✨ 100% Gốc</span></div><div class="item-desc">Ẩn danh hoàn toàn trên BXH trong 24 giờ.</div><div class="item-price">🪙 250</div><button class="btn-buy" onclick="buyItem('mask_100', 250)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🔍</div><div class="item-title">Kính Lúp <span style="font-size:10px; background:#fff9c4; color:#f57f17; padding:2px 5px; border-radius:4px; border:1px solid #f57f17;">✨ 100% Gốc</span></div><div class="item-desc">Loại bỏ 2 đáp án sai.</div><div class="item-price">🪙 200</div><button class="btn-buy" onclick="buyItem('glass_100', 200)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🛡️</div><div class="item-title">Bùa Bảo Hộ <span style="font-size:10px; background:#fff9c4; color:#f57f17; padding:2px 5px; border-radius:4px; border:1px solid #f57f17;">✨ 100% Gốc</span></div><div class="item-desc">Bảo vệ chuỗi trong 3 ngày vắng mặt.</div><div class="item-price">🪙 8000</div><button class="btn-buy" onclick="buyItem('shield_100', 8000)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">⏳</div><div class="item-title">Đồng Hồ <span style="font-size:10px; background:#fff9c4; color:#f57f17; padding:2px 5px; border-radius:4px; border:1px solid #f57f17;">✨ 100% Gốc</span></div><div class="item-desc">Đóng băng 30s thời gian làm bài.</div><div class="item-price">🪙 300</div><button class="btn-buy" onclick="buyItem('time_100', 300)">Đổi Ngay</button></div>
+                    <div class="shop-item"><div class="item-icon">🔥</div><div class="item-title">Ngọn Đuốc <span style="font-size:10px; background:#fff9c4; color:#f57f17; padding:2px 5px; border-radius:4px; border:1px solid #f57f17;">✨ 100% Gốc</span></div><div class="item-desc">Mở khóa 2 chữ cái (Dành cho gõ chính tả).</div><div class="item-price">🪙 250</div><button class="btn-buy" onclick="buyItem('torch_100', 250)">Đổi Ngay</button></div>
+
+                    <!-- GIAO DIỆN & CỘT MỐC (KHÔNG ĐỔI) -->
                     <div class="shop-item"><div class="item-icon">❄️</div><div class="item-title">Đá Hoa Tuyết</div><div class="item-desc">Đổi biểu tượng Streak.</div><div class="item-price" id="price-streak_snow">🪙 5000</div><button class="btn-buy" id="btn-streak_snow" onclick="buyItem('streak_snow', 5000)">Đổi Ngay</button></div>
                     <div class="shop-item"><div class="item-icon">🌸</div><div class="item-title">Đá Hoa Đào</div><div class="item-desc">Đổi biểu tượng Streak.</div><div class="item-price" id="price-streak_peach">🪙 5000</div><button class="btn-buy" id="btn-streak_peach" onclick="buyItem('streak_peach', 5000)">Đổi Ngay</button></div>
                     <div class="shop-item"><div class="item-icon">⚽</div><div class="item-title">Đá Túc Cầu</div><div class="item-desc">Đổi biểu tượng Streak.</div><div class="item-price" id="price-streak_soccer">🪙 5000</div><button class="btn-buy" id="btn-streak_soccer" onclick="buyItem('streak_soccer', 5000)">Đổi Ngay</button></div>
@@ -281,16 +315,120 @@
                 </div>
             </div>
 
-            <!-- VIEW: CỬA HÀNG THANH LÝ (MỚI THÊM) -->
+            <!-- ============================================== -->
+            <!-- VIEW: CỬA HÀNG THANH LÝ (MARKET 80%) -->
+            <!-- ============================================== -->
             <div id="view-market" class="view-section" style="display: none;">
                 <div class="header">
                     <h1 style="color: #616161;">📦 Chợ Đen (Thanh Lý)</h1>
-                    <p style="color: #9e9e9e;">Hàng xách tay, mua rẻ hơn 20% nhưng chịu phí 5% giao dịch. Không có XP Bonus.</p>
+                    <p style="color: #9e9e9e;">Hàng xách tay giá rẻ. Khi mua chịu thêm <b style="color:#d32f2f;">5% phí</b>. Không có XP Bonus.</p>
                 </div>
                 <div class="shop-grid" id="marketGrid">
-                    <!-- Khu vực này sẽ được đổ dữ liệu bằng JavaScript sau -->
-                    <div style="grid-column: 1 / -1; text-align: center; color: #888; padding: 20px; font-style: italic;">
-                        Đang xây dựng sạp hàng... Bệ hạ chờ thợ rèn viết JS đổ vào nhé!
+                    <!-- KHU VỰC THU MUA CỦA HỆ THỐNG -->
+                    <div style="grid-column: 1 / -1; background: #fff3e0; border: 2px dashed #ff9800; border-radius: 8px; padding: 15px; text-align: center; margin-bottom: 10px;">
+                        <h3 style="color: #e65100; margin-bottom: 5px;">🏦 Ngự Tiền Thu Mua Phủ</h3>
+                        <p style="font-size: 13px; color: #555;">Hệ thống nhận thu mua pháp bảo <b style="color:#f57f17;">(Hiệu năng 100%)</b> không dùng đến của Bệ hạ và hoàn lại <b>80% Vàng</b> ngay lập tức.</p>
+                        <div style="margin-top: 10px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;" id="pawnshopContainer">
+                            <!-- Nút bán đồ sẽ đổ vào đây bằng JS -->
+                            <span style="font-size: 12px; color: #888; font-style: italic;">Túi đồ của bạn hiện chưa có pháp bảo 100% nào để bán.</span>
+                        </div>
+                    </div>
+
+                    <!-- DANH SÁCH HÀNG THANH LÝ (80%) MÀ HỌC SINH CÓ THỂ MUA -->
+                    <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
+                        <div class="item-icon" style="filter: grayscale(100%);">🪪</div>
+                        <div class="item-title" style="color: #616161;">Thẻ Đổi Tên <span style="font-size:10px; background:#e0e0e0; color:#424242; padding:2px 5px; border-radius:4px; border:1px solid #9e9e9e;">📦 80% Cũ</span></div>
+                        <div class="item-desc">Đổi tên cơ bản. KHÔNG CÓ hiệu ứng Neon Gold.</div>
+                        <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
+                            <span style="text-decoration: line-through; opacity: 0.5;">5000</span>
+                            <span>🪙 4000</span>
+                        </div>
+                        <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
+                        <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('rename_80', 4000)">Mua Lại</button>
+                    </div>
+
+                    <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
+                        <div class="item-icon" style="filter: grayscale(100%);">🧪</div>
+                        <div class="item-title" style="color: #616161;">Bình Tiên x2 <span style="font-size:10px; background:#e0e0e0; color:#424242; padding:2px 5px; border-radius:4px; border:1px solid #9e9e9e;">📦 80% Cũ</span></div>
+                        <div class="item-desc">Chỉ nhân đôi XP trong <b>12 giờ</b>. Bị pha loãng.</div>
+                        <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
+                            <span style="text-decoration: line-through; opacity: 0.5;">150</span>
+                            <span>🪙 120</span>
+                        </div>
+                        <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
+                        <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('potion_80', 120)">Mua Lại</button>
+                    </div>
+
+                    <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
+                        <div class="item-icon" style="filter: grayscale(100%);">🧪</div>
+                        <div class="item-title" style="color: #616161;">Bình Tiên x3 <span style="font-size:10px; background:#e0e0e0; color:#424242; padding:2px 5px; border-radius:4px; border:1px solid #9e9e9e;">📦 80% Cũ</span></div>
+                        <div class="item-desc">Chỉ nhân ba XP trong <b>3 giờ</b>. Bị pha loãng.</div>
+                        <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
+                            <span style="text-decoration: line-through; opacity: 0.5;">1500</span>
+                            <span>🪙 1200</span>
+                        </div>
+                        <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
+                        <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('potion_x3_80', 1200)">Mua Lại</button>
+                    </div>
+
+                    <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
+                        <div class="item-icon" style="filter: grayscale(100%);">🎭</div>
+                        <div class="item-title" style="color: #616161;">Mặt Nạ Rách <span style="font-size:10px; background:#e0e0e0; color:#424242; padding:2px 5px; border-radius:4px; border:1px solid #9e9e9e;">📦 80% Cũ</span></div>
+                        <div class="item-desc">Chỉ ẩn danh trên BXH trong <b>12 giờ</b>.</div>
+                        <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
+                            <span style="text-decoration: line-through; opacity: 0.5;">250</span>
+                            <span>🪙 200</span>
+                        </div>
+                        <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
+                        <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('mask_80', 200)">Mua Lại</button>
+                    </div>
+
+                    <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
+                        <div class="item-icon" style="filter: grayscale(100%);">🔍</div>
+                        <div class="item-title" style="color: #616161;">Kính Lúp Bụi <span style="font-size:10px; background:#e0e0e0; color:#424242; padding:2px 5px; border-radius:4px; border:1px solid #9e9e9e;">📦 80% Cũ</span></div>
+                        <div class="item-desc">Chỉ loại bỏ được <b>1 đáp án sai</b>.</div>
+                        <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
+                            <span style="text-decoration: line-through; opacity: 0.5;">200</span>
+                            <span>🪙 160</span>
+                        </div>
+                        <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
+                        <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('glass_80', 160)">Mua Lại</button>
+                    </div>
+
+                    <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
+                        <div class="item-icon" style="filter: grayscale(100%);">🛡️</div>
+                        <div class="item-title" style="color: #616161;">Bùa Cũ Mòn <span style="font-size:10px; background:#e0e0e0; color:#424242; padding:2px 5px; border-radius:4px; border:1px solid #9e9e9e;">📦 80% Cũ</span></div>
+                        <div class="item-desc">Chỉ bảo vệ chuỗi trong <b>1 ngày</b> vắng mặt.</div>
+                        <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
+                            <span style="text-decoration: line-through; opacity: 0.5;">8000</span>
+                            <span>🪙 6400</span>
+                        </div>
+                        <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
+                        <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('shield_80', 6400)">Mua Lại</button>
+                    </div>
+
+                    <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
+                        <div class="item-icon" style="filter: grayscale(100%);">⏳</div>
+                        <div class="item-title" style="color: #616161;">Đồng Hồ Vỡ <span style="font-size:10px; background:#e0e0e0; color:#424242; padding:2px 5px; border-radius:4px; border:1px solid #9e9e9e;">📦 80% Cũ</span></div>
+                        <div class="item-desc">Đóng băng <b>15s</b> thời gian làm bài.</div>
+                        <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
+                            <span style="text-decoration: line-through; opacity: 0.5;">300</span>
+                            <span>🪙 240</span>
+                        </div>
+                        <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
+                        <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('time_80', 240)">Mua Lại</button>
+                    </div>
+
+                    <div class="shop-item" style="border: 2px dashed #9e9e9e; background: #f5f5f5;">
+                        <div class="item-icon" style="filter: grayscale(100%);">🔥</div>
+                        <div class="item-title" style="color: #616161;">Ngọn Đuốc Yếu <span style="font-size:10px; background:#e0e0e0; color:#424242; padding:2px 5px; border-radius:4px; border:1px solid #9e9e9e;">📦 80% Cũ</span></div>
+                        <div class="item-desc">Chỉ mở khóa được <b>1 chữ cái</b> đầu tiên.</div>
+                        <div class="item-price" style="color: #424242; background: #e0e0e0; display:flex; justify-content: space-around;">
+                            <span style="text-decoration: line-through; opacity: 0.5;">250</span>
+                            <span>🪙 200</span>
+                        </div>
+                        <div style="font-size: 10px; color: #d32f2f; text-align: center; margin-bottom: 5px;">+5% Phí trung gian</div>
+                        <button class="btn-buy" style="background: #9e9e9e;" onclick="buyItem('torch_80', 200)">Mua Lại</button>
                     </div>
                 </div>
             </div>
