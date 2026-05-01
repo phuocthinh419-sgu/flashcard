@@ -1938,7 +1938,8 @@ function renderFlashSaleBanner() {
     if (!banner) {
         banner = document.createElement('div');
         banner.id = 'flashSaleBanner';
-        banner.style.cssText = "position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 9999; background: linear-gradient(45deg, #ff1744, #d50000); color: white; padding: 10px 20px; border-radius: 30px; font-weight: 900; box-shadow: 0 4px 15px rgba(255, 23, 68, 0.6); display: flex; align-items: center; gap: 10px; cursor: pointer; border: 2px solid #ffd700; animation: pulse 1.5s infinite; white-space: nowrap;";
+        // [SỬA TỬ HUYỆT MOBILE]: Thêm max-width, flex-wrap, bỏ white-space: nowrap
+        banner.style.cssText = "position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 9999; background: linear-gradient(45deg, #ff1744, #d50000); color: white; padding: 8px 15px; border-radius: 25px; font-weight: 900; box-shadow: 0 4px 15px rgba(255, 23, 68, 0.6); display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; cursor: pointer; border: 2px solid #ffd700; animation: pulse 1.5s infinite; max-width: 92vw; width: max-content; text-align: center;";
         banner.onclick = claimFlashSaleVoucher;
         document.body.appendChild(banner);
     }
@@ -1946,7 +1947,9 @@ function renderFlashSaleBanner() {
     if (window.currentFlashSale && window.currentFlashSale.active) {
         let fs = window.currentFlashSale;
         let textStr = fs.type === 'mega' ? `🔥 ĐẠI LỄ VOUCHER (Còn: ${fs.q90}x90% | ${fs.q75}x75% | ${fs.q50}x50% | ∞x25%)` : `🔥 SĂN VOUCHER VIP -${fs.discount}% (Còn ${fs.qty} mã)`;
-        banner.innerHTML = `<span style="font-size: 14px;">${textStr}</span> <button style="background: #ffd700; color: #d50000; border: none; padding: 5px 12px; border-radius: 20px; font-weight: 900; cursor: pointer; transition: 0.2s;">GIẬT MÃ!</button>`;
+        
+        // Dùng clamp để chữ tự động thu nhỏ trên Mobile và to trên PC
+        banner.innerHTML = `<span style="font-size: clamp(11px, 3.5vw, 14px); line-height: 1.4;">${textStr}</span> <button style="background: #ffd700; color: #d50000; border: none; padding: 5px 12px; border-radius: 20px; font-weight: 900; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); flex-shrink: 0; white-space: nowrap;">GIẬT MÃ!</button>`;
         banner.style.display = 'flex';
     } else {
         banner.style.display = 'none';
