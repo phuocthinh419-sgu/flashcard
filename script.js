@@ -261,10 +261,14 @@ function updateUI() {
     if(document.getElementById('ui-torch-100')) document.getElementById('ui-torch-100').innerText = userData.torch_100 || 0;
     if(document.getElementById('ui-torch-80')) document.getElementById('ui-torch-80').innerText = userData.torch_80 || 0;
     
+    // 🌟 SỬA TỬ HUYỆT: Xóa riêng class hiệu ứng, không xóa sạch class cấu trúc
     let streakIconEl = document.getElementById('ui-streak-icon');
     if (streakIconEl) {
-        let currentIcon = userData.streakIcon || '🔥'; streakIconEl.innerText = currentIcon; streakIconEl.className = ''; 
-        if (['❄️', '🌸', '⚽', '🏀'].includes(currentIcon)) streakIconEl.classList.add('icon-spin'); else if (currentIcon === '🔥') streakIconEl.classList.add('icon-neon-fire');
+        let currentIcon = userData.streakIcon || '🔥'; 
+        streakIconEl.innerText = currentIcon; 
+        streakIconEl.classList.remove('icon-spin', 'icon-neon-fire'); 
+        if (['❄️', '🌸', '⚽', '🏀'].includes(currentIcon)) streakIconEl.classList.add('icon-spin'); 
+        else if (currentIcon === '🔥') streakIconEl.classList.add('icon-neon-fire');
     }
 
     let mentorExpiryEl = document.getElementById('ui-mentor-expiry');
@@ -295,12 +299,14 @@ function updateUI() {
         if(forceBtn) forceBtn.style.display = 'none'; if(document.getElementById('adminNoticeControl')) document.getElementById('adminNoticeControl').style.display = 'none';
     }            
     
-    let itemsToCheck = ['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow', 'theme_royal']; 
+    // Cập nhật tình trạng sở hữu, bổ sung tính năng dùng đồ mặc định
+    let itemsToCheck = ['streak_fire', 'streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_default', 'theme_aurora', 'theme_snow', 'theme_royal']; 
     if(userData.purchasedItems) { 
         itemsToCheck.forEach(item => { 
             let btn = document.getElementById('btn-' + item); let priceTag = document.getElementById('price-' + item); 
             if(btn && priceTag) { 
-                if(userData.purchasedItems.includes(item)) { btn.innerText = "Dùng Ngay"; btn.style.background = "#9e9e9e"; priceTag.innerText = "Đã sở hữu"; } 
+                let isDefault = (item === 'streak_fire' || item === 'theme_default');
+                if(isDefault || userData.purchasedItems.includes(item)) { btn.innerText = "Dùng Ngay"; btn.style.background = "#9e9e9e"; priceTag.innerText = "Đã sở hữu"; } 
                 else { btn.innerText = "Đổi Ngay"; btn.style.background = ""; let price = 5000; if(item === 'theme_aurora' || item === 'theme_snow') price = 15000; else if(item === 'theme_royal') price = 20000; priceTag.innerText = "🪙 " + price; } 
             } 
         }); 
@@ -308,6 +314,9 @@ function updateUI() {
     if (document.getElementById('ui-weekly-xp')) document.getElementById('ui-weekly-xp').innerText = userData.weeklyXp || 0; 
     if (document.getElementById('ui-highest-xp')) document.getElementById('ui-highest-xp').innerText = userData.highestWeeklyXp || 0;
     
+    // 🌟 SỬA TỬ HUYỆT: Gọi hàm áp dụng giao diện trực tiếp để UI lập tức đổi màu
+    applyTheme(userData.theme);
+
     if (typeof renderBracket === 'function') renderBracket();
     if (typeof renderAchievements === 'function') renderAchievements();
     if (typeof loadMarketItems === 'function') loadMarketItems(); 
@@ -354,12 +363,18 @@ function applyTheme(themeName) { document.body.classList.remove('theme-aurora', 
 function buyItem(itemType, basePrice) { 
     if (!currentUser) return alert("Hệ thống yêu cầu phải đăng nhập mới sử dụng tính năng giao dịch!"); 
     
-    // 1. Kiểm tra và áp dụng ngay nếu là đồ trang trí đã sở hữu
-    if (['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow', 'theme_royal'].includes(itemType)) {
-        if (userData.purchasedItems && userData.purchasedItems.includes(itemType)) {
+    // 1. Kiểm tra và áp dụng ngay nếu là đồ trang trí đã sở hữu (Đã nâng cấp để cho phép về lại nguyên thủy)
+    let decorItems = ['streak_fire', 'streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_default', 'theme_aurora', 'theme_snow', 'theme_royal'];
+    
+    if (decorItems.includes(itemType)) {
+        let isDefault = (itemType === 'streak_fire' || itemType === 'theme_default');
+        if (isDefault || (userData.purchasedItems && userData.purchasedItems.includes(itemType))) {
             let updates = {};
-            if (itemType.startsWith('streak_')) updates.streakIcon = itemType === 'streak_snow' ? '❄️' : itemType === 'streak_peach' ? '🌸' : itemType === 'streak_soccer' ? '⚽' : itemType === 'streak_basket' ? '🏀' : '🎓';
-            else if (itemType.startsWith('theme_')) updates.theme = itemType.replace('_', '-');
+            if (itemType.startsWith('streak_')) {
+                updates.streakIcon = itemType === 'streak_snow' ? '❄️' : itemType === 'streak_peach' ? '🌸' : itemType === 'streak_soccer' ? '⚽' : itemType === 'streak_basket' ? '🏀' : itemType === 'streak_cap' ? '🎓' : '🔥';
+            } else if (itemType.startsWith('theme_')) {
+                updates.theme = itemType.replace('_', '-');
+            }
             db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => { 
                 Object.assign(userData, updates);
                 updateUI(); 
@@ -425,8 +440,8 @@ function buyItem(itemType, basePrice) {
         if (itemType.startsWith('mask_100')) updates.maskExpiry = Date.now() + 86400000;
         if (itemType.startsWith('mask_80')) updates.maskExpiry = Date.now() + 43200000;
 
-        // Lưu danh sách đồ trang trí
-        if (['streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_aurora', 'theme_snow', 'theme_royal'].includes(itemType)) {
+        // Lưu danh sách đồ trang trí (Không lưu các món mặc định)
+        if (decorItems.includes(itemType) && itemType !== 'streak_fire' && itemType !== 'theme_default') {
             if (!userData.purchasedItems) userData.purchasedItems = [];
             userData.purchasedItems.push(itemType);
             updates.purchasedItems = userData.purchasedItems;
