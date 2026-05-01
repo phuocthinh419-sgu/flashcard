@@ -2210,3 +2210,39 @@ function skipDailyQuiz() {
     let modal = document.getElementById('dailyQuizModal');
     if (modal) modal.remove();
 }
+
+// =========================================================
+// 🌌 MA PHÁP KHỞI TẠO MƯA SAO BĂNG CHÂN THỰC 100%
+// =========================================================
+function generateMeteors() {
+    let container = document.getElementById('meteor-shower-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'meteor-shower-container';
+        document.body.prepend(container); // Ép nằm dưới cùng các lớp
+    }
+    container.innerHTML = ''; 
+    
+    // Sinh ra 25 tia sao băng với các chỉ số hoàn toàn ngẫu nhiên
+    for(let i = 0; i < 25; i++) {
+        let meteor = document.createElement('div');
+        meteor.className = 'realistic-meteor';
+        
+        // Tọa độ xuất phát rải rác từ tít bên phải (+150vw) sang tận mép trái (-20vw)
+        meteor.style.left = (Math.random() * 170 - 20) + 'vw'; 
+        meteor.style.top = (Math.random() * -50 - 10) + 'vh'; 
+        
+        // Độ dài sao băng (tia ngắn, tia dài)
+        meteor.style.height = (Math.random() * 80 + 40) + 'px';
+        
+        // Tốc độ rơi: Lững lờ, chân thực (từ 4s đến 9s)
+        meteor.style.animationDuration = (Math.random() * 5 + 4) + 's';
+        
+        // Độ trễ ngẫu nhiên để không rụng thành chùm (0s đến 15s)
+        meteor.style.animationDelay = (Math.random() * 15) + 's';
+        
+        container.appendChild(meteor);
+    }
+}
+// Tự động kích hoạt ngay khi vương quốc tải xong
+setTimeout(generateMeteors, 1000);
