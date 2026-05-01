@@ -135,22 +135,47 @@
             animation: starTwinkle 2.5s infinite alternate;
         }
 
-        /* 3. MƯA SAO BĂNG KHỔNG LỒ (Góc trên phải rơi xuống) */
-        body.theme-space .main-wrapper::before {
-            content: ''; position: fixed; top: -50px; right: 10%; width: 200px; height: 2px;
-            background: linear-gradient(to left, rgba(255,255,255,0), #ffffff);
-            box-shadow: 0 0 10px #ffffff, 0 0 20px #00e5ff;
-            z-index: -1; transform: rotate(-45deg);
-            animation: shootingStar 3.5s infinite;
+        /* 3. MƯA SAO BĂNG CHÂN THỰC (Đa tầng, đa tốc độ) */
+        #meteor-shower-container {
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100vw; height: 100vh; 
+            pointer-events: none; 
+            z-index: -2; 
+            overflow: hidden;
+        }
+        body.theme-space #meteor-shower-container {
+            display: block; /* Chỉ hiện khi Bệ hạ mặc áo Vũ Trụ */
         }
 
-        /* 4. TIỂU HÀNH TINH BAY SƯỢT QUA (Trễ nhịp hơn để tạo độ tự nhiên) */
-        body.theme-space .main-wrapper::after {
-            content: ''; position: fixed; top: 30vh; right: -50px; width: 120px; height: 1px;
-            background: linear-gradient(to left, rgba(255,255,255,0), #ffd700);
-            box-shadow: 0 0 8px #ffd700, 0 0 15px #ff9800;
-            z-index: -1; transform: rotate(-35deg);
-            animation: shootingStar 6s infinite 2s; 
+        .realistic-meteor {
+            position: absolute;
+            width: 2px;
+            /* Đuôi sao băng mờ dần về phía sau */
+            background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 100%);
+            transform: rotate(45deg); /* Rơi chéo từ trên-phải xuống dưới-trái */
+            opacity: 0;
+            animation: realMeteorFall linear infinite;
+        }
+
+        /* Lõi phát sáng ở đầu sao băng */
+        .realistic-meteor::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 4px; height: 4px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px 2px #fff, 0 0 20px 5px #00e5ff;
+        }
+
+        @keyframes realMeteorFall {
+            0% { transform: translate(0, 0) rotate(45deg); opacity: 0; }
+            10% { opacity: 1; }
+            70% { transform: translate(-80vw, 80vh) rotate(45deg); opacity: 0; }
+            100% { opacity: 0; }
         }
 
         /* 5. GIAO DIỆN PHA LÊ (Kính mờ) CHO TẤT CẢ THẺ BÀI ĐỂ THẤY VŨ TRỤ BÊN DƯỚI */
@@ -183,11 +208,6 @@
         @keyframes starTwinkle {
             0% { opacity: 0.3; }
             100% { opacity: 1; filter: drop-shadow(0 0 4px #fff); }
-        }
-        @keyframes shootingStar {
-            0% { transform: translate(0, 0) rotate(-45deg); opacity: 1; }
-            20% { transform: translate(-120vw, 120vh) rotate(-45deg); opacity: 0; }
-            100% { transform: translate(-120vw, 120vh) rotate(-45deg); opacity: 0; }
         }
     </style>
 </head>
