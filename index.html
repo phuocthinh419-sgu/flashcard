@@ -24,10 +24,10 @@
         }
         .icon-spin {
             display: inline-block;
-            animation: spin-clockwise 4s linear infinite; /* Xoay đều đặn trong 4 giây */
+            animation: spin-clockwise 4s linear infinite;
         }
 
-        /* 2. Lửa Tím Neon Chân Thật (Gốc đứng im, ngọn bập bùng, tỏa sáng) */
+        /* 2. Lửa Tím Neon Chân Thật */
         @keyframes true-neon-fire {
             0%   { filter: hue-rotate(260deg) saturate(300%) drop-shadow(0 0 2px #d500f9) drop-shadow(0 -2px 4px #aa00ff); transform: skewX(0deg) scaleY(1); }
             20%  { filter: hue-rotate(265deg) saturate(300%) drop-shadow(0 0 4px #e040fb) drop-shadow(0 -5px 8px #d500f9); transform: skewX(1deg) scaleY(1.05); }
@@ -38,8 +38,8 @@
         }
         .icon-neon-fire {
             display: inline-block;
-            transform-origin: bottom center; /* Đóng đinh gốc lửa xuống đất */
-            animation: true-neon-fire 0.25s ease-in-out infinite alternate; /* Cháy mượt mà không bị giật cục */
+            transform-origin: bottom center;
+            animation: true-neon-fire 0.25s ease-in-out infinite alternate;
         }
 
         /* 3. Khung Ngự Tiền Gia Sư lơ lửng */
@@ -47,7 +47,7 @@
             position: fixed;
             bottom: 25px;
             right: 25px;
-            z-index: 9990; /* Ẩn dưới Đài Tỷ Võ (9999) */
+            z-index: 9990; 
             display: flex;
             flex-direction: column;
             align-items: flex-end;
@@ -97,64 +97,97 @@
         .sidebar .nav-item:hover { background: rgba(255, 255, 255, 0.1); }
 
         /* =========================================
-           🌌 GIAO DIỆN VŨ TRỤ (MƯA SAO BĂNG)
+           🌌 ĐẠI PHÁP TRẬN: VŨ TRỤ CHÂN THỰC 100%
         ========================================= */
+        /* 1. Nền không gian sâu thẳm & Ép các lớp phải trong suốt */
+        body.theme-space,
+        body.theme-space .main-wrapper,
+        body.theme-space .main-content,
+        body.theme-space .view-section {
+            background-color: transparent !important;
+            background: transparent !important;
+            color: #fff;
+        }
+
         body.theme-space {
-            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
-            color: #e2e8f0;
+            background: linear-gradient(to bottom, #020111 10%, #20124d 100%) !important;
+            background-attachment: fixed !important;
             overflow-x: hidden;
-            position: relative;
-            z-index: 0;
         }
 
-        /* Các tầng sao lấp lánh */
+        /* 2. TẦNG SAO LẤP LÁNH KÍN TRỜI */
         body.theme-space::before {
-            content: '';
-            position: fixed;
-            top: 0; left: 0; width: 200vw; height: 200vh;
-            background: transparent;
-            z-index: -2;
+            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -3;
             background-image: 
-                radial-gradient(2px 2px at 20px 30px, #ffffff, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 150px 150px, #ffffff, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 300px 80px, #ffffff, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 50px 300px, #ffffff, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 250px 250px, #ffffff, rgba(0,0,0,0)),
-                radial-gradient(3px 3px at 400px 100px, #ffd700, rgba(0,0,0,0));
-            background-repeat: repeat;
-            background-size: 500px 500px;
-            animation: starsDrift 100s linear infinite;
+                radial-gradient(1px 1px at 10% 10%, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 20% 40%, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 30% 80%, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 40% 20%, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 50% 50%, #ffd700, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 60% 80%, #fff, rgba(0,0,0,0)),
+                radial-gradient(1.5px 1.5px at 70% 30%, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 80% 60%, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 90% 90%, #00e5ff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 95% 15%, #fff, rgba(0,0,0,0)),
+                radial-gradient(1.5px 1.5px at 15% 90%, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 85% 10%, #ffd700, rgba(0,0,0,0));
+            background-repeat: repeat; background-size: 200px 200px;
+            animation: starTwinkle 2.5s infinite alternate;
         }
 
-        /* Mưa sao băng (Meteor Shower) */
-        body.theme-space::after {
-            content: '';
-            position: fixed;
-            top: -50px; right: -50px;
-            width: 200px; height: 2px;
-            background: linear-gradient(to right, rgba(255,255,255,0), #fff);
-            filter: drop-shadow(0 0 8px #fff);
-            z-index: -1;
-            transform: rotate(45deg);
-            animation: meteorShower 4s infinite linear;
+        /* 3. MƯA SAO BĂNG KHỔNG LỒ (Góc trên phải rơi xuống) */
+        body.theme-space .main-wrapper::before {
+            content: ''; position: fixed; top: -50px; right: 10%; width: 200px; height: 2px;
+            background: linear-gradient(to left, rgba(255,255,255,0), #ffffff);
+            box-shadow: 0 0 10px #ffffff, 0 0 20px #00e5ff;
+            z-index: -1; transform: rotate(-45deg);
+            animation: shootingStar 3.5s infinite;
         }
 
-        /* Hiệu ứng chuyển động */
-        @keyframes starsDrift {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-500px); }
-        }
-        @keyframes meteorShower {
-            0% { transform: translate(100vw, -20vh) rotate(45deg); opacity: 1; }
-            20% { transform: translate(-20vw, 120vh) rotate(45deg); opacity: 0; }
-            100% { transform: translate(-20vw, 120vh) rotate(45deg); opacity: 0; }
+        /* 4. TIỂU HÀNH TINH BAY SƯỢT QUA (Trễ nhịp hơn để tạo độ tự nhiên) */
+        body.theme-space .main-wrapper::after {
+            content: ''; position: fixed; top: 30vh; right: -50px; width: 120px; height: 1px;
+            background: linear-gradient(to left, rgba(255,255,255,0), #ffd700);
+            box-shadow: 0 0 8px #ffd700, 0 0 15px #ff9800;
+            z-index: -1; transform: rotate(-35deg);
+            animation: shootingStar 6s infinite 2s; 
         }
 
-        /* Đổi màu các khung thẻ cho hợp vũ trụ */
-        body.theme-space .lib-card, body.theme-space .achieve-card {
-            background: rgba(15, 23, 42, 0.7) !important;
-            border-color: #3b82f6 !important;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+        /* 5. GIAO DIỆN PHA LÊ (Kính mờ) CHO TẤT CẢ THẺ BÀI ĐỂ THẤY VŨ TRỤ BÊN DƯỚI */
+        body.theme-space .lib-card, 
+        body.theme-space .achieve-card, 
+        body.theme-space .settings-card,
+        body.theme-space .workspace .panel,
+        body.theme-space .stats-overview-card {
+            background: rgba(10, 15, 40, 0.4) !important;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(0, 229, 255, 0.3) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+            color: #e0f7fa;
+        }
+
+        /* Tút lại chữ nghĩa cho phát sáng */
+        body.theme-space .header h1, 
+        body.theme-space .arena-title,
+        body.theme-space h3 {
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+            color: #fff !important;
+        }
+        
+        body.theme-space .stats-label {
+            color: #b3e5fc !important;
+        }
+
+        /* CHUYỂN ĐỘNG KEYFRAMES */
+        @keyframes starTwinkle {
+            0% { opacity: 0.3; }
+            100% { opacity: 1; filter: drop-shadow(0 0 4px #fff); }
+        }
+        @keyframes shootingStar {
+            0% { transform: translate(0, 0) rotate(-45deg); opacity: 1; }
+            20% { transform: translate(-120vw, 120vh) rotate(-45deg); opacity: 0; }
+            100% { transform: translate(-120vw, 120vh) rotate(-45deg); opacity: 0; }
         }
     </style>
 </head>
