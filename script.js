@@ -361,24 +361,46 @@ function switchTab(tabId) {
 function toggleSidebar() { let sidebar = document.getElementById('sidebar'); let overlay = document.getElementById('sidebarOverlay'); sidebar.classList.toggle('show'); if(sidebar.classList.contains('show')) { overlay.style.display = 'block'; setTimeout(() => overlay.style.opacity = '1', 10); } else { overlay.style.opacity = '0'; setTimeout(() => overlay.style.display = 'none', 300); } }
 function toggleDarkMode() { document.body.classList.toggle('dark-mode'); const isDark = document.body.classList.contains('dark-mode'); localStorage.setItem('darkMode', isDark ? 'true' : 'false'); document.getElementById('themeToggleBtn').innerText = isDark ? '☀️' : '🌙'; }
 function applyTheme(themeName) { 
-    document.body.classList.remove('theme-space', 'theme-snow', 'theme-aurora', 'theme-royal', 'dark-mode'); 
+    // 1. Tẩy các lớp áo cũ, nhưng TUYỆT ĐỐI KHÔNG xóa bừa dark-mode
+    document.body.classList.remove('theme-space', 'theme-snow', 'theme-aurora', 'theme-royal'); 
+    
     if (themeName && themeName !== 'theme_default') { 
         document.body.classList.add(themeName); 
-        if(themeName === 'theme-space' || themeName === 'theme-royal') { 
+        
+        // 2. Nếu là Vũ Trụ Không Gian -> Ép toàn bộ khung viền thành Màn Đêm (Dark Mode)
+        if(themeName === 'theme-space') { 
+            document.body.classList.add('dark-mode');
+            let btnToggle = document.getElementById('themeToggleBtn');
+            if(btnToggle) btnToggle.innerText = '☀️'; 
+            localStorage.setItem('darkMode', 'true'); 
+        } 
+        // 3. Nếu là Hoàng Gia -> Cho phép về nền sáng
+        else if(themeName === 'theme-royal') { 
+            document.body.classList.remove('dark-mode');
             let btnToggle = document.getElementById('themeToggleBtn');
             if(btnToggle) btnToggle.innerText = '🌙'; 
             localStorage.setItem('darkMode', 'false'); 
         } 
     } else {
-        if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
+        // 4. Nếu dùng Mặc Định -> Chiều theo ý thích Bật/Tắt của Bệ hạ trước đó
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            let btnToggle = document.getElementById('themeToggleBtn');
+            if(btnToggle) btnToggle.innerText = '☀️';
+        } else {
+            document.body.classList.remove('dark-mode');
+            let btnToggle = document.getElementById('themeToggleBtn');
+            if(btnToggle) btnToggle.innerText = '🌙';
+        }
     }
 }
 
 function buyItem(itemType, basePrice) { 
     if (!currentUser) return alert("Hệ thống yêu cầu phải đăng nhập mới sử dụng tính năng giao dịch!"); 
     
-    // 1. Kiểm tra và áp dụng ngay nếu là đồ trang trí đã sở hữu (Đã nâng cấp để cho phép về lại nguyên thủy)
-    let decorItems = ['streak_fire', 'streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_default', 'theme_space', 'theme_royal'];    
+    // 1. Kiểm tra và áp dụng ngay nếu là đồ trang trí đã sở hữu
+    let decorItems = ['streak_fire', 'streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_default', 'theme_space', 'theme_royal'];
+    
     if (decorItems.includes(itemType)) {
         let isDefault = (itemType === 'streak_fire' || itemType === 'theme_default');
         if (isDefault || (userData.purchasedItems && userData.purchasedItems.includes(itemType))) {
@@ -411,7 +433,12 @@ function buyItem(itemType, basePrice) {
     }
 
     // 3. Áp dụng Voucher và Buff Doraemon
-    if(userData.vouchers && userData.vouchers.length > 0) finalPrice = Math.floor(finalPrice * (100 - userData.vouchers[0]) / 100);
+    let usedVoucher = false; // [THẦN VÁ LỖI]: Cờ theo dõi xem có xài voucher không
+    if(userData.vouchers && userData.vouchers.length > 0) {
+        finalPrice = Math.floor(finalPrice * (100 - userData.vouchers[0]) / 100);
+        usedVoucher = true; // [THẦN VÁ LỖI]: Bắt quả tang đã cắn Voucher
+    }
+    
     if (userData.selectedMentor === 'doraemon' && userData.mentorExpiry > Date.now()) finalPrice = Math.floor(finalPrice * 0.85);
     if (isMarket) finalPrice = Math.floor(finalPrice * 1.05);
 
@@ -429,6 +456,12 @@ function buyItem(itemType, basePrice) {
     if (confirm(`Xác nhận thanh toán ${finalPrice} Vàng cho vật phẩm này?`)) {
         let updates = { gold: userData.gold - finalPrice };
         
+        // [THẦN VÁ LỖI]: THU HỒI VÀ TIÊU HỦY VOUCHER
+        if (usedVoucher) {
+            userData.vouchers.shift(); // Chém bay đầu cái mã xịn nhất vừa dùng
+            updates.vouchers = userData.vouchers;
+        }
+
         // Gán tên mới và cấp hiệu ứng Neon nếu mua Thẻ Chính Hãng
         if (newDisplayName) updates.displayName = newDisplayName;
         if (itemType === 'rename_100') {
