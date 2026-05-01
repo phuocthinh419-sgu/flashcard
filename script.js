@@ -326,7 +326,8 @@ function syncStatsToCloud() {
     if (currentUser && db) { 
         db.collection('vocab_users').doc(currentUser.uid).update({ 
             gold: userData.gold || 0, xp: userData.xp || 0, lifetime_xp: userData.lifetime_xp || 0, realm: userData.realm || "", streak: userData.streak || 1, displayName: userData.displayName || "", glass_100: userData.glass_100 || 0, glass_80: userData.glass_80 || 0, shield_100: userData.shield_100 || 0, shield_80: userData.shield_80 || 0, time_100: userData.time_100 || 0, time_80: userData.time_80 || 0, torch_100: userData.torch_100 || 0, torch_80: userData.torch_80 || 0, vouchers: userData.vouchers || [], streakIcon: userData.streakIcon || '🔥', theme: userData.theme || 'theme_default', purchasedItems: userData.purchasedItems || [], weeklyXp: userData.weeklyXp || 0, lastWeekXp: userData.lastWeekXp || 0, currentWeekStr: userData.currentWeekStr || "", highestWeeklyXp: userData.highestWeeklyXp || 0, hasBrokenRecordThisWeek: userData.hasBrokenRecordThisWeek || false, potionX3Expiry: userData.potionX3Expiry || null, potionExpiry: userData.potionExpiry || null, maskExpiry: userData.maskExpiry || null, timeMachine: userData.timeMachine || null, mastered_words: userData.mastered_words || 0, mastered_lessons: userData.mastered_lessons || [], selectedMentor: userData.selectedMentor || null, mentorExpiry: userData.mentorExpiry || null, blindBoxCount: userData.blindBoxCount || 0, lastBlindBoxDate: userData.lastBlindBoxDate || "",
-            neonNameExpiry: userData.neonNameExpiry || null // Thêm lệnh lưu trữ hạn dùng của Dạ Quang
+            neonNameExpiry: userData.neonNameExpiry || null,
+            lastPerfectDate: userData.lastPerfectDate || ""
         }).then(() => updateUI()).catch(e => console.error("Lỗi đồng bộ:", e));
     } 
 }
@@ -1478,8 +1479,9 @@ window.addEventListener('message', function(e) {
         let totalAnswered = (window.currentLessonCorrectCount || 0) + (window.currentLessonWrongCount || 0);
         if (totalAnswered === window.currentLessonTotal) {
             let isPerfect = (window.currentLessonWrongCount === 0);
-            if (isPerfect) {
-                let isFirstTimeMaster = false;
+                    if (isPerfect) {
+                        userData.lastPerfectDate = new Date().toLocaleDateString('en-GB');
+                        let isFirstTimeMaster = false;
                 if (!userData.mastered_lessons) userData.mastered_lessons = [];
                 if (!userData.mastered_lessons.includes(window.currentLessonContext)) {
                     userData.mastered_lessons.push(window.currentLessonContext);
@@ -1915,3 +1917,112 @@ async function executeBlindDraw() {
         alert(`🎲 Càn khôn đã định!\nĐã xếp ${c1Size} Dũng sĩ vào C1${c2Size > 0 ? ` và ${c2Size} Dũng sĩ vào C2` : ''}.`);
     }); 
 }
+
+// =========================================================
+// ⚡ ĐẠI PHÁP TRẬN: ĐẠI LỄ SĂN VOUCHER (MEGA FLASH SALE)
+// =========================================================
+window.currentFlashSale = null;
+
+setInterval(() => {
+    if (currentRealm && rtdb && !window.isListeningFlashSale) {
+        window.isListeningFlashSale = true;
+        rtdb.ref(`tournament_status/${currentRealm}/flash_sale`).on('value', snap => {
+            window.currentFlashSale = snap.val();
+            renderFlashSaleBanner();
+        });
+    }
+}, 2000);
+
+function renderFlashSaleBanner() {
+    let banner = document.getElementById('flashSaleBanner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'flashSaleBanner';
+        banner.style.cssText = "position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 9999; background: linear-gradient(45deg, #ff1744, #d50000); color: white; padding: 10px 20px; border-radius: 30px; font-weight: 900; box-shadow: 0 4px 15px rgba(255, 23, 68, 0.6); display: flex; align-items: center; gap: 10px; cursor: pointer; border: 2px solid #ffd700; animation: pulse 1.5s infinite; white-space: nowrap;";
+        banner.onclick = claimFlashSaleVoucher;
+        document.body.appendChild(banner);
+    }
+
+    if (window.currentFlashSale && window.currentFlashSale.active) {
+        let fs = window.currentFlashSale;
+        let textStr = fs.type === 'mega' ? `🔥 ĐẠI LỄ VOUCHER (Còn: ${fs.q90}x90% | ${fs.q75}x75% | ${fs.q50}x50% | ∞x25%)` : `🔥 SĂN VOUCHER VIP -${fs.discount}% (Còn ${fs.qty} mã)`;
+        banner.innerHTML = `<span style="font-size: 14px;">${textStr}</span> <button style="background: #ffd700; color: #d50000; border: none; padding: 5px 12px; border-radius: 20px; font-weight: 900; cursor: pointer; transition: 0.2s;">GIẬT MÃ!</button>`;
+        banner.style.display = 'flex';
+    } else {
+        banner.style.display = 'none';
+    }
+}
+
+function claimFlashSaleVoucher() {
+    if (!currentUser) return;
+    let todayStr = new Date().toLocaleDateString('en-GB');
+    
+    if (userData.streak < 3 && userData.displayName !== defendingChampion && userData.role !== 'teacher') return alert("🛑 LÁ CHẮN CHUỖI: Cần chuỗi 3 ngày!");
+    if (userData.lastPerfectDate !== todayStr && userData.role !== 'teacher') return alert("🛑 THỬ THÁCH KHỔ LUYỆN: Chưa hoàn thành Perfect (100%) bài học nào hôm nay!");
+
+    let ref = rtdb.ref(`tournament_status/${currentRealm}/flash_sale`);
+    
+    ref.transaction(fs => {
+        if (fs && fs.active) {
+            if (!fs.claimed_by) fs.claimed_by = {}; 
+            if (fs.claimed_by[currentUser.uid]) return; 
+            
+            let discountToGive = 0;
+            if (fs.type === 'mega') {
+                if (fs.q90 > 0) { fs.q90--; discountToGive = 90; }
+                else if (fs.q75 > 0) { fs.q75--; discountToGive = 75; }
+                else if (fs.q50 > 0) { fs.q50--; discountToGive = 50; }
+                else { discountToGive = 25; } 
+                fs.claimed_by[currentUser.uid] = discountToGive; 
+                return fs;
+            }
+        }
+        return; 
+    }, (error, committed, snapshot) => {
+        if (!committed) {
+            let fs = snapshot ? snapshot.val() : null;
+            if (fs && fs.claimed_by && fs.claimed_by[currentUser.uid]) alert(`⚠️ Ngài đã giật mã giảm ${fs.claimed_by[currentUser.uid]}% rồi!`);
+            else alert("😭 Sự kiện đã đóng cửa!");
+        } else {
+            let discount = snapshot.val().claimed_by[currentUser.uid];
+            if (!userData.vouchers) userData.vouchers = [];
+            userData.vouchers.push(discount); userData.vouchers.sort((a, b) => b - a); 
+            syncStatsToCloud();
+            alert(`🎉 CHÚC MỪNG! Ngài đã giật thành công Voucher -${discount}%!`);
+            updateUI();
+        }
+    });
+}
+
+// THIÊN CHUẨN LỊCH PHÁP: TỰ ĐỘNG CANH GIỜ
+function checkAndAutoTriggerFlashSale() {
+    if (!currentRealm || !rtdb) return;
+    let now = new Date(); let d = now.getDate(); let m = now.getMonth() + 1;
+    let todayStr = d.toString().padStart(2, '0') + '/' + m.toString().padStart(2, '0') + '/' + now.getFullYear();
+
+    let isMegaSaleDay = (d === m) || (d === 30 && m === 4) || (d === 1 && m === 5) || (d === 17 && m === 5) || (d === 2 && m === 9);
+    let ref = rtdb.ref(`tournament_status/${currentRealm}/flash_sale`);
+
+    ref.once('value').then(snap => {
+        let fs = snap.val();
+        if (isMegaSaleDay) {
+            if (!fs || fs.date !== todayStr) {
+                ref.transaction(currentData => {
+                    if (!currentData || currentData.date !== todayStr) {
+                        return { active: true, type: 'mega', date: todayStr, q90: 1, q75: 2, q50: 4, claimed_by: {} };
+                    } return; 
+                });
+            }
+        } else if (fs && fs.active && fs.date && fs.date !== todayStr) {
+            ref.remove(); 
+        }
+    });
+}
+setInterval(checkAndAutoTriggerFlashSale, 60000); setTimeout(checkAndAutoTriggerFlashSale, 5000);
+
+// [Lệnh Admin khẩn cấp - Dùng trong F12]
+window.adminStartMegaFlashSale = function() { 
+    let todayStr = new Date().toLocaleDateString('en-GB');
+    rtdb.ref(`tournament_status/${currentRealm}/flash_sale`).set({ active: true, type: 'mega', date: todayStr, q90: 1, q75: 2, q50: 4, claimed_by: {} }).then(() => alert("📢 Đã ÉP MỞ Đại Lễ Voucher thành công!"));
+};
+window.adminStopFlashSale = function() { rtdb.ref(`tournament_status/${currentRealm}/flash_sale`).remove().then(() => alert("🔇 Đã dẹp xong bảng Voucher!")); };
