@@ -300,17 +300,17 @@ function updateUI() {
     }            
     
     // Cập nhật tình trạng sở hữu, bổ sung tính năng dùng đồ mặc định
-    let itemsToCheck = ['streak_fire', 'streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_default', 'theme_aurora', 'theme_snow', 'theme_royal']; 
-    if(userData.purchasedItems) { 
-        itemsToCheck.forEach(item => { 
-            let btn = document.getElementById('btn-' + item); let priceTag = document.getElementById('price-' + item); 
-            if(btn && priceTag) { 
-                let isDefault = (item === 'streak_fire' || item === 'theme_default');
-                if(isDefault || userData.purchasedItems.includes(item)) { btn.innerText = "Dùng Ngay"; btn.style.background = "#9e9e9e"; priceTag.innerText = "Đã sở hữu"; } 
-                else { btn.innerText = "Đổi Ngay"; btn.style.background = ""; let price = 5000; if(item === 'theme_aurora' || item === 'theme_snow') price = 15000; else if(item === 'theme_royal') price = 20000; priceTag.innerText = "🪙 " + price; } 
-            } 
-        }); 
-    }
+    let itemsToCheck = ['streak_fire', 'streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_default', 'theme_space', 'theme_royal']; 
+    if(userData.purchasedItems) { 
+        itemsToCheck.forEach(item => { 
+            let btn = document.getElementById('btn-' + item); let priceTag = document.getElementById('price-' + item); 
+            if(btn && priceTag) { 
+                let isDefault = (item === 'streak_fire' || item === 'theme_default');
+                if(isDefault || userData.purchasedItems.includes(item)) { btn.innerText = "Dùng Ngay"; btn.style.background = "#9e9e9e"; priceTag.innerText = "Đã sở hữu"; } 
+                else { btn.innerText = "Đổi Ngay"; btn.style.background = ""; let price = 5000; if(item === 'theme_space') price = 15000; else if(item === 'theme_royal') price = 20000; priceTag.innerText = "🪙 " + price; } 
+            } 
+        }); 
+    }
     if (document.getElementById('ui-weekly-xp')) document.getElementById('ui-weekly-xp').innerText = userData.weeklyXp || 0; 
     if (document.getElementById('ui-highest-xp')) document.getElementById('ui-highest-xp').innerText = userData.highestWeeklyXp || 0;
     
@@ -360,14 +360,25 @@ function switchTab(tabId) {
 
 function toggleSidebar() { let sidebar = document.getElementById('sidebar'); let overlay = document.getElementById('sidebarOverlay'); sidebar.classList.toggle('show'); if(sidebar.classList.contains('show')) { overlay.style.display = 'block'; setTimeout(() => overlay.style.opacity = '1', 10); } else { overlay.style.opacity = '0'; setTimeout(() => overlay.style.display = 'none', 300); } }
 function toggleDarkMode() { document.body.classList.toggle('dark-mode'); const isDark = document.body.classList.contains('dark-mode'); localStorage.setItem('darkMode', isDark ? 'true' : 'false'); document.getElementById('themeToggleBtn').innerText = isDark ? '☀️' : '🌙'; }
-function applyTheme(themeName) { document.body.classList.remove('theme-aurora', 'theme-snow', 'theme-royal'); if (themeName && themeName !== 'theme_default') { document.body.classList.add(themeName); if(themeName === 'theme-snow' || themeName === 'theme-aurora' || themeName === 'theme-royal') { document.body.classList.remove('dark-mode'); document.getElementById('themeToggleBtn').innerText = '🌙'; localStorage.setItem('darkMode', 'false'); } } }
+function applyTheme(themeName) { 
+    document.body.classList.remove('theme-space', 'theme-snow', 'theme-aurora', 'theme-royal', 'dark-mode'); 
+    if (themeName && themeName !== 'theme_default') { 
+        document.body.classList.add(themeName); 
+        if(themeName === 'theme-space' || themeName === 'theme-royal') { 
+            let btnToggle = document.getElementById('themeToggleBtn');
+            if(btnToggle) btnToggle.innerText = '🌙'; 
+            localStorage.setItem('darkMode', 'false'); 
+        } 
+    } else {
+        if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
+    }
+}
 
 function buyItem(itemType, basePrice) { 
     if (!currentUser) return alert("Hệ thống yêu cầu phải đăng nhập mới sử dụng tính năng giao dịch!"); 
     
     // 1. Kiểm tra và áp dụng ngay nếu là đồ trang trí đã sở hữu (Đã nâng cấp để cho phép về lại nguyên thủy)
-    let decorItems = ['streak_fire', 'streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_default', 'theme_aurora', 'theme_snow', 'theme_royal'];
-    
+    let decorItems = ['streak_fire', 'streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_default', 'theme_space', 'theme_royal'];    
     if (decorItems.includes(itemType)) {
         let isDefault = (itemType === 'streak_fire' || itemType === 'theme_default');
         if (isDefault || (userData.purchasedItems && userData.purchasedItems.includes(itemType))) {
