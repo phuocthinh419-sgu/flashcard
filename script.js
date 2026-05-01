@@ -327,7 +327,8 @@ function syncStatsToCloud() {
         db.collection('vocab_users').doc(currentUser.uid).update({ 
             gold: userData.gold || 0, xp: userData.xp || 0, lifetime_xp: userData.lifetime_xp || 0, realm: userData.realm || "", streak: userData.streak || 1, displayName: userData.displayName || "", glass_100: userData.glass_100 || 0, glass_80: userData.glass_80 || 0, shield_100: userData.shield_100 || 0, shield_80: userData.shield_80 || 0, time_100: userData.time_100 || 0, time_80: userData.time_80 || 0, torch_100: userData.torch_100 || 0, torch_80: userData.torch_80 || 0, vouchers: userData.vouchers || [], streakIcon: userData.streakIcon || '🔥', theme: userData.theme || 'theme_default', purchasedItems: userData.purchasedItems || [], weeklyXp: userData.weeklyXp || 0, lastWeekXp: userData.lastWeekXp || 0, currentWeekStr: userData.currentWeekStr || "", highestWeeklyXp: userData.highestWeeklyXp || 0, hasBrokenRecordThisWeek: userData.hasBrokenRecordThisWeek || false, potionX3Expiry: userData.potionX3Expiry || null, potionExpiry: userData.potionExpiry || null, maskExpiry: userData.maskExpiry || null, timeMachine: userData.timeMachine || null, mastered_words: userData.mastered_words || 0, mastered_lessons: userData.mastered_lessons || [], selectedMentor: userData.selectedMentor || null, mentorExpiry: userData.mentorExpiry || null, blindBoxCount: userData.blindBoxCount || 0, lastBlindBoxDate: userData.lastBlindBoxDate || "",
             neonNameExpiry: userData.neonNameExpiry || null,
-            lastPerfectDate: userData.lastPerfectDate || ""
+            lastPerfectDate: userData.lastPerfectDate || "",
+            lastDailyQuizDate: userData.lastDailyQuizDate || ""
         }).then(() => updateUI()).catch(e => console.error("Lỗi đồng bộ:", e));
     } 
 }
@@ -2029,3 +2030,172 @@ window.adminStartMegaFlashSale = function() {
     rtdb.ref(`tournament_status/${currentRealm}/flash_sale`).set({ active: true, type: 'mega', date: todayStr, q90: 1, q75: 2, q50: 4, claimed_by: {} }).then(() => alert("📢 Đã ÉP MỞ Đại Lễ Voucher thành công!"));
 };
 window.adminStopFlashSale = function() { rtdb.ref(`tournament_status/${currentRealm}/flash_sale`).remove().then(() => alert("🔇 Đã dẹp xong bảng Voucher!")); };
+
+// =========================================================
+// 🏛️ ĐẠI PHÁP TRẬN: NGỰ TIỀN KHAI MINH (DAILY POP-UP QUIZ)
+// =========================================================
+window.currentDailyQuiz = null;
+
+setInterval(() => {
+    if (currentRealm && rtdb && !window.isListeningDailyQuiz) {
+        window.isListeningDailyQuiz = true;
+        
+        rtdb.ref(`tournament_status/${currentRealm}/daily_quiz`).on('value', snap => {
+            window.currentDailyQuiz = snap.val();
+            let todayStr = new Date().toLocaleDateString('en-GB');
+
+            // 1. Nếu hệ thống chưa có câu hỏi hôm nay, tự động bốc 1 câu ngẫu nhiên từ Kho
+            if ((!window.currentDailyQuiz || window.currentDailyQuiz.date !== todayStr) && allLessonsData && allLessonsData.length > 0) {
+                let allVocab = [];
+                allLessonsData.forEach(l => { if(l.vocab) allVocab = allVocab.concat(l.vocab); });
+                
+                if (allVocab.length >= 4) {
+                    let correctWord = allVocab[Math.floor(Math.random() * allVocab.length)];
+                    let opts = [correctWord.vi];
+                    while(opts.length < 4) {
+                        let rw = allVocab[Math.floor(Math.random() * allVocab.length)];
+                        if(!opts.includes(rw.vi)) opts.push(rw.vi);
+                    }
+                    opts.sort(() => Math.random() - 0.5);
+                    
+                    rtdb.ref(`tournament_status/${currentRealm}/daily_quiz`).transaction(curr => {
+                        if (!curr || curr.date !== todayStr) {
+                            return { 
+                                date: todayStr, 
+                                q_en: correctWord.en, 
+                                q_vi: correctWord.vi, 
+                                opts: opts, 
+                                slots: { lvl1: 1, lvl2: 2, lvl3: 3 }, 
+                                answered_by: {} 
+                            };
+                        }
+                        return; // Hủy giao dịch nếu đã có người khác bốc câu hỏi trước 1 mili-giây
+                    });
+                }
+            } 
+            // 2. Nếu đã có câu hỏi, kiểm tra xem người này đã làm chưa để hiện Pop-up
+            else if (window.currentDailyQuiz && window.currentDailyQuiz.date === todayStr) {
+                if (currentUser && userData && userData.lastDailyQuizDate !== todayStr) {
+                    // Tránh hiện Pop-up đè lên lúc đang đấu PvP hoặc đang trong bài học
+                    if (!document.getElementById('pvpModal')?.classList.contains('active') && 
+                        !document.getElementById('previewModal')?.classList.contains('active')) {
+                        showDailyQuizPopup();
+                    }
+                }
+                // Cập nhật số lượng phần thưởng realtime nếu Pop-up đang mở (Thấy số tụt dần để tạo áp lực)
+                if (document.getElementById('dailyQuizModal')) {
+                    updateDailyQuizSlots(window.currentDailyQuiz.slots);
+                }
+            }
+        });
+    }
+}, 3000);
+
+// Hiển thị Khung Pop-up uy nghi
+function showDailyQuizPopup() {
+    if (document.getElementById('dailyQuizModal')) return; 
+
+    let modal = document.createElement('div');
+    modal.id = 'dailyQuizModal';
+    modal.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 100000; display: flex; justify-content: center; align-items: center; animation: fadeIn 0.4s ease;";
+    
+    let q = window.currentDailyQuiz;
+    
+    let content = `
+    <div style="background: linear-gradient(135deg, #1e3a8a, #312e81); border: 2px solid #ffd700; border-radius: 16px; padding: 25px; width: 90%; max-width: 400px; text-align: center; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+        <div style="font-size: 22px; font-weight: 900; color: #ffd700; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px;">Ngự Tiền Khai Minh</div>
+        <div style="font-size: 13px; color: #93c5fd; margin-bottom: 15px; font-style: italic;">Trả lời duy nhất 1 câu hỏi mỗi ngày. Kẻ nhanh tay nhất sẽ xưng vương!</div>
+        
+        <div id="dq-slots-display" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 25px; font-size: 12px;">
+            <!-- Render realtime -->
+        </div>
+
+        <div style="font-size: 32px; font-weight: 900; color: #ffffff; margin-bottom: 30px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${q.q_en}</div>
+
+        <div style="display: grid; grid-template-columns: 1fr; gap: 10px;" id="dq-options">
+            ${q.opts.map((opt) => `<button onclick="submitDailyQuiz('${opt.replace(/'/g, "\\'")}')" style="background: rgba(255,255,255,0.1); border: 1px solid #60a5fa; color: white; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">${opt}</button>`).join('')}
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <button onclick="skipDailyQuiz()" style="background: transparent; color: #94a3b8; font-size: 13px; text-decoration: underline; border: none; cursor: pointer;">Bỏ qua (Tước quyền nhận thưởng hôm nay)</button>
+        </div>
+    </div>
+    `;
+    
+    modal.innerHTML = content;
+    document.body.appendChild(modal);
+    updateDailyQuizSlots(q.slots);
+}
+
+// Hàm cập nhật số lượng suất thưởng Realtime
+function updateDailyQuizSlots(slots) {
+    let s1 = slots.lvl1; let s2 = slots.lvl2; let s3 = slots.lvl3;
+    let slotEl = document.getElementById('dq-slots-display');
+    if (slotEl) {
+        slotEl.innerHTML = `
+            <span style="background: ${s1>0?'#ef4444':'#555'}; padding: 4px 8px; border-radius: 6px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">🥇 10K (${s1})</span>
+            <span style="background: ${s2>0?'#f97316':'#555'}; padding: 4px 8px; border-radius: 6px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">🥈 8K (${s2})</span>
+            <span style="background: ${s3>0?'#eab308':'#555'}; padding: 4px 8px; border-radius: 6px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">🥉 6.8K (${s3})</span>
+            <span style="background: #22c55e; padding: 4px 8px; border-radius: 6px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">💎 1K (∞)</span>
+        `;
+    }
+}
+
+// Chốt đáp án - Giao dịch nguyên tử chống gian lận mạng
+function submitDailyQuiz(selectedOpt) {
+    if (!currentUser) return;
+    let todayStr = new Date().toLocaleDateString('en-GB');
+    let q = window.currentDailyQuiz;
+    
+    // Khóa sổ ngay lập tức: Đóng mộc đã làm xong bài hôm nay
+    userData.lastDailyQuizDate = todayStr;
+    db.collection('vocab_users').doc(currentUser.uid).update({ lastDailyQuizDate: todayStr });
+    
+    let modal = document.getElementById('dailyQuizModal');
+    if (modal) modal.remove();
+
+    if (selectedOpt !== q.q_vi) {
+        alert("❌ SAI RỒI! Trí tuệ chưa thông, ân trạch đã trôi vào tay kẻ khác. Chúc may mắn vào ngày mai!");
+        return;
+    }
+
+    // Nếu đúng -> Tranh đoạt phần thưởng (Thác đổ Transaction)
+    let ref = rtdb.ref(`tournament_status/${currentRealm}/daily_quiz`);
+    ref.transaction(curr => {
+        if (curr && curr.date === todayStr) {
+            if (!curr.answered_by) curr.answered_by = {};
+            if (curr.answered_by[currentUser.uid]) return; // Chặn dúp nếu click 2 lần
+            
+            let reward = 1000;
+            if (curr.slots.lvl1 > 0) { curr.slots.lvl1--; reward = 10000; }
+            else if (curr.slots.lvl2 > 0) { curr.slots.lvl2--; reward = 8000; }
+            else if (curr.slots.lvl3 > 0) { curr.slots.lvl3--; reward = 6800; }
+            
+            curr.answered_by[currentUser.uid] = reward;
+            return curr;
+        }
+        return;
+    }, (error, comm, snap) => {
+        if (comm) {
+            let fs = snap.val();
+            let reward = fs.answered_by[currentUser.uid];
+            userData.gold = (userData.gold || 0) + reward;
+            syncStatsToCloud();
+            
+            let title = reward === 10000 ? "🥇 TRẠNG NGUYÊN" : reward === 8000 ? "🥈 BẢNG NHÃN" : reward === 6800 ? "🥉 THÁM HOA" : "💎 TÚ TÀI";
+            alert(`🎉 CHÍNH XÁC! Tốc độ đỉnh cao, Ngài đã xuất sắc đoạt danh hiệu ${title}!\n🎁 Thưởng nóng: +${reward.toLocaleString()} Vàng!`);
+            updateUI();
+            if (typeof triggerConfetti === 'function') triggerConfetti();
+        } else {
+            alert("⚠️ Mạng tắc nghẽn, không thể kết nối tới Cửu Trùng Đài!");
+        }
+    });
+}
+
+function skipDailyQuiz() {
+    let todayStr = new Date().toLocaleDateString('en-GB');
+    userData.lastDailyQuizDate = todayStr;
+    db.collection('vocab_users').doc(currentUser.uid).update({ lastDailyQuizDate: todayStr });
+    let modal = document.getElementById('dailyQuizModal');
+    if (modal) modal.remove();
+}
