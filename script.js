@@ -459,82 +459,146 @@ function buyItem(itemType, basePrice) {
         }
     }
 
-   // 3. Áp dụng Voucher và Buff Doraemon
-    let usedVoucher = false; // Cờ theo dõi xem có xài voucher không
-    let discountMsg = ""; // Báo cáo rành rọt các ưu đãi được áp dụng
+ // 3. Áp dụng Voucher và Buff Doraemon
+
+let usedVoucher = false; // [THẦN VÁ LỖI]: Cờ theo dõi xem có xài voucher không
+
+if(userData.vouchers && userData.vouchers.length > 0) {
+
+    finalPrice = Math.floor(finalPrice * (100 - userData.vouchers[0]) / 100);
+
+    usedVoucher = true; // [THẦN VÁ LỖI]: Bắt quả tang đã cắn Voucher
+
+}
+
+if (userData.selectedMentor === 'doraemon' && userData.mentorExpiry > Date.now()) finalPrice = Math.floor(finalPrice * 0.85);
+if (isMarket) finalPrice = Math.floor(finalPrice * 1.05);
+
+if (userData.gold < finalPrice) return alert(`Ngân khố không đủ! Cần ${finalPrice} 🪙.`);
+
+// 4. XỬ LÝ NHẬP TÊN TRƯỚC KHI TRỪ TIỀN
+
+let newDisplayName = null;
+
+if (itemType.startsWith('rename_')) {
+
+    newDisplayName = prompt("📜 Kính mời Bệ hạ hạ chỉ danh xưng mới:");
+
+    if (!newDisplayName || newDisplayName.trim() === "") return alert("Giao dịch hủy: Danh xưng không thể để trống!");
+
+    newDisplayName = newDisplayName.trim();
+
+}
+
+// 5. Xác nhận giao dịch
+
+if (confirm(`Xác nhận thanh toán ${finalPrice} Vàng cho vật phẩm này?`)) {
+
+    let updates = { gold: userData.gold - finalPrice };
     
-    // [LOGIC CHUẨN]: Chỉ cho phép xài Voucher nếu KHÔNG PHẢI hàng Chợ đen (!isMarket)
-    if (!isMarket && userData.vouchers && userData.vouchers.length > 0) {
-        let vVal = userData.vouchers[0];
-        finalPrice = Math.floor(finalPrice * (100 - vVal) / 100);
-        usedVoucher = true; // Bắt quả tang đã cắn Voucher
-        discountMsg += `\n🎫 Đã áp dụng Voucher giảm ${vVal}%`;
-    }
-    
-    // Lực lượng của Doraemon cũng chỉ giảm giá Hàng Chính Hãng
-    if (!isMarket && userData.selectedMentor === 'doraemon' && userData.mentorExpiry > Date.now()) {
-        finalPrice = Math.floor(finalPrice * 0.85);
-        discountMsg += `\n🐱 Doraemon buff giảm thêm 15%`;
+    // [THẦN VÁ LỖI]: THU HỒI VÀ TIÊU HỦY VOUCHER
+    if (usedVoucher) {
+
+        userData.vouchers.shift(); // Chém bay đầu cái mã xịn nhất vừa dùng
+
+        updates.vouchers = userData.vouchers;
+
     }
 
-    // Thuế chợ đen (đồ 80%) bị đội giá 5%
-    if (isMarket) {
-        finalPrice = Math.floor(finalPrice * 1.05);
+    // Gán tên mới và cấp hiệu ứng Neon nếu mua Thẻ Chính Hãng
+    if (newDisplayName) updates.displayName = newDisplayName;
+
+    if (itemType === 'rename_100') {
+
+        updates.neonNameExpiry = Date.now() + (7 * 24 * 60 * 60 * 1000); // Tỏa sáng trong 7 ngày
+
     }
 
-    if (userData.gold < finalPrice) return alert(`Ngân khố không đủ! Cần ${finalPrice.toLocaleString()} 🪙.`);
+    // Cấp pháp bảo
 
-    // 4. XỬ LÝ NHẬP TÊN TRƯỚC KHI TRỪ TIỀN
-    let newDisplayName = null;
-    if (itemType.startsWith('rename_')) {
-        newDisplayName = prompt("📜 Kính mời Bệ hạ hạ chỉ danh xưng mới:");
-        if (!newDisplayName || newDisplayName.trim() === "") return alert("Giao dịch hủy: Danh xưng không thể để trống!");
-        newDisplayName = newDisplayName.trim();
-    }
+    if (itemType === 'shield_100') updates.shield_100 = (userData.shield_100 || 0) + 3;
 
-    // 5. Xác nhận giao dịch (NÂNG CẤP BÁO CÁO RÕ RÀNG)
-    if (confirm(`Xác nhận thanh toán ${finalPrice.toLocaleString()} Vàng cho vật phẩm này?${discountMsg}`)) {
+    if (itemType === 'shield_80') updates.shield_80 = (userData.shield_80 || 0) + 1;
 
-function loadMarketItems() {
-    const container = document.getElementById('pawnshopContainer');
-    if(!container) {
-        console.warn("Khởi bẩm: Không tìm thấy gian hàng pawnshopContainer để bày đồ!");
-        return;
-    }
-    
-    // Đảm bảo dữ liệu không bị undefined
-    let g100 = userData.glass_100 || 0;
-    let s100 = Math.floor((userData.shield_100 || 0) / 3); // Bùa bán theo set 3 cái
-    let t100 = userData.time_100 || 0;
-    let to100 = userData.torch_100 || 0;
+    if (itemType === 'glass_100') updates.glass_100 = (userData.glass_100 || 0) + quantity;
 
-    let html = ''; 
-    let hasItems = false;
-    
-    const pawnPrices = { 
-        'glass_100': { name: 'Kính Lúp', price: 160, count: g100, icon: '🔍' }, 
-        'shield_100': { name: 'Bùa Bảo Hộ', price: 6400, count: s100, icon: '🛡️' }, 
-        'time_100': { name: 'Đồng Hồ', price: 240, count: t100, icon: '⏳' }, 
-        'torch_100': { name: 'Ngọn Đuốc', price: 200, count: to100, icon: '🔥' } 
-    };
-    
-    for (const [id, item] of Object.entries(pawnPrices)) {
-        if (item.count > 0) {
-            hasItems = true;
-            html += `<div style="background: rgba(255,255,255,0.8); border: 1px solid #ffcc80; padding: 10px; border-radius: 6px; width: 45%; min-width: 120px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                        <div style="font-size: 20px; margin-bottom: 5px;">${item.icon}</div>
-                        <div style="font-size: 14px; font-weight: bold; color: #424242;">${item.name}</div>
-                        <div style="font-size: 12px; color: #d32f2f; font-weight: bold; margin-bottom: 5px;">(Có: ${item.count})</div>
-                        <button onclick="sellItemToSystem('${id}', ${item.price})" style="width: 100%; padding: 8px 5px; background: #ff9800; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase;">BÁN (+${item.price} 🪙)</button>
-                     </div>`;
+    if (itemType === 'glass_80') updates.glass_80 = (userData.glass_80 || 0) + 1;
+
+    if (itemType === 'time_100') updates.time_100 = (userData.time_100 || 0) + quantity;
+
+    if (itemType === 'time_80') updates.time_80 = (userData.time_80 || 0) + 1;
+
+    if (itemType === 'torch_100') updates.torch_100 = (userData.torch_100 || 0) + quantity;
+
+    if (itemType === 'torch_80') updates.torch_80 = (userData.torch_80 || 0) + 1;
+
+    // Logic cho Bình Tiên và Mặt Nạ
+
+    if (itemType.startsWith('potion_100')) updates.potionExpiry = Date.now() + 86400000;
+
+    if (itemType.startsWith('potion_80')) updates.potionExpiry = Date.now() + 43200000;
+
+    if (itemType.startsWith('potion_x3_100')) updates.potionX3Expiry = Date.now() + 21600000;
+
+    if (itemType.startsWith('potion_x3_80')) updates.potionX3Expiry = Date.now() + 10800000;
+
+    if (itemType.startsWith('mask_100')) updates.maskExpiry = Date.now() + 86400000;
+
+    if (itemType.startsWith('mask_80')) updates.maskExpiry = Date.now() + 43200000;
+
+    // Lưu danh sách đồ trang trí (Không lưu các món mặc định)
+
+    if (decorItems.includes(itemType) && itemType !== 'streak_fire' && itemType !== 'theme_default') {
+
+        if (!userData.purchasedItems) userData.purchasedItems = [];
+
+        userData.purchasedItems.push(itemType);
+
+        updates.purchasedItems = userData.purchasedItems;
+        
+        // [THẦN VÁ LỖI]: Ban phát đặc quyền khi mua Cung Đình (Chính Hãng)
+        if (itemType === 'theme_royal') {
+
+            if (!userData.vouchers) userData.vouchers = [];
+
+            userData.vouchers.push(45); // Tặng thẳng 1 thẻ giảm 45%
+
+            userData.vouchers.sort((a, b) => b - a); // Sắp xếp thẻ xịn lên đầu
+
+            updates.vouchers = userData.vouchers;
+
         }
+
     }
-    
-    if(hasItems) {
-        container.innerHTML = html; 
-    } else { 
-        container.innerHTML = `<span style="font-size: 13px; color: #888; font-style: italic; width: 100%; text-align: center;">Ngài đang không có pháp bảo 100% nào để cầm cố.</span>`; 
-    }
+
+    // Cập nhật Firebase
+
+    db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
+
+        try { transferToAdmin(finalPrice, `Cửa hàng: ${itemType}`); } catch(e) {}
+
+        Object.assign(userData, updates);
+
+        updateUI();
+
+        if (newDisplayName) fetchLeaderboard(); 
+
+        let anim = document.getElementById('rewardAnim');
+
+        anim.innerText = `🛒 Giao dịch thành công! -${finalPrice} 🪙`;
+
+        anim.classList.add('show');
+
+        setTimeout(() => anim.classList.remove('show'), 3000);
+
+    }).catch(err => {
+
+        alert("Firebase từ chối! Bệ hạ vui lòng kiểm tra lại 'Rules' (Đạo luật cống nạp).");
+
+        console.error("Lỗi giao dịch:", err);
+
+    });
+
 }
 
 function sellItemToSystem(itemId, earnGold) {
