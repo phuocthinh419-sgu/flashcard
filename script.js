@@ -459,17 +459,30 @@ function buyItem(itemType, basePrice) {
         }
     }
 
-    // 3. Áp dụng Voucher và Buff Doraemon
-    let usedVoucher = false; // [THẦN VÁ LỖI]: Cờ theo dõi xem có xài voucher không
-    if(userData.vouchers && userData.vouchers.length > 0) {
-        finalPrice = Math.floor(finalPrice * (100 - userData.vouchers[0]) / 100);
-        usedVoucher = true; // [THẦN VÁ LỖI]: Bắt quả tang đã cắn Voucher
+   // 3. Áp dụng Voucher và Buff Doraemon
+    let usedVoucher = false; // Cờ theo dõi xem có xài voucher không
+    let discountMsg = ""; // Báo cáo rành rọt các ưu đãi được áp dụng
+    
+    // [LOGIC CHUẨN]: Chỉ cho phép xài Voucher nếu KHÔNG PHẢI hàng Chợ đen (!isMarket)
+    if (!isMarket && userData.vouchers && userData.vouchers.length > 0) {
+        let vVal = userData.vouchers[0];
+        finalPrice = Math.floor(finalPrice * (100 - vVal) / 100);
+        usedVoucher = true; // Bắt quả tang đã cắn Voucher
+        discountMsg += `\n🎫 Đã áp dụng Voucher giảm ${vVal}%`;
     }
     
-    if (userData.selectedMentor === 'doraemon' && userData.mentorExpiry > Date.now()) finalPrice = Math.floor(finalPrice * 0.85);
-    if (isMarket) finalPrice = Math.floor(finalPrice * 1.05);
+    // Lực lượng của Doraemon cũng chỉ giảm giá Hàng Chính Hãng
+    if (!isMarket && userData.selectedMentor === 'doraemon' && userData.mentorExpiry > Date.now()) {
+        finalPrice = Math.floor(finalPrice * 0.85);
+        discountMsg += `\n🐱 Doraemon buff giảm thêm 15%`;
+    }
 
-    if (userData.gold < finalPrice) return alert(`Ngân khố không đủ! Cần ${finalPrice} 🪙.`);
+    // Thuế chợ đen (đồ 80%) bị đội giá 5%
+    if (isMarket) {
+        finalPrice = Math.floor(finalPrice * 1.05);
+    }
+
+    if (userData.gold < finalPrice) return alert(`Ngân khố không đủ! Cần ${finalPrice.toLocaleString()} 🪙.`);
 
     // 4. XỬ LÝ NHẬP TÊN TRƯỚC KHI TRỪ TIỀN
     let newDisplayName = null;
@@ -479,71 +492,8 @@ function buyItem(itemType, basePrice) {
         newDisplayName = newDisplayName.trim();
     }
 
-    // 5. Xác nhận giao dịch
-    if (confirm(`Xác nhận thanh toán ${finalPrice} Vàng cho vật phẩm này?`)) {
-        let updates = { gold: userData.gold - finalPrice };
-        
-        // [THẦN VÁ LỖI]: THU HỒI VÀ TIÊU HỦY VOUCHER
-        if (usedVoucher) {
-            userData.vouchers.shift(); // Chém bay đầu cái mã xịn nhất vừa dùng
-            updates.vouchers = userData.vouchers;
-        }
-
-        // Gán tên mới và cấp hiệu ứng Neon nếu mua Thẻ Chính Hãng
-        if (newDisplayName) updates.displayName = newDisplayName;
-        if (itemType === 'rename_100') {
-            updates.neonNameExpiry = Date.now() + (7 * 24 * 60 * 60 * 1000); // Tỏa sáng trong 7 ngày
-        }
-
-       // Cấp pháp bảo
-        if (itemType === 'shield_100') updates.shield_100 = (userData.shield_100 || 0) + 3;
-        if (itemType === 'shield_80') updates.shield_80 = (userData.shield_80 || 0) + 1;
-        if (itemType === 'glass_100') updates.glass_100 = (userData.glass_100 || 0) + quantity;
-        if (itemType === 'glass_80') updates.glass_80 = (userData.glass_80 || 0) + 1;
-        if (itemType === 'time_100') updates.time_100 = (userData.time_100 || 0) + quantity;
-        if (itemType === 'time_80') updates.time_80 = (userData.time_80 || 0) + 1;
-        if (itemType === 'torch_100') updates.torch_100 = (userData.torch_100 || 0) + quantity;
-        if (itemType === 'torch_80') updates.torch_80 = (userData.torch_80 || 0) + 1;
-
-        // Logic cho Bình Tiên và Mặt Nạ
-        if (itemType.startsWith('potion_100')) updates.potionExpiry = Date.now() + 86400000;
-        if (itemType.startsWith('potion_80')) updates.potionExpiry = Date.now() + 43200000;
-        if (itemType.startsWith('potion_x3_100')) updates.potionX3Expiry = Date.now() + 21600000;
-        if (itemType.startsWith('potion_x3_80')) updates.potionX3Expiry = Date.now() + 10800000;
-        if (itemType.startsWith('mask_100')) updates.maskExpiry = Date.now() + 86400000;
-        if (itemType.startsWith('mask_80')) updates.maskExpiry = Date.now() + 43200000;
-
-        // Lưu danh sách đồ trang trí (Không lưu các món mặc định)
-        if (decorItems.includes(itemType) && itemType !== 'streak_fire' && itemType !== 'theme_default') {
-            if (!userData.purchasedItems) userData.purchasedItems = [];
-            userData.purchasedItems.push(itemType);
-            updates.purchasedItems = userData.purchasedItems;
-            
-            // [THẦN VÁ LỖI]: Ban phát đặc quyền khi mua Cung Đình (Chính Hãng)
-            if (itemType === 'theme_royal') {
-                if (!userData.vouchers) userData.vouchers = [];
-                userData.vouchers.push(45); // Tặng thẳng 1 thẻ giảm 45%
-                userData.vouchers.sort((a, b) => b - a); // Sắp xếp thẻ xịn lên đầu
-                updates.vouchers = userData.vouchers;
-            }
-        }
-
-        // Cập nhật Firebase
-        db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
-            try { transferToAdmin(finalPrice, `Cửa hàng: ${itemType}`); } catch(e) {}
-            Object.assign(userData, updates);
-            updateUI();
-            if (newDisplayName) fetchLeaderboard(); 
-            
-            let anim = document.getElementById('rewardAnim');
-            anim.innerText = `🛒 Giao dịch thành công! -${finalPrice} 🪙`;
-            anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 3000);
-        }).catch(err => {
-            alert("Firebase từ chối! Bệ hạ vui lòng kiểm tra lại 'Rules' (Đạo luật cống nạp).");
-            console.error("Lỗi giao dịch:", err);
-        });
-    }
-}
+    // 5. Xác nhận giao dịch (NÂNG CẤP BÁO CÁO RÕ RÀNG)
+    if (confirm(`Xác nhận thanh toán ${finalPrice.toLocaleString()} Vàng cho vật phẩm này?${discountMsg}`)) {
 
 function loadMarketItems() {
     const container = document.getElementById('pawnshopContainer');
