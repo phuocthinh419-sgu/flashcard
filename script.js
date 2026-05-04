@@ -315,6 +315,23 @@ function updateUI() {
     if (document.getElementById('ui-highest-xp')) document.getElementById('ui-highest-xp').innerText = userData.highestWeeklyXp || 0;
     
     // 🌟 SỬA TỬ HUYỆT: Gọi hàm áp dụng giao diện trực tiếp để UI lập tức đổi màu
+    // 🌟 KHÓA/MỞ KHOÁ MÁY DU HÀNH TRONG CỬA HÀNG TÙY TÌNH TRẠNG
+    let tmBtn = document.querySelector('button[onclick="buyTimeMachine()"]');
+    if (tmBtn) {
+        if (userData.timeMachine && (userData.timeMachine.status === 'available' || userData.timeMachine.status === 'in_progress')) {
+            let cost = userData.timeMachine.missedDays * 10000;
+            tmBtn.innerText = `SỬ DỤNG (${cost.toLocaleString()} 🪙)`;
+            tmBtn.style.opacity = '1';
+            tmBtn.style.pointerEvents = 'auto';
+            tmBtn.style.background = ''; // Trả lại màu gốc
+        } else {
+            tmBtn.innerText = "CHƯA KÍCH HOẠT (Yêu cầu đứt chuỗi ≤ 3 ngày)";
+            tmBtn.style.opacity = '0.5';
+            tmBtn.style.pointerEvents = 'none';
+            tmBtn.style.background = '#9e9e9e';
+        }
+    }
+
     applyTheme(userData.theme);
 
     if (typeof renderBracket === 'function') renderBracket();
@@ -2382,20 +2399,3 @@ function generateMeteors() {
 }
 // Tự động kích hoạt ngay khi vương quốc tải xong
 setTimeout(generateMeteors, 1000);
-
-// 🌟 KHÓA/MỞ KHOÁ MÁY DU HÀNH TRONG CỬA HÀNG TÙY TÌNH TRẠNG
-    let tmBtn = document.querySelector('button[onclick="buyTimeMachine()"]');
-    if (tmBtn) {
-        if (userData.timeMachine && (userData.timeMachine.status === 'available' || userData.timeMachine.status === 'in_progress')) {
-            let cost = userData.timeMachine.missedDays * 10000;
-            tmBtn.innerText = `SỬ DỤNG (${cost.toLocaleString()} 🪙)`;
-            tmBtn.style.opacity = '1';
-            tmBtn.style.pointerEvents = 'auto';
-            tmBtn.style.background = ''; // Trả lại màu gốc
-        } else {
-            tmBtn.innerText = "CHƯA KÍCH HOẠT (Yêu cầu đứt chuỗi ≤ 3 ngày)";
-            tmBtn.style.opacity = '0.5';
-            tmBtn.style.pointerEvents = 'none';
-            tmBtn.style.background = '#9e9e9e';
-        }
-    }
