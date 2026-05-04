@@ -1582,12 +1582,14 @@ window.addEventListener('message', function(e) {
     let vocabContext = null;
     let data = e.data;
     
-    // 1. GIẢI MÃ PHÙ HIỆU BẢO MẬT
+    // 1. GIẢI MÃ PHÙ HIỆU BẢO MẬT (Đã bọc thép chống sập)
     let decryptedData = "";
     try {
-        decryptedData = atob(data); // Giải mã Base64
-    } catch(err) { decryptedData = data; }
-
+        decryptedData = String(atob(data)); // Ép thành chuỗi
+    } catch(err) { 
+        decryptedData = String(data); // Nếu gặp tà thuật Object thì cũng ép thành chuỗi nốt
+    }
+    
     // 2. MẮT THẦN CHỐNG AUTO-CLICK & GIẢ MẠO
     // Bắt đầu tính giờ khi bài học hiện lên
     if (!window.lastQuestionStartTime) window.lastQuestionStartTime = Date.now();
@@ -1863,61 +1865,6 @@ function confirmMigration() {
 // =========================================================
 // ⚔️ KHAI CHIẾN TỶ VÕ (BẢN VÁ DÀNH CHO TRỌNG TÀI)
 // =========================================================
-
-async function adminStartPvP(league, stageKey, matchIndex, p1, p2) {
-    if(!confirm(`Bệ hạ có chắc chắn muốn khai chiến trận đấu giữa: ${p1} vs ${p2}?`)) return;
-    
-    // 1. Kiểm tra tài liệu thi đấu (Syllabus)
-    const sylSnap = await rtdb.ref(`tournament_status/${currentRealm}/syllabus`).once('value');
-    let syllabus = sylSnap.val() || [];
-    if(syllabus.length === 0) return alert("Khởi bẩm: Chưa có cấu hình tài liệu (Syllabus)! Hãy vào Ngự Thư Phòng chọn bài thi đấu.");
-    
-    // 2. Gom và trộn câu hỏi từ Kho
-    let questionBank = [];
-    allLessonsData.forEach(l => {
-        if(syllabus.includes(l.name)) { l.vocab.forEach(v => questionBank.push(v)); }
-    });
-    
-    if(questionBank.length < 30) return alert(`Kho câu hỏi của các bài đã chọn chỉ có ${questionBank.length} từ. Cần tối thiểu 30 từ để thi đấu!`);
-    
-    questionBank.sort(() => Math.random() - 0.5);
-    
-    // 3. Chuẩn bị 40 câu hỏi trắc nghiệm / chính tả
-    let selectedQ = questionBank.slice(0, 40).map(q => {
-        let opts = [q.vi];
-        while(opts.length < 4) {
-            let randQ = questionBank[Math.floor(Math.random() * questionBank.length)];
-            if(!opts.includes(randQ.vi)) opts.push(randQ.vi);
-        }
-        opts.sort(() => Math.random() - 0.5);
-        return { en: q.en, vi: q.vi, opts: opts };
-    });
-    
-    // 4. Khởi tạo Sàn Đấu (Phòng PvP)
-    let matchData = {
-        p1: p1, p2: p2,
-        p1_score: 0, p2_score: 0,
-        p1_set: 0, p2_set: 0,
-        p1_ans: "", p2_ans: "",
-        p1_time: 0, p2_time: 0,
-        q_idx: 1,
-        status: 'playing',
-        evaluating: false,
-        league: league,
-        stage: stageKey,
-        match_idx: matchIndex,
-        question_bank: selectedQ,
-        current_q: selectedQ[0],
-        mode: 'normal', // Set 1 mặc định là Trắc nghiệm
-        time_limit: 15,
-        unlock_time: Date.now() + 8000 // Chờ 8s đếm ngược trước câu đầu
-    };
-    
-    // 5. Cập nhật lên Cửu Trùng Đài (Firebase)
-    rtdb.ref(`active_pvp_match/${currentRealm}`).set(matchData).then(() => {
-        alert("⚔️ Sàn đấu đã mở! Các tuyển thủ đang bị kéo vào lôi đài...");
-    });
-}
 
 // =========================================================
 // 👁️ VÁ LỖI TRỌNG TÀI - BẬT MẮT THẦN CHO BỆ HẠ (DÁN CUỐI FILE)
