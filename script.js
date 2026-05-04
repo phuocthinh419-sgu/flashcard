@@ -501,6 +501,17 @@ function buyItem(itemType, basePrice) {
             if (!userData.purchasedItems) userData.purchasedItems = [];
             userData.purchasedItems.push(itemType);
             updates.purchasedItems = userData.purchasedItems;
+            
+            // [THẦN VÁ LỖI]: Ban phát đặc quyền khi mua Cung Đình (Chính Hãng)
+            if (itemType === 'theme_royal') {
+                if (!userData.vouchers) userData.vouchers = [];
+                userData.vouchers.push(45); // Tặng thẳng 1 thẻ giảm 45%
+                userData.vouchers.sort((a, b) => b - a); // Sắp xếp thẻ xịn lên đầu
+                updates.vouchers = userData.vouchers;
+                
+                // Ghi chú: Hiệu ứng Buff 5% XP Bệ hạ có thể tự động được tính 
+                // bằng cách check userData.purchasedItems.includes('theme_royal') trong phần tính XP sau này.
+            }
         }
 
         // Cập nhật Firebase
@@ -2371,3 +2382,20 @@ function generateMeteors() {
 }
 // Tự động kích hoạt ngay khi vương quốc tải xong
 setTimeout(generateMeteors, 1000);
+
+// 🌟 KHÓA/MỞ KHOÁ MÁY DU HÀNH TRONG CỬA HÀNG TÙY TÌNH TRẠNG
+    let tmBtn = document.querySelector('button[onclick="buyTimeMachine()"]');
+    if (tmBtn) {
+        if (userData.timeMachine && (userData.timeMachine.status === 'available' || userData.timeMachine.status === 'in_progress')) {
+            let cost = userData.timeMachine.missedDays * 10000;
+            tmBtn.innerText = `SỬ DỤNG (${cost.toLocaleString()} 🪙)`;
+            tmBtn.style.opacity = '1';
+            tmBtn.style.pointerEvents = 'auto';
+            tmBtn.style.background = ''; // Trả lại màu gốc
+        } else {
+            tmBtn.innerText = "CHƯA KÍCH HOẠT (Yêu cầu đứt chuỗi ≤ 3 ngày)";
+            tmBtn.style.opacity = '0.5';
+            tmBtn.style.pointerEvents = 'none';
+            tmBtn.style.background = '#9e9e9e';
+        }
+    }
