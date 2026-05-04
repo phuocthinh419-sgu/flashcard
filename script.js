@@ -525,9 +525,6 @@ function buyItem(itemType, basePrice) {
                 userData.vouchers.push(45); // Tặng thẳng 1 thẻ giảm 45%
                 userData.vouchers.sort((a, b) => b - a); // Sắp xếp thẻ xịn lên đầu
                 updates.vouchers = userData.vouchers;
-                
-                // Ghi chú: Hiệu ứng Buff 5% XP Bệ hạ có thể tự động được tính 
-                // bằng cách check userData.purchasedItems.includes('theme_royal') trong phần tính XP sau này.
             }
         }
 
