@@ -319,7 +319,7 @@ function updateUI() {
     let tmBtn = document.querySelector('button[onclick="buyTimeMachine()"]');
     if (tmBtn) {
         if (userData.timeMachine && (userData.timeMachine.status === 'available' || userData.timeMachine.status === 'in_progress')) {
-            let cost = userData.timeMachine.missedDays * 10000;
+            let cost = userData.timeMachine.missedDays * 800;
             tmBtn.innerText = `SỬ DỤNG (${cost.toLocaleString()} 🪙)`;
             tmBtn.style.opacity = '1';
             tmBtn.style.pointerEvents = 'auto';
@@ -1251,7 +1251,7 @@ function buyTimeMachine() {
     if (userData.timeMachine && userData.timeMachine.status === 'in_progress') { openTimeMachineModal(); return; } 
     if (userData.timeMachine && userData.timeMachine.lastAttemptDate !== todayStr) { userData.timeMachine.attemptsToday = 0; userData.timeMachine.lastAttemptDate = todayStr; } 
     if (userData.timeMachine && userData.timeMachine.attemptsToday >= 3) return alert("Hết lượt hôm nay!"); 
-    let cost = userData.timeMachine.missedDays * 10000; 
+    let cost = userData.timeMachine.missedDays * 800; 
     if (userData.gold < cost) return alert("Không đủ Vàng!"); 
     if (!confirm(`XÁC NHẬN GIAO DỊCH:\nTiêu tốn ${cost} Vàng để thực hiện thử thách.\nCần vượt qua ${userData.timeMachine.missedDays} Giai đoạn. Chấp nhận?`)) return; 
     let allVocab = []; allLessonsData.forEach(l => allVocab = allVocab.concat(l.vocab)); 
