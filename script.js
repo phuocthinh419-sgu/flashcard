@@ -1128,99 +1128,6 @@ function saveSyllabusSelection() {
     alert("Cấu hình tài liệu thi đấu đã được xác nhận!"); 
 }
 
-// =========================================================
-// ⚔️ HỆ THỐNG ĐIỀU HÀNH GIẢI ĐẤU (BRACKET LOGIC)
-// =========================================================
-function createBracketObject(players) { 
-    let N = players.length; let targetSize = 4; 
-    if (N > 4 && N <= 8) targetSize = 8; 
-    if (N > 8 && N <= 16) targetSize = 16; 
-    let bracket = { final: { p1: "---", p2: "---", winner: "" }, third_place: { p1: "---", p2: "---", winner: "" }, super_cup: { p1: "---", p2: "---", winner: "" }, promotion_playoff: { p1: "---", p2: "---", winner: "" } }; 
-    let layout = targetSize === 16 ? [1, 16, 8, 9, 5, 12, 4, 13, 2, 15, 7, 10, 6, 11, 3, 14] : targetSize === 8 ? [1, 8, 4, 5, 2, 7, 3, 6] : [1, 4, 2, 3]; 
-    let matches = []; 
-    for (let i = 0; i < targetSize; i += 2) { 
-        let pA = layout[i] <= N ? players[layout[i] - 1] : "BYE (Đặc cách)"; 
-        let pB = layout[i+1] <= N ? players[layout[i+1] - 1] : "BYE (Đặc cách)"; 
-        matches.push({ p1: pA, p2: pB, winner: "" }); 
-    } 
-    if (targetSize === 16) { 
-        bracket.r16l = [ matches[0], matches[1], matches[2], matches[3] ]; 
-        bracket.r16r = [ matches[4], matches[5], matches[6], matches[7] ]; 
-        bracket.qfl = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; 
-        bracket.qfr = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; 
-        bracket.sfl = { p1: "---", p2: "---", winner: "" }; bracket.sfr = { p1: "---", p2: "---", winner: "" }; 
-    } else if (targetSize === 8) { 
-        bracket.qfl = [ matches[0], matches[1] ]; bracket.qfr = [ matches[2], matches[3] ]; 
-        bracket.sfl = { p1: "---", p2: "---", winner: "" }; bracket.sfr = { p1: "---", p2: "---", winner: "" }; 
-    } else if (targetSize === 4) { bracket.sfl = matches[0]; bracket.sfr = matches[1]; } 
-    return bracket; 
-}
-
-// =========================================================
-// 🎲 THUẬT TOÁN BỐC THĂM VÀ CHIA MÂM C1 / C2 CHUẨN XÁC
-// =========================================================
-
-async function executeBlindDraw() { 
-    if(!confirm(`Xác nhận bốc thăm phân nhánh cho [${currentRealm}]?`)) return; 
-    
-    // 1. Lấy thông tin Đương Kim Vô Địch từ Lịch sử
-    const histSnap = await rtdb.ref(`tournament_status/${currentRealm}/history`).once('value'); 
-    const history = histSnap.val() || {}; 
-    let currentDefendingChampion = history.c1_champ || ""; 
-    
-    // 2. Lấy toàn bộ thần dân trong Phủ
-    const snapshot = await db.collection('vocab_users').where('realm', '==', currentRealm).get(); 
-    let allPlayers = []; 
-    snapshot.forEach(doc => allPlayers.push(doc.data())); 
-    
-    // 3. Xếp hạng dựa trên sức mạnh (XP)
-    allPlayers.sort((a,b) => (b.xp || 0) - (a.xp || 0)); 
-    
-    // 4. Lọc người đủ tiêu chuẩn (Chuỗi >= 3 HOẶC là ĐKVĐ)
-    let qualifiedPlayers = []; 
-    allPlayers.forEach(d => { 
-        let dName = d.displayName || "Ẩn danh";
-        let dStreak = d.streak || 1;
-        let isChampion = (dName === currentDefendingChampion && currentDefendingChampion !== "");
-        
-        if(d.role !== 'teacher' && (dStreak >= 3 || isChampion)) { 
-            qualifiedPlayers.push(dName); 
-        } 
-    }); 
-    
-    let N = qualifiedPlayers.length; 
-    if (N < 4) return alert("Cần tối thiểu 4 thần dân duy trì chuỗi 3 ngày (hoặc ĐKVĐ) để mở giải."); 
-    
-    // 5. Thuật toán chia số lượng C1 và C2 theo Bảng xếp hạng
-    let c1Size = 0, c2Size = 0; 
-    if (N >= 4 && N < 8) { 
-        c1Size = 4; c2Size = 0; 
-    } else if (N >= 8) { 
-        let max_pow = Math.pow(2, Math.floor(Math.log2(N))); 
-        c1Size = (N - max_pow < 4 && max_pow > 4) ? max_pow / 2 : max_pow; 
-        let c2PoolSize = N - c1Size; 
-        c2Size = (c2PoolSize >= 4) ? Math.pow(2, Math.floor(Math.log2(c2PoolSize))) : 0; 
-    } 
-    
-    // 6. Phân bổ hạt giống (Seeds) theo đúng Top XP
-    let c1Players = qualifiedPlayers.slice(0, c1Size);
-    let c2Players = qualifiedPlayers.slice(c1Size, c1Size + c2Size);
-    
-    // 7. Tạo sơ đồ và đưa lên Cửu Trùng Đài (Firebase)
-    let updates = {};
-    updates[`tournament_status/${currentRealm}/c1_bracket`] = createBracketObject(c1Players);
-    
-    if(c2Size > 0) {
-        updates[`tournament_status/${currentRealm}/c2_bracket`] = createBracketObject(c2Players);
-    } else {
-        updates[`tournament_status/${currentRealm}/c2_bracket`] = null; // Xóa C2 nếu không đủ mâm
-    }
-    
-    rtdb.ref().update(updates).then(() => {
-        alert(`🎲 Càn khôn đã định!\nĐã xếp ${c1Size} Dũng sĩ vào C1${c2Size > 0 ? ` và ${c2Size} Dũng sĩ vào C2` : ''}.`);
-    }); 
-}
-
 async function advanceTournament() { 
     if(!confirm("Tiến hành cập nhật cục diện và sắp xếp vòng trong?")) return; 
     const snap = await rtdb.ref(`tournament_status/${currentRealm}`).once('value'); 
@@ -2098,17 +2005,28 @@ async function executeBlindDraw() {
 // ⚡ ĐẠI PHÁP TRẬN: ĐẠI LỄ SĂN VOUCHER (MEGA FLASH SALE)
 // =========================================================
 window.currentFlashSale = null;
+window.currentListeningRealmFS = null; // Cờ lưu tên Phủ đang theo dõi
 
 setInterval(() => {
-    if (currentRealm && rtdb && !window.isListeningFlashSale) {
-        window.isListeningFlashSale = true;
+    // Nếu Phủ hiện tại khác với Phủ đang được theo dõi
+    if (currentRealm && rtdb && window.currentListeningRealmFS !== currentRealm) {
+        
+        // 1. Tắt loa theo dõi ở Phủ cũ để tránh nhiễu sóng
+        if (window.currentListeningRealmFS) {
+            rtdb.ref(`tournament_status/${window.currentListeningRealmFS}/flash_sale`).off();
+        }
+        
+        // 2. Chuyển cờ sang Phủ mới
+        window.currentListeningRealmFS = currentRealm;
+        
+        // 3. Bật loa theo dõi sự kiện ở Phủ mới
         rtdb.ref(`tournament_status/${currentRealm}/flash_sale`).on('value', snap => {
             window.currentFlashSale = snap.val();
             renderFlashSaleBanner();
         });
     }
 }, 2000);
-
+    
 function renderFlashSaleBanner() {
     let banner = document.getElementById('flashSaleBanner');
     if (!banner) {
@@ -2210,11 +2128,21 @@ window.adminStopFlashSale = function() { rtdb.ref(`tournament_status/${currentRe
 // 🏛️ ĐẠI PHÁP TRẬN: NGỰ TIỀN KHAI MINH (DAILY POP-UP QUIZ)
 // =========================================================
 window.currentDailyQuiz = null;
+window.currentListeningRealmDQ = null; // Bổ sung cờ lưu tên Phủ cho Daily Quiz
 
 setInterval(() => {
-    if (currentRealm && rtdb && !window.isListeningDailyQuiz) {
-        window.isListeningDailyQuiz = true;
+    // Kiểm tra nếu Phủ hiện tại khác với Phủ đang được theo dõi
+    if (currentRealm && rtdb && window.currentListeningRealmDQ !== currentRealm) {
         
+        // 1. Tắt loa ở Phủ cũ để tránh nhiễu âm
+        if (window.currentListeningRealmDQ) {
+            rtdb.ref(`tournament_status/${window.currentListeningRealmDQ}/daily_quiz`).off();
+        }
+        
+        // 2. Cập nhật cờ sang Phủ mới
+        window.currentListeningRealmDQ = currentRealm;
+        
+        // 3. Bật loa thu sóng ở Phủ mới
         rtdb.ref(`tournament_status/${currentRealm}/daily_quiz`).on('value', snap => {
             window.currentDailyQuiz = snap.val();
             let todayStr = new Date().toLocaleDateString('en-GB');
