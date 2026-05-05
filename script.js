@@ -2070,3 +2070,53 @@ function generateMeteors() {
     }
 }
 setTimeout(generateMeteors, 1000);
+
+// =========================================================
+// 🔥 ĐOẠN MÃ CUỐI CÙNG BỊ THIẾU (DÁN NỐI TIẾP VÀO CUỐI FILE)
+// =========================================================
+
+// 1. MẮT THẦN CHỐNG GIAN LẬN
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === 'hidden') { 
+        if (isUnderSurveillance) { if (typeof executeAntiCheatPunishment === 'function') executeAntiCheatPunishment(); if (rtdb) rtdb.goOffline(); }
+    } else if (document.visibilityState === 'visible') { if (rtdb) rtdb.goOnline(); }
+});
+window.addEventListener("blur", () => {
+    if (isUnderSurveillance) { if (typeof executeAntiCheatPunishment === 'function') executeAntiCheatPunishment(); if (rtdb) rtdb.goOffline(); }
+});
+window.addEventListener("focus", () => { if (rtdb) rtdb.goOnline(); });
+
+// 2. KHỞI ĐỘNG HỆ THỐNG (CÚ CHÂM NGÒI QUAN TRỌNG NHẤT)
+function startVocabForge() {
+    initSystem();
+    if (localStorage.getItem('darkMode') === 'true') { document.body.classList.add('dark-mode'); document.getElementById('themeToggleBtn').innerText = '☀️'; }
+    switchTab('library');
+}
+if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', startVocabForge); } 
+else { startVocabForge(); }
+
+// 3. CẬP NHẬT GIAO DIỆN GIẢI ĐẤU
+setInterval(() => { if (currentRealm && currentFullBracketData) { if (typeof renderBracket === 'function') { renderBracket(); } } }, 10000);
+
+// 4. QUẢN LÝ LOA PHÁT THANH
+function publishNotice() { let text = document.getElementById('adminNoticeInput').value; if(!text) return alert("Bệ hạ chưa nhập thánh ý!"); rtdb.ref(`tournament_status/${currentRealm}/global_notice`).set(text).then(() => { alert("📢 Đã truyền loa thành công ra toàn cõi!"); document.getElementById('adminNoticeInput').value = ""; }); }
+function clearNotice() { if(!confirm("Bệ hạ muốn thu hồi Thánh chỉ và tắt bảng LED?")) return; rtdb.ref(`tournament_status/${currentRealm}/global_notice`).set("").then(() => { alert("🔇 Đã tắt loa phát thanh!"); }); }
+
+// 5. COPY CODE
+function copyCode() { document.getElementById('generatedCode').select(); document.execCommand("copy"); alert("Thông tin mã được sao chép thành công."); }
+
+// 6. ĐĂNG XUẤT 
+function logoutApp() { if(auth) { auth.signOut().then(() => { alert("🚪 Đã thoát xác thành công! Ký ức cũ đã bị xóa sạch."); window.location.reload(); }).catch(err => alert("Lỗi: " + err.message)); } }
+
+// 7. ĐÀI BAN THƯỞNG CHUỖI NGÀY
+window.checkAndGrantStreakRewards = function(oldS, newS) {
+    if (oldS >= newS) return; let granted = false; let newVouchers = userData.vouchers ? [...userData.vouchers] : []; 
+    for (let s = oldS + 1; s <= newS; s++) {
+        let reward = 0; if (s === 30) reward = 15; else if (s === 50) reward = 30; else if (s === 100) reward = 50; else if (s > 100 && (s - 100) % 30 === 0) reward = 75; 
+        if (reward > 0) { newVouchers.push(reward); granted = true; alert(`🔥 QUÀ TẶNG CHUỖI ${s} NGÀY!\nHệ thống ban tặng 1 Mã giảm giá ${reward}% vào Cửa Hàng!`); }
+    }
+    if (granted) {
+        newVouchers.sort((a,b) => b - a); userData.vouchers = newVouchers;
+        if (typeof syncStatsToCloud === 'function') { syncStatsToCloud(); } else if (currentUser && db) { db.collection('vocab_users').doc(currentUser.uid).update({ vouchers: userData.vouchers }).then(() => updateUI()); }
+    }
+};
