@@ -1458,7 +1458,7 @@ function generateCode() {
     function startTimer(sec, textId, circleId, cb) { timeLeft = sec; const total = sec; document.getElementById(textId).innerText = timeLeft; document.getElementById(circleId).style.strokeDashoffset = '0'; clearInterval(timerId); timerId = setInterval(function() { timeLeft--; document.getElementById(textId).innerText = timeLeft; const offset = 283 - (timeLeft / total) * 283; document.getElementById(circleId).style.strokeDashoffset = offset; if (timeLeft <= 0) { clearInterval(timerId); cb(); } }, 1000); } 
     function finish(id, msg) { document.getElementById(id).innerHTML = '<div class="text-center p-10 bg-green-50 text-green-800 font-bold rounded-xl text-xl">🎉 '+msg+'</div>'; } 
     window.onload = function() { loadCard(0); }; 
-    <\/script></body></html>\`;
+    <\/script></body></html>`;
         
         document.getElementById('generatedCode').value = template;
         currentGeneratedVocab = vocabArray;
