@@ -1807,14 +1807,16 @@ async function adminStartPvP(league, stageKey, matchIndex, p1, p2) {
     questionBank.sort(() => Math.random() - 0.5);
     
     let selectedQ = questionBank.slice(0, 40).map(q => {
-        let opts = [q.vi];
-        while(opts.length < 4) {
-            let randQ = questionBank[Math.floor(Math.random() * questionBank.length)];
-            if(!opts.includes(randQ.vi)) opts.push(randQ.vi);
-        }
-        opts.sort(() => Math.random() - 0.5);
-        return { en: q.en, vi: q.vi, opts: opts };
-    });
+        let opts = [q.vi];
+        let loopCount = 0; // [THẦN VÁ LỖI]: Giới hạn lặp chống liệt tab
+        while(opts.length < 4 && loopCount < 30) {
+            let randQ = questionBank[Math.floor(Math.random() * questionBank.length)];
+            if(!opts.includes(randQ.vi)) opts.push(randQ.vi);
+            loopCount++;
+        }
+        opts.sort(() => Math.random() - 0.5);
+        return { en: q.en, vi: q.vi, opts: opts };
+    });
     
     let matchData = {
         p1: p1, p2: p2, p1_score: 0, p2_score: 0, p1_set: 0, p2_set: 0, p1_ans: "", p2_ans: "", p1_time: 0, p2_time: 0,
@@ -2012,9 +2014,14 @@ setInterval(() => {
             if ((!window.currentDailyQuiz || window.currentDailyQuiz.date !== todayStr) && allLessonsData && allLessonsData.length > 0) {
                 let allVocab = []; allLessonsData.forEach(l => { if(l.vocab) allVocab = allVocab.concat(l.vocab); });
                 if (allVocab.length >= 4) {
-                    let correctWord = allVocab[Math.floor(Math.random() * allVocab.length)]; let opts = [correctWord.vi];
-                    while(opts.length < 4) { let rw = allVocab[Math.floor(Math.random() * allVocab.length)]; if(!opts.includes(rw.vi)) opts.push(rw.vi); }
-                    opts.sort(() => Math.random() - 0.5);
+                    let correctWord = allVocab[Math.floor(Math.random() * allVocab.length)]; let opts = [correctWord.vi];
+                    let loopCount = 0; // [THẦN VÁ LỖI]: Giới hạn lặp
+                    while(opts.length < 4 && loopCount < 30) { 
+                        let rw = allVocab[Math.floor(Math.random() * allVocab.length)]; 
+                        if(!opts.includes(rw.vi)) opts.push(rw.vi); 
+                        loopCount++;
+                    }
+                    opts.sort(() => Math.random() - 0.5);
                     rtdb.ref(`tournament_status/${currentRealm}/daily_quiz`).transaction(curr => {
                         if (!curr || curr.date !== todayStr) { return { date: todayStr, q_en: correctWord.en, q_vi: correctWord.vi, opts: opts, slots: { lvl1: 1, lvl2: 2, lvl3: 3 }, answered_by: {} }; } return; 
                     });
