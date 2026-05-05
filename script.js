@@ -414,13 +414,19 @@ function applyTheme(themeName) {
 
 function buyItem(itemType, basePrice) { 
     if (!currentUser) return alert("Hệ thống yêu cầu phải đăng nhập mới sử dụng tính năng giao dịch!"); 
+    
     let decorItems = ['streak_fire', 'streak_snow', 'streak_peach', 'streak_soccer', 'streak_basket', 'streak_cap', 'theme_default', 'theme_space', 'theme_royal'];
+    
+    // 1. Kiểm tra nếu là đồ trang trí đã sở hữu thì chỉ đổi giao diện
     if (decorItems.includes(itemType)) {
         let isDefault = (itemType === 'streak_fire' || itemType === 'theme_default');
         if (isDefault || (userData.purchasedItems && userData.purchasedItems.includes(itemType))) {
             let updates = {};
-            if (itemType.startsWith('streak_')) { updates.streakIcon = itemType === 'streak_snow' ? '❄️' : itemType === 'streak_peach' ? '🌸' : itemType === 'streak_soccer' ? '⚽' : itemType === 'streak_basket' ? '🏀' : itemType === 'streak_cap' ? '🎓' : '🔥'; } 
-            else if (itemType.startsWith('theme_')) { updates.theme = itemType.replace('_', '-'); }
+            if (itemType.startsWith('streak_')) {
+                updates.streakIcon = itemType === 'streak_snow' ? '❄️' : itemType === 'streak_peach' ? '🌸' : itemType === 'streak_soccer' ? '⚽' : itemType === 'streak_basket' ? '🏀' : itemType === 'streak_cap' ? '🎓' : '🔥';
+            } else if (itemType.startsWith('theme_')) {
+                updates.theme = itemType.replace('_', '-');
+            }
             db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => { 
                 Object.assign(userData, updates); updateUI(); alert("Áp dụng thành công vật phẩm đã sở hữu!"); 
             });
@@ -428,25 +434,49 @@ function buyItem(itemType, basePrice) {
         }
     }
 
-    let isStore = itemType.endsWith('_100'); let isMarket = itemType.endsWith('_80'); let finalPrice = basePrice; let quantity = 1;
+    let isStore = itemType.endsWith('_100');
+    let isMarket = itemType.endsWith('_80');
+    let finalPrice = basePrice;
+    let quantity = 1;
 
+    // 2. Logic mua sỉ Pháp Bảo (Kính, Đồng hồ, Ngọn đuốc)
     if (itemType === 'glass_100' || itemType === 'time_100' || itemType === 'torch_100') {
         let itemName = itemType === 'glass_100' ? "Kính Lúp 🔍" : (itemType === 'time_100' ? "Đồng Hồ ⏳" : "Ngọn Đuốc 🔥");
+        
         let qStr = prompt(`${itemName}\nKính mời Bệ hạ nhập số lượng muốn mua:\n(🔥 ƯU ĐÃI SỈ: Mua từ 3 món trở lên giảm ngay 15% tổng giá gốc!)`, "1");
-        if (qStr === null) return; quantity = parseInt(qStr);
+        if (qStr === null) return; 
+        quantity = parseInt(qStr);
+        
         if (isNaN(quantity) || quantity <= 0) return alert("Kháng chỉ! Số lượng không hợp lệ!");
-        finalPrice = basePrice * quantity;
-        if (quantity >= 3) { finalPrice = Math.floor(finalPrice * 0.85); }
+        
+        finalPrice = basePrice * quantity; // Tính tổng giá trị gốc
+        
+        // Đạt mốc mua sỉ (>=3) thì chém 15%
+        if (quantity >= 3) {
+            finalPrice = Math.floor(finalPrice * 0.85); 
+        }
     }
 
-    let usedVoucher = false; let discountMsg = "";
+    // 3. Áp dụng Voucher và Buff Doraemon
+    let usedVoucher = false; // [THẦN VÁ LỖI]: Cờ theo dõi xem có xài voucher không
+    let discountMsg = ""; // Báo cáo rõ ràng
+
     if (!isMarket && userData.vouchers && userData.vouchers.length > 0) {
-        let vVal = userData.vouchers[0]; finalPrice = Math.floor(finalPrice * (100 - vVal) / 100); usedVoucher = true; discountMsg += `\n🎫 Đã áp dụng Voucher giảm ${vVal}%`;
+        let vVal = userData.vouchers[0];
+        finalPrice = Math.floor(finalPrice * (100 - vVal) / 100);
+        usedVoucher = true; // [THẦN VÁ LỖI]: Bắt quả tang đã cắn Voucher
+        discountMsg += `\n🎫 Đã tự động áp dụng Voucher giảm ${vVal}%`;
     }
-    if (!isMarket && userData.selectedMentor === 'doraemon' && userData.mentorExpiry > Date.now()) { finalPrice = Math.floor(finalPrice * 0.85); discountMsg += `\n🐱 Doraemon buff giảm thêm 15%`; }
+    
+    if (!isMarket && userData.selectedMentor === 'doraemon' && userData.mentorExpiry > Date.now()) {
+        finalPrice = Math.floor(finalPrice * 0.85);
+        discountMsg += `\n🐱 Doraemon buff giảm thêm 15%`;
+    }
     if (isMarket) finalPrice = Math.floor(finalPrice * 1.05);
+
     if (userData.gold < finalPrice) return alert(`Ngân khố không đủ! Cần ${finalPrice.toLocaleString()} 🪙.`);
 
+    // 4. XỬ LÝ NHẬP TÊN TRƯỚC KHI TRỪ TIỀN
     let newDisplayName = null;
     if (itemType.startsWith('rename_')) {
         newDisplayName = prompt("📜 Kính mời Bệ hạ hạ chỉ danh xưng mới:");
@@ -454,12 +484,23 @@ function buyItem(itemType, basePrice) {
         newDisplayName = newDisplayName.trim();
     }
 
+    // 5. Xác nhận giao dịch
     if (confirm(`Xác nhận thanh toán ${finalPrice.toLocaleString()} Vàng cho vật phẩm này?${discountMsg}`)) {
         let updates = { gold: userData.gold - finalPrice };
-        if (usedVoucher) { userData.vouchers.shift(); updates.vouchers = userData.vouchers; }
-        if (newDisplayName) updates.displayName = newDisplayName;
-        if (itemType === 'rename_100') { updates.neonNameExpiry = Date.now() + (7 * 24 * 60 * 60 * 1000); }
+        
+        // [THẦN VÁ LỖI]: THU HỒI VÀ TIÊU HỦY VOUCHER
+        if (usedVoucher) {
+            userData.vouchers.shift(); // Chém bay đầu cái mã xịn nhất vừa dùng
+            updates.vouchers = userData.vouchers;
+        }
 
+        // Gán tên mới và cấp hiệu ứng Neon nếu mua Thẻ Chính Hãng
+        if (newDisplayName) updates.displayName = newDisplayName;
+        if (itemType === 'rename_100') {
+            updates.neonNameExpiry = Date.now() + (7 * 24 * 60 * 60 * 1000); // Tỏa sáng trong 7 ngày
+        }
+
+       // Cấp pháp bảo
         if (itemType === 'shield_100') updates.shield_100 = (userData.shield_100 || 0) + 3;
         if (itemType === 'shield_80') updates.shield_80 = (userData.shield_80 || 0) + 1;
         if (itemType === 'glass_100') updates.glass_100 = (userData.glass_100 || 0) + quantity;
@@ -469,6 +510,7 @@ function buyItem(itemType, basePrice) {
         if (itemType === 'torch_100') updates.torch_100 = (userData.torch_100 || 0) + quantity;
         if (itemType === 'torch_80') updates.torch_80 = (userData.torch_80 || 0) + 1;
 
+        // Logic cho Bình Tiên và Mặt Nạ
         if (itemType.startsWith('potion_100')) updates.potionExpiry = Date.now() + 86400000;
         if (itemType.startsWith('potion_80')) updates.potionExpiry = Date.now() + 43200000;
         if (itemType.startsWith('potion_x3_100')) updates.potionX3Expiry = Date.now() + 21600000;
@@ -476,22 +518,33 @@ function buyItem(itemType, basePrice) {
         if (itemType.startsWith('mask_100')) updates.maskExpiry = Date.now() + 86400000;
         if (itemType.startsWith('mask_80')) updates.maskExpiry = Date.now() + 43200000;
 
+        // [LOGIC MỚI]: Lưu danh sách đồ trang trí và Tặng Voucher 45%
         if (decorItems.includes(itemType) && itemType !== 'streak_fire' && itemType !== 'theme_default') {
             if (!userData.purchasedItems) userData.purchasedItems = [];
-            userData.purchasedItems.push(itemType); updates.purchasedItems = userData.purchasedItems;
-            if (itemType === 'theme_royal') {
-                if (!userData.vouchers) userData.vouchers = [];
-                userData.vouchers.push(45); userData.vouchers.sort((a, b) => b - a); updates.vouchers = userData.vouchers;
-            }
+            userData.purchasedItems.push(itemType);
+            updates.purchasedItems = userData.purchasedItems;
+            
+            // Tặng ngay 1 thẻ 45% cho BẤT KỲ lần mua sắm đồ chính hãng nào
+            if (!userData.vouchers) userData.vouchers = [];
+            userData.vouchers.push(45);
+            userData.vouchers.sort((a, b) => b - a); // Đẩy thẻ xịn nhất lên đầu
+            updates.vouchers = userData.vouchers;
         }
 
+        // Cập nhật Firebase
         db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
             try { transferToAdmin(finalPrice, `Cửa hàng: ${itemType}`); } catch(e) {}
-            Object.assign(userData, updates); updateUI();
+            Object.assign(userData, updates);
+            updateUI();
             if (newDisplayName) fetchLeaderboard(); 
-            let anim = document.getElementById('rewardAnim'); anim.innerText = `🛒 Giao dịch thành công! -${finalPrice} 🪙`;
+            
+            let anim = document.getElementById('rewardAnim');
+            anim.innerText = `🛒 Giao dịch thành công! -${finalPrice} 🪙`;
             anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 3000);
-        }).catch(err => { alert("Firebase từ chối!"); console.error("Lỗi giao dịch:", err); });
+        }).catch(err => {
+            alert("Firebase từ chối! Bệ hạ vui lòng kiểm tra lại 'Rules' (Đạo luật cống nạp).");
+            console.error("Lỗi giao dịch:", err);
+        });
     }
 }
 
@@ -1301,6 +1354,8 @@ function generateCode() {
         if (vocabArray.length === 0) return alert("Định dạng không hợp lệ!");
         const jsonVocabStr = JSON.stringify(vocabArray);
         
+        // Đã sửa lại lỗi dư dấu gạch chéo trong regex nhận diện tiếng Trung: [\u4E00-\u9FA5]
+        // Đã loại bỏ hoàn toàn các biến của Cỗ máy Thời gian khỏi template bài học
         const template = `<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://cdn.tailwindcss.com"><\/script><style>body { background-color: transparent; margin: 0; padding: 10px; font-family: 'Segoe UI', sans-serif; } .perspective { perspective: 1000px; } .transform-style-3d { transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); } .backface-hidden { backface-visibility: hidden; } .rotate-y-180 { transform: rotateY(180deg); } .flipped .transform-style-3d { transform: rotateY(180deg); } .quiz-btn { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 2px solid #e0e7ff; background: white; font-weight: bold; color: #3730a3; transition: 0.2s; text-align: left; cursor: pointer; } .quiz-btn:hover { border-color: #4f46e5; background: #e0e7ff; } .quiz-btn.correct { background: #10b981; color: white; border-color: #059669; } .quiz-btn.wrong { background: #ef4444; color: white; border-color: #b91c1c; } .disabled { pointer-events: none; } .spell-char { width: 38px; height: 48px; text-align: center; font-size: 20px; font-weight: 900; border-radius: 8px; border: 2px solid #9333ea; outline: none; text-transform: uppercase; background: white; transition: all 0.3s; }</style></head><body><div id="flashcard-section" class="flex flex-col items-center w-full max-w-md mx-auto"><div class="text-center mb-4 text-indigo-800 font-bold" id="card-counter"></div><div id="flashcard" class="perspective w-full h-80 cursor-pointer mb-6" onclick="this.classList.toggle('flipped')"><div class="transform-style-3d relative w-full h-full rounded-2xl shadow-lg"><div class="backface-hidden absolute w-full h-full bg-white rounded-2xl flex flex-col items-center justify-center p-6 border-2 border-indigo-100"><div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;"><div class="text-5xl font-extrabold text-indigo-900 mb-2" id="word-en"></div><button onclick="speakWord(document.getElementById('word-en').innerText); event.stopPropagation();" style="background:none; border:none; font-size: 28px; cursor: pointer;">🔊</button></div><div class="text-lg text-gray-500 mb-4 font-mono" id="word-pro"></div><span class="px-4 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold uppercase" id="word-type"></span></div><div class="backface-hidden rotate-y-180 absolute w-full h-full bg-gradient-to-br from-indigo-600 to-blue-800 rounded-2xl flex flex-col items-center justify-center p-6 text-white text-center"><div class="text-3xl font-bold text-yellow-300" id="word-vi"></div></div></div></div><div class="flex gap-4 w-full"><button onclick="prevCard()" class="flex-1 py-3 rounded-xl bg-gray-200 text-gray-700 font-bold">⬅ Trước</button><button onclick="nextCard()" id="next-btn" class="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold">Tiếp ➡</button></div></div><div id="summary-section" class="hidden w-full max-w-md mx-auto relative"><div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100"><h2 class="text-xl font-bold text-indigo-800 mb-4 text-center border-b pb-3">📄 Tổng hợp bài học</h2><div id="summary-list" class="max-h-96 overflow-y-auto space-y-2"></div></div><button onclick="startQuiz()" class="w-full py-3 rounded-xl bg-yellow-500 text-white font-bold mb-3 shadow-md">Làm Trắc Nghiệm 🪙</button><button onclick="startSpelling()" class="w-full py-3 rounded-xl bg-purple-600 text-white font-bold shadow-md">Gõ Chính Tả ✍️</button></div><div id="quiz-section" class="hidden w-full max-w-md mx-auto"><div class="text-center mb-6"><div style="position: relative; width: 70px; height: 70px; margin: 0 auto 10px auto;"><svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg);" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"></circle><circle id="quiz-circle" cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"></circle></svg><div id="timer-text" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; color: #ef4444;">15</div></div><div style="display: flex; justify-content: center; align-items: center; gap: 10px;"><h2 id="quiz-question" class="text-4xl font-extrabold text-indigo-900"></h2><button onclick="speakWord(document.getElementById('quiz-question').innerText);">🔊</button></div></div><div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 15px;"><button id="btn-use-glass" onclick="requestGlass()" style="padding: 6px 16px; border-radius: 20px; background: #e0f2fe; color: #0284c7; font-weight: bold; border: 1px solid #bae6fd; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">🔍 Kính Lúp</button><button id="btn-use-time-quiz" onclick="requestTime()" style="padding: 6px 16px; border-radius: 20px; background: #f3e5f5; color: #7b1fa2; font-weight: bold; border: 1px solid #e1bee7; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">⏳ Đồng Hồ</button></div><div id="quiz-options" class="w-full"></div></div><div id="spelling-section" class="hidden w-full max-w-md mx-auto"><div class="text-center mb-6"><div style="position: relative; width: 70px; height: 70px; margin: 0 auto 10px auto;"><svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg);" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"></circle><circle id="spell-circle" cx="50" cy="50" r="45" fill="none" stroke="#9333ea" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"></circle></svg><div id="spell-timer-text" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; color: #9333ea;">30</div></div><h2 id="spell-question" class="text-3xl font-extrabold text-indigo-900 mt-2 mb-1"></h2></div><div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 15px;"><button id="btn-use-torch" onclick="requestTorch()" style="padding: 6px 16px; border-radius: 20px; background: #fff3e0; color: #e65100; font-weight: bold; border: 1px solid #ffe0b2; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">🔥 Ngọn Đuốc</button><button id="btn-use-time-spell" onclick="requestTime()" style="padding: 6px 16px; border-radius: 20px; background: #f3e5f5; color: #7b1fa2; font-weight: bold; border: 1px solid #e1bee7; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">⏳ Đồng Hồ</button></div><div id="spell-inputs" class="flex flex-wrap justify-center gap-2 mb-6 relative min-h-[60px]"></div><button onclick="submitSpelling()" id="spell-submit-btn" class="w-full py-3 rounded-xl bg-purple-600 text-white font-bold">Chốt Đáp Án (Enter)</button></div><script>
     function speakWord(t) { if ('speechSynthesis' in window) { let e = new SpeechSynthesisUtterance(t); e.lang = /[\\u4E00-\\u9FA5]/.test(t) ? 'zh-CN' : 'en-US'; window.speechSynthesis.speak(e); } } 
     const vocabList = \${jsonVocabStr}; let currentIndex = 0; let quizOrder = []; let timerId = null; let timeLeft = 0; 
@@ -1353,7 +1408,7 @@ function generateCode() {
 
     function loadCard(idx) { document.getElementById('flashcard').classList.remove('flipped'); const item = vocabList[idx]; document.getElementById('word-en').innerText = item.en; document.getElementById('word-pro').innerText = item.pro; document.getElementById('word-type').innerText = item.type; document.getElementById('word-vi').innerText = item.vi; document.getElementById('card-counter').innerText = 'Thẻ ' + (idx + 1) + ' / ' + vocabList.length; document.getElementById('next-btn').innerText = idx === vocabList.length - 1 ? "Xem Tổng Hợp 📄" : "Tiếp ➡"; } 
     function prevCard() { if (currentIndex > 0) { currentIndex--; loadCard(currentIndex); } } 
-    function nextCard() { if (currentIndex < vocabList.length - 1) { currentIndex++; loadCard(currentIndex); } else { document.getElementById('flashcard-section').classList.add('hidden'); document.getElementById('summary-section').classList.remove('hidden'); const list = document.getElementById('summary-list'); let html = ''; for(let i=0; i<vocabList.length; i++) { html += '<div class="p-2 border-b flex justify-between items-center"><div><b>'+vocabList[i].en+'</b><br><span class="text-sm text-gray-600">'+vocabList[i].vi+'</span></div><button onclick="speakWord(\\\''+vocabList[i].en+'\\')">🔊</button></div>'; } list.innerHTML = html; } } 
+    function nextCard() { if (currentIndex < vocabList.length - 1) { currentIndex++; loadCard(currentIndex); } else { document.getElementById('flashcard-section').classList.add('hidden'); document.getElementById('summary-section').classList.remove('hidden'); const list = document.getElementById('summary-list'); let html = ''; for(let i=0; i<vocabList.length; i++) { html += '<div class="p-2 border-b flex justify-between items-center"><div><b>'+vocabList[i].en+'</b><br><span class="text-sm text-gray-600">'+vocabList[i].vi+'</span></div><button onclick="speakWord(\\\''+vocabList[i].en+'\\'\)">🔊</button></div>'; } list.innerHTML = html; } } 
     function startQuiz() { document.getElementById('summary-section').classList.add('hidden'); document.getElementById('quiz-section').classList.remove('hidden'); quizOrder = []; for (let i = 0; i < vocabList.length; i++) quizOrder.push(i); quizOrder.sort(function() { return Math.random() - 0.5; }); currentIndex = 0; loadQuiz(); } 
     
     function loadQuiz() { 
@@ -1398,14 +1453,16 @@ function generateCode() {
                 bTi.style.textDecoration = 'none'; bTi.style.opacity = '1'; bTi.style.pointerEvents = 'auto'; bTi.innerText = '⏳ Đồng Hồ (' + (3 - timeSpellUses) + ')';
             }
         } 
-        const item = vocabList[quizOrder[currentIndex]]; document.getElementById('spell-question').innerText = item.vi; const container = document.getElementById('spell-inputs'); container.innerHTML = ''; const words = item.en.trim().split(' '); for(let i=0; i<words.length; i++) { let word = words[i]; let div = document.createElement('div'); div.className = 'flex gap-1 mb-2'; let chars = word.split(''); for(let j=0; j<chars.length; j++) { let char = chars[j]; let input = document.createElement('input'); input.className = 'spell-char'; input.dataset.char = char.toUpperCase(); if (char === '-' || char === '/') { input.value = char; input.disabled = true; input.style.background = '#eee'; } div.appendChild(input); } container.appendChild(div); } let hidden = document.createElement('input'); hidden.style.position = 'absolute'; hidden.style.opacity = '0'; hidden.style.top = '0'; hidden.style.left = '0'; hidden.style.width = '100%'; hidden.style.height = '100%'; hidden.style.zIndex = '10'; hidden.id = 'h-inp'; container.appendChild(hidden); hidden.focus(); let inputs = document.querySelectorAll('.spell-char'); hidden.oninput = function(e) { let val = e.target.value.toUpperCase().replace(/[ \\\\-\\\\/]/g, ''); let valIdx = 0; for(let k=0; k<inputs.length; k++) { if(!inputs[k].disabled) { if(!inputs[k].dataset.revealed) { inputs[k].value = val[valIdx] || ''; valIdx++; } } } }; hidden.onkeydown = function(e) { if(e.key === 'Enter') submitSpelling(); }; startTimer(30, 'spell-timer-text', 'spell-circle', submitSpelling); } 
-    function submitSpelling() { clearInterval(timerId); let inputs = document.querySelectorAll('.spell-char'); let userVal = ""; for(let i=0; i<inputs.length; i++) { userVal += inputs[i].value || ""; } userVal = userVal.toUpperCase().replace(/\\\\s/g, ''); let currentItem = vocabList[quizOrder[currentIndex]]; let correctVal = currentItem.en.toUpperCase().replace(/\\\\s/g, ''); function formatWords(str) { let arr = str.split('/'); let res = []; for(let i=0; i<arr.length; i++) res.push(arr[i].trim()); res.sort(); return res.join('/'); } let bTo = document.getElementById('btn-use-torch'); if(bTo) bTo.style.display = 'none'; let bTi = document.getElementById('btn-use-time-spell'); if(bTi) bTi.style.display = 'none'; if (formatWords(userVal) === formatWords(correctVal)) { for(let i=0; i<inputs.length; i++) inputs[i].style.background = '#d1fae5'; if(window.parent) { let token = btoa('SPELLING_CORRECT_' + Date.now()); window.parent.postMessage(token, '*'); } } else { if(window.parent) window.parent.postMessage(JSON.stringify({status: 'WRONG', en: currentItem.en, vi: currentItem.vi}), '*'); for(let i=0; i<inputs.length; i++) { inputs[i].style.background = '#fee2e2'; inputs[i].value = inputs[i].dataset.char; } } setTimeout(function() { currentIndex++; if (currentIndex < vocabList.length) loadSpelling(); else finish("spelling-section", "Hoàn thành Gõ chính tả!"); }, 2000); } 
+        const item = vocabList[quizOrder[currentIndex]]; document.getElementById('spell-question').innerText = item.vi; const container = document.getElementById('spell-inputs'); container.innerHTML = ''; const words = item.en.trim().split(' '); for(let i=0; i<words.length; i++) { let word = words[i]; let div = document.createElement('div'); div.className = 'flex gap-1 mb-2'; let chars = word.split(''); for(let j=0; j<chars.length; j++) { let char = chars[j]; let input = document.createElement('input'); input.className = 'spell-char'; input.dataset.char = char.toUpperCase(); if (char === '-' || char === '/') { input.value = char; input.disabled = true; input.style.background = '#eee'; } div.appendChild(input); } container.appendChild(div); } let hidden = document.createElement('input'); hidden.style.position = 'absolute'; hidden.style.opacity = '0'; hidden.style.top = '0'; hidden.style.left = '0'; hidden.style.width = '100%'; hidden.style.height = '100%'; hidden.style.zIndex = '10'; hidden.id = 'h-inp'; container.appendChild(hidden); hidden.focus(); let inputs = document.querySelectorAll('.spell-char'); hidden.oninput = function(e) { let val = e.target.value.toUpperCase().replace(/[\\\\s\\\\-\\\\/]/g, ''); let valIdx = 0; for(let k=0; k<inputs.length; k++) { if(!inputs[k].disabled) { if(!inputs[k].dataset.revealed) { inputs[k].value = val[valIdx] || ''; valIdx++; } } } }; hidden.onkeydown = function(e) { if(e.key === 'Enter') submitSpelling(); }; startTimer(30, 'spell-timer-text', 'spell-circle', submitSpelling); } 
+    function submitSpelling() { clearInterval(timerId); let inputs = document.querySelectorAll('.spell-char'); let userVal = ""; for(let i=0; i<inputs.length; i++) { userVal += inputs[i].value || ""; } userVal = userVal.toUpperCase().replace(/\\\\s/g, ''); let currentItem = vocabList[quizOrder[currentIndex]]; let correctVal = currentItem.en.toUpperCase().replace(/\\\\s/g, ''); function formatWords(str) { let arr = str.split('/'); let res = []; for(let i=0; i<arr.length; i++) res.push(arr[i].trim()); res.sort(); return res.join('/'); } let bTo = document.getElementById('btn-use-torch'); if(bTo) bTo.style.display = 'none'; let bTi = document.getElementById('btn-use-time-spell'); if(bTi) bTi.style.display = 'none'; if (formatWords(userVal) === formatWords(correctVal)) { for(let i=0; i<inputs.length; i++) inputs[i].style.background = '#d1fae5'; if(window.parent) { let token = btoa('SPELLING_CORRECT_' + Date.now()); window.parent.postMessage(token, '*'); } } else { if(window.parent) window.parent.postMessage(JSON.stringify({status: 'WRONG', en: currentItem.en, vi: currentItem.vi}), '*'); for(let i=0; i<inputs.length; i++) { inputs[i].style.background = '#fee2e2'; inputs[i].value = inputs[i].dataset.char; } } setTimeout(function() { currentIndex++; if (currentQuizIndex < vocabList.length) loadSpelling(); else finish("spelling-section", "Hoàn thành Gõ chính tả!"); }, 2000); } 
     function startTimer(sec, textId, circleId, cb) { timeLeft = sec; const total = sec; document.getElementById(textId).innerText = timeLeft; document.getElementById(circleId).style.strokeDashoffset = '0'; clearInterval(timerId); timerId = setInterval(function() { timeLeft--; document.getElementById(textId).innerText = timeLeft; const offset = 283 - (timeLeft / total) * 283; document.getElementById(circleId).style.strokeDashoffset = offset; if (timeLeft <= 0) { clearInterval(timerId); cb(); } }, 1000); } 
     function finish(id, msg) { document.getElementById(id).innerHTML = '<div class="text-center p-10 bg-green-50 text-green-800 font-bold rounded-xl text-xl">🎉 '+msg+'</div>'; } 
     window.onload = function() { loadCard(0); }; 
-    <\/script></body></html>`;
-        document.getElementById('generatedCode').value = template; currentGeneratedVocab = vocabArray;
-        alert("Đúc mã thành công! Trọn bộ Pháp bảo và Mắt Thần Tiếng Trung đã được khảm vào hệ thống.");
+    <\/script></body></html>\`;
+        
+        document.getElementById('generatedCode').value = template;
+        currentGeneratedVocab = vocabArray;
+        alert("Đúc mã thành công! Trọn bộ Pháp bảo đã được khảm vào hệ thống.");
     } catch (e) { alert("Lỗi nghiêm trọng khi đúc mã: " + e.message); }
 }
 
