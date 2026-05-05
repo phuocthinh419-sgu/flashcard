@@ -1692,12 +1692,19 @@ window.addEventListener("blur", () => {
 });
 window.addEventListener("focus", () => { if (rtdb) rtdb.goOnline(); });
 
-// 2. KHỞI ĐỘNG HỆ THỐNG
-window.addEventListener('DOMContentLoaded', () => {
+// 2. KHỞI ĐỘNG HỆ THỐNG (BẢN VÁ CHỐNG NGỦ ĐÔNG)
+function startVocabForge() {
     initSystem();
     if (localStorage.getItem('darkMode') === 'true') { document.body.classList.add('dark-mode'); document.getElementById('themeToggleBtn').innerText = '☀️'; }
     switchTab('library');
-});
+}
+
+// Nếu HTML còn đang tải thì chờ, nếu tải xong rồi thì chạy ngay lập tức!
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startVocabForge);
+} else {
+    startVocabForge();
+}
 
 // 3. CẬP NHẬT GIAO DIỆN GIẢI ĐẤU
 setInterval(() => { if (currentRealm && currentFullBracketData) { if (typeof renderBracket === 'function') { renderBracket(); } } }, 10000);
