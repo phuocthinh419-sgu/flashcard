@@ -2112,4 +2112,3 @@ function generateMeteors() {
     }
 }
 setTimeout(generateMeteors, 1000);
-}
