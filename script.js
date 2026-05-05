@@ -1319,7 +1319,7 @@ function buyTimeMachine() {
 setTimeout(() => { updateUI(); fetchLeaderboard(); }, 500);
 
 // =========================================================
-// 🔥 BẢN VÁ CÁC HÀM BỊ MẤT TÍCH (DÁN NỐI TIẾP VÀO CUỐI FILE)
+// 🌟 BỘ PHÁP BẢO & TÍNH NĂNG MỞ RỘNG (ĐÃ GỘP CHUẨN XÁC)
 // =========================================================
 
 function renderAchievements() {
@@ -1407,8 +1407,6 @@ function generateCode() {
         if (vocabArray.length === 0) return alert("Định dạng không hợp lệ!");
         const jsonVocabStr = JSON.stringify(vocabArray);
         
-        // Đã sửa lại lỗi dư dấu gạch chéo trong regex nhận diện tiếng Trung: [\u4E00-\u9FA5]
-        // Đã thêm hệ thống Đếm và Gạch chéo giới hạn 3 lần dùng bảo pháp!
         const template = `<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://cdn.tailwindcss.com"><\/script><style>body { background-color: transparent; margin: 0; padding: 10px; font-family: 'Segoe UI', sans-serif; } .perspective { perspective: 1000px; } .transform-style-3d { transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); } .backface-hidden { backface-visibility: hidden; } .rotate-y-180 { transform: rotateY(180deg); } .flipped .transform-style-3d { transform: rotateY(180deg); } .quiz-btn { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 2px solid #e0e7ff; background: white; font-weight: bold; color: #3730a3; transition: 0.2s; text-align: left; cursor: pointer; } .quiz-btn:hover { border-color: #4f46e5; background: #e0e7ff; } .quiz-btn.correct { background: #10b981; color: white; border-color: #059669; } .quiz-btn.wrong { background: #ef4444; color: white; border-color: #b91c1c; } .disabled { pointer-events: none; } .spell-char { width: 38px; height: 48px; text-align: center; font-size: 20px; font-weight: 900; border-radius: 8px; border: 2px solid #9333ea; outline: none; text-transform: uppercase; background: white; transition: all 0.3s; }</style></head><body><div id="flashcard-section" class="flex flex-col items-center w-full max-w-md mx-auto"><div class="text-center mb-4 text-indigo-800 font-bold" id="card-counter"></div><div id="flashcard" class="perspective w-full h-80 cursor-pointer mb-6" onclick="this.classList.toggle('flipped')"><div class="transform-style-3d relative w-full h-full rounded-2xl shadow-lg"><div class="backface-hidden absolute w-full h-full bg-white rounded-2xl flex flex-col items-center justify-center p-6 border-2 border-indigo-100"><div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;"><div class="text-5xl font-extrabold text-indigo-900 mb-2" id="word-en"></div><button onclick="speakWord(document.getElementById('word-en').innerText); event.stopPropagation();" style="background:none; border:none; font-size: 28px; cursor: pointer;">🔊</button></div><div class="text-lg text-gray-500 mb-4 font-mono" id="word-pro"></div><span class="px-4 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold uppercase" id="word-type"></span></div><div class="backface-hidden rotate-y-180 absolute w-full h-full bg-gradient-to-br from-indigo-600 to-blue-800 rounded-2xl flex flex-col items-center justify-center p-6 text-white text-center"><div class="text-3xl font-bold text-yellow-300" id="word-vi"></div></div></div></div><div class="flex gap-4 w-full"><button onclick="prevCard()" class="flex-1 py-3 rounded-xl bg-gray-200 text-gray-700 font-bold">⬅ Trước</button><button onclick="nextCard()" id="next-btn" class="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold">Tiếp ➡</button></div></div><div id="summary-section" class="hidden w-full max-w-md mx-auto relative"><div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100"><h2 class="text-xl font-bold text-indigo-800 mb-4 text-center border-b pb-3">📄 Tổng hợp bài học</h2><div id="summary-list" class="max-h-96 overflow-y-auto space-y-2"></div></div><button onclick="startQuiz()" class="w-full py-3 rounded-xl bg-yellow-500 text-white font-bold mb-3 shadow-md">Làm Trắc Nghiệm 🪙</button><button onclick="startSpelling()" class="w-full py-3 rounded-xl bg-purple-600 text-white font-bold shadow-md">Gõ Chính Tả ✍️</button></div><div id="quiz-section" class="hidden w-full max-w-md mx-auto"><div class="text-center mb-6"><div style="position: relative; width: 70px; height: 70px; margin: 0 auto 10px auto;"><svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg);" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"></circle><circle id="quiz-circle" cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"></circle></svg><div id="timer-text" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; color: #ef4444;">15</div></div><div style="display: flex; justify-content: center; align-items: center; gap: 10px;"><h2 id="quiz-question" class="text-4xl font-extrabold text-indigo-900"></h2><button onclick="speakWord(document.getElementById('quiz-question').innerText);">🔊</button></div></div><div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 15px;"><button id="btn-use-glass" onclick="requestGlass()" style="padding: 6px 16px; border-radius: 20px; background: #e0f2fe; color: #0284c7; font-weight: bold; border: 1px solid #bae6fd; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">🔍 Kính Lúp</button><button id="btn-use-time-quiz" onclick="requestTime()" style="padding: 6px 16px; border-radius: 20px; background: #f3e5f5; color: #7b1fa2; font-weight: bold; border: 1px solid #e1bee7; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">⏳ Đồng Hồ</button></div><div id="quiz-options" class="w-full"></div></div><div id="spelling-section" class="hidden w-full max-w-md mx-auto"><div class="text-center mb-6"><div style="position: relative; width: 70px; height: 70px; margin: 0 auto 10px auto;"><svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg);" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"></circle><circle id="spell-circle" cx="50" cy="50" r="45" fill="none" stroke="#9333ea" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"></circle></svg><div id="spell-timer-text" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; color: #9333ea;">30</div></div><h2 id="spell-question" class="text-3xl font-extrabold text-indigo-900 mt-2 mb-1"></h2></div><div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 15px;"><button id="btn-use-torch" onclick="requestTorch()" style="padding: 6px 16px; border-radius: 20px; background: #fff3e0; color: #e65100; font-weight: bold; border: 1px solid #ffe0b2; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">🔥 Ngọn Đuốc</button><button id="btn-use-time-spell" onclick="requestTime()" style="padding: 6px 16px; border-radius: 20px; background: #f3e5f5; color: #7b1fa2; font-weight: bold; border: 1px solid #e1bee7; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">⏳ Đồng Hồ</button></div><div id="spell-inputs" class="flex flex-wrap justify-center gap-2 mb-6 relative min-h-[60px]"></div><button onclick="submitSpelling()" id="spell-submit-btn" class="w-full py-3 rounded-xl bg-purple-600 text-white font-bold">Chốt Đáp Án (Enter)</button></div><script>
     function speakWord(t) { if ('speechSynthesis' in window) { let e = new SpeechSynthesisUtterance(t); e.lang = /[\\u4E00-\\u9FA5]/.test(t) ? 'zh-CN' : 'en-US'; window.speechSynthesis.speak(e); } } 
     const vocabList = ${jsonVocabStr}; let currentIndex = 0; let quizOrder = []; let timerId = null; let timeLeft = 0; 
@@ -1683,10 +1681,6 @@ window.addEventListener('message', function(e) {
     else if (e.data === 'TM_RESULT_FAIL') { closeModal(); userData.timeMachine.status = 'available'; userData.timeMachine.currentBank = []; db.collection('vocab_users').doc(currentUser.uid).update({ timeMachine: userData.timeMachine }).then(() => { updateUI(); alert(`❌ THẤT BẠI! Hãy thử lại nếu còn lượt.`); }); }
 });
 
-// =========================================================
-// 🔥 ĐOẠN MÃ CUỐI CÙNG BỊ THIẾU (DÁN NỐI TIẾP VÀO CUỐI FILE)
-// =========================================================
-
 // 1. MẮT THẦN CHỐNG GIAN LẬN
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === 'hidden') { 
@@ -1698,7 +1692,7 @@ window.addEventListener("blur", () => {
 });
 window.addEventListener("focus", () => { if (rtdb) rtdb.goOnline(); });
 
-// 2. KHỞI ĐỘNG HỆ THỐNG (CỰC KỲ QUAN TRỌNG ĐỂ TẢI DỮ LIỆU)
+// 2. KHỞI ĐỘNG HỆ THỐNG
 window.addEventListener('DOMContentLoaded', () => {
     initSystem();
     if (localStorage.getItem('darkMode') === 'true') { document.body.classList.add('dark-mode'); document.getElementById('themeToggleBtn').innerText = '☀️'; }
@@ -1725,11 +1719,11 @@ function logoutApp() {
     }
 }
 
-// 7. ĐÀI BAN THƯỞNG CHUỖI NGÀY (BẢN VÁ TỐI ƯU ĐỒNG BỘ)
+// 7. ĐÀI BAN THƯỞNG CHUỖI NGÀY
 window.checkAndGrantStreakRewards = function(oldS, newS) {
     if (oldS >= newS) return;
     let granted = false;
-    let newVouchers = userData.vouchers ? [...userData.vouchers] : []; // Tạo mảng dự phòng
+    let newVouchers = userData.vouchers ? [...userData.vouchers] : []; 
     
     for (let s = oldS + 1; s <= newS; s++) {
         let reward = 0;
@@ -1747,9 +1741,7 @@ window.checkAndGrantStreakRewards = function(oldS, newS) {
     
     if (granted) {
         newVouchers.sort((a,b) => b - a); 
-        userData.vouchers = newVouchers; // Cập nhật vào bộ nhớ ngay lập tức
-        
-        // Gọi thẳng hàm đồng bộ lớn của toàn hệ thống để mọi thứ nhất quán
+        userData.vouchers = newVouchers;
         if (typeof syncStatsToCloud === 'function') {
             syncStatsToCloud();
         } else if (currentUser && db) { 
@@ -1759,9 +1751,8 @@ window.checkAndGrantStreakRewards = function(oldS, newS) {
 };
 
 // =========================================================
-// ✈️ HỆ THỐNG DI CƯ (GIẤY THÔNG HÀNH) - BẢN VÁ BỔ SUNG
+// ✈️ HỆ THỐNG DI CƯ (GIẤY THÔNG HÀNH)
 // =========================================================
-
 function openMigrationModal() { 
     if(availableRealms.length <= 1) return alert("Hệ thống hiện tại chỉ mới có 1 Lãnh Thổ duy nhất.");
     if(userData.role !== 'teacher' && userData.gold < 100000) return alert("Bạn không đủ 100.000 Vàng để mua Giấy Thông Hành!"); 
@@ -1786,22 +1777,11 @@ function confirmMigration() {
         }
     }
     
-    // Gửi gắm XP vào Trọn đời và thiết lập lại các chỉ số đua top
     userData.lifetime_xp = (userData.lifetime_xp || 0) + userData.xp; 
-    userData.xp = 0; 
-    userData.weeklyXp = 0; 
-    userData.lastWeekXp = 0; 
-    userData.highestWeeklyXp = 0; 
-    userData.realm = newRealm; 
+    userData.xp = 0; userData.weeklyXp = 0; userData.lastWeekXp = 0; userData.highestWeeklyXp = 0; userData.realm = newRealm; 
     
     db.collection('vocab_users').doc(currentUser.uid).update({ 
-        gold: userData.gold, 
-        lifetime_xp: userData.lifetime_xp, 
-        xp: 0, 
-        weeklyXp: 0, 
-        lastWeekXp: 0, 
-        highestWeeklyXp: 0, 
-        realm: newRealm 
+        gold: userData.gold, lifetime_xp: userData.lifetime_xp, xp: 0, weeklyXp: 0, lastWeekXp: 0, highestWeeklyXp: 0, realm: newRealm 
     }).then(() => { 
         alert(`✈️ Đã di cư thành công sang Phủ [${newRealm}]!`); 
         window.location.reload(); 
@@ -1809,32 +1789,23 @@ function confirmMigration() {
 }
 
 // =========================================================
-// ⚔️ KHAI CHIẾN TỶ VÕ (BẢN VÁ DÀNH CHO TRỌNG TÀI)
+// ⚔️ KHAI CHIẾN TỶ VÕ & MẮT THẦN TRỌNG TÀI
 // =========================================================
-
-// =========================================================
-// 👁️ VÁ LỖI TRỌNG TÀI - BẬT MẮT THẦN CHO BỆ HẠ (DÁN CUỐI FILE)
-// =========================================================
-
 async function adminStartPvP(league, stageKey, matchIndex, p1, p2) {
     if(!confirm(`Bệ hạ có chắc chắn muốn khai chiến trận đấu giữa: ${p1} vs ${p2}?`)) return;
     
-    // 1. Kiểm tra tài liệu thi đấu (Syllabus)
     const sylSnap = await rtdb.ref(`tournament_status/${currentRealm}/syllabus`).once('value');
     let syllabus = sylSnap.val() || [];
     if(syllabus.length === 0) return alert("Khởi bẩm: Chưa có cấu hình tài liệu (Syllabus)! Hãy vào Ngự Thư Phòng chọn bài thi đấu.");
     
-    // 2. Gom và trộn câu hỏi từ Kho
     let questionBank = [];
     allLessonsData.forEach(l => {
         if(syllabus.includes(l.name)) { l.vocab.forEach(v => questionBank.push(v)); }
     });
     
     if(questionBank.length < 30) return alert(`Kho câu hỏi của các bài đã chọn chỉ có ${questionBank.length} từ. Cần tối thiểu 30 từ để thi đấu!`);
-    
     questionBank.sort(() => Math.random() - 0.5);
     
-    // 3. Chuẩn bị 40 câu hỏi trắc nghiệm / chính tả
     let selectedQ = questionBank.slice(0, 40).map(q => {
         let opts = [q.vi];
         while(opts.length < 4) {
@@ -1845,50 +1816,25 @@ async function adminStartPvP(league, stageKey, matchIndex, p1, p2) {
         return { en: q.en, vi: q.vi, opts: opts };
     });
     
-    // 4. Khởi tạo Sàn Đấu (Phòng PvP)
     let matchData = {
-        p1: p1, p2: p2,
-        p1_score: 0, p2_score: 0,
-        p1_set: 0, p2_set: 0,
-        p1_ans: "", p2_ans: "",
-        p1_time: 0, p2_time: 0,
-        q_idx: 1,
-        status: 'playing',
-        evaluating: false,
-        league: league,
-        stage: stageKey,
-        match_idx: matchIndex,
-        question_bank: selectedQ,
-        current_q: selectedQ[0],
-        mode: 'normal', // Set 1 mặc định là Trắc nghiệm
-        time_limit: 15,
-        unlock_time: Date.now() + 8000 // Chờ 8s đếm ngược trước câu đầu
+        p1: p1, p2: p2, p1_score: 0, p2_score: 0, p1_set: 0, p2_set: 0, p1_ans: "", p2_ans: "", p1_time: 0, p2_time: 0,
+        q_idx: 1, status: 'playing', evaluating: false, league: league, stage: stageKey, match_idx: matchIndex,
+        question_bank: selectedQ, current_q: selectedQ[0], mode: 'normal', time_limit: 15, unlock_time: Date.now() + 8000
     };
     
-    // 👉 NÚT THẮT CHÍNH LÀ ĐÂY: Bật Mắt thần cho Bệ hạ theo dõi Lôi đài
     window.isSpectating = true;
     
-    // 5. Cập nhật lên Cửu Trùng Đài (Firebase)
     rtdb.ref(`active_pvp_match/${currentRealm}`).set(matchData).then(() => {
         alert("⚔️ Sàn đấu đã mở! Kính mời Bệ hạ thị sát lôi đài!");
     });
 }
 
-// 🛡️ Nút dự phòng: Dành cho lúc Bệ hạ lỡ F5 lại trang mà lôi đài bị ẩn đi.
-// Ngài có thể mở F12 (Console) gõ adminSpectateCurrentMatch() để gọi lại màn hình PvP.
 function adminSpectateCurrentMatch() {
     window.isSpectating = true;
     rtdb.ref(`active_pvp_match/${currentRealm}`).once('value').then(snap => {
         if(snap.exists()) {
             let pvpModalEl = document.getElementById('pvpModal');
-            if(pvpModalEl) {
-                pvpModalEl.classList.add('active'); 
-                pvpModalEl.style.display = 'flex'; 
-                pvpModalEl.style.opacity = '1'; 
-                pvpModalEl.style.visibility = 'visible'; 
-                pvpModalEl.style.pointerEvents = 'auto'; 
-                pvpModalEl.style.zIndex = '99999';
-            }
+            if(pvpModalEl) { pvpModalEl.classList.add('active'); pvpModalEl.style.display = 'flex'; pvpModalEl.style.opacity = '1'; pvpModalEl.style.visibility = 'visible'; pvpModalEl.style.pointerEvents = 'auto'; pvpModalEl.style.zIndex = '99999'; }
         } else {
             alert("Bẩm Bệ hạ, hiện tại không có trận đấu nào đang diễn ra ở Phủ này!");
             window.isSpectating = false;
@@ -1897,9 +1843,8 @@ function adminSpectateCurrentMatch() {
 }
 
 // =========================================================
-// 🏆 VÁ LỖI LOGIC XẾP CẶP ĐẤU (BRACKET) CHUẨN XÁC 100%
+// 🏆 THUẬT TOÁN XẾP CẶP ĐẤU (BRACKET) CHUẨN XÁC 100%
 // =========================================================
-
 function createBracketObject(players) { 
     let N = players.length; let targetSize = 4; 
     if (N > 4 && N <= 8) targetSize = 8; 
@@ -1907,7 +1852,6 @@ function createBracketObject(players) {
     
     let bracket = { final: { p1: "---", p2: "---", winner: "" }, third_place: { p1: "---", p2: "---", winner: "" }, super_cup: { p1: "---", p2: "---", winner: "" }, promotion_playoff: { p1: "---", p2: "---", winner: "" } }; 
     
-    // Thuật toán chia rẽ hạt giống: Nửa đầu mảng vào Nhánh Trái, nửa sau vào Nhánh Phải
     let leftLayout = targetSize === 16 ? [1, 16, 8, 9, 4, 13, 5, 12] : targetSize === 8 ? [1, 8, 4, 5] : [1, 4];
     let rightLayout = targetSize === 16 ? [2, 15, 7, 10, 3, 14, 6, 11] : targetSize === 8 ? [2, 7, 3, 6] : [2, 3];
     
@@ -1918,7 +1862,6 @@ function createBracketObject(players) {
         let pB = leftLayout[i+1] <= N ? players[leftLayout[i+1] - 1] : "BYE (Đặc cách)"; 
         leftMatches.push({ p1: pA, p2: pB, winner: "" }); 
     }
-    
     for (let i = 0; i < rightLayout.length; i += 2) { 
         let pA = rightLayout[i] <= N ? players[rightLayout[i] - 1] : "BYE (Đặc cách)"; 
         let pB = rightLayout[i+1] <= N ? players[rightLayout[i+1] - 1] : "BYE (Đặc cách)"; 
@@ -1926,8 +1869,7 @@ function createBracketObject(players) {
     }
 
     if (targetSize === 16) { 
-        bracket.r16l = leftMatches; 
-        bracket.r16r = rightMatches; 
+        bracket.r16l = leftMatches; bracket.r16r = rightMatches; 
         bracket.qfl = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; 
         bracket.qfr = [{ p1: "---", p2: "---", winner: "" }, { p1: "---", p2: "---", winner: "" }]; 
         bracket.sfl = { p1: "---", p2: "---", winner: "" }; bracket.sfr = { p1: "---", p2: "---", winner: "" }; 
@@ -1943,83 +1885,48 @@ function createBracketObject(players) {
 async function executeBlindDraw() { 
     if(!confirm(`Xác nhận bốc thăm phân nhánh cho [${currentRealm}]?`)) return; 
     
-    // 1. Lấy thông tin Đương Kim Vô Địch từ Lịch sử
     const histSnap = await rtdb.ref(`tournament_status/${currentRealm}/history`).once('value'); 
-    const history = histSnap.val() || {}; 
-    let currentDefendingChampion = history.c1_champ || ""; 
+    const history = histSnap.val() || {}; let currentDefendingChampion = history.c1_champ || ""; 
     
-    // 2. Lấy toàn bộ thần dân trong Phủ
     const snapshot = await db.collection('vocab_users').where('realm', '==', currentRealm).get(); 
-    let allPlayers = []; 
-    snapshot.forEach(doc => allPlayers.push(doc.data())); 
+    let allPlayers = []; snapshot.forEach(doc => allPlayers.push(doc.data())); 
     
-    // 3. Xếp hạng dựa trên sức mạnh (XP)
     allPlayers.sort((a,b) => (b.xp || 0) - (a.xp || 0)); 
-    
-    // 4. Lọc người đủ tiêu chuẩn (Chuỗi >= 3 HOẶC là ĐKVĐ)
     let qualifiedPlayers = []; 
     allPlayers.forEach(d => { 
-        let dName = d.displayName || "Ẩn danh";
-        let dStreak = d.streak || 1;
-        let isChampion = (dName === currentDefendingChampion && currentDefendingChampion !== "");
-        
-        if(d.role !== 'teacher' && (dStreak >= 3 || isChampion)) { 
-            qualifiedPlayers.push(dName); 
-        } 
+        let dName = d.displayName || "Ẩn danh"; let dStreak = d.streak || 1; let isChampion = (dName === currentDefendingChampion && currentDefendingChampion !== ""); 
+        if(d.role !== 'teacher' && (dStreak >= 3 || isChampion)) { qualifiedPlayers.push(dName); } 
     }); 
     
     let N = qualifiedPlayers.length; 
     if (N < 4) return alert("Cần tối thiểu 4 thần dân duy trì chuỗi 3 ngày (hoặc ĐKVĐ) để mở giải."); 
     
-    // 5. Thuật toán chia số lượng C1 và C2 theo Bảng xếp hạng
     let c1Size = 0, c2Size = 0; 
-    if (N >= 4 && N < 8) { 
-        c1Size = 4; c2Size = 0; 
-    } else if (N >= 8) { 
-        let max_pow = Math.pow(2, Math.floor(Math.log2(N))); 
-        c1Size = (N - max_pow < 4 && max_pow > 4) ? max_pow / 2 : max_pow; 
-        let c2PoolSize = N - c1Size; 
-        c2Size = (c2PoolSize >= 4) ? Math.pow(2, Math.floor(Math.log2(c2PoolSize))) : 0; 
+    if (N >= 4 && N < 8) { c1Size = 4; c2Size = 0; } 
+    else if (N >= 8) { 
+        let max_pow = Math.pow(2, Math.floor(Math.log2(N))); c1Size = (N - max_pow < 4 && max_pow > 4) ? max_pow / 2 : max_pow; 
+        let c2PoolSize = N - c1Size; c2Size = (c2PoolSize >= 4) ? Math.pow(2, Math.floor(Math.log2(c2PoolSize))) : 0; 
     } 
     
-    // 6. Phân bổ hạt giống (Seeds) theo đúng Top XP
-    let c1Players = qualifiedPlayers.slice(0, c1Size);
-    let c2Players = qualifiedPlayers.slice(c1Size, c1Size + c2Size);
+    let c1Players = qualifiedPlayers.slice(0, c1Size); let c2Players = qualifiedPlayers.slice(c1Size, c1Size + c2Size);
+    let updates = {}; updates[`tournament_status/${currentRealm}/c1_bracket`] = createBracketObject(c1Players);
     
-    // 7. Tạo sơ đồ và đưa lên Cửu Trùng Đài (Firebase)
-    let updates = {};
-    updates[`tournament_status/${currentRealm}/c1_bracket`] = createBracketObject(c1Players);
+    if(c2Size > 0) { updates[`tournament_status/${currentRealm}/c2_bracket`] = createBracketObject(c2Players); } 
+    else { updates[`tournament_status/${currentRealm}/c2_bracket`] = null; }
     
-    if(c2Size > 0) {
-        updates[`tournament_status/${currentRealm}/c2_bracket`] = createBracketObject(c2Players);
-    } else {
-        updates[`tournament_status/${currentRealm}/c2_bracket`] = null; // Xóa C2 nếu không đủ mâm
-    }
-    
-    rtdb.ref().update(updates).then(() => {
-        alert(`🎲 Càn khôn đã định!\nĐã xếp ${c1Size} Dũng sĩ vào C1${c2Size > 0 ? ` và ${c2Size} Dũng sĩ vào C2` : ''}.`);
-    }); 
+    rtdb.ref().update(updates).then(() => { alert(`🎲 Càn khôn đã định!\nĐã xếp ${c1Size} Dũng sĩ vào C1${c2Size > 0 ? ` và ${c2Size} Dũng sĩ vào C2` : ''}.`); }); 
 }
 
 // =========================================================
 // ⚡ ĐẠI PHÁP TRẬN: ĐẠI LỄ SĂN VOUCHER (MEGA FLASH SALE)
 // =========================================================
 window.currentFlashSale = null;
-window.currentListeningRealmFS = null; // Cờ lưu tên Phủ đang theo dõi
+window.currentListeningRealmFS = null; 
 
 setInterval(() => {
-    // Nếu Phủ hiện tại khác với Phủ đang được theo dõi
     if (currentRealm && rtdb && window.currentListeningRealmFS !== currentRealm) {
-        
-        // 1. Tắt loa theo dõi ở Phủ cũ để tránh nhiễu sóng
-        if (window.currentListeningRealmFS) {
-            rtdb.ref(`tournament_status/${window.currentListeningRealmFS}/flash_sale`).off();
-        }
-        
-        // 2. Chuyển cờ sang Phủ mới
+        if (window.currentListeningRealmFS) { rtdb.ref(`tournament_status/${window.currentListeningRealmFS}/flash_sale`).off(); }
         window.currentListeningRealmFS = currentRealm;
-        
-        // 3. Bật loa theo dõi sự kiện ở Phủ mới
         rtdb.ref(`tournament_status/${currentRealm}/flash_sale`).on('value', snap => {
             window.currentFlashSale = snap.val();
             renderFlashSaleBanner();
@@ -2032,33 +1939,23 @@ function renderFlashSaleBanner() {
     if (!banner) {
         banner = document.createElement('div');
         banner.id = 'flashSaleBanner';
-        // [SỬA TỬ HUYỆT MOBILE]: Thêm max-width, flex-wrap, bỏ white-space: nowrap
         banner.style.cssText = "position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 9999; background: linear-gradient(45deg, #ff1744, #d50000); color: white; padding: 8px 15px; border-radius: 25px; font-weight: 900; box-shadow: 0 4px 15px rgba(255, 23, 68, 0.6); display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; cursor: pointer; border: 2px solid #ffd700; animation: pulse 1.5s infinite; max-width: 92vw; width: max-content; text-align: center;";
-        banner.onclick = claimFlashSaleVoucher;
-        document.body.appendChild(banner);
+        banner.onclick = claimFlashSaleVoucher; document.body.appendChild(banner);
     }
-
     if (window.currentFlashSale && window.currentFlashSale.active) {
         let fs = window.currentFlashSale;
         let textStr = fs.type === 'mega' ? `🔥 ĐẠI LỄ VOUCHER (Còn: ${fs.q90}x90% | ${fs.q75}x75% | ${fs.q50}x50% | ∞x25%)` : `🔥 SĂN VOUCHER VIP -${fs.discount}% (Còn ${fs.qty} mã)`;
-        
-        // Dùng clamp để chữ tự động thu nhỏ trên Mobile và to trên PC
         banner.innerHTML = `<span style="font-size: clamp(11px, 3.5vw, 14px); line-height: 1.4;">${textStr}</span> <button style="background: #ffd700; color: #d50000; border: none; padding: 5px 12px; border-radius: 20px; font-weight: 900; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); flex-shrink: 0; white-space: nowrap;">GIẬT MÃ!</button>`;
         banner.style.display = 'flex';
-    } else {
-        banner.style.display = 'none';
-    }
+    } else { banner.style.display = 'none'; }
 }
 
 function claimFlashSaleVoucher() {
-    if (!currentUser) return;
-    let todayStr = new Date().toLocaleDateString('en-GB');
-    
+    if (!currentUser) return; let todayStr = new Date().toLocaleDateString('en-GB');
     if (userData.streak < 3 && userData.displayName !== defendingChampion && userData.role !== 'teacher') return alert("🛑 LÁ CHẮN CHUỖI: Cần chuỗi 3 ngày!");
     if (userData.lastPerfectDate !== todayStr && userData.role !== 'teacher') return alert("🛑 THỬ THÁCH KHỔ LUYỆN: Chưa hoàn thành Perfect (100%) bài học nào hôm nay!");
 
     let ref = rtdb.ref(`tournament_status/${currentRealm}/flash_sale`);
-    
     ref.transaction(fs => {
         if (fs && fs.active) {
             if (!fs.claimed_by) fs.claimed_by = {}; 
@@ -2066,15 +1963,10 @@ function claimFlashSaleVoucher() {
             
             let discountToGive = 0;
             if (fs.type === 'mega') {
-                if (fs.q90 > 0) { fs.q90--; discountToGive = 90; }
-                else if (fs.q75 > 0) { fs.q75--; discountToGive = 75; }
-                else if (fs.q50 > 0) { fs.q50--; discountToGive = 50; }
-                else { discountToGive = 25; } 
-                fs.claimed_by[currentUser.uid] = discountToGive; 
-                return fs;
+                if (fs.q90 > 0) { fs.q90--; discountToGive = 90; } else if (fs.q75 > 0) { fs.q75--; discountToGive = 75; } else if (fs.q50 > 0) { fs.q50--; discountToGive = 50; } else { discountToGive = 25; } 
+                fs.claimed_by[currentUser.uid] = discountToGive; return fs;
             }
-        }
-        return; 
+        } return; 
     }, (error, committed, snapshot) => {
         if (!committed) {
             let fs = snapshot ? snapshot.val() : null;
@@ -2083,157 +1975,84 @@ function claimFlashSaleVoucher() {
         } else {
             let discount = snapshot.val().claimed_by[currentUser.uid];
             if (!userData.vouchers) userData.vouchers = [];
-            userData.vouchers.push(discount); userData.vouchers.sort((a, b) => b - a); 
-            syncStatsToCloud();
-            alert(`🎉 CHÚC MỪNG! Ngài đã giật thành công Voucher -${discount}%!`);
-            updateUI();
+            userData.vouchers.push(discount); userData.vouchers.sort((a, b) => b - a); syncStatsToCloud();
+            alert(`🎉 CHÚC MỪNG! Ngài đã giật thành công Voucher -${discount}%!`); updateUI();
         }
     });
 }
 
-// THIÊN CHUẨN LỊCH PHÁP: TỰ ĐỘNG CANH GIỜ
 function checkAndAutoTriggerFlashSale() {
     if (!currentRealm || !rtdb) return;
-    let now = new Date(); let d = now.getDate(); let m = now.getMonth() + 1;
-    let todayStr = d.toString().padStart(2, '0') + '/' + m.toString().padStart(2, '0') + '/' + now.getFullYear();
-
+    let now = new Date(); let d = now.getDate(); let m = now.getMonth() + 1; let todayStr = d.toString().padStart(2, '0') + '/' + m.toString().padStart(2, '0') + '/' + now.getFullYear();
     let isMegaSaleDay = (d === m) || (d === 30 && m === 4) || (d === 1 && m === 5) || (d === 17 && m === 5) || (d === 2 && m === 9);
     let ref = rtdb.ref(`tournament_status/${currentRealm}/flash_sale`);
-
     ref.once('value').then(snap => {
         let fs = snap.val();
         if (isMegaSaleDay) {
-            if (!fs || fs.date !== todayStr) {
-                ref.transaction(currentData => {
-                    if (!currentData || currentData.date !== todayStr) {
-                        return { active: true, type: 'mega', date: todayStr, q90: 1, q75: 2, q50: 4, claimed_by: {} };
-                    } return; 
-                });
-            }
-        } else if (fs && fs.active && fs.date && fs.date !== todayStr) {
-            ref.remove(); 
-        }
+            if (!fs || fs.date !== todayStr) { ref.transaction(currentData => { if (!currentData || currentData.date !== todayStr) { return { active: true, type: 'mega', date: todayStr, q90: 1, q75: 2, q50: 4, claimed_by: {} }; } return; }); }
+        } else if (fs && fs.active && fs.date && fs.date !== todayStr) { ref.remove(); }
     });
 }
 setInterval(checkAndAutoTriggerFlashSale, 60000); setTimeout(checkAndAutoTriggerFlashSale, 5000);
-
-// [Lệnh Admin khẩn cấp - Dùng trong F12]
-window.adminStartMegaFlashSale = function() { 
-    let todayStr = new Date().toLocaleDateString('en-GB');
-    rtdb.ref(`tournament_status/${currentRealm}/flash_sale`).set({ active: true, type: 'mega', date: todayStr, q90: 1, q75: 2, q50: 4, claimed_by: {} }).then(() => alert("📢 Đã ÉP MỞ Đại Lễ Voucher thành công!"));
-};
+window.adminStartMegaFlashSale = function() { let todayStr = new Date().toLocaleDateString('en-GB'); rtdb.ref(`tournament_status/${currentRealm}/flash_sale`).set({ active: true, type: 'mega', date: todayStr, q90: 1, q75: 2, q50: 4, claimed_by: {} }).then(() => alert("📢 Đã ÉP MỞ Đại Lễ Voucher thành công!")); };
 window.adminStopFlashSale = function() { rtdb.ref(`tournament_status/${currentRealm}/flash_sale`).remove().then(() => alert("🔇 Đã dẹp xong bảng Voucher!")); };
 
 // =========================================================
 // 🏛️ ĐẠI PHÁP TRẬN: NGỰ TIỀN KHAI MINH (DAILY POP-UP QUIZ)
 // =========================================================
 window.currentDailyQuiz = null;
-window.currentListeningRealmDQ = null; // Bổ sung cờ lưu tên Phủ cho Daily Quiz
+window.currentListeningRealmDQ = null;
 
 setInterval(() => {
-    // Kiểm tra nếu Phủ hiện tại khác với Phủ đang được theo dõi
     if (currentRealm && rtdb && window.currentListeningRealmDQ !== currentRealm) {
-        
-        // 1. Tắt loa ở Phủ cũ để tránh nhiễu âm
-        if (window.currentListeningRealmDQ) {
-            rtdb.ref(`tournament_status/${window.currentListeningRealmDQ}/daily_quiz`).off();
-        }
-        
-        // 2. Cập nhật cờ sang Phủ mới
+        if (window.currentListeningRealmDQ) { rtdb.ref(`tournament_status/${window.currentListeningRealmDQ}/daily_quiz`).off(); }
         window.currentListeningRealmDQ = currentRealm;
-        
-        // 3. Bật loa thu sóng ở Phủ mới
         rtdb.ref(`tournament_status/${currentRealm}/daily_quiz`).on('value', snap => {
-            window.currentDailyQuiz = snap.val();
-            let todayStr = new Date().toLocaleDateString('en-GB');
-
-            // 1. Nếu hệ thống chưa có câu hỏi hôm nay, tự động bốc 1 câu ngẫu nhiên từ Kho
+            window.currentDailyQuiz = snap.val(); let todayStr = new Date().toLocaleDateString('en-GB');
             if ((!window.currentDailyQuiz || window.currentDailyQuiz.date !== todayStr) && allLessonsData && allLessonsData.length > 0) {
-                let allVocab = [];
-                allLessonsData.forEach(l => { if(l.vocab) allVocab = allVocab.concat(l.vocab); });
-                
+                let allVocab = []; allLessonsData.forEach(l => { if(l.vocab) allVocab = allVocab.concat(l.vocab); });
                 if (allVocab.length >= 4) {
-                    let correctWord = allVocab[Math.floor(Math.random() * allVocab.length)];
-                    let opts = [correctWord.vi];
-                    while(opts.length < 4) {
-                        let rw = allVocab[Math.floor(Math.random() * allVocab.length)];
-                        if(!opts.includes(rw.vi)) opts.push(rw.vi);
-                    }
+                    let correctWord = allVocab[Math.floor(Math.random() * allVocab.length)]; let opts = [correctWord.vi];
+                    while(opts.length < 4) { let rw = allVocab[Math.floor(Math.random() * allVocab.length)]; if(!opts.includes(rw.vi)) opts.push(rw.vi); }
                     opts.sort(() => Math.random() - 0.5);
-                    
                     rtdb.ref(`tournament_status/${currentRealm}/daily_quiz`).transaction(curr => {
-                        if (!curr || curr.date !== todayStr) {
-                            return { 
-                                date: todayStr, 
-                                q_en: correctWord.en, 
-                                q_vi: correctWord.vi, 
-                                opts: opts, 
-                                slots: { lvl1: 1, lvl2: 2, lvl3: 3 }, 
-                                answered_by: {} 
-                            };
-                        }
-                        return; // Hủy giao dịch nếu đã có người khác bốc câu hỏi trước 1 mili-giây
+                        if (!curr || curr.date !== todayStr) { return { date: todayStr, q_en: correctWord.en, q_vi: correctWord.vi, opts: opts, slots: { lvl1: 1, lvl2: 2, lvl3: 3 }, answered_by: {} }; } return; 
                     });
                 }
             } 
-            // 2. Nếu đã có câu hỏi, kiểm tra xem người này đã làm chưa để hiện Pop-up
             else if (window.currentDailyQuiz && window.currentDailyQuiz.date === todayStr) {
                 if (currentUser && userData && userData.lastDailyQuizDate !== todayStr) {
-                    // Tránh hiện Pop-up đè lên lúc đang đấu PvP hoặc đang trong bài học
-                    if (!document.getElementById('pvpModal')?.classList.contains('active') && 
-                        !document.getElementById('previewModal')?.classList.contains('active')) {
-                        showDailyQuizPopup();
-                    }
+                    if (!document.getElementById('pvpModal')?.classList.contains('active') && !document.getElementById('previewModal')?.classList.contains('active')) { showDailyQuizPopup(); }
                 }
-                // Cập nhật số lượng phần thưởng realtime nếu Pop-up đang mở (Thấy số tụt dần để tạo áp lực)
-                if (document.getElementById('dailyQuizModal')) {
-                    updateDailyQuizSlots(window.currentDailyQuiz.slots);
-                }
+                if (document.getElementById('dailyQuizModal')) { updateDailyQuizSlots(window.currentDailyQuiz.slots); }
             }
         });
     }
 }, 3000);
 
-// Hiển thị Khung Pop-up uy nghi
 function showDailyQuizPopup() {
     if (document.getElementById('dailyQuizModal')) return; 
-
-    let modal = document.createElement('div');
-    modal.id = 'dailyQuizModal';
+    let modal = document.createElement('div'); modal.id = 'dailyQuizModal';
     modal.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 100000; display: flex; justify-content: center; align-items: center; animation: fadeIn 0.4s ease;";
-    
     let q = window.currentDailyQuiz;
-    
     let content = `
     <div style="background: linear-gradient(135deg, #1e3a8a, #312e81); border: 2px solid #ffd700; border-radius: 16px; padding: 25px; width: 90%; max-width: 400px; text-align: center; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
         <div style="font-size: 22px; font-weight: 900; color: #ffd700; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px;">Ngự Tiền Khai Minh</div>
         <div style="font-size: 13px; color: #93c5fd; margin-bottom: 15px; font-style: italic;">Trả lời duy nhất 1 câu hỏi mỗi ngày. Kẻ nhanh tay nhất sẽ xưng vương!</div>
-        
-        <div id="dq-slots-display" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 25px; font-size: 12px;">
-            <!-- Render realtime -->
-        </div>
-
+        <div id="dq-slots-display" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 25px; font-size: 12px;"></div>
         <div style="font-size: 32px; font-weight: 900; color: #ffffff; margin-bottom: 30px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${q.q_en}</div>
-
         <div style="display: grid; grid-template-columns: 1fr; gap: 10px;" id="dq-options">
             ${q.opts.map((opt) => `<button onclick="submitDailyQuiz('${opt.replace(/'/g, "\\'")}')" style="background: rgba(255,255,255,0.1); border: 1px solid #60a5fa; color: white; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">${opt}</button>`).join('')}
         </div>
-        
         <div style="margin-top: 20px;">
             <button onclick="skipDailyQuiz()" style="background: transparent; color: #94a3b8; font-size: 13px; text-decoration: underline; border: none; cursor: pointer;">Bỏ qua (Tước quyền nhận thưởng hôm nay)</button>
         </div>
-    </div>
-    `;
-    
-    modal.innerHTML = content;
-    document.body.appendChild(modal);
-    updateDailyQuizSlots(q.slots);
+    </div>`;
+    modal.innerHTML = content; document.body.appendChild(modal); updateDailyQuizSlots(q.slots);
 }
 
-// Hàm cập nhật số lượng suất thưởng Realtime
 function updateDailyQuizSlots(slots) {
-    let s1 = slots.lvl1; let s2 = slots.lvl2; let s3 = slots.lvl3;
-    let slotEl = document.getElementById('dq-slots-display');
+    let s1 = slots.lvl1; let s2 = slots.lvl2; let s3 = slots.lvl3; let slotEl = document.getElementById('dq-slots-display');
     if (slotEl) {
         slotEl.innerHTML = `
             <span style="background: ${s1>0?'#ef4444':'#555'}; padding: 4px 8px; border-radius: 6px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">🥇 10K (${s1})</span>
@@ -2244,63 +2063,31 @@ function updateDailyQuizSlots(slots) {
     }
 }
 
-// Chốt đáp án - Giao dịch nguyên tử chống gian lận mạng
 function submitDailyQuiz(selectedOpt) {
-    if (!currentUser) return;
-    let todayStr = new Date().toLocaleDateString('en-GB');
-    let q = window.currentDailyQuiz;
-    
-    // Khóa sổ ngay lập tức: Đóng mộc đã làm xong bài hôm nay
-    userData.lastDailyQuizDate = todayStr;
-    db.collection('vocab_users').doc(currentUser.uid).update({ lastDailyQuizDate: todayStr });
-    
-    let modal = document.getElementById('dailyQuizModal');
-    if (modal) modal.remove();
+    if (!currentUser) return; let todayStr = new Date().toLocaleDateString('en-GB'); let q = window.currentDailyQuiz;
+    userData.lastDailyQuizDate = todayStr; db.collection('vocab_users').doc(currentUser.uid).update({ lastDailyQuizDate: todayStr });
+    let modal = document.getElementById('dailyQuizModal'); if (modal) modal.remove();
+    if (selectedOpt !== q.q_vi) { alert("❌ SAI RỒI! Trí tuệ chưa thông, ân trạch đã trôi vào tay kẻ khác. Chúc may mắn vào ngày mai!"); return; }
 
-    if (selectedOpt !== q.q_vi) {
-        alert("❌ SAI RỒI! Trí tuệ chưa thông, ân trạch đã trôi vào tay kẻ khác. Chúc may mắn vào ngày mai!");
-        return;
-    }
-
-    // Nếu đúng -> Tranh đoạt phần thưởng (Thác đổ Transaction)
-    let ref = rtdb.ref(`tournament_status/${currentRealm}/daily_quiz`);
-    ref.transaction(curr => {
+    rtdb.ref(`tournament_status/${currentRealm}/daily_quiz`).transaction(curr => {
         if (curr && curr.date === todayStr) {
-            if (!curr.answered_by) curr.answered_by = {};
-            if (curr.answered_by[currentUser.uid]) return; // Chặn dúp nếu click 2 lần
-            
+            if (!curr.answered_by) curr.answered_by = {}; if (curr.answered_by[currentUser.uid]) return; 
             let reward = 1000;
-            if (curr.slots.lvl1 > 0) { curr.slots.lvl1--; reward = 10000; }
-            else if (curr.slots.lvl2 > 0) { curr.slots.lvl2--; reward = 8000; }
-            else if (curr.slots.lvl3 > 0) { curr.slots.lvl3--; reward = 6800; }
-            
-            curr.answered_by[currentUser.uid] = reward;
-            return curr;
-        }
-        return;
+            if (curr.slots.lvl1 > 0) { curr.slots.lvl1--; reward = 10000; } else if (curr.slots.lvl2 > 0) { curr.slots.lvl2--; reward = 8000; } else if (curr.slots.lvl3 > 0) { curr.slots.lvl3--; reward = 6800; }
+            curr.answered_by[currentUser.uid] = reward; return curr;
+        } return;
     }, (error, comm, snap) => {
         if (comm) {
-            let fs = snap.val();
-            let reward = fs.answered_by[currentUser.uid];
-            userData.gold = (userData.gold || 0) + reward;
-            syncStatsToCloud();
-            
+            let fs = snap.val(); let reward = fs.answered_by[currentUser.uid]; userData.gold = (userData.gold || 0) + reward; syncStatsToCloud();
             let title = reward === 10000 ? "🥇 TRẠNG NGUYÊN" : reward === 8000 ? "🥈 BẢNG NHÃN" : reward === 6800 ? "🥉 THÁM HOA" : "💎 TÚ TÀI";
-            alert(`🎉 CHÍNH XÁC! Tốc độ đỉnh cao, Ngài đã xuất sắc đoạt danh hiệu ${title}!\n🎁 Thưởng nóng: +${reward.toLocaleString()} Vàng!`);
-            updateUI();
-            if (typeof triggerConfetti === 'function') triggerConfetti();
-        } else {
-            alert("⚠️ Mạng tắc nghẽn, không thể kết nối tới Cửu Trùng Đài!");
-        }
+            alert(`🎉 CHÍNH XÁC! Tốc độ đỉnh cao, Ngài đã xuất sắc đoạt danh hiệu ${title}!\n🎁 Thưởng nóng: +${reward.toLocaleString()} Vàng!`); updateUI(); if (typeof triggerConfetti === 'function') triggerConfetti();
+        } else { alert("⚠️ Mạng tắc nghẽn, không thể kết nối tới Cửu Trùng Đài!"); }
     });
 }
 
 function skipDailyQuiz() {
-    let todayStr = new Date().toLocaleDateString('en-GB');
-    userData.lastDailyQuizDate = todayStr;
-    db.collection('vocab_users').doc(currentUser.uid).update({ lastDailyQuizDate: todayStr });
-    let modal = document.getElementById('dailyQuizModal');
-    if (modal) modal.remove();
+    let todayStr = new Date().toLocaleDateString('en-GB'); userData.lastDailyQuizDate = todayStr; db.collection('vocab_users').doc(currentUser.uid).update({ lastDailyQuizDate: todayStr });
+    let modal = document.getElementById('dailyQuizModal'); if (modal) modal.remove();
 }
 
 // =========================================================
@@ -2308,33 +2095,13 @@ function skipDailyQuiz() {
 // =========================================================
 function generateMeteors() {
     let container = document.getElementById('meteor-shower-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'meteor-shower-container';
-        document.body.prepend(container); // Ép nằm dưới cùng các lớp
-    }
+    if (!container) { container = document.createElement('div'); container.id = 'meteor-shower-container'; document.body.prepend(container); }
     container.innerHTML = ''; 
-    
-    // Sinh ra 25 tia sao băng với các chỉ số hoàn toàn ngẫu nhiên
     for(let i = 0; i < 25; i++) {
-        let meteor = document.createElement('div');
-        meteor.className = 'realistic-meteor';
-        
-        // Tọa độ xuất phát rải rác từ tít bên phải (+150vw) sang tận mép trái (-20vw)
-        meteor.style.left = (Math.random() * 170 - 20) + 'vw'; 
-        meteor.style.top = (Math.random() * -50 - 10) + 'vh'; 
-        
-        // Độ dài sao băng (tia ngắn, tia dài)
-        meteor.style.height = (Math.random() * 80 + 40) + 'px';
-        
-        // Tốc độ rơi: Lững lờ, chân thực (từ 4s đến 9s)
-        meteor.style.animationDuration = (Math.random() * 5 + 4) + 's';
-        
-        // Độ trễ ngẫu nhiên để không rụng thành chùm (0s đến 15s)
-        meteor.style.animationDelay = (Math.random() * 15) + 's';
-        
-        container.appendChild(meteor);
+        let meteor = document.createElement('div'); meteor.className = 'realistic-meteor';
+        meteor.style.left = (Math.random() * 170 - 20) + 'vw'; meteor.style.top = (Math.random() * -50 - 10) + 'vh'; 
+        meteor.style.height = (Math.random() * 80 + 40) + 'px'; meteor.style.animationDuration = (Math.random() * 5 + 4) + 's';
+        meteor.style.animationDelay = (Math.random() * 15) + 's'; container.appendChild(meteor);
     }
 }
-// Tự động kích hoạt ngay khi vương quốc tải xong
 setTimeout(generateMeteors, 1000);
