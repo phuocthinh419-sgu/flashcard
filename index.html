@@ -359,12 +359,15 @@
                         <button class="btn-buy" style="background: linear-gradient(45deg, #00bcd4, #0097a7);" onclick="openMigrationModal()">Di Cư</button>
                     </div>
 
-                    <div class="shop-item" id="shop-time-machine" style="display: none; border: 2px solid #9c27b0; background: #f3e5f5;">
-                        <div class="item-icon">⏳</div>
-                        <div class="item-title" style="color: #6a1b9a;">Máy Du Hành</div>
-                        <div class="item-desc">Khôi phục chuỗi đã mất. Phải vượt qua thử thách khốc liệt!</div>
-                        <div class="item-price" id="price-time-machine" style="color: #6a1b9a; background: #e1bee7;">🪙 ---</div>
-                        <button class="btn-buy" id="btn-time-machine" style="background: linear-gradient(45deg, #9c27b0, #ab47bc);" onclick="buyTimeMachine()">Kích Hoạt</button>
+                    <div style="background: linear-gradient(135deg, #f3e5f5, #e1bee7); border: 2px solid #ab47bc; border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                        <div style="font-size: 35px; margin-bottom: 5px; animation: pulse 2s infinite;">⏳</div>
+                        <div style="font-size: 16px; font-weight: 900; color: #4a148c; margin-bottom: 5px;">CỖ MÁY THỜI GIAN</div>
+                        <div style="font-size: 12px; color: #6a1b9a; margin-bottom: 15px; font-style: italic;">
+                    Xuyên không học bù để khôi phục chuỗi ngày đã mất (Tối đa 3 ngày). Phí: 10.000 Vàng / Ngày.
+                    </div>
+                        <button onclick="buyTimeMachine()" style="width: 100%; padding: 12px; border-radius: 8px; background: #9e9e9e; color: white; font-weight: bold; cursor: not-allowed; opacity: 0.5; border: none; transition: all 0.3s ease;">
+                    CHƯA KÍCH HOẠT
+                        </button>
                     </div>
                     
                     <div class="shop-item" style="border: 2px solid #ff9800; background: #fff8e1;">
