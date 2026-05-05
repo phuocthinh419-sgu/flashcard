@@ -1970,22 +1970,29 @@ setInterval(() => {
         window.currentListeningRealmDQ = currentRealm;
         rtdb.ref(`tournament_status/${currentRealm}/daily_quiz`).on('value', snap => {
             window.currentDailyQuiz = snap.val(); let todayStr = new Date().toLocaleDateString('en-GB');
+            
+            // 1. Tự động bốc câu hỏi (CHỈ DÀNH CHO ADMIN)
             if ((!window.currentDailyQuiz || window.currentDailyQuiz.date !== todayStr) && allLessonsData && allLessonsData.length > 0) {
-                let allVocab = []; allLessonsData.forEach(l => { if(l.vocab) allVocab = allVocab.concat(l.vocab); });
-                if (allVocab.length >= 4) {
-                    let correctWord = allVocab[Math.floor(Math.random() * allVocab.length)]; let opts = [correctWord.vi];
-                    let loopCount = 0; // [THẦN VÁ LỖI]: Giới hạn lặp
-                    while(opts.length < 4 && loopCount < 30) { 
-                        let rw = allVocab[Math.floor(Math.random() * allVocab.length)]; 
-                        if(!opts.includes(rw.vi)) opts.push(rw.vi); 
-                        loopCount++;
-                    }
-                    opts.sort(() => Math.random() - 0.5);
-                    rtdb.ref(`tournament_status/${currentRealm}/daily_quiz`).transaction(curr => {
-                        if (!curr || curr.date !== todayStr) { return { date: todayStr, q_en: correctWord.en, q_vi: correctWord.vi, opts: opts, slots: { lvl1: 1, lvl2: 2, lvl3: 3 }, answered_by: {} }; } return; 
-                    });
+                // [THẦN VÁ LỖI]: Cấm học sinh đi tạo đề, chặn đứng vòng lặp permission_denied!
+                if (userData.role === 'teacher') {
+                    let allVocab = []; allLessonsData.forEach(l => { if(l.vocab) allVocab = allVocab.concat(l.vocab); });
+                    if (allVocab.length >= 4) {
+                        let correctWord = allVocab[Math.floor(Math.random() * allVocab.length)]; let opts = [correctWord.vi];
+                        let loopCount = 0;
+                        while(opts.length < 4 && loopCount < 30) { 
+                            let rw = allVocab[Math.floor(Math.random() * allVocab.length)]; 
+                            // Thêm logic không cho trùng nghĩa đã vá lần trước
+                            if(!opts.includes(rw.vi) && rw.vi !== correctWord.vi) opts.push(rw.vi); 
+                            loopCount++;
+                        }
+                        opts.sort(() => Math.random() - 0.5);
+                        rtdb.ref(`tournament_status/${currentRealm}/daily_quiz`).transaction(curr => {
+                            if (!curr || curr.date !== todayStr) { return { date: todayStr, q_en: correctWord.en, q_vi: correctWord.vi, opts: opts, slots: { lvl1: 1, lvl2: 2, lvl3: 3 }, answered_by: {} }; } return; 
+                        });
+                    }
                 }
             } 
+            // 2. Học sinh và Admin hiển thị Pop-up làm bài
             else if (window.currentDailyQuiz && window.currentDailyQuiz.date === todayStr) {
                 if (currentUser && userData && userData.lastDailyQuizDate !== todayStr) {
                     if (!document.getElementById('pvpModal')?.classList.contains('active') && !document.getElementById('previewModal')?.classList.contains('active')) { showDailyQuizPopup(); }
