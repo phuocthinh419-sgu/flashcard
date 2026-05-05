@@ -518,19 +518,20 @@ function buyItem(itemType, basePrice) {
         if (itemType.startsWith('mask_100')) updates.maskExpiry = Date.now() + 86400000;
         if (itemType.startsWith('mask_80')) updates.maskExpiry = Date.now() + 43200000;
 
-        // [LOGIC MỚI]: Lưu danh sách đồ trang trí và Tặng Voucher 45%
-        if (decorItems.includes(itemType) && itemType !== 'streak_fire' && itemType !== 'theme_default') {
-            if (!userData.purchasedItems) userData.purchasedItems = [];
-            userData.purchasedItems.push(itemType);
-            updates.purchasedItems = userData.purchasedItems;
-            
-            // Tặng ngay 1 thẻ 45% cho BẤT KỲ lần mua sắm đồ chính hãng nào
-            if (!userData.vouchers) userData.vouchers = [];
-            userData.vouchers.push(45);
-            userData.vouchers.sort((a, b) => b - a); // Đẩy thẻ xịn nhất lên đầu
-            updates.vouchers = userData.vouchers;
-        }
+        // Lưu danh sách đồ trang trí (Không lưu các món mặc định)
+    if (decorItems.includes(itemType) && itemType !== 'streak_fire' && itemType !== 'theme_default') {
+        if (!userData.purchasedItems) userData.purchasedItems = [];
+        userData.purchasedItems.push(itemType);
+        updates.purchasedItems = userData.purchasedItems;
+    }
 
+    // [THÁNH CHỈ MỚI]: Cứ tiêu xài ở Cửa Hàng Chính Hãng (!isMarket) là auto nhận 1 Voucher 45%
+    if (!isMarket) {
+        if (!userData.vouchers) userData.vouchers = [];
+        userData.vouchers.push(45); // Lũy tiến: mua bao nhiêu món thêm bấy nhiêu thẻ 45%
+        userData.vouchers.sort((a, b) => b - a); // Sắp xếp thẻ xịn lên đầu
+        updates.vouchers = userData.vouchers;
+    }
         // Cập nhật Firebase
         db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
             try { transferToAdmin(finalPrice, `Cửa hàng: ${itemType}`); } catch(e) {}
@@ -2007,7 +2008,7 @@ function showDailyQuizPopup() {
         <div id="dq-slots-display" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 25px; font-size: 12px;"></div>
         <div style="font-size: 32px; font-weight: 900; color: #ffffff; margin-bottom: 30px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${q.q_en}</div>
         <div style="display: grid; grid-template-columns: 1fr; gap: 10px;" id="dq-options">
-            ${q.opts.map((opt) => `<button onclick="submitDailyQuiz('${opt.replace(/'/g, "\\'")}')" style="background: rgba(255,255,255,0.1); border: 1px solid #60a5fa; color: white; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">${opt}</button>`).join('')}
+            ${q.opts.map((opt, idx) => `<button onclick="submitDailyQuiz(${idx})" style="background: rgba(255,255,255,0.1); border: 1px solid #60a5fa; color: white; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">${opt}</button>`).join('')}
         </div>
         <div style="margin-top: 20px;">
             <button onclick="skipDailyQuiz()" style="background: transparent; color: #94a3b8; font-size: 13px; text-decoration: underline; border: none; cursor: pointer;">Bỏ qua (Tước quyền nhận thưởng hôm nay)</button>
@@ -2028,11 +2029,21 @@ function updateDailyQuizSlots(slots) {
     }
 }
 
-function submitDailyQuiz(selectedOpt) {
+// Chốt đáp án - Giao dịch nguyên tử chống gian lận mạng
+function submitDailyQuiz(selectedIndex) {
     if (!currentUser) return; let todayStr = new Date().toLocaleDateString('en-GB'); let q = window.currentDailyQuiz;
+    
+    // Khóa sổ ngay lập tức: Đóng mộc đã làm xong bài hôm nay
     userData.lastDailyQuizDate = todayStr; db.collection('vocab_users').doc(currentUser.uid).update({ lastDailyQuizDate: todayStr });
     let modal = document.getElementById('dailyQuizModal'); if (modal) modal.remove();
-    if (selectedOpt !== q.q_vi) { alert("❌ SAI RỒI! Trí tuệ chưa thông, ân trạch đã trôi vào tay kẻ khác. Chúc may mắn vào ngày mai!"); return; }
+
+    // [THẦN VÁ LỖI]: Lấy đáp án trực tiếp từ vị trí nút bấm, miễn nhiễm mọi lỗi chuỗi/font chữ!
+    let selectedOpt = q.opts[selectedIndex];
+
+    if (selectedOpt !== q.q_vi) { 
+        alert("❌ SAI RỒI! Trí tuệ chưa thông, ân trạch đã trôi vào tay kẻ khác. Chúc may mắn vào ngày mai!"); 
+        return; 
+    }
 
     rtdb.ref(`tournament_status/${currentRealm}/daily_quiz`).transaction(curr => {
         if (curr && curr.date === todayStr) {
