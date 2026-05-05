@@ -359,16 +359,31 @@
                         <button class="btn-buy" style="background: linear-gradient(45deg, #00bcd4, #0097a7);" onclick="openMigrationModal()">Di Cư</button>
                     </div>
 
-                    <div style="background: linear-gradient(135deg, #f3e5f5, #e1bee7); border: 2px solid #ab47bc; border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                        <div style="font-size: 35px; margin-bottom: 5px; animation: pulse 2s infinite;">⏳</div>
-                        <div style="font-size: 16px; font-weight: 900; color: #4a148c; margin-bottom: 5px;">CỖ MÁY THỜI GIAN</div>
-                        <div style="font-size: 12px; color: #6a1b9a; margin-bottom: 15px; font-style: italic;">
-                    Xuyên không học bù để khôi phục chuỗi ngày đã mất (Tối đa 3 ngày). Phí: 10.000 Vàng / Ngày.
-                    </div>
-                        <button onclick="buyTimeMachine()" style="width: 100%; padding: 12px; border-radius: 8px; background: #9e9e9e; color: white; font-weight: bold; cursor: not-allowed; opacity: 0.5; border: none; transition: all 0.3s ease;">
-                    CHƯA KÍCH HOẠT
-                        </button>
-                    </div>
+                   <div style="background: linear-gradient(135deg, #1a0b2e 0%, #4a148c 100%); border: 1px solid #9c27b0; border-radius: 12px; padding: 20px 15px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; box-shadow: 0 6px 15px rgba(0,0,0,0.4);">
+    
+    <!-- Hiệu ứng tinh vân phát sáng góc trái -->
+    <div style="position: absolute; top: -30px; left: -30px; width: 100px; height: 100px; background: #e040fb; filter: blur(40px); opacity: 0.3; z-index: 0;"></div>
+    
+    <div style="position: relative; z-index: 1;">
+        <div style="font-size: 42px; margin-bottom: 8px; animation: pulse 2s infinite; text-shadow: 0 0 20px #e040fb;">⏳</div>
+        <div style="font-size: 18px; font-weight: 900; color: #ffffff; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Cỗ Máy Thời Gian</div>
+        <div style="font-size: 12px; color: #e1bee7; margin-bottom: 15px; font-style: italic; line-height: 1.4; padding: 0 5px;">
+            Xuyên không học bù để khôi phục chuỗi ngày đã mất (Tối đa 3 ngày).
+        </div>
+    </div>
+
+    <div style="position: relative; z-index: 1;">
+        <!-- Khối giá tiền bo tròn đồng bộ với các thẻ khác -->
+        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); padding: 6px 20px; border-radius: 20px; display: inline-block; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(224, 64, 251, 0.2);">
+            <span style="color: #ffd700; font-weight: 900; font-size: 15px;">🪙 800 / Ngày</span>
+        </div>
+
+        <!-- Nút bấm: Màu gốc là tím Neon (JS sẽ tự đè màu xám nếu chưa đủ điều kiện đứt chuỗi) -->
+        <button onclick="buyTimeMachine()" style="width: 100%; padding: 12px; border-radius: 8px; background: linear-gradient(45deg, #7b1fa2, #e040fb); color: white; font-weight: 900; font-size: 14px; border: none; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; box-shadow: 0 4px 10px rgba(123, 31, 162, 0.4);">
+            Đang tải...
+        </button>
+    </div>
+</div>
                     
                     <div class="shop-item" style="border: 2px solid #ff9800; background: #fff8e1;">
                         <div class="item-icon">🎡</div>
