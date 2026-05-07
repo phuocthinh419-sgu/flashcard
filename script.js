@@ -549,18 +549,64 @@ function buyItem(itemType, basePrice) {
     }
 }
 
+function loadMarketItems() {
+    const container = document.getElementById('pawnshopContainer');
+    if(!container) return;
+    
+    // Chỉ lấy số lượng Pháp bảo Chính hãng (100%)
+    let g100 = userData.glass_100 || 0;
+    let s100 = userData.shield_100 || 0;
+    let t100 = userData.time_100 || 0;
+    let to100 = userData.torch_100 || 0;
+
+    let html = ''; 
+    let hasItems = false;
+    
+    // Bảng giá thu mua độc quyền Hàng 100%
+    const pawnPrices = { 
+        'glass_100': { name: 'Kính Lúp (100%)', price: 160, count: g100, icon: '🔍' }, 
+        'shield_100': { name: 'Bùa Bảo Hộ (100%)', price: 2100, count: Math.floor(s100 / 3), icon: '🛡️' }, // Thu mua theo bộ 3 lá
+        'time_100': { name: 'Đồng Hồ (100%)', price: 240, count: t100, icon: '⏳' }, 
+        'torch_100': { name: 'Ngọn Đuốc (100%)', price: 200, count: to100, icon: '🔥' }
+    };
+    
+    for (const [id, item] of Object.entries(pawnPrices)) {
+        // Nếu số lượng đủ để bán thì mới hiện ra
+        if (item.count > 0) {
+            hasItems = true;
+            let unitLabel = id === 'shield_100' ? 'bộ (3 lá)' : 'cái';
+            html += `<div style="background: rgba(255,255,255,0.8); border: 1px solid #ffcc80; padding: 10px; border-radius: 6px; width: 45%; min-width: 120px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        <div style="font-size: 20px; margin-bottom: 5px;">${item.icon}</div>
+                        <div style="font-size: 14px; font-weight: bold; color: #424242;">${item.name}</div>
+                        <div style="font-size: 12px; color: #d32f2f; font-weight: bold; margin-bottom: 5px;">(Bán được: ${item.count} ${unitLabel})</div>
+                        <button onclick="sellItemToSystem('${id}', ${item.price})" style="width: 100%; padding: 8px 5px; background: #ff9800; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase;">BÁN (+${item.price} 🪙)</button>
+                     </div>`;
+        }
+    }
+    
+    if(hasItems) {
+        container.innerHTML = html; 
+    } else { 
+        container.innerHTML = `<span style="font-size: 13px; color: #888; font-style: italic; width: 100%; text-align: center;">Ngài đang không có Pháp bảo Chính hãng (100%) nào để cầm cố.<br><br><b>Lưu ý:</b> Hệ thống không thu mua Hàng hiệu, Vật phẩm tiêu hao, hoặc Hàng chợ đen (80%).</span>`; 
+    }
+}
+
 function sellItemToSystem(itemId, earnGold) {
     if (!confirm(`Xác nhận thanh lý món đồ này cho hệ thống để lấy ${earnGold} Vàng?`)) return;
     let updates = { gold: (userData.gold || 0) + earnGold };
+    
     if (itemId === 'glass_100') updates.glass_100 = userData.glass_100 - 1;
     if (itemId === 'shield_100') updates.shield_100 = userData.shield_100 - 3;
     if (itemId === 'time_100') updates.time_100 = userData.time_100 - 1;
     if (itemId === 'torch_100') updates.torch_100 = userData.torch_100 - 1;
+    
     db.collection('vocab_users').doc(currentUser.uid).update(updates).then(() => {
         if (typeof transferToAdmin === 'function') transferToAdmin(-earnGold, `Thu mua lại: ${itemId}`);
         Object.assign(userData, updates); updateUI(); 
         let anim = document.getElementById('rewardAnim'); anim.innerText = `🏦 Thanh lý thành công! +${earnGold} 🪙`; 
         anim.classList.add('show'); setTimeout(() => anim.classList.remove('show'), 3000);
+    }).catch(err => {
+        alert("Lỗi kết nối Cửu Trùng Đài!"); console.error(err);
     });
 }
 
