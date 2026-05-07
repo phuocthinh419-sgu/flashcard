@@ -1533,13 +1533,13 @@ window.addEventListener('message', function(e) {
             if (typeof showMentorDialogue === 'function') showMentorDialogue('wrong', vocabContext);
         }
     } 
-    // KIỂM TRA ĐÁP ÁN ĐÚNG
+   // KIỂM TRA ĐÁP ÁN ĐÚNG
     else if (decryptedData.startsWith('CORRECT_') || decryptedData.startsWith('SPELLING_CORRECT_')) {
         
-        // --- TRẢM AUTO CLICK ---
-        // Nếu trả lời đúng trong vòng dưới 0.5 giây (500ms) -> Chắc chắn là Ma pháp!
-        if (timeTaken < 500) {
-            alert("🛑 CẢNH BÁO TỪ HỆ THỐNG: Tốc độ của ngươi không phải của con người! Đừng hòng dùng Auto-click để lừa dối Bệ hạ!");
+        // [THẦN VÁ LỖI]: Phân biệt rạch ròi. Chỉ chặn Auto-click khi đang học bài (có currentLessonContext)
+        // Nếu đang ở trong PvP (không có currentLessonContext), tha hồ bấm nhanh!
+        if (window.currentLessonContext && timeTaken < 500) {
+            alert("🛑 CẢNH BÁO GIAN LẬN AUTO-CLICK: Ai gian lận làm chóa. ");
             return; // Hủy bỏ kết quả, không cộng vàng/XP
         }
         
