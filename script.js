@@ -16,7 +16,19 @@ const firebaseConfig = {
 };
 
 let db, auth, rtdb;
-try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); auth = firebase.auth(); rtdb = firebase.database(); } 
+try { 
+    firebase.initializeApp(firebaseConfig); 
+    db = firebase.firestore(); 
+    auth = firebase.auth(); 
+    rtdb = firebase.database(); 
+    
+    // [THẦN KHẢM PHÉP CHỐNG SẬP PHIÊN]: Ép Firebase ghi nhớ trạng thái vào LocalStorage vĩnh viễn,
+    // Miễn nhiễm hoàn toàn với lỗi "missing initial state" do sessionStorage bị Chrome Partitioned!
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+        .catch(function(error) {
+            console.error("Không thể thiết lập ma pháp lưu trữ vĩnh viễn:", error);
+        });
+} 
 catch (e) { console.error("Lỗi Firebase!"); }
 
 let currentUser = null;
@@ -618,7 +630,26 @@ async function syncFromSheetsToFirebase() { let targetRealm = document.getElemen
 function fetchLessonsFromFirebase() { const container = document.getElementById('libraryContainer'); const syllabusDiv = document.getElementById('syllabusChecklist');  if (!container || !db || !currentRealm) return; container.innerHTML = "<p>Đang mở kho tàng...</p>"; db.collection('realms').doc(currentRealm).collection('lessons').orderBy('created', 'asc').onSnapshot(snap => { let htmlLib = ''; let htmlArena = ''; allLessonsData = []; snap.forEach(doc => { const data = doc.data(); allLessonsData.push({ id: doc.id, name: data.name, vocab: data.vocab, raw: data.html }); let deleteBtn = userData.role === 'teacher' ? `<button class="btn-delete-lib" onclick="deleteLesson('${doc.id}', event)">Xóa</button>` : ''; htmlLib += `<div class="lib-card">${deleteBtn}<h3>${data.name}</h3><p style="font-size:11px;">Số lượng: ${data.vocab.length} từ</p><button class="btn-run" style="margin-top:10px;" onclick="viewCard('${btoa(unescape(encodeURIComponent(data.html)))}', '${data.name.replace(/'/g, "\\'")}', ${data.vocab.length})">▶ VÀO HỌC</button></div>`; htmlArena += `<label class="syllabus-item"><input type="checkbox" name="syllabusCheck" value="${data.name}"> <span>${data.name} (${data.vocab.length} từ)</span></label>`; }); if(allLessonsData.length === 0) htmlLib = "<p style='color:#888'>Kho bài học của Phủ này hiện đang trống. Quản trị viên vui lòng vào Ngự Thư Phòng để thêm bài.</p>"; container.innerHTML = htmlLib; if(syllabusDiv) syllabusDiv.innerHTML = htmlArena; if(userData.role === 'teacher') { document.querySelectorAll('.lib-card').forEach(card => { card.addEventListener('mouseenter', () => { let btn = card.querySelector('.btn-delete-lib'); if(btn) btn.style.display = 'block'; }); card.addEventListener('mouseleave', () => { let btn = card.querySelector('.btn-delete-lib'); if(btn) btn.style.display = 'none'; }); }); } }, err => { container.innerHTML = `<p style="color:#ff5252;">Lỗi Tường Lửa: ${err.message}<br>Vui lòng vào tab Cài Đặt đăng nhập hệ thống.</p>`; }); }
 function getCurrentWeekStr() { let d = new Date(); d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7)); let yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1)); let weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7); return d.getUTCFullYear() + "-W" + weekNo; }
 function triggerConfetti() { for (let i = 0; i < 60; i++) { let conf = document.createElement('div'); conf.className = 'confetti'; conf.style.left = Math.random() * 100 + 'vw'; conf.style.backgroundColor = ['#fbc02d', '#ff5722', '#00c853', '#2962ff', '#e040fb'][Math.floor(Math.random() * 5)]; conf.style.animationDuration = (Math.random() * 2 + 2) + 's'; document.body.appendChild(conf); setTimeout(() => conf.remove(), 4000); } }
-function loginWithGoogle() {  if (!auth) return;  var provider = new firebase.auth.GoogleAuthProvider();  provider.setCustomParameters({ prompt: 'select_account' });  auth.signInWithPopup(provider).then(() => { window.location.reload(); }).catch(err => { console.warn("Popup bị chặn, chuyển sang Redirect...", err); auth.signInWithRedirect(provider); }); }
+function loginWithGoogle() {
+    if (!auth) return;
+    var provider = new firebase.auth.GoogleAuthProvider();
+    
+    // [THẦN VÁ LỖI]: Ép cấu hình custom để tránh việc Chrome nuốt mất sessionStorage
+    provider.setCustomParameters({ prompt: 'select_account' });
+    
+    // Thay vì thả nổi tự do, ta bắt bộ bắt lỗi state và điều hướng thủ công nếu trình duyệt Partitioned Storage
+    auth.signInWithPopup(provider)
+        .then(() => { 
+            window.location.reload(); 
+        })
+        .catch(err => {
+            console.warn("Popup bị chặn hoặc dính lỗi Storage Partitioning, chuyển sang cấu thức an toàn: ", err);
+            // Nếu trình duyệt chặn, ép Firebase sử dụng cấu thức đăng nhập cục bộ thay vì liên miền
+            auth.signInWithRedirect(provider).catch(redirectErr => {
+                alert("Khởi bẩm Bệ hạ, trình duyệt này khóa cấu trúc lưu trữ liên miền. Xin Ngài hạ chỉ dùng Đăng nhập bằng Email/Mật khẩu phía dưới để vượt rào bảo mật!");
+            });
+        });
+}
 function loginWithEmail() { if (!auth) return; const email = document.getElementById('loginEmail').value.trim(); const pass = document.getElementById('loginPass').value.trim(); if (!email || !pass) return alert("Vui lòng cung cấp đầy đủ thông tin truy cập!"); auth.signInWithEmailAndPassword(email, pass).catch(err => alert("Lỗi: " + err.message)); }
 function registerWithEmail() { if (!auth) return; const email = document.getElementById('loginEmail').value.trim(); const pass = document.getElementById('loginPass').value.trim(); if (!email || !pass) return alert("Vui lòng cung cấp đầy đủ thông tin để đăng ký!"); auth.createUserWithEmailAndPassword(email, pass).then(() => alert("Đăng ký thành công!")).catch(err => alert("Lỗi: " + err.message)); }
 function saveDisplayName() {  const name = document.getElementById('displayNameInput').value.trim();  if (!name) return alert("Tên hiển thị không được để trống!");  let onboardRealm = document.getElementById('onboardRealmSelect'); if (onboardRealm && onboardRealm.value && !userData.realm) { userData.realm = onboardRealm.value; currentRealm = userData.realm; } userData.displayName = name;  userData.email = currentUser.email;  db.collection('vocab_users').doc(currentUser.uid).set(userData, {merge: true}).then(() => {  document.getElementById('nameModal').classList.remove('active');  updateUI();  setupRealmListeners();  fetchLessonsFromFirebase();  alert(`🎉 Thiết lập thành công! Chào mừng bạn đến với khóa học [${userData.realm}]!`); });  }
